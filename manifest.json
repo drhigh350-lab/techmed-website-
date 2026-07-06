@@ -1,0 +1,86 @@
+{
+  "name": "TechMed \u2014 Think Smart. Perform Elite.",
+  "short_name": "TechMed",
+  "description": "Nigeria's strategic JAMB admission platform. Predict your chances, access verified cutoffs, and join a community of 5,000+ elite performers.",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#1a3a5c",
+  "theme_color": "#1a3a5c",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "images/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "images/logo-light.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "categories": [
+    "education",
+    "productivity"
+  ],
+  "screenshots": [
+    {
+      "src": "images/202735.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "TechMed Admission Predictor"
+    },
+    {
+      "src": "images/202733.jpg",
+      "sizes": "1080x1920",
+      "type": "image/jpeg",
+      "form_factor": "narrow",
+      "label": "Aggregate Breakdown Analysis"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Predict Admission",
+      "short_name": "Predictor",
+      "description": "Calculate your admission chances with real university formulas",
+      "url": "/predictor.html",
+      "icons": [
+        {
+          "src": "images/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Cutoff Database",
+      "short_name": "Cutoffs",
+      "description": "Search verified JAMB cutoff marks for 30 universities",
+      "url": "/cutoffs.html",
+      "icons": [
+        {
+          "src": "images/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "Free Quizzes",
+      "short_name": "Quizzes",
+      "description": "Practice UTME & Post UTME questions for free",
+      "url": "https://quizboot.com/page/techmedofficial",
+      "icons": [
+        {
+          "src": "images/logo.png",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

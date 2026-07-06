@@ -1,0 +1,5 @@
+INSTRUCTIONS:
+1. Header nav logo = normal logo.png (for consistency with other pages)
+2. Big centered logo in story section = metallic-logo.jpg
+3. Upload metallic-logo.jpg into images/ folder
+4. Replace about.html with this file
