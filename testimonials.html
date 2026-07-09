@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0H63K2GWX5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0H63K2GWX5');
+</script>
+<title>TECHMED Records & Testimonials — 2026 UTME Success Stories</title>
+<meta name="description" content="TECHMED produced Nigeria's highest JAMB 2026 score. See student success stories, results, and testimonials from the TECHMED ecosystem.">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+<!-- THEME FIX -->
+<script>
+(function() {
+  const saved = localStorage.getItem('theme');
+  if (saved) {
+    document.documentElement.setAttribute('data-theme', saved);
+  } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  } else {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+})();
+</script>
+
+<style>
+  /* ===== WALLPAPER CAROUSEL SYSTEM ===== */
+  .carousel-section {
+    padding: 60px 0;
+    overflow: hidden;
+    position: relative;
+    contain: paint layout;
+    isolation: isolate;
+  }
+
+  .carousel-section:nth-child(odd) {
+    background: var(--bg-elevated);
+  }
+
+  .carousel-section:nth-child(even) {
+    background: var(--bg);
+  }
+
+  .carousel-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding: 0 20px;
+  }
+
+  .carousel-header .section-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .carousel-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2.2rem);
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.03em;
+    margin-bottom: 8px;
+  }
+
+  .carousel-header p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* Infinite Scroll Track */
+  .wallpaper-track {
+    display: flex;
+    width: max-content;
+    animation: scroll-left 50s linear infinite;
+  }
+
+  .wallpaper-track-reverse {
+    animation: scroll-right 55s linear infinite;
+  }
+
+  .wallpaper-track-slow {
+    animation: scroll-left 30s linear infinite;
+  }
+
+  @keyframes scroll-left {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  @keyframes scroll-right {
+    0% { transform: translateX(-50%); }
+    100% { transform: translateX(0); }
+  }
+
+  /* Carousel Items */
+  .wallpaper-item {
+    flex-shrink: 0;
+    width: 260px;
+    height: 360px;
+    margin-right: 14px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+    cursor: zoom-in;
+  }
+
+  .wallpaper-item:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl), var(--shadow-glow);
+    border-color: rgba(14,165,233,0.3);
+    z-index: 10;
+  }
+
+  .wallpaper-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+    transition: transform 0.6s ease;
+  }
+
+  .wallpaper-item:hover img {
+    transform: scale(1.08);
+  }
+
+  /* Testimonial Items - TALLER for PDF pages */
+  .testimonial-item {
+    flex-shrink: 0;
+    width: 280px;
+    height: 500px;
+    margin-right: 14px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+    cursor: zoom-in;
+  }
+
+  .testimonial-item:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl);
+    border-color: rgba(245,158,11,0.3);
+    z-index: 10;
+  }
+
+  .testimonial-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  /* Success Story Items */
+  .success-item {
+    flex-shrink: 0;
+    width: 320px;
+    height: 420px;
+    margin-right: 14px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    position: relative;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    transition: all var(--transition);
+    cursor: zoom-in;
+  }
+
+  .success-item:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl), var(--shadow-accent-glow);
+    border-color: rgba(245,158,11,0.3);
+    z-index: 10;
+  }
+
+  .success-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    display: block;
+  }
+
+  /* Score Overlay */
+  .score-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(8,13,26,0.95) 0%, rgba(8,13,26,0.7) 60%, transparent 100%);
+    padding: 40px 16px 16px;
+    color: white;
+    transform: translateY(100%);
+    transition: transform var(--transition-slow);
+    pointer-events: none;
+  }
+
+  .wallpaper-item:hover .score-overlay,
+  .success-item:hover .score-overlay {
+    transform: translateY(0);
+  }
+
+  .score-overlay .student-name {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 4px;
+    letter-spacing: -0.02em;
+  }
+
+  .score-overlay .student-score {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .score-overlay .student-meta {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
+  }
+
+  /* Crown badge for #1 */
+  .crown-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: var(--shadow-md), var(--shadow-accent-glow);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Reg Number Blur Overlay */
+  .reg-blur {
+    position: absolute;
+    top: 30%;
+    left: 8%;
+    right: 8%;
+    height: 18%;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Improvement Badge */
+  .improvement-badge {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, var(--success), #059669);
+    color: white;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    box-shadow: var(--shadow-sm);
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  /* Fixed Hero Banners */
+  .hero-fixed {
+    padding: 100px 20px 40px;
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .hero-banner-fixed {
+    max-width: 100%;
+    width: 100%;
+    max-height: 350px;
+    object-fit: contain;
+    display: block;
+    margin: 0 auto 30px;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+  }
+
+  .featured-banner-fixed {
+    max-width: 900px;
+    margin: 0 auto;
+    display: block;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+  }
+
+  .featured-banner-fixed img {
+    width: 100%;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Page Title */
+  .page-title {
+    text-align: center;
+    padding: 20px 20px 40px;
+  }
+
+  .page-title h1 {
+    font-family: var(--font-display);
+    font-size: clamp(1.8rem, 4vw, 2.5rem);
+    font-weight: 900;
+    color: var(--text);
+    margin-bottom: 12px;
+    letter-spacing: -0.03em;
+  }
+
+  .page-title p {
+    font-size: 1rem;
+    color: var(--text-light);
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  /* Gradient fade edges for carousel */
+  .carousel-container {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+  }
+
+  .carousel-container::before,
+  .carousel-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 80px;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  .carousel-container::before {
+    left: 0;
+    background: linear-gradient(to right, var(--bg-elevated), transparent);
+  }
+
+  .carousel-container::after {
+    right: 0;
+    background: linear-gradient(to left, var(--bg-elevated), transparent);
+  }
+
+  /* ===== LIGHTBOX / ZOOM SYSTEM ===== */
+  .lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    padding: 40px 20px;
+  }
+
+  .lightbox-overlay.active {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+  }
+
+  .lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: 0 25px 80px rgba(0,0,0,0.6);
+    transform: scale(0.9);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .lightbox-overlay.active .lightbox-content {
+    transform: scale(1);
+  }
+
+  .lightbox-content img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    display: block;
+    border-radius: var(--radius-lg);
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: -50px;
+    right: 0;
+    width: 44px;
+    height: 44px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.5rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 10;
+  }
+
+  .lightbox-close:hover {
+    background: rgba(255,255,255,0.3);
+    transform: rotate(90deg);
+  }
+
+  .lightbox-caption {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+    padding: 30px 20px 15px;
+    color: white;
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  /* Tap hint on carousel items */
+  .tap-hint {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(8px);
+    color: white;
+    padding: 8px 16px;
+    border-radius: var(--radius-full);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  .wallpaper-item:hover .tap-hint,
+  .testimonial-item:hover .tap-hint,
+  .success-item:hover .tap-hint {
+    opacity: 1;
+  }
+
+  /* Dual CTA Section */
+  .cta-dual {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 20px 16px;
+    text-align: center;
+    transition: all var(--transition);
+  }
+
+  .cta-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-lg);
+    border-color: rgba(14,165,233,0.2);
+  }
+
+  /* Fix double-tap on mobile touch screens — only suppress visual effects, not pointer events */
+  @media (hover: none) and (pointer: coarse) {
+    .cta-card:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    .cta-card .btn-primary-cta:hover,
+    .cta-card .btn-secondary-cta:hover {
+      transform: none;
+      box-shadow: none;
+    }
+    /* Ensure anchor tags remain fully tappable */
+    .cta-card a,
+    .cta-card .btn {
+      pointer-events: auto !important;
+      cursor: pointer !important;
+      -webkit-tap-highlight-color: rgba(14,165,233,0.2);
+      touch-action: manipulation;
+    }
+  }
+
+  .cta-card h3 {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .cta-card p {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .cta-card .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    transition: all var(--transition);
+    text-decoration: none;
+    white-space: nowrap;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: rgba(14,165,233,0.15);
+    cursor: pointer;
+  }
+
+  .cta-card .btn-primary-cta {
+    background: linear-gradient(135deg, var(--primary), var(--primary-deep));
+    color: white;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .cta-card .btn-primary-cta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md), var(--shadow-glow);
+  }
+
+  .cta-card .btn-secondary-cta {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .cta-card .btn-secondary-cta:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    box-shadow: var(--shadow-neon-soft);
+  }
+
+  /* TECHMED Logo in Nav */
+  .nav-logo span {
+    font-weight: 800;
+    font-size: 1.25rem;
+    color: var(--primary);
+    margin-left: 8px;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .wallpaper-item {
+      width: 200px;
+      height: 280px;
+    }
+
+    .testimonial-item {
+      width: 220px;
+      height: 400px;
+    }
+
+    .success-item {
+      width: 260px;
+      height: 340px;
+    }
+
+    .cta-dual {
+      grid-template-columns: 1fr;
+    }
+
+    .carousel-container::before,
+    .carousel-container::after {
+      width: 40px;
+    }
+
+    .lightbox-content img {
+      max-height: 75vh;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .wallpaper-item {
+      width: 160px;
+      height: 220px;
+    }
+
+    .testimonial-item {
+      width: 180px;
+      height: 320px;
+    }
+
+    .success-item {
+      width: 200px;
+      height: 260px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== LIGHTBOX OVERLAY ===== -->
+<div class="lightbox-overlay" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-content" onclick="event.stopPropagation()">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Close">&times;</button>
+    <img id="lightboxImg" src="" alt="" onclick="closeLightbox()" style="cursor: zoom-out;">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+</div>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="images/logo.png" alt="TECHMED" style="height: 40px; width: auto; border-radius: 6px;">
+    <span>TECHMED</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="predictor.html">Predictor</a>
+    <a href="intelligence.html">Intelligence</a>
+    <a href="materials.html">Resources</a>
+    <a href="testimonials.html" class="active">Records & Testimonials</a>
+    <a href="about.html">About</a>
+    <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="nav-cta" target="_blank">Join Channel</a>
+    <div class="theme-toggle-wrapper">
+      <button class="theme-toggle" id="themeToggleBtn" onclick="toggleThemeMenu()" aria-label="Toggle theme">
+        <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="theme-menu" id="themeMenu">
+        <button onclick="setTheme('light')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Light
+        </button>
+        <button onclick="setTheme('dark')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Dark
+        </button>
+        <button onclick="setTheme('system')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          System
+        </button>
+      </div>
+    </div>
+  </div>
+  <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMenu()"></div>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="predictor.html">Predictor</a>
+  <a href="intelligence.html">Intelligence</a>
+  <a href="materials.html">Resources</a>
+  <a href="testimonials.html" class="active">Records & Testimonials</a>
+  <a href="about.html">About</a>
+  <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="mobile-cta" target="_blank">Join WhatsApp Channel</a>
+</div>
+
+<!-- ===== FIXED HERO BANNERS ===== -->
+<section class="hero-fixed">
+  <img src="images/201825.jpg" alt="TECHMED Testimonial Chatbox" class="hero-banner-fixed"
+       onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+  <div style="display:none; text-align:center; padding:30px;">
+    <h2 style="color:var(--primary);">TECHMED Testimonial Chatbox</h2>
+    <p style="color:var(--text-light);">Real Students. Real Impact. Real Growth.</p>
+  </div>
+
+  <div class="featured-banner-fixed reveal">
+    <img src="images/205600.jpg" alt="From the TECHMED Ecosystem to the Top of Nigeria — Owoeye Daniella 372/400 Highest Score in Nigeria, Ebunu Ayomide 366/400 Top 20 Candidate Nationwide">
+  </div>
+</section>
+
+<!-- Page Title -->
+<section class="page-title">
+  <h1>Results & Testimonials</h1>
+  <p>Real students. Real scores. Real transformation. Ordered by highest UTME score.</p>
+</section>
+
+<!-- ===== CAROUSEL 1: 300+ SCORERS ===== -->
+<section class="carousel-section">
+  <div class="carousel-header">
+    <span class="section-label">Verified UTME Results</span>
+    <h2>300+ Scorers</h2>
+    <p>Students who scored 300 and above in their UTME examinations through the TECHMED ecosystem.</p>
+  </div>
+
+  <div class="carousel-container">
+    <div class="wallpaper-track" id="scorersTrack">
+
+      <!-- 1. Owoeye Daniella - 372 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <div class="crown-badge">👑</div>
+        <img src="images/IMG-20260604-WA0006.jpg" alt="Owoeye Daniella - 372/400" data-caption="Owoeye Daniella — 372/400 · Highest in Nigeria 2026 · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Owoeye Daniella</div>
+          <div class="student-score">372 / 400</div>
+          <div class="student-meta">Highest in Nigeria 2026 · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 2. Ebunu Ayomide Ezekiel - 366 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <div class="crown-badge">🥈</div>
+        <img src="images/IMG_20260421_085944.jpg" alt="Ebunu Ayomide Ezekiel - 366/400" data-caption="Ebunu Ayomide Ezekiel — 366/400 · Top 20 Nationwide 2026 · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Ebunu Ayomide Ezekiel</div>
+          <div class="student-score">366 / 400</div>
+          <div class="student-meta">Top 20 Nationwide 2026 · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 3. Ikpommwosa Israel Osawuwen - 351 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/IMG-20260604-WA0102.jpg" alt="Ikpommwosa Israel Osawuwen - 351/400" data-caption="Ikpommwosa Israel Osawuwen — 351/400 · 2025 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Ikpommwosa Israel Osawuwen</div>
+          <div class="student-score">351 / 400</div>
+          <div class="student-meta">2025 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 4. Monehin Maximum Oluwanimoni - 350 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/IMG-20260604-WA0098.jpg" alt="Monehin Maximum Oluwanimoni - 350/400" data-caption="Monehin Maximum Oluwanimoni — 350/400 · 2025 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Monehin Maximum Oluwanimoni</div>
+          <div class="student-score">350 / 400</div>
+          <div class="student-meta">2025 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 6. Alamu Marvellous Oluwaseyi - 336 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/201162.jpg" alt="Alamu Marvellous Oluwaseyi - 336/400" data-caption="Alamu Marvellous Oluwaseyi — 336/400 · TECHMED Inner Circle · 2026 UTME">
+<div class="score-overlay">
+          <div class="student-name">Alamu Marvellous Oluwaseyi</div>
+          <div class="student-score">336 / 400</div>
+          <div class="student-meta">TECHMED Inner Circle · 2026 UTME</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 7. Adefioye Blessing Ayomide - 334 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/245621.jpg" alt="Adefioye Blessing Ayomide - 334/400" data-caption="Adefioye Blessing Ayomide — 334/400 · 2026 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Adefioye Blessing Ayomide</div>
+          <div class="student-score">334 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 8. Akasha David Onoriode - 330 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/245793.jpg" alt="Akasha David Onoriode - 330/400" data-caption="Akasha David Onoriode — 330/400 · 2025 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Akasha David Onoriode</div>
+          <div class="student-score">330 / 400</div>
+          <div class="student-meta">2025 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 9. Chinemelum Adaeze Precious - 327 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/245788.jpg" alt="Chinemelum Adaeze Precious - 327/400" data-caption="Chinemelum Adaeze Precious — 327/400 · 2026 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Chinemelum Adaeze Precious</div>
+          <div class="student-score">327 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 10. Shiniyi-Goja Dooyum Anselm - 320 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/245790.jpg" alt="Shiniyi-Goja Dooyum Anselm - 320/400" data-caption="Shiniyi-Goja Dooyum Anselm — 320/400 · 2026 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Shiniyi-Goja Dooyum Anselm</div>
+          <div class="student-score">320 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 11. Gabriel Kelvin Oghenerukewe - 317 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/245789.jpg" alt="Gabriel Kelvin Oghenerukewe - 317/400" data-caption="Gabriel Kelvin Oghenerukewe — 317/400 · 2026 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Gabriel Kelvin Oghenerukewe</div>
+          <div class="student-score">317 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 12. Ndika Andrew Chukwuemeka - 317 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        
+        <img src="images/IMG-20260424-WA0093.jpg" alt="Ndika Andrew Chukwuemeka - 317/400" data-caption="Ndika Andrew Chukwuemeka — 317/400 · 2026 UTME · TECHMED Ecosystem">
+<div class="score-overlay">
+          <div class="student-name">Ndika Andrew Chukwuemeka</div>
+          <div class="student-score">317 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 13. Sadiq Oluwatoyin Fathia - 336 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/245795.jpg" alt="Sadiq Oluwatoyin Fathia - 336/400" data-caption="Sadiq Oluwatoyin Fathia — 336/400 · 2025 UTME · TECHMED Ecosystem">
+        <div class="score-overlay">
+          <div class="student-name">Sadiq Oluwatoyin Fathia</div>
+          <div class="student-score">336 / 400</div>
+          <div class="student-meta">2025 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 14. Awoleke Fortune Mololuwa - 330 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/245791.jpg" alt="Awoleke Fortune Mololuwa - 330/400" data-caption="Awoleke Fortune Mololuwa — 330/400 · 2026 UTME · TECHMED Ecosystem">
+        <div class="score-overlay">
+          <div class="student-name">Awoleke Fortune Mololuwa</div>
+          <div class="student-score">330 / 400</div>
+          <div class="student-meta">2026 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- 15. Oyekola Semilore Dorcas - 304 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/245792.jpg" alt="Oyekola Semilore Dorcas - 304/400" data-caption="Oyekola Semilore Dorcas — 304/400 · 2025 UTME · TECHMED Ecosystem">
+        <div class="score-overlay">
+          <div class="student-name">Oyekola Semilore Dorcas</div>
+          <div class="student-score">304 / 400</div>
+          <div class="student-meta">2025 UTME · TECHMED Ecosystem</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CAROUSEL 2: APPRECIATION & GRATITUDE ===== -->
+<section class="carousel-section">
+  <div class="carousel-header">
+    <span class="section-label" style="color: var(--success);">Community Voices</span>
+    <h2>Appreciation & Gratitude</h2>
+    <p>Messages from students whose lives were transformed by the TECHMED ecosystem.</p>
+  </div>
+
+  <div class="carousel-container">
+    <div class="wallpaper-track wallpaper-track-reverse" id="appreciationTrack">
+      
+      <!-- Testimonial Page 2 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_02.jpg" alt="TECHMED Student Testimonial 2" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 3 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_03.jpg" alt="TECHMED Student Testimonial 3" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 4 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_04.jpg" alt="TECHMED Student Testimonial 4" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 5 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_05.jpg" alt="TECHMED Student Testimonial 5" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 6 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_06.jpg" alt="TECHMED Student Testimonial 6" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 7 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_07.jpg" alt="TECHMED Student Testimonial 7" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 8 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_08.jpg" alt="TECHMED Student Testimonial 8" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 9 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_09.jpg" alt="TECHMED Student Testimonial 9" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 10 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_10.jpg" alt="TECHMED Student Testimonial 10" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 11 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_11.jpg" alt="TECHMED Student Testimonial 11" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 12 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_12.jpg" alt="TECHMED Student Testimonial 12" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 13 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_13.jpg" alt="TECHMED Student Testimonial 13" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 14 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_14.jpg" alt="TECHMED Student Testimonial 14" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 15 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_15.jpg" alt="TECHMED Student Testimonial 15" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 16 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_16.jpg" alt="TECHMED Student Testimonial 16" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 17 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_17.jpg" alt="TECHMED Student Testimonial 17" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 18 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_18.jpg" alt="TECHMED Student Testimonial 18" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 19 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_19.jpg" alt="TECHMED Student Testimonial 19" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 20 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_20.jpg" alt="TECHMED Student Testimonial 20" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 21 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_21.jpg" alt="TECHMED Student Testimonial 21" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 22 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_22.jpg" alt="TECHMED Student Testimonial 22" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 23 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_23.jpg" alt="TECHMED Student Testimonial 23" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 24 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_24.jpg" alt="TECHMED Student Testimonial 24" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 25 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_25.jpg" alt="TECHMED Student Testimonial 25" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 26 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_26.jpg" alt="TECHMED Student Testimonial 26" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 27 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_27.jpg" alt="TECHMED Student Testimonial 27" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 28 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_28.jpg" alt="TECHMED Student Testimonial 28" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 29 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_29.jpg" alt="TECHMED Student Testimonial 29" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 30 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_30.jpg" alt="TECHMED Student Testimonial 30" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 31 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_31.jpg" alt="TECHMED Student Testimonial 31" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 32 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_32.jpg" alt="TECHMED Student Testimonial 32" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 33 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_33.jpg" alt="TECHMED Student Testimonial 33" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 34 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_34.jpg" alt="TECHMED Student Testimonial 34" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 35 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_35.jpg" alt="TECHMED Student Testimonial 35" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 36 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_36.jpg" alt="TECHMED Student Testimonial 36" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+      
+      <!-- Testimonial Page 37 -->
+      <div class="wallpaper-item" onclick="openLightbox(this)">
+        <img src="images/testimonial_images/testimonial_page_37.jpg" alt="TECHMED Student Testimonial 37" data-caption="TECHMED Community Testimonial">
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CAROUSEL 3: SUCCESS STORIES (Before/After) ===== -->
+<section class="carousel-section">
+  <div class="carousel-header">
+    <span class="section-label" style="color: var(--primary-light);">Transformation</span>
+    <h2>Success Stories</h2>
+    <p>Students who improved their scores dramatically through consistent preparation with TECHMED.</p>
+  </div>
+
+  <div class="carousel-container">
+    <div class="wallpaper-track wallpaper-track-slow" id="successTrack">
+
+      <!-- Lawal Daniel: 292 → 313 (+21) -->
+      <div class="success-item" onclick="openLightbox(this)">
+        <div class="improvement-badge">+21 POINTS</div>
+        <img src="images/245794.jpg" alt="Lawal Daniel Adekunle - Improved from 292 to 313" data-caption="Lawal Daniel Adekunle — 292 → 313 (+21 points) · 2024 → 2025 UTME">
+        <div class="score-overlay">
+          <div class="student-name">Lawal Daniel Adekunle</div>
+          <div class="student-score">292 → 313</div>
+          <div class="student-meta">2024 → 2025 UTME · +21 Points Improvement</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+      <!-- Chibuike Paul: 219 → 302 (+83) -->
+      <div class="success-item" onclick="openLightbox(this)">
+        <div class="improvement-badge" style="background: linear-gradient(135deg, var(--accent), var(--accent-deep));">+83 POINTS 🔥</div>
+        <img src="images/245617.jpg" alt="Chibuike Paul Ubah - Improved from 219 to 302" data-caption="Chibuike Paul Ubah — 219 → 302 (+83 points) · 2024 → 2025 UTME">
+        <div class="score-overlay">
+          <div class="student-name">Chibuike Paul Ubah</div>
+          <div class="student-score">219 → 302</div>
+          <div class="student-meta">2024 → 2025 UTME · +83 Points Improvement</div>
+        </div>
+        <div class="tap-hint">👆 Tap to zoom</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===== DUAL CTA SECTION ===== -->
+<section class="cta-section" style="padding: 80px 20px;">
+  <div class="cta-dual">
+    <div class="cta-card">
+      <h3>Tap to View More</h3>
+      <p>See more results, testimonials, and success stories from the TECHMED community.</p>
+      <a href="https://wa.me/p/35448148438165288/2347044255045" class="btn btn-primary-cta" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        View on WhatsApp
+      </a>
+    </div>
+
+    <!-- Card 1b: Additional View More -->
+    <div class="cta-card">
+      <h3>More Results</h3>
+      <p>Additional success stories and high scores from the TECHMED community.</p>
+      <a href="https://wa.me/p/35643042342008543/2347044255045" class="btn btn-primary-cta" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        View on WhatsApp
+      </a>
+    </div>
+
+    <div class="cta-card">
+      <h3>Submit Your Story</h3>
+      <p>Share your JAMB success story and inspire others in the community.</p>
+      <a href="https://wa.me/2347044255045?text=Hi%20Tutor%20TechMed%2C%20I%20want%20to%20share%20my%20testimonial" class="btn btn-secondary-cta" target="_blank" rel="noopener noreferrer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+        Share Your Story
+      </a>
+    </div>
+
+    <div class="cta-card">
+      <h3>Predict Your Admission</h3>
+      <p>Use our AI-powered predictor to calculate your chances of admission into any Nigerian university.</p>
+      <a href="https://techmed.pages.dev/predictor" class="btn btn-primary-cta" target="_blank" rel="noopener noreferrer" style="background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: #1a0a00;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Try Predictor
+      </a>
+    </div>
+
+    <div class="cta-card">
+      <h3>Explore Resources</h3>
+      <p>Access past questions, study materials, and Post-UTME prep resources curated by TECHMED.</p>
+      <a href="https://techmed.pages.dev/materials" class="btn btn-secondary-cta" target="_blank" rel="noopener noreferrer" style="border-color: var(--accent); color: var(--accent);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Browse Materials
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" style="margin-top:0;">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h3>TECHMED</h3>
+      <p>Think Smart. Perform Elite.</p>
+    </div>
+    <div class="footer-links">
+      <h4>Platform</h4>
+      <a href="predictor.html">Predictor</a>
+      <a href="intelligence.html">Intelligence</a>
+      <a href="materials.html">Resources</a>
+    </div>
+    <div class="footer-links">
+      <h4>Support</h4>
+      <a href="https://wa.me/2347044255045" target="_blank">Contact Tutor TechMed</a>
+      <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" target="_blank">Join Channel</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>2026 TECHMED. All rights reserved.</p>
+  </div>
+</footer>
+
+
+<script>
+// ===== THEME TOGGLE =====
+function toggleThemeMenu() {
+  const dropdown = document.getElementById('themeMenu');
+  if (dropdown) dropdown.classList.toggle('active');
+}
+
+function setTheme(mode) {
+  if (mode === 'system') {
+    localStorage.removeItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  } else {
+    localStorage.setItem('theme', mode);
+    document.documentElement.setAttribute('data-theme', mode);
+  }
+  const dropdown = document.getElementById('themeMenu');
+  if (dropdown) dropdown.classList.remove('active');
+}
+
+// Close theme dropdown when tapping outside
+document.addEventListener('click', function(e) {
+  const dropdown = document.getElementById('themeMenu');
+  const btn = document.getElementById('themeToggleBtn');
+  if (dropdown && dropdown.classList.contains('active')) {
+    if (!dropdown.contains(e.target) && e.target !== btn) {
+      dropdown.classList.remove('active');
+    }
+  }
+});
+
+// ===== MOBILE MENU =====
+function toggleMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('mobileOverlay');
+  const btn = document.getElementById('hamburgerBtn');
+  if (!menu || !overlay) return;
+
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    closeMenu();
+  } else {
+    menu.classList.add('open');
+    overlay.classList.add('open');
+    if (btn) btn.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+
+function closeMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('mobileOverlay');
+  const btn = document.getElementById('hamburgerBtn');
+  if (menu) menu.classList.remove('open');
+  if (overlay) overlay.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// ===== INFINITE SCROLL DUPLICATION =====
+function duplicateTrack(trackId) {
+  const track = document.getElementById(trackId);
+  if (!track) return;
+
+  const items = track.innerHTML;
+  track.innerHTML = items + items; // Duplicate for seamless loop
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  duplicateTrack('scorersTrack');
+  duplicateTrack('appreciationTrack');
+  // successTrack has enough items naturally
+});
+
+// ===== LIGHTBOX / ZOOM SYSTEM =====
+// Carousel keeps scrolling even when lightbox is open!
+
+function openLightbox(element) {
+  const img = element.querySelector('img');
+  const lightbox = document.getElementById('lightbox');
+  const lightboxImg = document.getElementById('lightboxImg');
+  const lightboxCaption = document.getElementById('lightboxCaption');
+
+  if (!img || !lightbox || !lightboxImg) return;
+
+  lightboxImg.src = img.src;
+  lightboxImg.alt = img.alt || '';
+  lightboxCaption.textContent = img.getAttribute('data-caption') || img.alt || '';
+
+  lightbox.classList.add('active');
+  document.body.style.overflow = 'hidden'; // Prevent body scroll only
+}
+
+function closeLightbox() {
+  const lightbox = document.getElementById('lightbox');
+  if (!lightbox) return;
+
+  lightbox.classList.remove('active');
+  document.body.style.overflow = '';
+
+  // Clear src after animation
+  setTimeout(() => {
+    const lightboxImg = document.getElementById('lightboxImg');
+    if (lightboxImg && !lightbox.classList.contains('active')) {
+      lightboxImg.src = '';
+    }
+  }, 300);
+}
+
+// Close on Escape key
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeLightbox();
+  }
+});
+
+// Lightbox close options:
+// 1. Tap the X button
+// 2. Tap the zoomed image itself
+// 3. Tap outside the image (on dark background)
+// 4. Press Escape key
+</script>
+</body>
+</html>
