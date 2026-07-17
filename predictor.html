@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0H63K2GWX5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-0H63K2GWX5');
+</script>
+<title>TechMed Admission Predictor — Real University Formulas</title>
+<meta name="description" content="Predict your admission chances using real university aggregate formulas. 30+ universities. Verified cutoffs for 2025/2026.">
+<!-- EARLY THEME — must run before stylesheet loads to prevent white flash -->
+<script>
+(function(){
+  try {
+    var saved = localStorage.getItem('techmed-theme');
+    if (saved && saved !== 'system') {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="images/logo.jpg" alt="TechMed" style="height: 40px; width: auto; border-radius: 6px;">
+    <span style="font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-left: 8px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: 0.15em; text-transform: uppercase;">TECHMED</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="predictor.html" class="active">Predictor</a>
+    <a href="intelligence.html">Intelligence</a>
+    <a href="materials.html">Resources</a>
+    <a href="testimonials.html">Records & Testimonials</a>
+    <a href="about.html">About</a>
+    <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="nav-cta" target="_blank">Join Channel</a>
+    <div class="theme-toggle-wrapper">
+      <button class="theme-toggle" id="themeToggleBtn" onclick="toggleThemeMenu()" aria-label="Toggle theme">
+        <svg class="icon-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+        <svg class="icon-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+      <div class="theme-menu" id="themeMenu">
+        <button onclick="setTheme('light')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+          Light
+        </button>
+        <button onclick="setTheme('dark')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+          Dark
+        </button>
+        <button onclick="setTheme('system')" class="theme-option">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+          System
+        </button>
+      </div>
+    </div>
+  </div>
+  <button class="hamburger" id="hamburgerBtn" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<div class="mobile-overlay" id="mobileOverlay" onclick="closeMenu()"></div>
+<div class="mobile-menu" id="mobileMenu">
+  <a href="index.html">Home</a>
+  <a href="predictor.html" class="active">Predictor</a>
+  <a href="intelligence.html">Intelligence</a>
+  <a href="materials.html">Resources</a>
+  <a href="testimonials.html">Records & Testimonials</a>
+  <a href="about.html">About</a>
+  <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="mobile-cta" target="_blank">Join WhatsApp Channel</a>
+</div>
+
+<section class="predictor-hero">
+  <h1>Will You Get Admitted?</h1>
+  <p>Enter your JAMB score, O'Level grades, and target university. We calculate your exact admission probability using real aggregate formulas — not guesses.</p>
+</section>
+
+<div class="form-card">
+  <div class="form-group">
+    <label>Full Name</label>
+    <input type="text" id="iname" placeholder="Your full name">
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>Target University *</label>
+      <select id="iuni">
+        <option value="">Select University</option>
+        <option value="UNILAG">University of Lagos (UNILAG)</option>
+        <option value="UI">University of Ibadan (UI)</option>
+        <option value="OAU">Obafemi Awolowo University (OAU)</option>
+        <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+        <option value="UNN">University of Nigeria (UNN)</option>
+        <option value="UNIBEN">University of Benin (UNIBEN)</option>
+        <option value="UNIZIK">Nnamdi Azikiwe University (UNIZIK)</option>
+        <option value="ABU">Ahmadu Bello University (ABU)</option>
+        <option value="FUTA">Federal University of Tech, Akure (FUTA)</option>
+        <option value="FUTMINNA">Federal University of Tech, Minna (FUTMINNA)</option>
+        <option value="FUTO">Federal University of Tech, Owerri (FUTO)</option>
+        <option value="FUOYE">Federal University, Oye-Ekiti (FUOYE)</option>
+        <option value="UNIPORT">University of Port Harcourt (UNIPORT)</option>
+        <option value="UNICAL">University of Calabar (UNICAL)</option>
+        <option value="UNIJOS">University of Jos (UNIJOS)</option>
+        <option value="BUK">Bayero University Kano (BUK)</option>
+        <option value="FUNAAB">Federal Univ. of Agriculture, Abeokuta (FUNAAB)</option>
+        <option value="UNIABUJA">University of Abuja (UNIABUJA)</option>
+        <option value="FUD">Federal University Dutse (FUD)</option>
+        <option value="FUL">Federal University Lokoja (FUL)</option>
+        <option value="FUK">Federal University Kashere (FUK)</option>
+        <option value="FUWUKARI">Federal University Wukari (FUWUKARI)</option>
+        <option value="UNIMAID">University of Maiduguri (UNIMAID)</option>
+        <option value="FED_LAFIA">Federal University of Lafia (FED-LAFIA)</option>
+        <option value="FED_DUTSINMA">Federal University Dutsin-Ma (FED-DUTSINMA)</option>
+        <option value="LASU">Lagos State University (LASU)</option>
+        <option value="OOU">Olabisi Onabanjo University (OOU)</option>
+        <option value="EKSU">Ekiti State University (EKSU)</option>
+        <option value="DELSU">Delta State University (DELSU)</option>
+        <option value="AAU">Ambrose Alli University (AAU)</option>
+        <option value="UNIOSUN">Osun State University (UNIOSUN)</option>
+        <option value="UNIMED">University of Medical Sciences, Ondo (UNIMED)</option>
+        <option value="COOU">Chukwuemeka Odumegwu Ojukwu University (COOU)</option>
+        <option value="BSU">Benue State University (BSU)</option>
+        <option value="ABSU">Abia State University (ABSU)</option>
+        <option value="EBSU">Ebonyi State University (EBSU)</option>
+        <option value="ESUT">Enugu State University of Sci. &amp; Tech. (ESUT)</option>
+        <option value="UNIUYO">University of Uyo (UNIUYO)</option>
+        <option value="FUMMSA">Fed. Univ. of Medicine &amp; Med. Sci., Abeokuta (FUMMSA)</option>
+        <option value="BMU">Bayelsa Medical University (BMU)</option>
+        <option value="FUHSI">Fed. Univ. of Health Sciences, Ila-Orangun (FUHSI)</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label>Course of Study *</label>
+      <select id="icourse">
+        <option value="">Select Course</option>
+        <optgroup label="Medicine &amp; Health Sciences">
+          <option value="medicine and surgery">Medicine and Surgery</option>
+          <option value="dentistry">Dentistry</option>
+          <option value="dentistry and dental surgery">Dentistry and Dental Surgery</option>
+          <option value="pharmacy">Pharmacy</option>
+          <option value="pharmacy and pharmacology">Pharmacy and Pharmacology</option>
+          <option value="nursing">Nursing</option>
+          <option value="nursing science">Nursing Science</option>
+          <option value="medical laboratory science">Medical Laboratory Science</option>
+          <option value="radiography">Radiography</option>
+          <option value="physiotherapy">Physiotherapy</option>
+          <option value="optometry">Optometry</option>
+          <option value="anatomy">Anatomy</option>
+          <option value="physiology">Physiology</option>
+          <option value="pharmacology">Pharmacology</option>
+          <option value="medical biochemistry">Medical Biochemistry</option>
+          <option value="medical rehabilitation">Medical Rehabilitation</option>
+          <option value="prosthetics and orthotics">Prosthetics and Orthotics</option>
+          <option value="nutrition and dietetics">Nutrition and Dietetics</option>
+          <option value="public health">Public Health</option>
+          <option value="environmental health science">Environmental Health Science</option>
+          <option value="health information management">Health Information Management</option>
+          <option value="veterinary medicine">Veterinary Medicine</option>
+        </optgroup>
+        <optgroup label="Law">
+          <option value="law">Law</option>
+        </optgroup>
+        <optgroup label="Engineering &amp; Technology">
+          <option value="computer engineering">Computer Engineering</option>
+          <option value="electrical engineering">Electrical Engineering</option>
+          <option value="mechanical engineering">Mechanical Engineering</option>
+          <option value="civil engineering">Civil Engineering</option>
+          <option value="mechatronics engineering">Mechatronics Engineering</option>
+          <option value="petroleum engineering">Petroleum Engineering</option>
+          <option value="chemical engineering">Chemical Engineering</option>
+          <option value="materials and metallurgical engineering">Materials &amp; Metallurgical Engineering</option>
+          <option value="agricultural engineering">Agricultural Engineering</option>
+          <option value="food engineering">Food Engineering</option>
+          <option value="water resources engineering">Water Resources Engineering</option>
+          <option value="marine engineering">Marine Engineering</option>
+          <option value="aeronautic engineering">Aeronautic Engineering</option>
+          <option value="architecture">Architecture</option>
+          <option value="building">Building</option>
+          <option value="quantity surveying">Quantity Surveying</option>
+          <option value="estate management">Estate Management</option>
+          <option value="urban and regional planning">Urban and Regional Planning</option>
+          <option value="surveying and geoinformatics">Surveying and Geoinformatics</option>
+        </optgroup>
+        <optgroup label="Computing &amp; Sciences">
+          <option value="computer science">Computer Science</option>
+          <option value="microbiology">Microbiology</option>
+          <option value="biochemistry">Biochemistry</option>
+          <option value="biotechnology">Biotechnology</option>
+          <option value="forensic science">Forensic Science</option>
+          <option value="industrial chemistry">Industrial Chemistry</option>
+          <option value="industrial mathematics">Industrial Mathematics</option>
+          <option value="industrial physics">Industrial Physics</option>
+          <option value="science laboratory technology">Science Laboratory Technology</option>
+          <option value="biological sciences">Biological Sciences</option>
+          <option value="chemistry">Chemistry</option>
+          <option value="physics">Physics</option>
+          <option value="mathematics">Mathematics</option>
+          <option value="statistics">Statistics</option>
+          <option value="geology">Geology</option>
+          <option value="geography">Geography</option>
+        </optgroup>
+        <optgroup label="Social Sciences &amp; Humanities">
+          <option value="mass communication">Mass Communication</option>
+          <option value="accounting">Accounting</option>
+          <option value="economics">Economics</option>
+          <option value="business administration">Business Administration</option>
+          <option value="english">English</option>
+          <option value="sociology">Sociology</option>
+          <option value="psychology">Psychology</option>
+          <option value="political science">Political Science</option>
+          <option value="public administration">Public Administration</option>
+          <option value="history and international studies">History and International Studies</option>
+          <option value="philosophy">Philosophy</option>
+          <option value="religious studies">Religious Studies</option>
+          <option value="theatre arts">Theatre Arts</option>
+          <option value="music">Music</option>
+          <option value="fine and applied arts">Fine and Applied Arts</option>
+          <option value="creative arts">Creative Arts</option>
+          <option value="visual arts">Visual Arts</option>
+          <option value="library and information science">Library and Information Science</option>
+          <option value="actuarial science">Actuarial Science</option>
+          <option value="banking and finance">Banking and Finance</option>
+          <option value="insurance">Insurance</option>
+          <option value="marketing">Marketing</option>
+          <option value="industrial relations and personnel management">Industrial Relations &amp; Personnel Management</option>
+          <option value="entrepreneurship">Entrepreneurship</option>
+        </optgroup>
+        <optgroup label="Education">
+          <option value="education">Education</option>
+          <option value="business education">Business Education</option>
+          <option value="adult education">Adult Education</option>
+          <option value="guidance and counselling">Guidance and Counselling</option>
+          <option value="special education">Special Education</option>
+          <option value="early childhood education">Early Childhood Education</option>
+          <option value="primary education">Primary Education</option>
+          <option value="physical and health education">Physical and Health Education</option>
+          <option value="health education">Health Education</option>
+          <option value="human kinetics">Human Kinetics</option>
+          <option value="computer education">Computer Education</option>
+          <option value="educational technology">Educational Technology</option>
+          <option value="library and information science education">Library and Information Science Education</option>
+          <option value="social studies education">Social Studies Education</option>
+          <option value="economics education">Economics Education</option>
+          <option value="geography education">Geography Education</option>
+          <option value="history education">History Education</option>
+          <option value="religious studies education">Religious Studies Education</option>
+          <option value="english education">English Education</option>
+          <option value="french education">French Education</option>
+          <option value="igbo education">Igbo Education</option>
+          <option value="yoruba education">Yoruba Education</option>
+          <option value="hausa education">Hausa Education</option>
+          <option value="music education">Music Education</option>
+          <option value="fine arts education">Fine Arts Education</option>
+        </optgroup>
+        <optgroup label="Agriculture &amp; Natural Resources">
+          <option value="agriculture">Agriculture</option>
+          <option value="food science">Food Science</option>
+          <option value="fisheries">Fisheries</option>
+          <option value="forestry">Forestry</option>
+          <option value="wildlife management">Wildlife Management</option>
+          <option value="aquaculture">Aquaculture</option>
+          <option value="animal science">Animal Science</option>
+          <option value="crop science">Crop Science</option>
+          <option value="soil science">Soil Science</option>
+          <option value="agricultural economics">Agricultural Economics</option>
+          <option value="agricultural extension">Agricultural Extension</option>
+          <option value="home science">Home Science</option>
+        </optgroup>
+      </select>
+    </div>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>JAMB Score *</label>
+      <input type="number" id="ijamb" min="0" max="400" placeholder="e.g. 280">
+    </div>
+    <div class="form-group" id="putmeWrap">
+      <label>Post UTME Score</label>
+      <input type="number" id="iputme" min="0" max="100" placeholder="Leave blank if not yet written">
+      <div class="form-hint" id="putmeHint">Enter your actual Post UTME score when available</div>
+    </div>
+  </div>
+
+    <div class="form-group">
+    <label>O'Level Grades (5 core subjects — English, Maths, and 3 others)</label>
+    <div class="form-hint" id="olevelHint" style="margin-bottom:8px; color:var(--text-light); font-size:0.85rem;">Required for admission screening at all universities</div>
+
+    <!-- Dynamic Labels -->
+    <div id="olevelLabelRow" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 4px; font-size: 0.75rem; color: var(--text-light); font-weight: 600;">
+      <span id="lbl_ge">English</span>
+      <span id="lbl_gm">Maths</span>
+      <span id="lbl_g3">Subject 3</span>
+      <span id="lbl_g4">Subject 4</span>
+      <span id="lbl_g5">Subject 5</span>
+    </div>
+
+    <div class="grade-selects">
+      <select id="ge"><option value="">—</option><option value="A1">A1</option><option value="B2">B2</option><option value="B3">B3</option><option value="C4">C4</option><option value="C5">C5</option><option value="C6">C6</option><option value="D7">D7</option><option value="E8">E8</option><option value="F9">F9</option></select>
+      <select id="gm"><option value="">—</option><option value="A1">A1</option><option value="B2">B2</option><option value="B3">B3</option><option value="C4">C4</option><option value="C5">C5</option><option value="C6">C6</option><option value="D7">D7</option><option value="E8">E8</option><option value="F9">F9</option></select>
+      <select id="g3"><option value="">—</option><option value="A1">A1</option><option value="B2">B2</option><option value="B3">B3</option><option value="C4">C4</option><option value="C5">C5</option><option value="C6">C6</option><option value="D7">D7</option><option value="E8">E8</option><option value="F9">F9</option></select>
+      <select id="g4"><option value="">—</option><option value="A1">A1</option><option value="B2">B2</option><option value="B3">B3</option><option value="C4">C4</option><option value="C5">C5</option><option value="C6">C6</option><option value="D7">D7</option><option value="E8">E8</option><option value="F9">F9</option></select>
+      <select id="g5"><option value="">—</option><option value="A1">A1</option><option value="B2">B2</option><option value="B3">B3</option><option value="C4">C4</option><option value="C5">C5</option><option value="C6">C6</option><option value="D7">D7</option><option value="E8">E8</option><option value="F9">F9</option></select>
+    </div>
+  </div>
+
+</div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label>O'Level Sittings</label>
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="setSit(1,this)">One Sitting</button>
+        <button class="toggle-btn" onclick="setSit(2,this)">Two Sittings</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>State of Origin</label>
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="setIndigene(false,this)">Non-Indigene</button>
+        <button class="toggle-btn" onclick="setIndigene(true,this)">Indigene</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="pbtn" class="btn-primary" style="width:100%; margin-top:8px;" onclick="run()">Predict My Admission Chances</button>
+</div>
+
+<!-- Results -->
+<div id="rs" class="results-v2">
+  <div class="result-header">
+    <h2 id="rname"></h2>
+    <p class="sub" id="rsub"></p>
+    <p class="sub" id="rformula" style="font-size:0.8rem; color:var(--text-light); margin-top:4px;"></p>
+    <div id="rposition" class="position-badge"></div>
+    <p id="rpositionDesc" style="font-size:0.85rem; color:var(--text-light); margin-top:4px;"></p>
+  </div>
+
+  <div class="score-grid">
+    <div class="score-box">
+      <div class="label">JAMB Score</div>
+      <div class="value" id="sc-jamb"></div>
+    </div>
+    <div class="score-box">
+      <div class="label">Your Aggregate</div>
+      <div class="value" id="sc-agg"></div>
+    </div>
+    <div class="score-box">
+      <div class="label">Cutoff Needed</div>
+      <div class="value" id="sc-needed"></div>
+    </div>
+    <div class="score-box" style="background: linear-gradient(135deg, var(--primary), var(--accent)); color: white;">
+      <div class="label" id="rchanceLabel">Admission Chance</div>
+      <div class="value" id="rchance" style="font-size: 2rem; font-weight: 800;"></div>
+    </div>
+  </div>
+
+  <div id="breakdownBox" class="info-box" style="display:none;"></div>
+
+  <div id="targetBox" class="info-box"></div>
+
+  <div class="cluster-bars">
+    <div id="clusterElite" class="cluster-bar elite" style="width:0%">Elite</div>
+    <div id="clusterStrong" class="cluster-bar strong" style="width:0%">Strong</div>
+    <div id="clusterComp" class="cluster-bar competitive" style="width:0%">Comp</div>
+    <div id="clusterBorder" class="cluster-bar borderline" style="width:0%">Border</div>
+    <div id="clusterBelow" class="cluster-bar below" style="width:0%">Below</div>
+  </div>
+
+  <div id="minPassWarning" class="info-box" style="display:none; border-left: 4px solid var(--danger); background: rgba(220, 38, 38, 0.05);">
+    <h4 style="color: var(--danger);">⚠ Minimum Post UTME Pass Warning</h4>
+    <p id="minPassText" style="margin: 0; color: var(--text);"></p>
+  </div>
+
+  <div class="analysis-box">
+    <h4>Detailed Analysis & Recommendations</h4>
+    <pre id="aitext"></pre>
+  </div>
+
+  <div id="ctaBox" class="whatsapp-cta" style="display:none;"></div>
+
+  <div style="text-align:center; margin-top:24px;">
+    <button class="btn-secondary" onclick="resetForm()">Start New Prediction</button>
+  </div>
+</div>
+
+
+<!-- Bottom Navigation CTAs -->
+<section class="predictor-cta-section" style="padding: 60px 24px; max-width: 900px; margin: 0 auto; text-align: center;">
+  <h2 style="font-family: var(--font-display); font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800; color: var(--text); margin-bottom: 12px; letter-spacing: -0.03em;">Continue Your Journey</h2>
+  <p style="font-size: 1rem; color: var(--text-light); margin-bottom: 32px; line-height: 1.7;">Explore more tools and resources to secure your admission.</p>
+  <div style="display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;">
+    <a href="intelligence.html" class="btn-primary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Explore Admission Intelligence Directory
+    </a>
+    <a href="materials.html" class="btn-secondary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      Access Free Quizzes
+    </a>
+    <a href="testimonials.html" class="btn-secondary">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      See Success Stories
+    </a>
+  </div>
+</section>
+
+<!-- Proof Bar -->
+<section class="proof-bar" style="padding: 40px 24px; background: var(--surface); border-top: 1px solid var(--border);">
+  <div style="max-width: 900px; margin: 0 auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 32px; text-align: center;">
+    <div>
+      <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">372</div>
+      <div style="font-size: 0.85rem; color: var(--text-light);">Highest JAMB 2026</div>
+    </div>
+    <div>
+      <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">5,000+</div>
+      <div style="font-size: 0.85rem; color: var(--text-light);">Community Members</div>
+    </div>
+    <div>
+      <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">100+</div>
+      <div style="font-size: 0.85rem; color: var(--text-light);">Scored 300+</div>
+    </div>
+    <div>
+      <div style="font-size: 2rem; font-weight: 800; color: var(--primary);">30+</div>
+      <div style="font-size: 0.85rem; color: var(--text-light);">Universities Covered</div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer" style="margin-top:0;">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <h3 style="font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: 0.15em; text-transform: uppercase;">TECHMED</h3>
+      <p>Nigeria's most trusted student-centered ecosystem</p>
+      <div class="footer-social">
+        <a href="https://www.facebook.com/TheTechmedGuy" target="_blank" aria-label="Facebook">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+        <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" target="_blank" aria-label="WhatsApp">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <h4>Platform</h4>
+      <a href="predictor.html">Predictor</a>
+      <a href="intelligence.html">Admission Intelligence Directory</a>
+      <a href="materials.html">Resources</a>
+      <a href="testimonials.html">Records & Testimonials</a>
+    </div>
+    <div class="footer-links">
+      <h4>Company</h4>
+      <a href="about.html">About</a>
+      <a href="about.html#founder">Founder</a>
+      <a href="testimonials.html">Success Stories</a>
+    </div>
+    <div class="footer-links">
+      <h4>Support</h4>
+      <a href="https://wa.me/2347044255045" target="_blank">Contact Tutor TechMed</a>
+      <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" target="_blank">Join Channel</a>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>2026 TechMed. Think Smart. Perform Elite. All rights reserved.</p>
+  </div>
+</footer>
+
+<script src="js/engine.js"></script>
+<script>
+// ===== THEME & MOBILE MENU =====
+function initTheme() {
+  try {
+    const saved = localStorage.getItem('techmed-theme');
+    if (saved && saved !== 'system') {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      // Default to system preference
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+  } catch (e) {
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+  // Listen for OS theme changes (when in system mode)
+  try {
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+      const current = localStorage.getItem('techmed-theme');
+      if (!current || current === 'system') {
+        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+        if (typeof updateThemeIcons === 'function') updateThemeIcons();
+      }
+    });
+  } catch(e){}
+}
+
+function toggleThemeMenu() {
+  const menu = document.getElementById('themeMenu');
+  if (menu) menu.classList.toggle('active');
+}
+
+// Close theme menu when clicking outside
+document.addEventListener('click', function(e) {
+  const wrapper = document.querySelector('.theme-toggle-wrapper');
+  if (wrapper && !wrapper.contains(e.target)) {
+    const menu = document.getElementById('themeMenu');
+    if (menu) menu.classList.remove('active');
+  }
+});
+
+function setTheme(mode) {
+  localStorage.setItem('techmed-theme', mode);
+  if (mode === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  } else {
+    document.documentElement.setAttribute('data-theme', mode);
+  }
+  updateThemeIcons();
+  const menu = document.getElementById('themeMenu');
+  if (menu) menu.classList.remove('active');
+}
+
+function updateThemeIcons() {
+  const current = document.documentElement.getAttribute('data-theme') || 'light';
+  const sunIcons = document.querySelectorAll('.icon-sun');
+  const moonIcons = document.querySelectorAll('.icon-moon');
+  sunIcons.forEach(el => el.style.display = current === 'dark' ? 'none' : 'block');
+  moonIcons.forEach(el => el.style.display = current === 'dark' ? 'block' : 'none');
+}
+
+initTheme();
+updateThemeIcons();
+
+// Mobile menu
+function toggleMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('mobileOverlay');
+  const btn = document.getElementById('hamburgerBtn');
+  if (!menu) return;
+  const isOpen = menu.classList.contains('open');
+  if (isOpen) {
+    menu.classList.remove('open');
+    overlay && overlay.classList.remove('open');
+    btn && btn.classList.remove('active');
+    document.body.style.overflow = '';
+  } else {
+    menu.classList.add('open');
+    overlay && overlay.classList.add('open');
+    btn && btn.classList.add('active');
+    document.body.style.overflow = 'hidden';
+  }
+}
+function closeMenu() {
+  const menu = document.getElementById('mobileMenu');
+  const overlay = document.getElementById('mobileOverlay');
+  const btn = document.getElementById('hamburgerBtn');
+  menu && menu.classList.remove('open');
+  overlay && overlay.classList.remove('open');
+  btn && btn.classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeMenu(); });
+</script>
+</body>
+</html>
