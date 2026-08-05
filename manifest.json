@@ -27,22 +27,6 @@
     "education",
     "productivity"
   ],
-  "screenshots": [
-    {
-      "src": "images/202735.jpg",
-      "sizes": "1080x1920",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "TECHMED Admission Predictor"
-    },
-    {
-      "src": "images/202733.jpg",
-      "sizes": "1080x1920",
-      "type": "image/jpeg",
-      "form_factor": "narrow",
-      "label": "Aggregate Breakdown Analysis"
-    }
-  ],
   "shortcuts": [
     {
       "name": "Predict Admission",
