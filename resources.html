@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -13,8 +13,19 @@
 
   gtag('config', 'G-0H63K2GWX5');
 </script>
-<title>TechMed Resources — Brainstorming Hub, Boosters & Free Quizzes</title>
-<meta name="description" content="Operation 100 2027 daily JAMB challenge. Post UTME past questions, detailed university research files, and high-yield boosters by TechMed.">
+<title>TECHMED Resources — Brainstorming Hub, Boosters & Free Quizzes</title>
+<meta name="description" content="Operation 100 2027 daily JAMB challenge. Post UTME past questions, detailed university research files, and high-yield boosters by TECHMED.">
+<!-- EARLY THEME — must run before stylesheet loads to prevent flash of wrong theme -->
+<script>
+(function(){
+  try {
+    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
 <link rel="stylesheet" href="css/style.css">
 <link rel="icon" type="image/png" href="images/favicon.png">
 <style>
@@ -149,7 +160,7 @@
   }
   .materials-tab-v2:hover { border-color: var(--primary); color: var(--primary); }
   .materials-tab-v2.active {
-    background: rgba(14,165,233,0.12);
+    background: rgba(9,71,110,0.12);
     border-color: var(--primary);
     color: var(--primary-light);
     box-shadow: 0 0 12px var(--neon-primary);
@@ -179,7 +190,7 @@
   .material-card-v2:hover {
     transform: translateY(-8px);
     box-shadow: var(--shadow-xl), var(--shadow-glow);
-    border-color: rgba(14,165,233,0.2);
+    border-color: rgba(9,71,110,0.2);
   }
   .material-card-v2 img {
     width: 100%;
@@ -239,7 +250,7 @@
     font-size: 0.7rem;
     font-weight: 700;
     color: var(--primary);
-    border: 1px solid rgba(14,165,233,0.15);
+    border: 1px solid rgba(9,71,110,0.15);
     letter-spacing: 0.03em;
     margin-bottom: var(--space-3);
     width: fit-content;
@@ -247,7 +258,7 @@
   .material-tag-v2.accent {
     background: var(--warning-soft);
     color: var(--accent);
-    border-color: rgba(245,158,11,0.15);
+    border-color: rgba(201,162,39,0.15);
   }
   .material-tag-v2.success {
     background: var(--success-soft);
@@ -257,7 +268,7 @@
   .material-tag-v2.primary {
     background: var(--info-soft);
     color: var(--primary-light);
-    border-color: rgba(14,165,233,0.15);
+    border-color: rgba(9,71,110,0.15);
   }
 
   /* ===== PAYMENT INFO SECTION ===== */
@@ -298,7 +309,7 @@
   }
   .payment-option-card:hover {
     box-shadow: var(--shadow-md), var(--shadow-glow);
-    border-color: rgba(14,165,233,0.2);
+    border-color: rgba(9,71,110,0.2);
     transform: translateY(-3px);
   }
   .payment-option-card h4 {
@@ -323,7 +334,7 @@
 
   /* ===== NAV BLOCK LETTERS ===== */
   .nav-logo-text {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-family: var(--font-display);
     font-weight: 800;
     font-size: 1.25rem;
     letter-spacing: 0.15em;
@@ -505,14 +516,14 @@
 <!-- ========== NAVIGATION ========== -->
 <nav class="nav">
   <a href="index.html" class="nav-logo">
-    <img src="images/logo.jpg" alt="TechMed" style="height: 40px; width: auto; border-radius: 6px; margin-right: 8px;">
+    <img src="images/logo.jpg" alt="TECHMED" style="height: 40px; width: auto; border-radius: 6px; margin-right: 8px;">
     <span class="nav-logo-text">TECHMED</span>
   </a>
   <div class="nav-links">
     <a href="index.html">Home</a>
     <a href="predictor.html">Predictor</a>
     <a href="intelligence.html">Intelligence</a>
-    <a href="materials.html" class="active">Resources</a>
+    <a href="resources.html" class="active">Resources</a>
     <a href="testimonials.html">Records & Testimonials</a>
     <a href="about.html">About</a>
     <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="nav-cta" target="_blank">Join Channel</a>
@@ -527,11 +538,19 @@
   <a href="index.html">Home</a>
   <a href="predictor.html">Predictor</a>
   <a href="intelligence.html">Intelligence</a>
-  <a href="materials.html" class="active">Resources</a>
+  <a href="resources.html" class="active">Resources</a>
   <a href="testimonials.html">Records & Testimonials</a>
   <a href="about.html">About</a>
   <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="mobile-cta" target="_blank">Join WhatsApp Channel</a>
 </div>
+
+<!-- ========== PAGE HEADER ========== -->
+<section class="section" style="padding-bottom: var(--space-4);">
+  <div class="section-header reveal">
+    <h2>Resources That Actually Move Your Score</h2>
+    <p>High-yield boosters, structured daily practice, and research files built around what's actually tested — not everything you could possibly study.</p>
+  </div>
+</section>
 
 <!-- ========== FILTER TABS ========== -->
 <div class="materials-tabs-v2">
@@ -546,13 +565,51 @@
 <!-- ========== MATERIALS GRID ========== -->
 <div class="materials-grid-v2">
 
-<!-- Admission Intelligence Guide — FREE & FEATURED -->
-  <div class="material-card-v2 featured-guide" data-category="research free">
+<!-- UTME 2027 Campaign — TOP FEATURED -->
+  <div class="material-card-v2 featured-guide" data-category="campaign free">
     <div class="featured-badge">★ FEATURED</div>
-    <img src="images/217555.jpg" alt="TechMed Admission Intelligence Guide 2026">
+    <img src="images/utme-2027-campaign-banner.png" alt="TECHMED UTME 2027 Campaign">
+    <div class="material-card-body-v2">
+      <div class="material-tag-v2 primary">STARTS SEPTEMBER</div>
+      <h3>UTME 2027 Campaign</h3>
+      <p>We're building something for the next generation of UTME candidates. Be the first to know when it launches — early access, updates, and exclusive prep resources land on our WhatsApp channel first.</p>
+      <div class="material-price-v2 waitlist">STAY UPDATED</div>
+      <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="btn-primary" style="width: 100%; justify-content: center; text-decoration: none;" target="_blank">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+        Stay Updated on WhatsApp
+      </a>
+    </div>
+  </div>
+
+<!-- Post-UTME Chemistry High-Yield Guide — FREE & FEATURED -->
+  <div class="material-card-v2 featured-guide" data-category="post-utme free">
+    <div class="featured-badge">★ FEATURED</div>
+    <img src="images/chemistry-high-yield-guide-cover.png" alt="TECHMED Post-UTME Chemistry High-Yield Guide 2026/2027">
     <div class="material-card-body-v2">
       <div class="material-tag-v2 success">FREE DOWNLOAD</div>
-      <h3>TechMed Admission Intelligence Guide 2026</h3>
+      <h3>Post-UTME Chemistry High-Yield Guide 2026/2027</h3>
+      <p>Built for candidates preparing for UNILAG, UI, OAU, UNIBEN, RSU, OOU and other universities. A focused revision guide that shows you what to prioritize instead of revising every topic equally — so you walk into the exam more prepared, not more tired.</p>
+      <ul style="font-size: 0.875rem; color: var(--text-light); line-height: 1.8; margin: 0 0 var(--space-4); padding-left: 1.1em;">
+        <li>Focus on what actually matters</li>
+        <li>Save time — avoid guesswork</li>
+        <li>Walk into the exam more prepared</li>
+      </ul>
+      <div class="material-price-v2 free">FREE FOREVER</div>
+      <div class="guide-actions">
+        <a href="TECHMED%20Post-UTME%20Chemistry%20High-yield%20Guide%202026.pdf" download class="btn-primary" style="width: 100%; justify-content: center; text-decoration: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download PDF
+        </a>
+      </div>
+    </div>
+  </div>
+
+<!-- Admission Intelligence Guide — FREE, no longer top featured -->
+  <div class="material-card-v2" data-category="research free">
+    <img src="images/217555.jpg" alt="TECHMED Admission Intelligence Guide 2026">
+    <div class="material-card-body-v2">
+      <div class="material-tag-v2 success">FREE DOWNLOAD</div>
+      <h3>TECHMED Admission Intelligence Guide 2026</h3>
       <p>The Complete Nigerian University Admission Roadmap. How to Secure Admission or Move Forward Strategically Without Wasting Years. Strategic planning, smart decisions, secure your future. #NoWastedYear</p>
       <div class="material-price-v2 free">FREE FOREVER</div>
       <div class="guide-actions">
@@ -575,7 +632,7 @@
     <div class="material-card-body-v2">
       <div class="material-tag-v2 primary">WAITLIST — 2027</div>
       <h3>Operation 100 — 2027 Edition</h3>
-      <p>A focused daily challenge built for serious JAMB candidates in the science field. Solve 100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics, and English — sharpen speed, accuracy, and exam confidence consistently. Train daily. Think smarter. Perform elite.</p>
+      <p>A focused daily challenge built for serious JAMB candidates in the science field. Solve 100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics, and English — sharpen speed, accuracy, and exam confidence consistently.</p>
       <div class="material-price-v2 waitlist">PRICE COMING SOON</div>
       <button class="btn-primary" onclick="openBuyModal('operation-100', 'Operation 100 — 2027 Edition', 0)" style="width: 100%; justify-content: center;">
         Join the Waitlist
@@ -662,7 +719,7 @@
       <h3>Free & Unlimited Quiz Practice</h3>
       <p>Thousands of UTME and Post UTME questions with detailed solutions — no sign-up required. Quality questions, detailed solutions, track your progress.</p>
       <div class="material-price-v2 free">FREE FOREVER</div>
-      <a href="https://quizboot.com/page/techmedofficial" class="btn-primary" style="background: linear-gradient(135deg, #2563eb, #1d4ed8); width: 100%; justify-content: center;" target="_blank">
+      <a href="https://quizboot.com/page/techmedofficial" class="btn-primary" style="background: linear-gradient(135deg, var(--primary-light), var(--primary)); width: 100%; justify-content: center;" target="_blank">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
         Access Free Quizzes
       </a>
@@ -681,7 +738,7 @@
     </div>
     <div class="payment-option-card">
       <h4>BUY AND CONNECT</h4>
-      <p>Chat directly with TechMed. Send proof of payment and receive your files manually. Same products, personal service.</p>
+      <p>Chat directly with TECHMED. Send proof of payment and receive your files manually. Same products, personal service.</p>
       <p class="note">Account: Johnson Wisdom Onyekachi · 6573645432 · Moniepoint MFB</p>
     </div>
   </div>
@@ -691,7 +748,7 @@
 <footer class="footer">
   <div class="footer-inner">
     <div class="footer-brand">
-      <img src="images/techmed-logo.png" alt="TechMed" onerror="this.style.display='none'">
+      <img src="images/techmed-logo.png" alt="TECHMED" onerror="this.style.display='none'">
       <h3>TECHMED</h3>
       <p>Think Smart. Perform Elite.</p>
       <div class="footer-social">
@@ -707,7 +764,7 @@
       <h4>Platform</h4>
       <a href="predictor.html">Predictor</a>
       <a href="intelligence.html">Intelligence</a>
-      <a href="materials.html">Resources</a>
+      <a href="resources.html">Resources</a>
     </div>
     <div class="footer-links">
       <h4>Support</h4>
@@ -721,7 +778,7 @@
     </div>
   </div>
   <div class="footer-bottom">
-    <p>2026 TechMed. All rights reserved. Think Smart. Perform Elite.</p>
+    <p>2026 TECHMED. All rights reserved. Think Smart. Perform Elite.</p>
   </div>
 </footer>
 
@@ -745,20 +802,11 @@
         <option value="UNIZIK">Nnamdi Azikiwe University (UNIZIK)</option>
         <option value="ABU">Ahmadu Bello University (ABU)</option>
         <option value="FUTA">Federal Uni. of Tech. Akure (FUTA)</option>
-        <option value="FUTMINNA">Federal Uni. of Tech. Minna (FUTMINNA)</option>
-        <option value="FUTO">Federal Uni. of Tech. Owerri (FUTO)</option>
-        <option value="FUOYE">Federal University Oye-Ekiti (FUOYE)</option>
         <option value="UNIPORT">University of Port Harcourt (UNIPORT)</option>
         <option value="UNICAL">University of Calabar (UNICAL)</option>
-        <option value="UNIJOS">University of Jos (UNIJOS)</option>
         <option value="BUK">Bayero University Kano (BUK)</option>
-        <option value="FUNAAB">Federal Uni. of Agric. Abeokuta (FUNAAB)</option>
         <option value="UNIABUJA">University of Abuja (UNIABUJA)</option>
-        <option value="LASU">Lagos State University (LASU)</option>
         <option value="OOU">Olabisi Onabanjo University (OOU)</option>
-        <option value="EKSU">Ekiti State University (EKSU)</option>
-        <option value="DELSU">Delta State University (DELSU)</option>
-        <option value="AAU">Ambrose Alli University (AAU)</option>
         <option value="OTHER">Other (specify on WhatsApp)</option>
       </select>
     </div>
@@ -868,7 +916,7 @@ function closeBuyModal() {
   document.body.style.overflow = '';
 }
 
-/* ===== BACKEND PAYMENT (PLACEHOLDER) ===== */
+/* ===== BACKEND PAYMENT (PAYSTACK VIA SUPABASE EDGE FUNCTION) ===== */
 function buyBackend() {
   const uni = document.getElementById('uniSelect').value;
 
@@ -885,10 +933,11 @@ function buyBackend() {
   btn.innerHTML = 'Processing...';
   btn.disabled = true;
 
-  // CHANGE THIS URL AFTER YOU DEPLOY (Step 8)
-  const API_BASE = 'https://techmed-api.onrender.com';
+  // Supabase Edge Function — validates the product/price server-side and
+  // starts a Paystack transaction. See supabase/functions/pay-initiate.
+  const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
 
-  fetch(`${API_BASE}/api/pay/initiate`, {
+  fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -896,7 +945,7 @@ function buyBackend() {
       product_name: currentName,
       amount: currentPrice,
       email: customerEmail,
-      name: 'TechMed Customer',
+      name: 'TECHMED Customer',
       university: uni || null
     })
   })
@@ -925,9 +974,9 @@ function buyWhatsApp() {
   let text = '';
 
   if (currentProduct === 'operation-100') {
-    text = 'Hi TechMed, I want to join the Operation 100 2027 waitlist. My name is ______ and I am preparing for JAMB. Please notify me when registration opens.';
+    text = 'Hi TECHMED, I want to join the Operation 100 2027 waitlist. My name is ______ and I am preparing for JAMB. Please notify me when registration opens.';
   } else {
-    text = 'Hi TechMed, I want to buy ' + currentName + '.';
+    text = 'Hi TECHMED, I want to buy ' + currentName + '.';
     if (currentPrice > 0) {
       text += ' Price: ₦' + currentPrice.toLocaleString() + '.';
     }
@@ -965,7 +1014,7 @@ document.addEventListener('keydown', function(e) {
 <div id="pdfModal" class="pdf-modal" onclick="if(event.target===this)closePdfViewer()">
   <div class="pdf-modal-content">
     <div class="pdf-modal-header">
-      <h3>📘 TechMed Admission Intelligence Guide 2026</h3>
+      <h3>📘 TECHMED Admission Intelligence Guide 2026</h3>
       <div class="pdf-actions">
         <a href="TECHMED%20Admission%20Intelligence%20Guide%202026.pdf" download class="btn-download">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -977,7 +1026,7 @@ document.addEventListener('keydown', function(e) {
         </button>
       </div>
     </div>
-    <iframe class="pdf-iframe" src="TECHMED%20Admission%20Intelligence%20Guide%202026.pdf" title="TechMed Admission Intelligence Guide 2026"></iframe>
+    <iframe class="pdf-iframe" src="TECHMED%20Admission%20Intelligence%20Guide%202026.pdf" title="TECHMED Admission Intelligence Guide 2026"></iframe>
   </div>
 </div>
 

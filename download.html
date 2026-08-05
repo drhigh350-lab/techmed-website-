@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-0H63K2GWX5"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-0H63K2GWX5');
+</script>
+
+<title>Your Download — TECHMED</title>
+<meta name="description" content="Access the resource you just purchased from TECHMED.">
+<meta name="robots" content="noindex">
+
+<!-- EARLY THEME — must run before stylesheet loads to prevent flash -->
+<script>
+(function(){
+  try {
+    var saved = localStorage.getItem('techmed-theme');
+    if (saved && saved !== 'system') {
+      document.documentElement.setAttribute('data-theme', saved);
+    } else {
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-theme', prefersDark ? 'dark' : 'light');
+    }
+  } catch(e) {
+    document.documentElement.setAttribute('data-theme', 'dark');
+  }
+})();
+</script>
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" type="image/png" href="images/favicon.png">
+
+<style>
+  .download-wrap {
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-8) var(--space-4);
+  }
+  .download-card {
+    max-width: 480px;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+  }
+  .download-icon {
+    width: 64px;
+    height: 64px;
+    margin: 0 auto var(--space-5);
+    border-radius: var(--radius-full);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .download-icon.state-loading { background: var(--info-soft); color: var(--primary); }
+  .download-icon.state-success { background: var(--success-soft); color: var(--success); }
+  .download-icon.state-error { background: var(--danger-soft); color: var(--danger); }
+  .download-card h1 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin-bottom: var(--space-3);
+    color: var(--text);
+  }
+  .download-card p {
+    color: var(--text-light);
+    line-height: 1.7;
+    margin-bottom: var(--space-6);
+  }
+  .download-card .ref-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-5);
+    word-break: break-all;
+  }
+  .spinner {
+    width: 28px; height: 28px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-logo">
+    <img src="images/logo.jpg" alt="TECHMED" style="height: 40px; width: auto; border-radius: 6px;">
+    <span style="font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-left: 8px; font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase;">TECHMED</span>
+  </a>
+</nav>
+
+<div class="download-wrap">
+  <div class="download-card" id="stateCard">
+    <div class="download-icon state-loading" id="stateIcon">
+      <div class="spinner"></div>
+    </div>
+    <h1 id="stateTitle">Confirming your payment…</h1>
+    <p id="stateMessage">This usually takes a few seconds. Please don't close this page.</p>
+    <div id="stateAction"></div>
+  </div>
+</div>
+
+<script>
+// Maps product_id -> actual downloadable file URL. Fill these in once the
+// paid resources are hosted (Supabase Storage is a natural place for these,
+// since the project already uses Supabase). Free resources on resources.html
+// are already served as direct static links and don't need this.
+const FILE_URLS = {
+  'post-utme-pq': null,        // TODO: add file URL — Post Brainstorming Hub
+  'research-file': null,       // TODO: add file URL — University Research File
+  'chemistry-booster': null,   // TODO: add file URL — Chemistry Booster System
+  'biology-booster': null,     // TODO: add file URL — Biology Booster System
+  'physics-booster': null,     // TODO: add file URL — Physics Booster System
+};
+
+const SUPABASE_URL = 'https://unbgborbhxzsotaieiun.supabase.co';
+const SUPABASE_ANON_KEY = ''; // TODO: add the project's anon public key here
+
+function setState(iconClass, iconSvg, title, message, actionHtml) {
+  document.getElementById('stateIcon').className = 'download-icon ' + iconClass;
+  document.getElementById('stateIcon').innerHTML = iconSvg;
+  document.getElementById('stateTitle').textContent = title;
+  document.getElementById('stateMessage').textContent = message;
+  document.getElementById('stateAction').innerHTML = actionHtml || '';
+}
+
+const ICONS = {
+  success: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>',
+  error: '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>',
+};
+
+const whatsappHref = (ref) => `https://wa.me/2347044255045?text=${encodeURIComponent(
+  `Hi TECHMED, I just paid for a resource. My payment reference is ${ref || 'unknown'} — please help me get my download.`
+)}`;
+
+async function checkOrder() {
+  const params = new URLSearchParams(window.location.search);
+  const reference = params.get('reference') || params.get('trxref');
+
+  if (!reference) {
+    setState('state-error', ICONS.error, 'Missing payment reference',
+      'We could not find a payment reference in this link. If you just paid, contact us on WhatsApp and we will sort it out immediately.',
+      `<a href="${whatsappHref('')}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Contact TECHMED on WhatsApp</a>`);
+    return;
+  }
+
+  if (!SUPABASE_ANON_KEY) {
+    setState('state-error', ICONS.error, 'Almost there',
+      'Your payment reference is saved. We are finishing setup on this page — contact us on WhatsApp with your reference and we will send your file right away.',
+      `<a href="${whatsappHref(reference)}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Contact TECHMED on WhatsApp</a>
+       <p class="ref-note">Reference: ${reference}</p>`);
+    return;
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?reference=eq.${encodeURIComponent(reference)}&select=status,product_id,product_name`, {
+      headers: {
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+    });
+    const rows = await res.json();
+    const order = Array.isArray(rows) ? rows[0] : null;
+
+    if (!order) {
+      setState('state-error', ICONS.error, 'We could not find that order',
+        'This can happen if you refreshed the page or the link was opened twice. Contact us on WhatsApp with your reference and we will confirm manually.',
+        `<a href="${whatsappHref(reference)}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Contact TECHMED on WhatsApp</a>
+         <p class="ref-note">Reference: ${reference}</p>`);
+      return;
+    }
+
+    if (order.status === 'paid') {
+      const fileUrl = FILE_URLS[order.product_id];
+      if (fileUrl) {
+        setState('state-success', ICONS.success, 'Payment confirmed',
+          `Your download for "${order.product_name}" is ready.`,
+          `<a href="${fileUrl}" download class="btn-primary" style="width:100%;justify-content:center;">Download Now</a>
+           <p class="ref-note">Reference: ${reference}</p>`);
+      } else {
+        setState('state-success', ICONS.success, 'Payment confirmed',
+          `Your payment for "${order.product_name}" went through. We are sending your file to your email shortly — or grab it instantly on WhatsApp.`,
+          `<a href="${whatsappHref(reference)}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Get My File on WhatsApp</a>
+           <p class="ref-note">Reference: ${reference}</p>`);
+      }
+      return;
+    }
+
+    if (order.status === 'pending') {
+      setState('state-loading', '<div class="spinner"></div>', 'Still confirming…',
+        'Paystack has not confirmed this payment yet. This page will refresh automatically — please wait a moment.',
+        '');
+      setTimeout(checkOrder, 3000);
+      return;
+    }
+
+    setState('state-error', ICONS.error, 'Payment not completed',
+      'It looks like this payment did not go through. No charge should have been made. Try again, or contact us if you were charged.',
+      `<a href="resources.html" class="btn-primary" style="width:100%;justify-content:center;">Back to Resources</a>`);
+  } catch (err) {
+    console.error(err);
+    setState('state-error', ICONS.error, 'Something went wrong',
+      'We could not check your payment status right now. Contact us on WhatsApp with your reference and we will confirm manually.',
+      `<a href="${whatsappHref(reference)}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Contact TECHMED on WhatsApp</a>
+       <p class="ref-note">Reference: ${reference}</p>`);
+  }
+}
+
+checkOrder();
+
+/* ===== THEME CHANGE LISTENER ===== */
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+  const saved = localStorage.getItem('techmed-theme');
+  if (!saved || saved === 'system') {
+    document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+  }
+});
+</script>
+
+</body>
+</html>

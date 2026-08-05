@@ -10,15 +10,16 @@
 // in OneSignalSDKWorker.js so browsers reliably pick up the update.
 // ============================================================
 
-const CACHE_NAME = 'techmed-v8-2026';
+const CACHE_NAME = 'techmed-v9-2026';
 const urlsToCache = [
   '/',
   '/index.html',
   '/predictor.html',
-  '/cutoffs.html',
-  '/materials.html',
+  '/resources.html',
   '/about.html',
+  '/intelligence.html',
   '/testimonials.html',
+  '/download.html',
   '/manifest.json',
   '/css/style.css',
   '/js/engine.js',
@@ -34,10 +35,22 @@ const urlsToCache = [
   '/images/202733.jpg'
 ];
 
+// Cache each URL independently so one missing/renamed file (e.g. a page
+// that gets renamed or removed) can't silently break the entire install,
+// which is what happened when /materials.html and /cutoffs.html stopped
+// existing but were still in this list — cache.addAll() fails ALL-or-
+// NOTHING, so a single 404 here used to leave the whole cache empty/stale.
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache =>
+      Promise.all(
+        urlsToCache.map(url =>
+          cache.add(url).catch(err =>
+            console.warn('[SW] Skipped caching (not found or failed):', url, err)
+          )
+        )
+      )
+    )
   );
 });
 
@@ -55,12 +68,38 @@ self.addEventListener('activate', event => {
   );
 });
 
+// Network-first for page navigations (HTML) so visitors always get the
+// live version of a page — falling back to cache only if the network
+// request fails (e.g. actually offline). This is what prevents a renamed
+// or updated page from silently serving a stale cached copy, which is
+// the bug that caused predictor.html to fail when reached via an in-app
+// link (the browser was serving a broken/stale cached navigation).
+//
+// Cache-first for everything else (images, CSS, JS) since those assets
+// change rarely and benefit from instant offline-style loading.
 self.addEventListener('fetch', event => {
+  const isNavigation =
+    event.request.mode === 'navigate' ||
+    (event.request.method === 'GET' &&
+      event.request.headers.get('accept')?.includes('text/html'));
+
+  if (isNavigation) {
+    event.respondWith(
+      fetch(event.request)
+        .then(response => {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          return response;
+        })
+        .catch(() => caches.match(event.request))
+    );
+    return;
+  }
+
   event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) return response;
-        return fetch(event.request);
-      })
+    caches.match(event.request).then(response => {
+      if (response) return response;
+      return fetch(event.request);
+    })
   );
 });

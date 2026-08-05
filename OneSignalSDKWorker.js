@@ -26,7 +26,7 @@
 // byte-for-byte diff actually changes and browsers pick up the update.
 // ============================================================
 
-const CACHE_VERSION_TAG = 'v8-2026'; // bump this on every deploy that changes techmed-sw-cache.js
+const CACHE_VERSION_TAG = 'v9-2026'; // bump this on every deploy that changes techmed-sw-cache.js
 
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 importScripts("/techmed-sw-cache.js");

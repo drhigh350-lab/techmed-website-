@@ -336,22 +336,34 @@ async function cpFinishExam(){
   const timeTakenSec = Math.round((Date.now() - CP_STATE.startTime) / 1000);
   const xpEarned = cpCalcXp(correct);
 
-  // Only award real XP to a logged-in player with a loaded player row — Custom Practice is
-  // otherwise fully anonymous/local, so there's no players row to safely credit.
-  let xpHtml;
-  if(dcIsLoggedIn() && dcState.player){
-    let saveConfirmed = false;
+  // Ensure a player row exists — same as Daily Challenge and Rapid Fire — instead of requiring
+  // dcState.player to already be populated. Custom Practice can be opened straight from the
+  // Practice hub without ever touching Daily Challenge first, so dcState.player may still be
+  // null here even for a returning, logged-in player. dcEnsurePlayer resolves the real Supabase
+  // row either way (guest device-scoped row or the logged-in row), so XP always has somewhere
+  // real to land instead of silently going nowhere.
+  const player = dcState.player || await dcEnsurePlayer(userName);
+  if(player) dcState.player = player;
+
+  let saveConfirmed = false;
+  if(player && player.id){
     try {
-      const newXp = (dcState.player.xp || 0) + xpEarned;
-      saveConfirmed = await dcUpdatePlayer(dcState.player.id, { xp: newXp });
-      if(saveConfirmed) dcState.player.xp = newXp;
+      const newXp = (player.xp || 0) + xpEarned;
+      saveConfirmed = await dcUpdatePlayer(player.id, { xp: newXp });
+      if(!saveConfirmed) saveConfirmed = await dcUpdatePlayer(player.id, { xp: newXp }); // one retry, same pattern as Rapid Fire/Daily Challenge
+      if(saveConfirmed) dcSetActivePlayer({ ...player, xp: newXp });
     } catch(e){ console.error('[CustomPractice] Failed to award XP', e); }
-    xpHtml = saveConfirmed
-      ? `<div class="tip-box" style="margin-top:10px;text-align:center"><strong>+${xpEarned} XP earned</strong> — added to your total</div>`
-      : `<div class="tip-box" style="margin-top:10px;text-align:center">Scored ${xpEarned} XP, but we couldn't save it just now. Your practice score above is still accurate.</div>`;
-  } else {
-    xpHtml = `<div class="tip-box" style="margin-top:10px;text-align:center">Sign up to bank <strong>${xpEarned} XP</strong> from this session — right now it's practice-only. <button class="btn-go" style="margin-top:8px;padding:10px 16px" onclick="dcShowAuthNudge('Save your progress?','Create a free account to start earning XP from Custom Practice too.')">Sign Up Free</button></div>`;
+    // Log this session in `attempts` (source: custom_practice) so it counts toward lifetime
+    // accuracy, the activity heat map, and weekly goals — same table Daily Challenge and Rapid
+    // Fire write to. Logged regardless of whether the XP save above succeeded, since the
+    // practice itself still happened even if the XP write hiccupped.
+    try {
+      await dcSaveAttempt(player.id, 'custom_practice', correct, timeTakenSec, null, xpEarned, 'custom_practice', total);
+    } catch(e){ console.error('[CustomPractice] Failed to log attempt', e); }
   }
+  const xpHtml = saveConfirmed
+    ? `<div class="tip-box" style="margin-top:10px;text-align:center"><strong>+${xpEarned} XP earned</strong> — added to your total</div>`
+    : `<div class="tip-box" style="margin-top:10px;text-align:center">Scored ${xpEarned} XP, but we couldn't save it just now — check your connection. Your practice score above is still accurate.</div>`;
 
   body.innerHTML = `
     <div style="text-align:center;padding:20px 4px">

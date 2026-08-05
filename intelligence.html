@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TechMed • Admission Intelligence — RoboMed</title>
+<title>TECHMED Admission Intelligence — Think Smart. Perform Elite.</title>
+<meta name="description" content="RoboMed: TECHMED's gamified learning platform for JAMB and Post-UTME prep. Daily challenges, smart practice, live leaderboards, and deep intelligence on 17 Nigerian universities — CAPS decoder, aggregate calculator, and admission tracking.">
+<meta property="og:title" content="RoboMed — TECHMED Admission Intelligence">
+<meta property="og:description" content="Deep intelligence on 17 Nigerian universities. CAPS decoder, aggregate calculator, scam protection, UTME prep system, and clearance guide — all in one gamified platform.">
 <link rel="icon" type="image/png" href="images/favicon.png">
 <link rel="stylesheet" href="css/style.css">
 
@@ -20,7 +23,7 @@
 <!-- SYSTEM THEME DETECTION -->
 <script>
 (function() {
-  const saved = localStorage.getItem('theme');
+  const saved = localStorage.getItem('techmed-theme');
   if (saved) {
     document.documentElement.setAttribute('data-theme', saved);
   } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
@@ -31,7 +34,7 @@
 
   // Live system theme change listener
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-    if (!localStorage.getItem('theme')) {
+    if (!localStorage.getItem('techmed-theme')) {
       document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
     }
   });
@@ -150,7 +153,7 @@ html { scroll-behavior: auto; }
   height: 135px;
   cursor: pointer;
   position: relative;
-  filter: drop-shadow(0 10px 26px rgba(14, 165, 233, 0.35));
+  filter: drop-shadow(0 10px 26px rgba(9,71,110, 0.35));
   transition: transform 0.15s ease;
   flex-shrink: 0;
   animation: rFloat 3.4s ease-in-out infinite;
@@ -618,7 +621,7 @@ html { scroll-behavior: auto; }
 .chat-input input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 3px rgba(9,71,110, 0.1);
 }
 
 .chat-input input::placeholder { color: var(--text-muted); }
@@ -674,7 +677,7 @@ html { scroll-behavior: auto; }
 .topic-btn:hover {
   border-color: var(--primary);
   color: var(--primary-light);
-  background: rgba(14, 165, 233, 0.06);
+  background: rgba(9,71,110, 0.06);
   transform: translateY(-1px);
 }
 
@@ -783,8 +786,8 @@ html { scroll-behavior: auto; }
 }
 
 .b-extreme { background: rgba(239,68,68,0.12); color: #f87171; border: 1px solid rgba(239,68,68,0.22); }
-.b-very    { background: rgba(249,115,22,0.12); color: #fb923c; border: 1px solid rgba(249,115,22,0.22); }
-.b-high    { background: rgba(234,179,8,0.12);  color: #fbbf24; border: 1px solid rgba(234,179,8,0.22); }
+.b-very    { background: rgba(168,132,30,0.12); color: #fb923c; border: 1px solid rgba(168,132,30,0.22); }
+.b-high    { background: rgba(234,179,8,0.12);  color: #DBBE5C; border: 1px solid rgba(234,179,8,0.22); }
 .b-mod     { background: rgba(34,197,94,0.12);  color: #4ade80; border: 1px solid rgba(34,197,94,0.22); }
 
 /* ---- STATS ROW ---- */
@@ -834,8 +837,8 @@ html { scroll-behavior: auto; }
 
 /* ---- INFO BOXES ---- */
 .formula-box {
-  background: rgba(14, 165, 233, 0.07);
-  border: 1px solid rgba(14, 165, 233, 0.18);
+  background: rgba(9,71,110, 0.07);
+  border: 1px solid rgba(9,71,110, 0.18);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   font-family: monospace;
@@ -860,8 +863,8 @@ html { scroll-behavior: auto; }
 .danger-box strong { color: #f87171; }
 
 .tip-box {
-  background: rgba(14, 165, 233, 0.05);
-  border: 1px solid rgba(14, 165, 233, 0.13);
+  background: rgba(9,71,110, 0.05);
+  border: 1px solid rgba(9,71,110, 0.13);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   font-size: 0.83rem;
@@ -873,8 +876,8 @@ html { scroll-behavior: auto; }
 .tip-box strong { color: var(--primary-light); }
 
 .amber-box {
-  background: rgba(245, 158, 11, 0.06);
-  border: 1px solid rgba(245, 158, 11, 0.18);
+  background: rgba(201,162,39, 0.06);
+  border: 1px solid rgba(201,162,39, 0.18);
   border-radius: var(--radius-sm);
   padding: var(--space-3) var(--space-4);
   font-size: 0.83rem;
@@ -883,7 +886,7 @@ html { scroll-behavior: auto; }
   margin-bottom: var(--space-3);
 }
 
-.amber-box strong { color: #fbbf24; }
+.amber-box strong { color: #DBBE5C; }
 
 .shock-box {
   background: var(--surface-raised);
@@ -945,7 +948,7 @@ html { scroll-behavior: auto; }
 .school-search-wrap input:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 3px rgba(9,71,110, 0.1);
 }
 
 .school-search-wrap input::placeholder { color: var(--text-muted); }
@@ -969,7 +972,7 @@ html { scroll-behavior: auto; }
 .quick-school-btn:hover {
   border-color: var(--primary);
   color: var(--primary-light);
-  background: rgba(14, 165, 233, 0.06);
+  background: rgba(9,71,110, 0.06);
 }
 
 /* ---- AGGREGATE CALCULATOR ---- */
@@ -1018,12 +1021,12 @@ html { scroll-behavior: auto; }
 .calc-form textarea:focus {
   outline: none;
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
+  box-shadow: 0 0 0 3px rgba(9,71,110, 0.1);
 }
 
 .calc-result {
-  background: linear-gradient(135deg, rgba(14,165,233,0.1), rgba(245,158,11,0.07));
-  border: 1px solid rgba(14, 165, 233, 0.2);
+  background: linear-gradient(135deg, rgba(9,71,110,0.1), rgba(201,162,39,0.07));
+  border: 1px solid rgba(9,71,110, 0.2);
   border-radius: var(--radius);
   padding: var(--space-5) var(--space-6);
   margin-top: var(--space-5);
@@ -1173,7 +1176,7 @@ html { scroll-behavior: auto; }
 .subject-card.active {
   border-color: var(--primary);
   color: var(--primary-light);
-  background: rgba(14, 165, 233, 0.06);
+  background: rgba(9,71,110, 0.06);
 }
 
 /* ---- SCROLL TO TOP ---- */
@@ -1359,10 +1362,10 @@ html { scroll-behavior: auto; }
   letter-spacing: 0.08em;
 }
 .dc-dot.bio  { background:rgba(34,197,94,0.15);  color:#4ade80; border:1px solid rgba(34,197,94,0.3); }
-.dc-dot.chem { background:rgba(14,165,233,0.15); color:#38bdf8; border:1px solid rgba(14,165,233,0.3); }
-.dc-dot.phy  { background:rgba(249,115,22,0.15); color:#fb923c; border:1px solid rgba(249,115,22,0.3); }
+.dc-dot.chem { background:rgba(9,71,110,0.15); color:#98B0C4; border:1px solid rgba(9,71,110,0.3); }
+.dc-dot.phy  { background:rgba(168,132,30,0.15); color:#fb923c; border:1px solid rgba(168,132,30,0.3); }
 .dc-dot.eng  { background:rgba(236,72,153,0.15); color:#f472b6; border:1px solid rgba(236,72,153,0.3); }
-.dc-dot.math { background:rgba(234,179,8,0.15);  color:#fbbf24; border:1px solid rgba(234,179,8,0.3); }
+.dc-dot.math { background:rgba(234,179,8,0.15);  color:#DBBE5C; border:1px solid rgba(234,179,8,0.3); }
 .dc-dot.apt  { background:rgba(139,92,246,0.15); color:#a78bfa; border:1px solid rgba(139,92,246,0.3); }
 .dc-dot.gk   { background:rgba(20,184,166,0.15); color:#2dd4bf; border:1px solid rgba(20,184,166,0.3); }
 
@@ -1491,7 +1494,7 @@ html { scroll-behavior: auto; }
   transition: all 0.2s;
 }
 .cp-time-btn.cp-active, .cp-subject-card.cp-active { border-color: var(--primary); }
-.cp-time-btn.cp-active { background: rgba(14,165,233,0.12); color: var(--primary-light); }
+.cp-time-btn.cp-active { background: rgba(9,71,110,0.12); color: var(--primary-light); }
 
 .cp-option {
   display: flex;
@@ -1578,7 +1581,7 @@ html { scroll-behavior: auto; }
   font-size: 0.65rem;
   font-weight: 800;
   letter-spacing: 0.1em;
-  color: #38bdf8;
+  color: #98B0C4;
   background: rgba(56,189,248,0.12);
   border: 1px solid rgba(56,189,248,0.3);
   border-radius: 999px;
@@ -1630,7 +1633,7 @@ html { scroll-behavior: auto; }
   background: radial-gradient(circle, rgba(56,189,248,0.16) 0%, transparent 72%);
   pointer-events: none;
 }
-.hub-promo-feat-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem; line-height: 1; flex-shrink: 0; color: #38bdf8; filter: drop-shadow(0 0 5px rgba(56,189,248,0.45)); }
+.hub-promo-feat-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 1.15rem; height: 1.15rem; line-height: 1; flex-shrink: 0; color: #98B0C4; filter: drop-shadow(0 0 5px rgba(56,189,248,0.45)); }
 .hub-promo-feat-icon svg { width: 100%; height: 100%; }
 .hub-promo-feat-text { position: relative; font-size: 0.71rem; line-height: 1.35; color: rgba(255,255,255,0.75); }
 .hub-promo-feat-text strong { display: block; color: #fff; font-size: 0.74rem; margin-bottom: 1px; }
@@ -1652,7 +1655,7 @@ html { scroll-behavior: auto; }
   border-color: rgba(56,189,248,0.5);
 }
 .hub-promo-price-label { font-size: 0.7rem; color: rgba(255,255,255,0.6); }
-.hub-promo-price { font-family: var(--font-display); font-size: 1.3rem; font-weight: 900; color: #38bdf8; }
+.hub-promo-price { font-family: var(--font-display); font-size: 1.3rem; font-weight: 900; color: #98B0C4; }
 .hub-promo-btn {
   position: relative;
   z-index: 1;
@@ -1717,10 +1720,10 @@ html { scroll-behavior: auto; }
 .dc-subj-btn .dsb-name { font-size: 0.78rem; font-weight: 800; letter-spacing:0.04em; color: var(--subj-clr); }
 .dc-subj-btn .dsb-tag  { font-size: 0.64rem; color: color-mix(in srgb, var(--subj-clr) 70%, var(--text-muted)); font-weight: 700; letter-spacing: 0.06em; }
 .dc-subj-btn.bio-btn   { --subj-clr:#4ade80; }
-.dc-subj-btn.chem-btn  { --subj-clr:#38bdf8; }
+.dc-subj-btn.chem-btn  { --subj-clr:#98B0C4; }
 .dc-subj-btn.phy-btn   { --subj-clr:#fb923c; }
 .dc-subj-btn.eng-btn   { --subj-clr:#f472b6; }
-.dc-subj-btn.math-btn  { --subj-clr:#fbbf24; }
+.dc-subj-btn.math-btn  { --subj-clr:#DBBE5C; }
 .dc-subj-btn.apt-btn   { --subj-clr:#a78bfa; }
 .dc-subj-btn.gk-btn    { --subj-clr:#2dd4bf; }
 .dc-subj-btn.selected  {
@@ -1846,8 +1849,8 @@ html { scroll-behavior: auto; }
   align-items: center;
   gap: 3px;
   flex-shrink: 0;
-  background: rgba(249,115,22,0.1);
-  border: 1px solid rgba(249,115,22,0.3);
+  background: rgba(168,132,30,0.1);
+  border: 1px solid rgba(168,132,30,0.3);
   border-radius: 999px;
   padding: 6px 12px;
 }
@@ -2076,7 +2079,7 @@ html { scroll-behavior: auto; }
   font-size: 0.66rem;
   font-weight: 800;
   letter-spacing: 0.09em;
-  color: #38bdf8;
+  color: #98B0C4;
   margin-bottom: 8px;
 }
 .cc-welcome-title {
@@ -2107,7 +2110,7 @@ html { scroll-behavior: auto; }
   border-radius: 3px;
   background: rgba(255,255,255,0.12);
 }
-.cc-welcome-daybar span.done { background: linear-gradient(90deg,#38bdf8,#818cf8); }
+.cc-welcome-daybar span.done { background: linear-gradient(90deg,#98B0C4,#818cf8); }
 .cc-welcome-prize {
   position: relative;
   display: flex;
@@ -2119,7 +2122,7 @@ html { scroll-behavior: auto; }
   padding: 10px 12px;
   margin-bottom: 16px;
 }
-.cc-welcome-prize-icon { flex-shrink: 0; color: #fbbf24; width: 22px; height: 22px; }
+.cc-welcome-prize-icon { flex-shrink: 0; color: #DBBE5C; width: 22px; height: 22px; }
 .cc-welcome-prize-icon svg { width: 100%; height: 100%; }
 .cc-welcome-prize-text { font-size: 0.76rem; color: rgba(255,255,255,0.8); line-height: 1.4; }
 .cc-welcome-prize-text strong { color: #fff; }
@@ -2207,7 +2210,7 @@ html { scroll-behavior: auto; }
   30% { background: #f87171; color:#fff; }
 }
 .cw-cell.cw-correct { color: #4ade80; }
-.cw-cell.cw-revealed { color: #fbbf24; }
+.cw-cell.cw-revealed { color: #DBBE5C; }
 
 .cw-topbar {
   display:flex; align-items:center; justify-content:space-between;
@@ -2270,7 +2273,7 @@ html { scroll-behavior: auto; }
 /* Stage 1 — flash + pixels + welcome */
 .intro-flash{
   position: absolute; inset: 0;
-  background: radial-gradient(circle at 50% 45%, #7dd3fc 0%, #38bdf8 28%, #1d4ed8 55%, #05070f 78%);
+  background: radial-gradient(circle at 50% 45%, #B8CCDC 0%, #98B0C4 28%, #1d4ed8 55%, #05070f 78%);
   animation: introFlashPulse 0.9s cubic-bezier(.2,.8,.2,1) forwards;
 }
 @keyframes introFlashPulse{
@@ -2286,7 +2289,7 @@ html { scroll-behavior: auto; }
   grid-template-rows: repeat(10, 1fr);
 }
 .intro-pixel{
-  background: var(--primary-light, #38bdf8);
+  background: var(--primary-light, #98B0C4);
   opacity: 0;
   animation: introPixelIn 0.5s ease forwards;
 }
@@ -2326,7 +2329,7 @@ html { scroll-behavior: auto; }
   color: #fff;
   text-shadow: 0 0 24px rgba(56,189,248,0.7);
 }
-.intro-title .hi{ color: #7dd3fc; }
+.intro-title .hi{ color: #B8CCDC; }
 .intro-sub{
   margin-top: 8px;
   font-size: clamp(0.75rem, 2.4vw, 0.9rem);
@@ -2444,7 +2447,7 @@ html { scroll-behavior: auto; }
   color: #fff;
   text-shadow: 0 0 26px rgba(56,189,248,0.6);
 }
-.intro-brand-logo .med{ color: #38bdf8; }
+.intro-brand-logo .med{ color: #98B0C4; }
 .intro-brand-tagline{
   margin-top: 12px;
   font-family: var(--font-display);
@@ -2454,10 +2457,10 @@ html { scroll-behavior: auto; }
   text-transform: uppercase;
   color: rgba(255,255,255,0.8);
 }
-.intro-brand-tagline .accent{ color: #7dd3fc; }
+.intro-brand-tagline .accent{ color: #B8CCDC; }
 .intro-brand-underline{
   width: 64px; height: 3px; margin: 16px auto 0;
-  background: linear-gradient(90deg, #38bdf8, #7dd3fc);
+  background: linear-gradient(90deg, #98B0C4, #B8CCDC);
   border-radius: 2px;
   transform: scaleX(0);
   animation: introUnderlineGrow 0.6s ease forwards;
@@ -2640,13 +2643,13 @@ html { scroll-behavior: auto; }
 
 <nav class="nav">
   <a href="index.html" class="nav-logo">
-    <img src="images/logo.png" alt="TechMed" width="40" height="40" style="border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">
-    <span style="font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-left: 8px; font-family: 'Plus Jakarta Sans', system-ui, sans-serif; letter-spacing: 0.15em; text-transform: uppercase;">TECHMED</span>
+    <img src="images/logo.png" alt="TECHMED" width="40" height="40" style="border-radius:6px;object-fit:cover;flex-shrink:0;" onerror="this.style.display='none'">
+    <span style="font-weight: 800; font-size: 1.25rem; color: var(--primary); margin-left: 8px; font-family: var(--font-display); letter-spacing: 0.15em; text-transform: uppercase;">TECHMED</span>
   </a>
   <div class="nav-links">
     <a href="index.html">Home</a><a href="predictor.html">Predictor</a>
     <a href="intelligence.html" class="active">Intelligence</a>
-    <a href="materials.html">Resources</a><a href="testimonials.html">Records</a>
+    <a href="resources.html">Resources</a><a href="testimonials.html">Records</a>
     <a href="about.html">About</a>
     <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="nav-cta" target="_blank">Join Channel</a>
   </div>
@@ -2656,7 +2659,7 @@ html { scroll-behavior: auto; }
 <div class="mobile-menu" id="mobileMenu">
   <a href="index.html">Home</a><a href="predictor.html">Predictor</a>
   <a href="intelligence.html" class="active">Intelligence</a>
-  <a href="materials.html">Resources</a><a href="testimonials.html">Records</a>
+  <a href="resources.html">Resources</a><a href="testimonials.html">Records</a>
   <a href="about.html">About</a>
   <a href="https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i" class="mobile-cta" target="_blank">Join Channel</a>
 </div>
@@ -2842,7 +2845,7 @@ html { scroll-behavior: auto; }
         <option value="UNIUYO">University of Uyo (UNIUYO)</option>
         <option value="STANDARD">Other University (Standard Formula)</option>
       </select>
-      <div id="calcHint" style="font-size:.78rem;color:var(--primary-light);margin-top:-8px;margin-bottom:12px;padding:10px 13px;background:rgba(14,165,233,.06);border-radius:8px;display:none"></div>
+      <div id="calcHint" style="font-size:.78rem;color:var(--primary-light);margin-top:-8px;margin-bottom:12px;padding:10px 13px;background:rgba(9,71,110,.06);border-radius:8px;display:none"></div>
       <label>Your JAMB Score (0–400)</label>
       <input type="number" id="calcJamb" placeholder="e.g. 280" min="0" max="400">
       <label>Post UTME Score (0–100) — leave blank if not yet taken</label>
@@ -3047,7 +3050,7 @@ html { scroll-behavior: auto; }
   <div class="content-panel" id="panel-report">
     <button class="back-btn" onclick="goBack()">← Back to RoboMed</button>
     <div class="sec-header">🐞 Report a Problem</div>
-    <div class="tip-box" style="margin-bottom:16px"><strong>Found a bug, a wrong answer, or something broken?</strong> Tell us exactly what happened — the more detail, the faster we can fix it. Every report goes straight to the TechMed team.</div>
+    <div class="tip-box" style="margin-bottom:16px"><strong>Found a bug, a wrong answer, or something broken?</strong> Tell us exactly what happened — the more detail, the faster we can fix it. Every report goes straight to the TECHMED team.</div>
     <div class="calc-form">
       <label>What's the problem? *</label>
       <select id="reportType">
@@ -3203,10 +3206,10 @@ strategy:'For universities not specifically listed, use this formula as your bas
 const CAPS_DATA={
 ADMITTED:{label:'ADMITTED',emoji:'✅',color:'#4ade80',what:'Your admission has been formally offered and confirmed on CAPS. This is the status you are working toward.',
 action:['1. Log into caps.jamb.gov.ng with your JAMB registration number and password immediately.','2. Confirm the school, course, and all personal details are correct. Screenshot with date/time visible.','3. Click "Accept Admission" if details are correct.','4. Download and print your CAPS admission letter — required for school clearance.','5. Go to the school\'s official portal to pay acceptance fee. Do NOT pay to any agent or unofficial channel.'],danger:null},
-'PROPOSED ADMISSION':{label:'PROPOSED ADMISSION',emoji:'⏳',color:'#fbbf24',what:'The university has recommended you. JAMB has NOT yet given final approval. You cannot accept yet — wait for status to change to ADMITTED.',
+'PROPOSED ADMISSION':{label:'PROPOSED ADMISSION',emoji:'⏳',color:'#DBBE5C',what:'The university has recommended you. JAMB has NOT yet given final approval. You cannot accept yet — wait for status to change to ADMITTED.',
 action:['Do NOT pay any acceptance fee yet — Proposed Admission is NOT the same as Admitted.','Monitor CAPS daily — it should update to ADMITTED soon.','If unchanged after 2 weeks, contact the school admissions office directly with your JAMB number.','Do NOT allow anyone to "help" push it forward — this is where scam agents operate.'],
 danger:'🛑 CRITICAL MISTAKE: Students have paid acceptance fees and reported to schools while on "Proposed Admission" — creating serious problems requiring costly reversals. Wait for ADMITTED status before any action.'},
-'ADMISSION IN PROGRESS':{label:'ADMISSION IN PROGRESS',emoji:'🔄',color:'#38bdf8',what:'The institution has submitted your details to JAMB for processing. The status is actively moving. No action required from you now.',
+'ADMISSION IN PROGRESS':{label:'ADMISSION IN PROGRESS',emoji:'🔄',color:'#98B0C4',what:'The institution has submitted your details to JAMB for processing. The status is actively moving. No action required from you now.',
 action:['No action required — the system is processing your case.','Check CAPS daily during this period.','Do NOT pay any fees or take any actions yet.','If unchanged after 3 weeks, contact the school admissions office directly.'],danger:null},
 'NOT ADMITTED':{label:'NOT ADMITTED',emoji:'❌',color:'#f87171',what:'You have not been offered admission in this batch. This may be the first list — supplementary lists regularly follow weeks later.',
 action:['Do not panic — supplementary lists follow the main list. Keep checking CAPS daily until the cycle officially closes.','Verify your O\'Level results are uploaded and showing "Verified" on CAPS — unverified results block admission finalisation.','Explore alternative pathways using the "I Missed Admission" section below.','Diagnose the exact problem honestly: was it JAMB score? Post UTME? School choice? O\'Level? The solution must match the problem.','Give yourself 72 hours before deciding anything. No agents. No panic payments.'],
@@ -3219,7 +3222,7 @@ action:['Go to the school\'s official .edu.ng portal and pay acceptance fee thro
 REJECTED:{label:'REJECTED BY CANDIDATE',emoji:'🚫',color:'#f87171',what:'The admission offer has been rejected on CAPS. If intentional (accepting a better offer elsewhere), verify the other offer shows ADMITTED first. If accidental — act within 72 hours.',
 action:['If intentional: confirm the other school\'s CAPS status shows ADMITTED before any action.','If accidental or done by a third party: visit a JAMB office within 72 hours with all your documents.','Document everything — screenshots with timestamps, device used, any third-party communications.','Every day of delay reduces reversal chances significantly.'],
 danger:'🛑 REAL STORY: A candidate\'s uncle was given his JAMB login to "help process things." The uncle accidentally clicked "Reject" on his Pharmacy admission. By the time the error was discovered 3 days later, the slot had been reallocated. JAMB\'s reversal process took 6 weeks. The admission window had closed. He was not reinstated. Nobody touches your CAPS login except you. Ever.'},
-'CHANGE OF COURSE':{label:'CHANGE OF COURSE OFFERED',emoji:'↔️',color:'#fbbf24',what:'You have been placed in a different course from what you applied for. The university moved you to where your aggregate qualifies.',
+'CHANGE OF COURSE':{label:'CHANGE OF COURSE OFFERED',emoji:'↔️',color:'#DBBE5C',what:'You have been placed in a different course from what you applied for. The university moved you to where your aggregate qualifies.',
 action:['Research the offered course thoroughly before accepting or rejecting — careers have been built on courses candidates didn\'t initially choose.','Consider: Is this course useful to your career goals? Are there transfer options? (Transfers are rare and not guaranteed.)','Compare this offer vs. starting fresh next cycle with a stronger score.','Accepting is legally binding — you cannot freely switch after acceptance.'],danger:null}
 };
 
@@ -3438,7 +3441,7 @@ const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJ
 // (no existing player's level or XP requirement shifts), levels 11-100 continue with a
 // gentler growth curve so the endgame stays reachable for long-term daily players.
 const XP_LEVELS = [0,100,250,500,900,1400,2100,3000,4200,6000,7830,9700,11600,13530,15500,17500,19540,21620,23730,25880,28070,30300,32570,34880,37230,39620,42060,44540,47070,49640,52260,54930,57640,60400,63210,66070,68980,71950,74970,78040,81170,84360,87600,90900,94260,97680,101160,104710,108320,111990,115730,119540,123420,127370,131390,135480,139640,143880,148190,152580,157050,161600,166230,170950,175750,180640,185620,190690,195850,201100,206440,211880,217420,223060,228800,234640,240590,246650,252810,259090,265480,271980,278600,285340,292200,299180,306290,313530,320900,328400,336040,343810,351720,359780,367980,376330,384830,393480,402290,411260];
-const LEVEL_NAMES = ['Rookie','Student','Scholar','Contender','Achiever','Elite','Champion','Legend','Master','Grandmaster','Vanguard','Vanguard II','Vanguard III','Sentinel','Sentinel II','Sentinel III','Strategist','Strategist II','Strategist III','Strategist Prime','Luminary','Luminary II','Luminary III','Virtuoso','Virtuoso II','Virtuoso III','Mastermind','Mastermind II','Mastermind III','Mastermind Prime','Sage','Sage II','Sage III','Oracle','Oracle II','Oracle III','Visionary','Visionary II','Visionary III','Visionary Prime','Titan','Titan II','Titan III','Colossus','Colossus II','Colossus III','Juggernaut','Juggernaut II','Juggernaut III','Juggernaut Prime','Phenom','Phenom II','Phenom III','Prodigy','Prodigy II','Prodigy III','Maverick','Maverick II','Maverick III','Maverick Prime','Conqueror','Conqueror II','Conqueror III','Overlord','Overlord II','Overlord III','Paragon','Paragon II','Paragon III','Paragon Prime','Immortal','Immortal II','Immortal III','Ascendant','Ascendant II','Ascendant III','Transcendent','Transcendent II','Transcendent III','Transcendent Prime','Apex','Apex II','Apex III','Zenith','Zenith II','Zenith III','Pinnacle','Pinnacle II','Pinnacle III','Pinnacle Prime','Icon','Icon II','Icon III','Myth','Myth II','Myth III','Legendary Icon','Living Legend','TechMed Elite','TechMed GOAT'];
+const LEVEL_NAMES = ['Rookie','Student','Scholar','Contender','Achiever','Elite','Champion','Legend','Master','Grandmaster','Vanguard','Vanguard II','Vanguard III','Sentinel','Sentinel II','Sentinel III','Strategist','Strategist II','Strategist III','Strategist Prime','Luminary','Luminary II','Luminary III','Virtuoso','Virtuoso II','Virtuoso III','Mastermind','Mastermind II','Mastermind III','Mastermind Prime','Sage','Sage II','Sage III','Oracle','Oracle II','Oracle III','Visionary','Visionary II','Visionary III','Visionary Prime','Titan','Titan II','Titan III','Colossus','Colossus II','Colossus III','Juggernaut','Juggernaut II','Juggernaut III','Juggernaut Prime','Phenom','Phenom II','Phenom III','Prodigy','Prodigy II','Prodigy III','Maverick','Maverick II','Maverick III','Maverick Prime','Conqueror','Conqueror II','Conqueror III','Overlord','Overlord II','Overlord III','Paragon','Paragon II','Paragon III','Paragon Prime','Immortal','Immortal II','Immortal III','Ascendant','Ascendant II','Ascendant III','Transcendent','Transcendent II','Transcendent III','Transcendent Prime','Apex','Apex II','Apex III','Zenith','Zenith II','Zenith III','Pinnacle','Pinnacle II','Pinnacle III','Pinnacle Prime','Icon','Icon II','Icon III','Myth','Myth II','Myth III','Legendary Icon','Living Legend','TECHMED Elite','TECHMED GOAT'];
 
 // Supabase access tokens expire after ~1 hour (session.expires_at, unix seconds). Previously nothing
 // ever refreshed them, so any player who stayed on a quiz/Rapid Fire run past that window kept sending
@@ -3849,7 +3852,7 @@ async function dcGetOrCreateReferralCode(player){
 
 function dcGetReferralShareText(code){
   const url = `${window.location.origin}${window.location.pathname}?ref=${code}`;
-  const msg = `I'm on a Daily Challenge streak on TechMed RoboMed 🔥 4 minutes a day to sharpen Post-UTME skills. Come catch me on the leaderboard:`;
+  const msg = `I'm on a Daily Challenge streak on TECHMED RoboMed 🔥 4 minutes a day to sharpen Post-UTME skills. Come catch me on the leaderboard:`;
   return { url, msg };
 }
 
@@ -3883,7 +3886,7 @@ async function dcShareReferralLink(){
   if(!player || !player.id) return;
   const code = await dcGetOrCreateReferralCode(player);
   const { url, msg } = dcGetReferralShareText(code);
-  const result = await dcShareText('TechMed RoboMed', msg, url);
+  const result = await dcShareText('TECHMED RoboMed', msg, url);
   if(result==='copied'){
     const btn = document.getElementById('referralShareBtn');
     if(btn){ const orig=btn.textContent; btn.textContent='✅ Link copied!'; setTimeout(()=>btn.textContent=orig, 2000); }
@@ -3930,7 +3933,7 @@ async function dcRenderResultCardCanvas(data){
 
   // Header
   const headGrad = ctx.createLinearGradient(W/2-260,0,W/2+260,0);
-  headGrad.addColorStop(0,'#38bdf8'); headGrad.addColorStop(1,'#fbbf24');
+  headGrad.addColorStop(0,'#98B0C4'); headGrad.addColorStop(1,'#DBBE5C');
   ctx.fillStyle = headGrad;
   ctx.font = '800 28px "Segoe UI", sans-serif';
   ctx.fillText('ROBOMED · DAILY CHALLENGE', W/2, y);
@@ -3947,7 +3950,7 @@ async function dcRenderResultCardCanvas(data){
   ctx.shadowBlur = 40;
   const scoreGrad = ctx.createLinearGradient(0,y+90,0,scoreY);
   if(data.pct>=70){ scoreGrad.addColorStop(0,'#86efac'); scoreGrad.addColorStop(1,'#4ade80'); }
-  else { scoreGrad.addColorStop(0,'#7dd3fc'); scoreGrad.addColorStop(1,'#38bdf8'); }
+  else { scoreGrad.addColorStop(0,'#B8CCDC'); scoreGrad.addColorStop(1,'#98B0C4'); }
   ctx.fillStyle = scoreGrad;
   ctx.font = '900 190px "Segoe UI", sans-serif';
   ctx.fillText(`${data.score}/${data.total}`, W/2, scoreY);
@@ -3960,9 +3963,9 @@ async function dcRenderResultCardCanvas(data){
   // Stats row: streak, XP, level
   const statY = scoreY + 190;
   const stats = [
-    { label:'STREAK', value:`${data.streak}🔥`, color:'#fbbf24' },
+    { label:'STREAK', value:`${data.streak}🔥`, color:'#DBBE5C' },
     { label:'XP TOTAL', value:`${data.xp}`, color:'#4ade80' },
-    { label:'LEVEL', value:`${data.level}`, color:'#38bdf8' }
+    { label:'LEVEL', value:`${data.level}`, color:'#98B0C4' }
   ];
   const colW = W/3;
   stats.forEach((s,i)=>{
@@ -3986,7 +3989,7 @@ async function dcRenderResultCardCanvas(data){
   ctx.fillText('Think Smart. Perform Elite.', W/2, dividerY+60);
 
   // Footer branding
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#98B0C4';
   ctx.font = '800 30px "Segoe UI", sans-serif';
   ctx.fillText('techmedng.com/intelligence', W/2, H-40);
 
@@ -4001,7 +4004,7 @@ async function dcShareCompletion(score, streak, xp, level){
   const code = await dcGetOrCreateReferralCode(player);
   const { url } = dcGetReferralShareText(code);
   const streakLine = streak>1 ? `I protected my ${streak}-day streak today 🔥` : `Just scored ${score}/${DC_TOTAL_QS} on today's Daily Challenge 🔥`;
-  const text = `${streakLine}\nThink Smart. Perform Elite.\nRoboMed by TechMed —`;
+  const text = `${streakLine}\nThink Smart. Perform Elite.\nRoboMed by TECHMED —`;
   const dataUrl = await dcRenderResultCardCanvas({
     displayName: dcDisplayName(player),
     score, total: DC_TOTAL_QS,
@@ -4404,10 +4407,10 @@ function dcSaveLocalPlayer(p){
 
 const DC_SUBJECTS = {
   ENG:  { name:'English Language',              tag:'ENG',  icon:'📝', cls:'eng-btn',  color:'#f472b6' },
-  MATH: { name:'Mathematics',                   tag:'MATH', icon:'🔢', cls:'math-btn', color:'#fbbf24' },
+  MATH: { name:'Mathematics',                   tag:'MATH', icon:'🔢', cls:'math-btn', color:'#DBBE5C' },
   GK:   { name:'Current Affairs / Gen. Paper',  tag:'GK',   icon:'🌍', cls:'gk-btn',   color:'#2dd4bf' },
   APT:  { name:'Aptitude Test',                 tag:'APT',  icon:'🧠', cls:'apt-btn',  color:'#a78bfa' },
-  CHEM: { name:'Chemistry',                     tag:'CHEM', icon:'⚗️', cls:'chem-btn', color:'#38bdf8' },
+  CHEM: { name:'Chemistry',                     tag:'CHEM', icon:'⚗️', cls:'chem-btn', color:'#98B0C4' },
   BIO:  { name:'Biology',                       tag:'BIO',  icon:'🧬', cls:'bio-btn',  color:'#4ade80' },
   PHY:  { name:'Physics',                       tag:'PHY',  icon:'⚡', cls:'phy-btn',  color:'#fb923c' }
 };
@@ -5299,7 +5302,7 @@ async function dcRenderWeeklyCardCanvas(data){
 
   // Header
   const headGrad = ctx.createLinearGradient(W/2-260,0,W/2+260,0);
-  headGrad.addColorStop(0,'#38bdf8'); headGrad.addColorStop(1,'#fbbf24');
+  headGrad.addColorStop(0,'#98B0C4'); headGrad.addColorStop(1,'#DBBE5C');
   ctx.fillStyle = headGrad;
   ctx.font = '800 30px "Segoe UI", sans-serif';
   ctx.fillText('ROBOMED · WEEKLY REVIEW', W/2, y);
@@ -5316,9 +5319,9 @@ async function dcRenderWeeklyCardCanvas(data){
   const rankTopY = y + 200, rankBottomY = y + 440;
   ctx.font = '900 220px "Segoe UI", sans-serif';
   const rankGrad = ctx.createLinearGradient(0,rankTopY,0,rankBottomY);
-  rankGrad.addColorStop(0,'#fde047'); rankGrad.addColorStop(1,'#f59e0b');
+  rankGrad.addColorStop(0,'#E8D488'); rankGrad.addColorStop(1,'#C9A227');
   const rankBlue = ctx.createLinearGradient(0,rankTopY,0,rankBottomY);
-  rankBlue.addColorStop(0,'#7dd3fc'); rankBlue.addColorStop(1,'#38bdf8');
+  rankBlue.addColorStop(0,'#B8CCDC'); rankBlue.addColorStop(1,'#98B0C4');
   ctx.save();
   ctx.shadowColor = data.rank<=3 ? 'rgba(251,191,36,0.6)' : 'rgba(56,189,248,0.6)';
   ctx.shadowBlur = 40;
@@ -5333,8 +5336,8 @@ async function dcRenderWeeklyCardCanvas(data){
   const statY = rankBottomY + 200;
   const stats = [
     { label:'XP GAINED', value:`${data.weekXp}`, color:'#4ade80' },
-    { label:'DAYS PLAYED', value:`${data.daysPlayed}/7`, color:'#38bdf8' },
-    { label:'STREAK', value:`${data.streak}🔥`, color:'#fbbf24' }
+    { label:'DAYS PLAYED', value:`${data.daysPlayed}/7`, color:'#98B0C4' },
+    { label:'STREAK', value:`${data.streak}🔥`, color:'#DBBE5C' }
   ];
   const colW = W/3;
   stats.forEach((s,i)=>{
@@ -5363,7 +5366,7 @@ async function dcRenderWeeklyCardCanvas(data){
   ctx.fillText(msg, W/2, dividerY+70);
 
   // Footer branding
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#98B0C4';
   ctx.font = '800 30px "Segoe UI", sans-serif';
   ctx.fillText('techmedng.com/intelligence', W/2, H-64);
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -5413,7 +5416,7 @@ async function dcShowWeeklyReviewCard(){
       <div style="font-size:.78rem;color:var(--text-light);margin:4px 0 14px">${data.weekLabel}</div>
       ${data.inProgress?'<div class="tip-box" style="margin-bottom:14px;font-size:.75rem">This week isn\'t over yet — final results lock in Sunday 11:59PM.</div>':''}
       <img src="${dataUrl}" alt="Weekly review card" style="width:100%;border-radius:14px;border:1px solid var(--border)" />
-      <button class="btn-go" style="width:100%;padding:13px;margin-top:16px" onclick="dcShareImage(window._dcLastCardUrl,'techmed-weekly-review.png','My TechMed Weekly Review','Check out my week on TechMed RoboMed 🔥')">📤 Share My Review</button>
+      <button class="btn-go" style="width:100%;padding:13px;margin-top:16px" onclick="dcShareImage(window._dcLastCardUrl,'techmed-weekly-review.png','My TECHMED Weekly Review','Check out my week on TECHMED RoboMed 🔥')">📤 Share My Review</button>
       <button class="btn-go" style="width:100%;padding:11px;margin-top:8px;background:var(--surface-raised);border:1px solid var(--border);color:var(--text-light)" onclick="dcRenderIntro(dcGetMySubjects())">← Back to Profile</button>
     </div>`;
 }
@@ -5438,7 +5441,7 @@ async function dcCheckWeeklyCardPrompt(){
       <div class="school-name" style="font-size:1.1rem">📸 Your Week in Review!</div>
       <div style="font-size:.78rem;color:var(--text-light);margin:4px 0 14px">${data.weekLabel} · New week just started 🎉</div>
       <img src="${dataUrl}" alt="Weekly review card" style="width:100%;border-radius:14px;border:1px solid var(--border)" />
-      <button class="btn-go" style="width:100%;padding:13px;margin-top:16px" onclick="dcShareImage(window._dcLastCardUrl,'techmed-weekly-review.png','My TechMed Weekly Review','Check out my week on TechMed RoboMed 🔥')">📤 Share My Review</button>
+      <button class="btn-go" style="width:100%;padding:13px;margin-top:16px" onclick="dcShareImage(window._dcLastCardUrl,'techmed-weekly-review.png','My TECHMED Weekly Review','Check out my week on TECHMED RoboMed 🔥')">📤 Share My Review</button>
       <button class="btn-go" style="width:100%;padding:11px;margin-top:8px;background:var(--surface-raised);border:1px solid var(--border);color:var(--text-light)" onclick="openDailyChallenge()">Continue to Daily Challenge →</button>
     </div>`;
 }
@@ -5680,7 +5683,7 @@ function _dcRenderProfileShell(subjects, player, opts){
         : `<div style="text-align:center;font-size:.7rem;color:var(--text-muted);margin-top:8px">🔒 Subjects locked until tomorrow — you've already played today's combo</div>`}
       <button class="btn-go" style="width:100%;padding:11px;margin-top:8px;background:var(--surface-raised);border:1px solid var(--border);color:var(--text-light)" onclick="dcShowLeaderboard()">🏆 Leaderboard</button>
       <button class="btn-go" style="width:100%;padding:11px;margin-top:8px;background:linear-gradient(90deg,#f97316,#f43f5e);border:none;color:#fff;position:relative" onclick="rfShowSubjectPicker()">
-        ${!hasPlayedRF?'<span style="position:absolute;top:-8px;right:8px;background:#fbbf24;color:#000;font-size:.6rem;font-weight:900;padding:2px 7px;border-radius:999px;letter-spacing:.05em">NEW</span>':''}
+        ${!hasPlayedRF?'<span style="position:absolute;top:-8px;right:8px;background:#DBBE5C;color:#000;font-size:.6rem;font-weight:900;padding:2px 7px;border-radius:999px;letter-spacing:.05em">NEW</span>':''}
         🔥 Rapid Fire — ${hasPlayedRF?'Endless Mode':'Try it! Unlimited Qs, Unlimited XP'}
       </button>
       <button class="btn-go" style="width:100%;padding:11px;margin-top:8px;background:var(--surface-raised);border:1px solid var(--border);color:var(--text-light)" onclick="dcShowWeeklyReviewCard()">📸 My Weekly Review</button>
@@ -6061,12 +6064,12 @@ async function dcFinishQuiz(timedOut){
         <strong>Want to turn it around right now?</strong> Today's challenge is locked in, but you can jump into Rapid Fire on the same subjects — no pressure, no timer, just questions until you feel steady again.
         <button class="btn-go" style="width:100%;padding:11px;margin-top:10px" onclick="rfBounceBack('${subjects.join(',')}')">🔥 Bounce Back with Rapid Fire</button>
       </div>`:''}
-      ${weakSubject?`<div class="tip-box" style="margin-top:10px;border-color:#fbbf24;background:rgba(251,191,36,.08)">
+      ${weakSubject?`<div class="tip-box" style="margin-top:10px;border-color:#DBBE5C;background:rgba(251,191,36,.08)">
         <strong>${DC_SUBJECTS[weakSubject.tag]?.icon||''} You're weak in ${DC_SUBJECTS[weakSubject.tag]?.name||weakSubject.tag}</strong> — ${weakSubject.correct}/${weakSubject.total} today. A short Rapid Fire round on just this subject can close the gap fast.
         <div id="dcWeakDetail" style="margin-top:8px"></div>
         <button class="btn-go" style="width:100%;padding:11px;margin-top:10px" onclick="rfBounceBack('${weakSubject.tag}')">🎯 Rapid Fire: ${DC_SUBJECTS[weakSubject.tag]?.name||weakSubject.tag}</button>
       </div>`:''}
-      ${leveledUp?`<div class="tip-box" style="margin-top:10px;border-color:var(--accent);background:rgba(245,158,11,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevel} — ${lvl.name}!</strong></div>`:''}
+      ${leveledUp?`<div class="tip-box" style="margin-top:10px;border-color:var(--accent);background:rgba(201,162,39,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevel} — ${lvl.name}!</strong></div>`:''}
       ${badgeHtml}
       <div class="tip-box" style="margin-top:10px;font-size:.82rem">
         ${isReview?`<strong>📖 This was a review — no extra XP, streak, or leaderboard entry.</strong> Today's challenge is already logged. Come back tomorrow!`:`<strong>+${xpEarned} XP earned</strong>${streakData.streak>1?` · 🔥 ${streakData.streak}-day streak`:''}${score===DC_TOTAL_QS?' · 💎 Perfect score!':''}`}
@@ -6104,7 +6107,7 @@ async function dcFinishQuiz(timedOut){
         <strong style="display:block;margin-bottom:4px;color:var(--text)">Recent misses worth a second look:</strong>
         ${misses.map(m=>`<div style="margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid rgba(255,255,255,0.08)">
           <div>${m.q}</div>
-          ${m.exp?`<div style="color:#fbbf24;margin-top:2px">→ ${m.exp}</div>`:''}
+          ${m.exp?`<div style="color:#DBBE5C;margin-top:2px">→ ${m.exp}</div>`:''}
         </div>`).join('')}
       </div>`;
     }).catch(()=>{});
@@ -6164,7 +6167,7 @@ async function dcRenderBadgeCardCanvas(badgeKey, nickname){
 
   // Header
   const headGrad = ctx.createLinearGradient(W/2-260,0,W/2+260,0);
-  headGrad.addColorStop(0,'#38bdf8'); headGrad.addColorStop(1,'#fbbf24');
+  headGrad.addColorStop(0,'#98B0C4'); headGrad.addColorStop(1,'#DBBE5C');
   ctx.fillStyle = headGrad;
   ctx.font = '800 30px "Segoe UI", sans-serif';
   ctx.fillText('ROBOMED · ACHIEVEMENT UNLOCKED', W/2, afterLogoY);
@@ -6194,7 +6197,7 @@ async function dcRenderBadgeCardCanvas(badgeKey, nickname){
   ctx.beginPath(); ctx.moveTo(140,dividerY); ctx.lineTo(W-140,dividerY); ctx.stroke();
 
   const nameGrad = ctx.createLinearGradient(W/2-200,0,W/2+200,0);
-  nameGrad.addColorStop(0,'#fbbf24'); nameGrad.addColorStop(1,'#f59e0b');
+  nameGrad.addColorStop(0,'#DBBE5C'); nameGrad.addColorStop(1,'#C9A227');
   ctx.fillStyle = nameGrad;
   ctx.font = '800 46px "Segoe UI", sans-serif';
   ctx.fillText(nickname||'Player', W/2, dividerY + 66);
@@ -6204,7 +6207,7 @@ async function dcRenderBadgeCardCanvas(badgeKey, nickname){
   ctx.fillText('earned this badge on RoboMed', W/2, dividerY + 102);
 
   // Footer branding
-  ctx.fillStyle = '#38bdf8';
+  ctx.fillStyle = '#98B0C4';
   ctx.font = '800 30px "Segoe UI", sans-serif';
   ctx.fillText('techmedng.com/intelligence', W/2, H-64);
   ctx.fillStyle = 'rgba(255,255,255,0.4)';
@@ -6223,7 +6226,7 @@ async function dcShareBadge(badgeKey){
   const dataUrl = await dcRenderBadgeCardCanvas(badgeKey, nickname);
   if(!dataUrl) return;
   window._dcLastCardUrl = dataUrl;
-  await dcShareImage(dataUrl, `techmed-badge-${badgeKey}.png`, `${b.name} — TechMed Achievement`, `I just unlocked ${b.name} on TechMed RoboMed! 🏅`);
+  await dcShareImage(dataUrl, `techmed-badge-${badgeKey}.png`, `${b.name} — TECHMED Achievement`, `I just unlocked ${b.name} on TECHMED RoboMed! 🏅`);
 }
 
 async function dcShowMyBadges(){
@@ -6401,7 +6404,7 @@ async function dcShowLeaderboard(mode){
       rows = board.map((u,i)=>{
         const isMine = myUni && u.university===myUni;
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
-        return `<div class="checklist-item" style="${isMine?'background:rgba(14,165,233,.08);border-radius:8px;padding:4px 8px':''}">
+        return `<div class="checklist-item" style="${isMine?'background:rgba(9,71,110,.08);border-radius:8px;padding:4px 8px':''}">
           <div style="font-size:1.1rem;margin-right:8px">${medal}</div>
           <div style="flex:1"><strong>🎓 ${u.university}${isMine?' (You)':''}</strong> <span style="font-size:.7rem;color:var(--text-muted)">${u.playerCount} player${u.playerCount===1?'':'s'}</span></div>
           <div><strong>${u.totalXp} XP</strong></div>
@@ -6417,7 +6420,7 @@ async function dcShowLeaderboard(mode){
       rows = board.map((p,i)=>{
         const isMe = myId && p.id===myId;
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
-        return `<div class="checklist-item" style="${isMe?'background:rgba(14,165,233,.08);border-radius:8px;padding:4px 8px':''}">
+        return `<div class="checklist-item" style="${isMe?'background:rgba(9,71,110,.08);border-radius:8px;padding:4px 8px':''}">
           <div style="font-size:1.1rem;margin-right:8px">${medal}</div>
           <div style="flex:1"><strong>${dcDisplayName(p)}${isMe?' (You)':''}</strong> <span style="font-size:.7rem;color:var(--text-muted)">Lvl ${p.level||1} · 🔥 Best ${p.best_streak||0}</span></div>
           <div><strong>${p.xp||0} XP</strong></div>
@@ -6436,7 +6439,7 @@ async function dcShowLeaderboard(mode){
         const pLevel=e.players?.level||1;
         const isMe = myId && e.player_id===myId;
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
-        return `<div class="checklist-item" style="${isMe?'background:rgba(14,165,233,.08);border-radius:8px;padding:4px 8px':''}">
+        return `<div class="checklist-item" style="${isMe?'background:rgba(9,71,110,.08);border-radius:8px;padding:4px 8px':''}">
           <div style="font-size:1.1rem;margin-right:8px">${medal}</div>
           <div style="flex:1"><strong>${pName}${isMe?' (You)':''}</strong> <span style="font-size:.7rem;color:var(--text-muted)">Lvl ${pLevel} · ${e.daysPlayed} day${e.daysPlayed===1?'':'s'} played</span></div>
           <div><strong>${e.weekXp} XP</strong></div>
@@ -6457,7 +6460,7 @@ async function dcShowLeaderboard(mode){
         const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':`#${i+1}`;
         const timeStr=typeof e.time_taken==='number'?dcFormatTime(e.time_taken):'';
         const comboStr=e.uni_key?e.uni_key.replace(/\+/g,' · '):'';
-        return `<div class="checklist-item" style="${isMe?'background:rgba(14,165,233,.08);border-radius:8px;padding:4px 8px':''}">
+        return `<div class="checklist-item" style="${isMe?'background:rgba(9,71,110,.08);border-radius:8px;padding:4px 8px':''}">
           <div style="font-size:1.1rem;margin-right:8px">${medal}</div>
           <div style="flex:1"><strong>${pName}${isMe?' (You)':''}</strong> <span style="font-size:.7rem;color:var(--text-muted)">Lvl ${pLevel} · ${pXp} XP${comboStr?' · '+comboStr:''}${timeStr?' · ⏱️ '+timeStr:''}</span></div>
           <div><strong>${e.score}/${DC_TOTAL_QS}</strong></div>
@@ -6750,7 +6753,7 @@ async function rfFinish(){
       <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">${rfState.subjects.join(' · ')}</div>
       ${saveConfirmed===false?`<div class="danger-box" style="margin-top:10px;text-align:left">⚠️ <strong>Couldn't confirm your XP saved.</strong> Check your connection and retry before leaving this screen. <button class="btn-go" style="width:100%;padding:10px;margin-top:8px" onclick="rfRetrySave(this,'${player.id}',${newXpTotal},${newLevelInfo.level})">↻ Retry Saving</button></div>`:''}
       <div style="font-size:2.4rem;font-weight:900;margin:16px 0;font-family:var(--font-display)">${rfState.correct}/${totalAnswered} <span style="font-size:1rem;color:var(--text-muted)">(${pct}%)</span></div>
-      ${leveledUp?`<div class="tip-box" style="border-color:var(--accent);background:rgba(245,158,11,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevelInfo.level} — ${newLevelInfo.name}!</strong></div>`:''}
+      ${leveledUp?`<div class="tip-box" style="border-color:var(--accent);background:rgba(201,162,39,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevelInfo.level} — ${newLevelInfo.name}!</strong></div>`:''}
       ${badgeHtml}
       <div class="tip-box" style="margin-top:10px;font-size:.82rem">
         <strong>${rfState.xpThisRun>=0?'+':''}${rfState.xpThisRun} XP this run</strong> · 🔥 Best streak: ${rfState.bestStreakThisRun}
@@ -6840,11 +6843,11 @@ async function rfCheckAndAwardBadges(playerId, stats){
 const CW_SUBJECTS = {
   BIO:  { name:'Biology',            icon:'🧬', color:'#4ade80',
     topics:['Cell Biology','Genetics & Evolution','Ecology','Plant Physiology','Animal Physiology (Nutrition, Respiration, Excretion)','Reproduction & Growth','Nervous System & Support'] },
-  CHEM: { name:'Chemistry',          icon:'⚗️', color:'#38bdf8',
+  CHEM: { name:'Chemistry',          icon:'⚗️', color:'#98B0C4',
     topics:['Atomic Structure & Periodicity','Chemical Bonding','Stoichiometry & Mole Concept','States of Matter & Gas Laws','Acids, Bases & Salts','Energy Changes & Rates of Reaction','Organic Chemistry'] },
   PHY:  { name:'Physics',            icon:'⚡', color:'#fb923c',
     topics:['Mechanics (Motion, Force, Energy)','Waves & Optics','Electricity & Magnetism','Heat & Thermodynamics','Modern Physics (Atomic, Nuclear, Photoelectric)','Electromagnetic Induction & AC','Measurements, Scalars & Vectors'] },
-  MATH: { name:'Mathematics',        icon:'🔢', color:'#fbbf24',
+  MATH: { name:'Mathematics',        icon:'🔢', color:'#DBBE5C',
     topics:['Algebra','Trigonometry','Geometry & Mensuration','Statistics & Probability','Calculus (Differentiation & Integration)','Number Bases & Indices','Coordinate Geometry'] },
   ENG:  { name:'English Language',   icon:'📝', color:'#f472b6',
     topics:['Comprehension & Summary','Lexis & Structure (Synonyms/Antonyms)','Oral Forms (Phonetics, Stress, Intonation)','Sentence Structure & Grammar','Figures of Speech','Idioms & Register','Punctuation & Word Classes'] }
@@ -7410,7 +7413,7 @@ async function cwFinishPuzzle(){
       <div class="school-name" style="font-size:1.1rem">🧩 Puzzle Complete!</div>
       <div style="font-size:.78rem;color:var(--text-light);margin-top:4px">${CW_SUBJECTS[cwState.subject].name} · ${cwState.topic}</div>
       <div style="font-size:2.2rem;font-weight:900;margin:16px 0;font-family:var(--font-display)">${m}:${s}</div>
-      ${leveledUp?`<div class="tip-box" style="border-color:var(--accent);background:rgba(245,158,11,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevelInfo.level} — ${newLevelInfo.name}!</strong></div>`:''}
+      ${leveledUp?`<div class="tip-box" style="border-color:var(--accent);background:rgba(201,162,39,.08)"><strong>🎊 LEVEL UP! You reached Level ${newLevelInfo.level} — ${newLevelInfo.name}!</strong></div>`:''}
       <div class="tip-box" style="margin-top:10px;font-size:.82rem">
         <strong>+${xpEarned} XP earned</strong> · ${cwState.hintsUsed>0? `${cwState.hintsUsed} hint${cwState.hintsUsed===1?'':'s'} used (−${cwState.xpSpentOnHints} XP)` : 'No hints used — clean solve! 💪'}
       </div>
@@ -7530,7 +7533,7 @@ async function dcRenderMemoryNudge(player){
     <div class="practice-hub" style="background:linear-gradient(160deg, rgba(56,189,248,0.08), rgba(139,92,246,0.05));border-color:rgba(56,189,248,0.2)">
       <div class="practice-hub-header">
         <span class="practice-hub-icon">🧠</span>
-        <span class="practice-hub-title" style="color:#38bdf8">Memory Check</span>
+        <span class="practice-hub-title" style="color:#98B0C4">Memory Check</span>
       </div>
       <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 10px;line-height:1.5">It's been <strong style="color:var(--text)">${stalest.days} days</strong> since you last practiced <strong style="color:var(--text)">${s.name}</strong> — what you learned fades faster than it feels. A quick review now keeps it locked in.</p>
       <button class="cp-launch-btn" onclick="rfBounceBack('${stalest.tag}')">
@@ -8368,7 +8371,7 @@ async function ttFinishTopic(){
 
   listEl.innerHTML = `
     <div style="text-align:center;padding:20px 4px">
-      <div style="font-size:2.6rem;font-weight:900;font-family:var(--font-display);color:${scorePct>=70?'#4ade80':scorePct>=50?'#fbbf24':'#f87171'}">${scorePct}%</div>
+      <div style="font-size:2.6rem;font-weight:900;font-family:var(--font-display);color:${scorePct>=70?'#4ade80':scorePct>=50?'#DBBE5C':'#f87171'}">${scorePct}%</div>
       <p style="font-size:.9rem;color:var(--text-muted);margin:4px 0 0">${correct} of ${total} correct · ${topic}${wasPartial?' · stopped early':''}</p>
     </div>
     ${xpHtml}
@@ -8616,7 +8619,7 @@ function showSchool(key){
 
 // ===== CAPS =====
 function renderCaps(){
-  const colors={ADMITTED:'#4ade80','PROPOSED ADMISSION':'#fbbf24','ADMISSION IN PROGRESS':'#38bdf8','NOT ADMITTED':'#f87171',AWAITING:'#fb923c',ACCEPTED:'#4ade80',REJECTED:'#f87171','CHANGE OF COURSE':'#fbbf24'};
+  const colors={ADMITTED:'#4ade80','PROPOSED ADMISSION':'#DBBE5C','ADMISSION IN PROGRESS':'#98B0C4','NOT ADMITTED':'#f87171',AWAITING:'#fb923c',ACCEPTED:'#4ade80',REJECTED:'#f87171','CHANGE OF COURSE':'#DBBE5C'};
   document.getElementById('capsGrid').innerHTML=Object.keys(CAPS_DATA).map(k=>{const d=CAPS_DATA[k];return`<button class="caps-btn" onclick="showCapsStatus('${k}')"><span class="ct">Current Status</span><span style="color:${colors[k]||'#fff'}">${d.emoji} ${d.label}</span></button>`}).join('');
 }
 function showCapsStatus(key){
@@ -8692,7 +8695,7 @@ function renderScams(){document.getElementById('scamList').innerHTML=SCAMS.map(s
 function renderPathways(){document.getElementById('pathwayGrid').innerHTML=PATHWAYS.map(p=>`<div class="pathway-card"><span class="pc-e">${p.emoji}</span><h4>${p.title}</h4><p>${p.desc}</p></div>`).join('')}
 
 // ===== CONFETTI =====
-function confetti(){const cols=['#0ea5e9','#f59e0b','#10b981','#ef4444','#8b5cf6','#ec4899'];for(let i=0;i<36;i++){const el=document.createElement('div');el.className='confetti';el.style.cssText=`left:${Math.random()*100}vw;background:${cols[~~(Math.random()*cols.length)]};animation-duration:${Math.random()*2+2}s;border-radius:${Math.random()>.5?'50%':'2px'}`;document.body.appendChild(el);setTimeout(()=>el.remove(),4500)}}
+function confetti(){const cols=['#09476E','#C9A227','#10b981','#ef4444','#8b5cf6','#ec4899'];for(let i=0;i<36;i++){const el=document.createElement('div');el.className='confetti';el.style.cssText=`left:${Math.random()*100}vw;background:${cols[~~(Math.random()*cols.length)]};animation-duration:${Math.random()*2+2}s;border-radius:${Math.random()>.5?'50%':'2px'}`;document.body.appendChild(el);setTimeout(()=>el.remove(),4500)}}
 
 // ===== NAV =====
 function initNav(){
