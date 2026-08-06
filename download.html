@@ -193,9 +193,8 @@ async function checkOrder() {
            <p class="ref-note">Reference: ${reference}</p>`);
       } else {
         setState('state-success', ICONS.success, 'Payment confirmed',
-          `Your payment for "${order.product_name}" went through. We are sending your file to your email shortly — or grab it instantly on WhatsApp.`,
-          `<a href="${whatsappHref(reference)}" class="btn-primary" target="_blank" style="width:100%;justify-content:center;">Get My File on WhatsApp</a>
-           <p class="ref-note">Reference: ${reference}</p>`);
+          `Your payment for "${order.product_name}" went through. Your download link is on its way to your email.`,
+          `<p class="ref-note">Reference: ${reference}</p>`);
       }
       return;
     }
