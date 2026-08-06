@@ -869,6 +869,38 @@ function filterMaterials(category) {
 let currentProduct = null;
 let currentPrice = 0;
 let currentName = '';
+let isBuySubmitting = false;
+
+// Duplicate-payment guard: after a successful pay-initiate, we remember
+// product+university in localStorage for a short window. If the buy modal
+// is reopened for the same item within that window (e.g. the user comes
+// back after already completing checkout, unsure if it went through), we
+// warn before letting them start a second, fully independent transaction —
+// this is what actually double-charged a customer for the same file.
+const RECENT_PURCHASE_WINDOW_MS = 15 * 60 * 1000;
+
+function recentPurchaseKey(id, uni) {
+  return 'techmed_recent_purchase_' + id + '_' + (uni || 'na');
+}
+
+function markRecentPurchaseAttempt(id, uni) {
+  try { localStorage.setItem(recentPurchaseKey(id, uni), String(Date.now())); } catch (e) {}
+}
+
+function warnIfRecentPurchase(id, uni) {
+  if (id === 'operation-100') return true; // waitlist, not a real charge
+  let last;
+  try { last = parseInt(localStorage.getItem(recentPurchaseKey(id, uni)), 10); } catch (e) { return true; }
+  if (!last || isNaN(last)) return true;
+  const elapsed = Date.now() - last;
+  if (elapsed >= RECENT_PURCHASE_WINDOW_MS) return true;
+  const minutesAgo = Math.max(1, Math.round(elapsed / 60000));
+  return confirm(
+    'You already started a payment for this ' + minutesAgo + ' minute(s) ago. ' +
+    'If it already went through, check your email or WhatsApp before paying again — ' +
+    'buying again now will charge you a second time. Continue anyway?'
+  );
+}
 
 function openBuyModal(id, name, price) {
   currentProduct = id;
@@ -918,7 +950,13 @@ function closeBuyModal() {
 
 /* ===== BACKEND PAYMENT (PAYSTACK VIA SUPABASE EDGE FUNCTION) ===== */
 function buyBackend() {
+  // Guards against a second transaction firing from a rapid double-tap,
+  // independent of (and in addition to) the button's disabled attribute.
+  if (isBuySubmitting) return;
+
   const uni = document.getElementById('uniSelect').value;
+
+  if (!warnIfRecentPurchase(currentProduct, uni)) return;
 
   // Get customer email
   const customerEmail = prompt('Enter your email for receipt:');
@@ -926,6 +964,8 @@ function buyBackend() {
     alert('Please enter a valid email');
     return;
   }
+
+  isBuySubmitting = true;
 
   // Show loading
   const btn = document.getElementById('backendBtn');
@@ -951,16 +991,23 @@ function buyBackend() {
   })
   .then(r => r.json())
   .then(data => {
+    if (data.success && data.data.authorization_url) {
+      // Mark before navigating away — this is what lets us warn if the
+      // user comes back (e.g. via the browser back button) and tries to
+      // pay for the same item again before checking whether it already
+      // went through.
+      markRecentPurchaseAttempt(currentProduct, uni);
+      window.location.href = data.data.authorization_url;
+      return;
+    }
+
+    isBuySubmitting = false;
     btn.innerHTML = originalText;
     btn.disabled = false;
-
-    if (data.success && data.data.authorization_url) {
-      window.location.href = data.data.authorization_url;
-    } else {
-      alert('Payment failed: ' + (data.message || 'Unknown error'));
-    }
+    alert('Payment failed: ' + (data.message || 'Unknown error'));
   })
   .catch(err => {
+    isBuySubmitting = false;
     btn.innerHTML = originalText;
     btn.disabled = false;
     console.error(err);
