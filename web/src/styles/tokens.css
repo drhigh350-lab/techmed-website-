@@ -1,0 +1,65 @@
+/*
+  TECHMED design tokens — sourced from the Branding & Representation
+  Standard (Deep Navy dominant, Professional Blue secondary, Gold accent
+  only, Montserrat + Inter). Kept in sync with css/style.css on the static
+  site; this is the same system, ported for the Astro rebuild.
+*/
+
+:root {
+  /* Brand core */
+  --color-deep-navy: #012748;
+  --color-professional-blue: #09476E;
+  --color-soft-blue: #98B0C4;
+  --color-gold: #C9A227;
+  --color-gold-light: #DBBE5C;
+  --color-gold-deep: #A8841E;
+  --color-white: #F8F9FA;
+
+  /* Semantic roles (dark is default, per brand standard) */
+  --bg: var(--color-deep-navy);
+  --surface: var(--color-professional-blue);
+  --surface-raised: #0B3A5C;
+  --surface-dark: #001D36;
+  --text: var(--color-white);
+  --text-light: var(--color-soft-blue);
+  --text-muted: #6C87A0;
+  --border: rgba(248, 249, 250, 0.1);
+  --accent: var(--color-gold);
+  --accent-light: var(--color-gold-light);
+  --accent-deep: var(--color-gold-deep);
+
+  /* Typography */
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-main: 'Inter', system-ui, sans-serif;
+
+  /* Shape */
+  --radius-sm: 8px;
+  --radius: 12px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+
+  /* Spacing */
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-24: 96px;
+}
+
+/*
+  Light mode is opt-in (data-theme="light"), matching the existing site's
+  theme-toggle behavior — dark is the brand-standard default.
+*/
+:root[data-theme='light'] {
+  --bg: #F8F9FA;
+  --surface: #ffffff;
+  --surface-raised: #EEF1F4;
+  --surface-dark: var(--color-deep-navy);
+  --text: var(--color-deep-navy);
+  --text-light: #3D5972;
+  --text-muted: var(--color-soft-blue);
+  --border: rgba(1, 39, 72, 0.1);
+}
