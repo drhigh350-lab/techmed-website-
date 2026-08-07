@@ -2,7 +2,12 @@
 // Source: Campaign Operating Manual, Chapter 14 — The Builder Manifesto.
 // Reproduced verbatim, as the manual specifies it should appear unchanged
 // across the website, landing page, welcome guide and Builder Passport.
-const lines = [
+// Content lives in Sanity (singleton doc _id: "builderManifesto") once
+// seeded; this fallback keeps the section correct even if Sanity is
+// unreachable or not yet seeded.
+import { fetchSanity } from '../lib/sanity';
+
+const FALLBACK_LINES = [
   'We are not here to chase motivation.',
   'We are here to build discipline.',
   'We are not looking for shortcuts.',
@@ -20,10 +25,16 @@ const lines = [
   'Because things built well last.',
   'We are The Builders.',
 ];
+
+const manifesto = await fetchSanity<{ label: string; lines: string[] }>(
+  `*[_id == "builderManifesto"][0]{label, lines}`,
+  { label: 'The Builder Manifesto', lines: FALLBACK_LINES },
+);
+const { label, lines } = manifesto;
 ---
 
 <section class="manifesto" id="manifesto">
-  <p class="label">The Builder Manifesto</p>
+  <p class="label">{label}</p>
   <div class="lines">
     {lines.map((line) => (
       <p>{line}</p>

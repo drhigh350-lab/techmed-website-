@@ -1,34 +1,47 @@
 ---
 // Founder facts sourced from about.html (already live on techmedng.com) —
 // kept consistent with the established public bio rather than restated
-// from scratch.
+// from scratch. Content lives in Sanity (singleton doc _id: "founder")
+// once seeded; falls back to the local static photo and this copy either
+// way, so a missing/unreachable Sanity doc never breaks the section.
+import { fetchSanity } from '../lib/sanity';
+
+const FALLBACK = {
+  name: 'Wisdom Johnson',
+  role: 'Tutor TechMed',
+  label: 'A Note From the Founder',
+  photoUrl: '/images/201319.jpg',
+  bio: [
+    'Wisdom Johnson is a medical student at the University of Uyo and the founder of TECHMED. Before gaining admission, he lived the exact pain many Nigerian students face today — after secondary school in 2021, he wrote UTME in 2022 hoping to study Medicine & Surgery, and was not admitted. He spent nearly three years at home facing that disappointment.',
+    'Instead of giving up, he studied the admission process deeply. On his second attempt, he scored 331 in UTME and 91% in Chemistry, and secured admission to study Medicine & Surgery in 2024.',
+  ],
+  quote:
+    "Most students don't fail because they lack intelligence. They fail because they lack strategy, systems and proper guidance.",
+};
+
+const founder = await fetchSanity<typeof FALLBACK>(
+  `*[_id == "founder"][0]{name, role, label, "photoUrl": photo.asset->url, bio, quote}`,
+  FALLBACK,
+);
+const { name, role, label, bio, quote } = founder;
+// photo.asset->url resolves to null if a founder doc exists in Sanity but
+// has no photo uploaded yet — fall back to the static asset rather than
+// rendering a broken <img>.
+const photoUrl = founder.photoUrl || FALLBACK.photoUrl;
 ---
 
 <section class="section">
   <div class="grid">
     <div class="photo-wrap">
-      <img src="/images/201319.jpg" alt="Wisdom Johnson, founder of TECHMED" />
+      <img src={photoUrl} alt={`${name}, founder of TECHMED`} />
     </div>
     <div class="content">
-      <p class="label">A Note From the Founder</p>
-      <h2>Wisdom Johnson — Tutor TechMed</h2>
-      <p>
-        Wisdom Johnson is a medical student at the University of Uyo and the
-        founder of TECHMED. Before gaining admission, he lived the exact pain
-        many Nigerian students face today — after secondary school in 2021, he
-        wrote UTME in 2022 hoping to study Medicine &amp; Surgery, and was not
-        admitted. He spent nearly three years at home facing that
-        disappointment.
-      </p>
-      <p>
-        Instead of giving up, he studied the admission process deeply. On his
-        second attempt, he scored 331 in UTME and 91% in Chemistry, and
-        secured admission to study Medicine &amp; Surgery in 2024.
-      </p>
-      <p class="quote">
-        "Most students don't fail because they lack intelligence. They fail
-        because they lack strategy, systems and proper guidance."
-      </p>
+      <p class="label">{label}</p>
+      <h2>{name} — {role}</h2>
+      {bio.map((paragraph) => (
+        <p set:text={paragraph} />
+      ))}
+      <p class="quote">"{quote}"</p>
     </div>
   </div>
 </section>

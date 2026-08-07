@@ -1,7 +1,11 @@
 ---
 // Grounded in the Brand Overview and Campaign Manual only — no invented
-// pricing, dates or claims not documented in those sources.
-const faqs = [
+// pricing, dates or claims not documented in those sources. Content lives
+// in Sanity (faqItem documents, ordered by "order") once seeded; the
+// fallback below keeps this section correct either way.
+import { fetchSanity } from '../lib/sanity';
+
+const FALLBACK_FAQS = [
   {
     q: 'What is TECHMED, exactly?',
     a: "A student-success ecosystem for Nigerian students preparing for UTME and Post-UTME — combining structured preparation, a Builder community, and personal growth content, built around one belief: most students don't fail from lack of intelligence, but from lack of a clear system.",
@@ -23,6 +27,11 @@ const faqs = [
     a: "Tap \"Become a Builder\" to join the TECHMED WhatsApp Channel — that's where onboarding, your Builder Cohort assignment, and everything else begins.",
   },
 ];
+
+const faqs = await fetchSanity<{ q: string; a: string }[]>(
+  `*[_type == "faqItem"] | order(order asc){"q": question, "a": answer}`,
+  FALLBACK_FAQS,
+);
 ---
 
 <section class="section">
