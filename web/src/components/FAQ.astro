@@ -1,0 +1,80 @@
+---
+// Grounded in the Brand Overview and Campaign Manual only — no invented
+// pricing, dates or claims not documented in those sources.
+const faqs = [
+  {
+    q: 'What is TECHMED, exactly?',
+    a: "A student-success ecosystem for Nigerian students preparing for UTME and Post-UTME — combining structured preparation, a Builder community, and personal growth content, built around one belief: most students don't fail from lack of intelligence, but from lack of a clear system.",
+  },
+  {
+    q: 'What is a Builder Cohort?',
+    a: "Your academic home inside TECHMED — an assigned group (not a giant public chat) where you attend Builder Sessions, ask questions, and prepare alongside the same set of fellow Builders throughout the journey.",
+  },
+  {
+    q: 'Is TECHMED free?',
+    a: 'The Builder community, the WhatsApp Channel, and a number of resources are free. Some structured programs and revision materials are paid. You will always know which is which before joining.',
+  },
+  {
+    q: "I've already written UTME before. Is this still for me?",
+    a: 'Yes. Builders include first-time candidates and students rewriting UTME. TECHMED focuses on building the systems and understanding that carry you forward, whichever attempt this is.',
+  },
+  {
+    q: 'How do I actually join?',
+    a: "Tap \"Become a Builder\" to join the TECHMED WhatsApp Channel — that's where onboarding, your Builder Cohort assignment, and everything else begins.",
+  },
+];
+---
+
+<section class="section">
+  <h2>Frequently Asked Questions</h2>
+  <div class="list">
+    {faqs.map((item) => (
+      <details>
+        <summary>{item.q}</summary>
+        <p>{item.a}</p>
+      </details>
+    ))}
+  </div>
+</section>
+
+<style>
+  .section {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-8);
+    text-align: center;
+  }
+
+  details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5) var(--space-6);
+    margin-bottom: var(--space-3);
+  }
+
+  summary {
+    font-family: var(--font-display);
+    font-weight: 600;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
+  }
+
+  details p {
+    margin-top: var(--space-3);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+</style>

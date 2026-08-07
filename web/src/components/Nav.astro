@@ -1,0 +1,43 @@
+---
+const WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i';
+---
+
+<header class="nav">
+  <a href="/" class="logo">TECHMED</a>
+  <a class="cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Become a Builder</a>
+</header>
+
+<style>
+  .nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-6);
+    background: rgba(1, 39, 72, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    color: var(--text);
+  }
+
+  .cta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 10px 20px;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+  }
+</style>

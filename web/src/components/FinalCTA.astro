@@ -1,0 +1,41 @@
+---
+const WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i';
+---
+
+<section class="cta-section">
+  <h2>Brick by brick. Day by day.</h2>
+  <p>You don't have to prepare alone.</p>
+  <a class="cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Become a Builder</a>
+</section>
+
+<style>
+  .cta-section {
+    text-align: center;
+    padding: var(--space-24) var(--space-6);
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-3);
+  }
+
+  p {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .cta {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    padding: 16px 36px;
+    border-radius: var(--radius);
+    text-decoration: none;
+  }
+</style>

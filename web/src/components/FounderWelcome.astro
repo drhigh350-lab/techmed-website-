@@ -1,0 +1,102 @@
+---
+// Founder facts sourced from about.html (already live on techmedng.com) —
+// kept consistent with the established public bio rather than restated
+// from scratch.
+---
+
+<section class="section">
+  <div class="grid">
+    <div class="photo-wrap">
+      <img src="/images/201319.jpg" alt="Wisdom Johnson, founder of TECHMED" />
+    </div>
+    <div class="content">
+      <p class="label">A Note From the Founder</p>
+      <h2>Wisdom Johnson — Tutor TechMed</h2>
+      <p>
+        Wisdom Johnson is a medical student at the University of Uyo and the
+        founder of TECHMED. Before gaining admission, he lived the exact pain
+        many Nigerian students face today — after secondary school in 2021, he
+        wrote UTME in 2022 hoping to study Medicine &amp; Surgery, and was not
+        admitted. He spent nearly three years at home facing that
+        disappointment.
+      </p>
+      <p>
+        Instead of giving up, he studied the admission process deeply. On his
+        second attempt, he scored 331 in UTME and 91% in Chemistry, and
+        secured admission to study Medicine &amp; Surgery in 2024.
+      </p>
+      <p class="quote">
+        "Most students don't fail because they lack intelligence. They fail
+        because they lack strategy, systems and proper guidance."
+      </p>
+    </div>
+  </div>
+</section>
+
+<style>
+  .section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: var(--space-12);
+    align-items: center;
+  }
+
+  .photo-wrap img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 4px solid var(--surface-raised);
+  }
+
+  .label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  h2 {
+    font-size: clamp(1.4rem, 3vw, 1.8rem);
+    margin-bottom: var(--space-5);
+  }
+
+  .content p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-4);
+  }
+
+  .quote {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-style: italic;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: var(--space-5);
+  }
+
+  @media (max-width: 700px) {
+    .grid {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+    .photo-wrap img {
+      width: 160px;
+      margin: 0 auto;
+    }
+    .quote {
+      text-align: left;
+    }
+  }
+</style>
