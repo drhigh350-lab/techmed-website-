@@ -1,5 +1,6 @@
 ---
-const WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i';
+import { getWhatsappChannelUrl } from '../lib/sanity';
+const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
 ---
 
 <header class="nav">

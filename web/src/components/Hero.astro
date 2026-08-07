@@ -2,7 +2,8 @@
 // Landing page hero — copy pulled directly from the UTME 2027 Campaign
 // Operating Manual (Chapter 39, Landing Page Structure) and the Branding
 // Standard's primary tagline.
-const WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i';
+import { getWhatsappChannelUrl } from '../lib/sanity';
+const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
 ---
 
 <section class="hero" id="become-a-builder">

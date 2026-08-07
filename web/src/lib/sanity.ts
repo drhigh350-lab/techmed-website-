@@ -1,0 +1,60 @@
+import { createClient } from '@sanity/client';
+
+// Server-side only — these envs are intentionally not PUBLIC_-prefixed, so
+// Astro/Vite never bundles them into client-side JS. Every call site here
+// runs in .astro frontmatter (build time), never in the browser.
+export const sanity = createClient({
+  projectId: import.meta.env.SANITY_PROJECT_ID,
+  dataset: import.meta.env.SANITY_DATASET ?? 'production',
+  apiVersion: '2024-01-01',
+  useCdn: true,
+  timeout: 8000,
+});
+
+// The underlying HTTP layer can emit a socket 'error' event *after* a
+// request has already rejected and been handled by fetchSanity's own
+// try/catch below (observed with dangling keep-alive sockets when a
+// network proxy tears down the connection mid-tunnel). An unhandled
+// 'error'/'uncaughtException' of that kind is fatal to the whole Node
+// process by default, which would crash the entire static build over a
+// single flaky Sanity request — exactly what fetchSanity exists to avoid.
+// This is scoped to that specific failure mode: log and continue, don't
+// swallow anything else.
+let stragglerGuardInstalled = false;
+function installStragglerGuard() {
+  if (stragglerGuardInstalled) return;
+  stragglerGuardInstalled = true;
+  process.on('uncaughtException', (err: NodeJS.ErrnoException) => {
+    if (err && (err.syscall === 'read' || err.syscall === 'write') && err.code) {
+      console.warn('[sanity] ignoring late socket error from a request already handled:', err.message);
+      return;
+    }
+    throw err;
+  });
+}
+installStragglerGuard();
+
+// Fetches are defensive by design: if Sanity is unreachable at build time
+// (misconfigured env, network issue, project not yet seeded), the site
+// still builds using the caller's fallback rather than failing the deploy.
+export async function fetchSanity<T>(query: string, fallback: T): Promise<T> {
+  try {
+    const result = await sanity.fetch<T>(query);
+    if (result === null || result === undefined || (Array.isArray(result) && result.length === 0)) {
+      return fallback;
+    }
+    return result;
+  } catch (err) {
+    console.warn('[sanity] fetch failed, using fallback content:', (err as Error).message);
+    return fallback;
+  }
+}
+
+export const FALLBACK_WHATSAPP_CHANNEL = 'https://whatsapp.com/channel/0029Vb7tQsfD38CSNxWtHN3i';
+
+export async function getWhatsappChannelUrl(): Promise<string> {
+  return fetchSanity<string>(
+    `*[_id == "siteSettings"][0].whatsappChannelUrl`,
+    FALLBACK_WHATSAPP_CHANNEL,
+  );
+}
