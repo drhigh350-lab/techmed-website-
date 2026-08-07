@@ -1,15 +1,33 @@
-import { createClient } from '@sanity/client';
+import { createClient, type SanityClient } from '@sanity/client';
 
 // Server-side only — these envs are intentionally not PUBLIC_-prefixed, so
 // Astro/Vite never bundles them into client-side JS. Every call site here
 // runs in .astro frontmatter (build time), never in the browser.
-export const sanity = createClient({
-  projectId: import.meta.env.SANITY_PROJECT_ID,
-  dataset: import.meta.env.SANITY_DATASET ?? 'production',
-  apiVersion: '2024-01-01',
-  useCdn: true,
-  timeout: 8000,
-});
+//
+// Client construction is lazy and defensive on purpose: @sanity/client
+// throws synchronously if projectId is missing (e.g. the env vars aren't
+// configured yet in this build environment), and that throw happens the
+// moment this module is imported — before fetchSanity's own try/catch
+// below ever gets a chance to run. A missing/misconfigured env var should
+// degrade to fallback content like any other Sanity failure, not crash
+// the whole build at import time.
+let client: SanityClient | null | undefined;
+function getClient(): SanityClient | null {
+  if (client !== undefined) return client;
+  try {
+    client = createClient({
+      projectId: import.meta.env.SANITY_PROJECT_ID,
+      dataset: import.meta.env.SANITY_DATASET ?? 'production',
+      apiVersion: '2024-01-01',
+      useCdn: true,
+      timeout: 8000,
+    });
+  } catch (err) {
+    console.warn('[sanity] client could not be configured, using fallback content:', (err as Error).message);
+    client = null;
+  }
+  return client;
+}
 
 // The underlying HTTP layer can emit a socket 'error' event *after* a
 // request has already rejected and been handled by fetchSanity's own
@@ -38,6 +56,9 @@ installStragglerGuard();
 // (misconfigured env, network issue, project not yet seeded), the site
 // still builds using the caller's fallback rather than failing the deploy.
 export async function fetchSanity<T>(query: string, fallback: T): Promise<T> {
+  const sanity = getClient();
+  if (!sanity) return fallback;
+
   try {
     const result = await sanity.fetch<T>(query);
     if (result === null || result === undefined || (Array.isArray(result) && result.length === 0)) {
