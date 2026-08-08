@@ -10,6 +10,7 @@ import BaseLayout from '../layouts/BaseLayout.astro';
 import SectionHeading from '../components/SectionHeading.astro';
 import SubjectCard from '../components/SubjectCard.astro';
 import ResourceCard from '../components/ResourceCard.astro';
+import NoteBox from '../components/NoteBox.astro';
 import { getWhatsappChannelUrl } from '../lib/sanity';
 import { getSubjects } from '../lib/syllabus';
 import { getResources } from '../lib/resources';
@@ -102,12 +103,14 @@ const jsonLd = [
       title="The Five TECHMED JAMB Blueprints"
       align="center"
     />
-    <div class="blueprints-note reveal">
-      <strong>About the Blueprints:</strong> built from the official JAMB syllabus and optimized by
-      TECHMED into a clearer, more strategic learning roadmap — the same required content, organized
-      by how concepts actually depend on each other rather than JAMB's original listing order.
-      TECHMED is not affiliated with or endorsed by JAMB; each Blueprint is TECHMED's own study
-      structure, built on top of JAMB's published syllabus.
+    <div class="blueprints-note-wrap reveal">
+      <NoteBox>
+        <strong>About the Blueprints:</strong> built from the official JAMB syllabus and optimized by
+        TECHMED into a clearer, more strategic learning roadmap — the same required content, organized
+        by how concepts actually depend on each other rather than JAMB's original listing order.
+        TECHMED is not affiliated with or endorsed by JAMB; each Blueprint is TECHMED's own study
+        structure, built on top of JAMB's published syllabus.
+      </NoteBox>
     </div>
     <div class="subject-grid">
       {subjects.map((subject) => (
@@ -387,37 +390,10 @@ const jsonLd = [
   }
 
   /* 3. Blueprints */
-  .blueprints-note {
-    position: relative;
-    overflow: hidden;
+  .blueprints-note-wrap {
     max-width: 720px;
     margin: 0 auto var(--space-10);
-    font-size: 0.92rem;
-    line-height: 1.75;
-    color: var(--text-light);
     text-align: left;
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--space-5) var(--space-6) var(--space-5) calc(var(--space-6) + var(--space-2));
-  }
-
-  /* Overlay bar instead of border-left — mixing a 1px border with a
-     thicker, differently-colored border-left miters into a visible seam
-     at the rounded corner. See the identical fix on the subject page's
-     .note/.dependency-note for the full reasoning. */
-  .blueprints-note::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 3px;
-    background: var(--color-soft-blue);
-  }
-
-  .blueprints-note strong {
-    color: var(--text);
   }
 
   .subject-grid {
