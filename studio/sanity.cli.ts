@@ -5,4 +5,5 @@ export default defineCliConfig({
     projectId: 'kxoz58eb',
     dataset: 'production',
   },
+  studioHost: 'techmed',
 });
