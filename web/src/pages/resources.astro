@@ -111,6 +111,13 @@ const jsonLd = [
       </div>
     </section>
   )}
+
+  <section class="syllabus-link reveal">
+    <p>
+      Not sure what to study yet? See the full <a href="/jamb-syllabus-2027">JAMB Syllabus 2027</a>,
+      broken down by subject and study stage.
+    </p>
+  </section>
 </BaseLayout>
 
 <style>
@@ -252,6 +259,28 @@ const jsonLd = [
     color: var(--text-light);
     max-width: 52ch;
     margin-bottom: var(--space-6);
+  }
+
+  .syllabus-link {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-24);
+    text-align: center;
+  }
+
+  .syllabus-link p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+  }
+
+  .syllabus-link a {
+    color: var(--accent);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .syllabus-link a:hover {
+    text-decoration: underline;
   }
 
   @media (max-width: 800px) {
