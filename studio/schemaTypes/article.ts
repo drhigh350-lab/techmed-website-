@@ -1,4 +1,6 @@
-import { defineField, defineType } from 'sanity';
+import type { ComponentType } from 'react';
+import { defineField, defineType, type ArrayOfObjectsInputProps } from 'sanity';
+import { MarkdownPasteInput } from '../components/MarkdownPasteInput';
 
 // The TECHMED Knowledge Base / Blog content model. Body uses Sanity's
 // standard portable-text block content — restricted to the block styles,
@@ -112,6 +114,14 @@ export default defineType({
       name: 'body',
       title: 'Body',
       type: 'array',
+      description:
+        'Write directly, or draft elsewhere (e.g. ChatGPT) and paste in — pasting Markdown-formatted text (## headings, **bold**, - bullets, [links](url)) auto-converts into real formatted blocks instead of landing as literal symbols.',
+      // Sanity's field-level `components.input` type is a union covering
+      // every possible array shape (primitives, objects, portable text);
+      // MarkdownPasteInput only handles the portable-text one, which this
+      // field actually is. The runtime contract matches; only the union
+      // widens beyond what any single component could satisfy.
+      components: { input: MarkdownPasteInput as unknown as ComponentType<ArrayOfObjectsInputProps> },
       of: [
         {
           type: 'block',
