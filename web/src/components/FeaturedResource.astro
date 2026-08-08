@@ -1,0 +1,199 @@
+---
+// A single highlighted resource near the top of the hub. Driven entirely
+// by a resource's `featured` flag in src/lib/resources.ts — not hardcoded
+// to one product, so a different resource can be featured later just by
+// moving the flag. Renders nothing if no resource is featured, so the
+// hub degrades gracefully rather than showing a broken/empty block.
+import type { Resource } from '../lib/resources';
+
+interface Props {
+  resource?: Resource;
+}
+
+const { resource } = Astro.props;
+
+const currencySymbol = resource?.currency === 'NGN' ? '₦' : (resource?.currency ?? '');
+const priceLabel = resource
+  ? resource.status === 'free'
+    ? 'FREE'
+    : resource.price
+      ? `${currencySymbol}${resource.price.toLocaleString()}`
+      : 'Price coming soon'
+  : '';
+
+const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
+const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
+---
+
+{resource && (
+  <section class="featured reveal">
+    <div class="content">
+      <span class="eyebrow">Featured Resource</span>
+      <p class="meta">{resource.category} · {resource.type}</p>
+      <h2>{resource.title}</h2>
+      <p class="description">{resource.description}</p>
+      <div class="footer">
+        <span class:list={['price', resource.status]}>{priceLabel}</span>
+        <div class="actions">
+          {resource.status === 'free' && primaryHref && (
+            <a
+              class="btn-primary"
+              href={primaryHref}
+              target={primaryIsExternal ? '_blank' : undefined}
+              rel={primaryIsExternal ? 'noopener' : undefined}
+            >
+              {resource.actionLabel}
+            </a>
+          )}
+          <a class="btn-secondary" href={`/resources/${resource.slug}`}>View Details</a>
+        </div>
+      </div>
+    </div>
+    {resource.thumbnail && <div class="icon" set:html={resource.thumbnail} />}
+  </section>
+)}
+
+<style>
+  .featured {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-8);
+    max-width: 1000px;
+    margin: 0 auto var(--space-16);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+  }
+
+  .content {
+    flex: 1;
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  .meta {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+  }
+
+  h2 {
+    font-size: clamp(1.3rem, 3vw, 1.75rem);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-3);
+  }
+
+  .description {
+    font-size: 0.95rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    max-width: 52ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .footer {
+    display: flex;
+    align-items: center;
+    gap: var(--space-5);
+    flex-wrap: wrap;
+  }
+
+  .price {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+  }
+
+  .price.free {
+    color: var(--accent);
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 12px 22px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+
+  .icon {
+    flex-shrink: 0;
+    width: 88px;
+    height: 88px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    color: var(--accent);
+  }
+
+  .icon :global(svg) {
+    width: 40px;
+    height: 40px;
+  }
+
+  @media (max-width: 700px) {
+    .featured {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: var(--space-6);
+    }
+
+    .icon {
+      width: 56px;
+      height: 56px;
+    }
+
+    .icon :global(svg) {
+      width: 28px;
+      height: 28px;
+    }
+  }
+</style>
