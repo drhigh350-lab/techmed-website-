@@ -1,0 +1,260 @@
+---
+import { getWhatsappChannelUrl } from '../lib/sanity';
+import { NAV_ROUTES } from '../lib/routes';
+
+const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
+const currentPath = Astro.url.pathname;
+const isActive = (path: string) => currentPath === path || currentPath === `${path}/`;
+---
+
+<header class="navbar">
+  <nav class="navbar-inner">
+    <a href="/" class="logo">TECHMED</a>
+
+    <ul class="nav-links">
+      {NAV_ROUTES.map((route) => (
+        <li>
+          <a href={route.path} class:list={['nav-link', { active: isActive(route.path) }]}>
+            {route.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <a class="cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Join Builder Cohort</a>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <ul>
+      {NAV_ROUTES.map((route) => (
+        <li>
+          <a href={route.path} class:list={['mobile-link', { active: isActive(route.path) }]}>
+            {route.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <a class="mobile-cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Join Builder Cohort</a>
+  </div>
+</header>
+
+<script>
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('mobileMenu');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = menu?.classList.toggle('open');
+    toggle.classList.toggle('open', isOpen);
+    toggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+
+  // Close the mobile menu on navigation, so it doesn't stay open across
+  // a route change (Astro does full page loads, but this covers the
+  // instant it takes the new page to render).
+  menu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      menu.classList.remove('open');
+      toggle?.classList.remove('open');
+      toggle?.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    });
+  });
+</script>
+
+<style>
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(1, 39, 72, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    list-style: none;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-link {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-light);
+    text-decoration: none;
+    padding: var(--space-2) 0;
+    position: relative;
+    transition: color 150ms ease;
+    white-space: nowrap;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 200ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-link.active {
+    color: var(--text);
+  }
+
+  .nav-link.active::after {
+    width: 100%;
+  }
+
+  .cta {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 10px 20px;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+
+  .menu-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+  }
+  .menu-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .nav-links,
+    .cta {
+      display: none;
+    }
+
+    .menu-toggle {
+      display: flex;
+    }
+
+    .mobile-menu {
+      display: block;
+      max-height: 0;
+      overflow: hidden;
+      background: var(--surface-dark);
+      border-top: 1px solid var(--border);
+      transition: max-height 300ms ease;
+    }
+
+    .mobile-menu.open {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .mobile-menu ul {
+      list-style: none;
+      padding: var(--space-4) var(--space-6);
+    }
+
+    .mobile-link {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-light);
+      text-decoration: none;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mobile-link.active {
+      color: var(--accent);
+    }
+
+    .mobile-cta {
+      display: block;
+      margin: 0 var(--space-6) var(--space-6);
+      text-align: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: #1a0a00;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      padding: 14px;
+      border-radius: var(--radius);
+      text-decoration: none;
+    }
+  }
+</style>
