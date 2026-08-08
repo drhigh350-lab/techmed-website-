@@ -33,7 +33,7 @@ const photoUrl = founder.photoUrl || FALLBACK.photoUrl;
 <section class="section">
   <div class="grid">
     <div class="photo-wrap reveal">
-      <img src={photoUrl} alt={`${name}, founder of TECHMED`} />
+      <img src={photoUrl} alt={`${name}, founder of TECHMED`} loading="lazy" decoding="async" />
     </div>
     <div class="content reveal">
       <p class="label">{label}</p>
