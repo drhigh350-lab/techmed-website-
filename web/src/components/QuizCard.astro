@@ -1,0 +1,131 @@
+---
+// Generic enough to hold a future Kairo-powered subject quiz without a
+// redesign — metadata fields are individually optional and render a
+// plain dash when unavailable rather than inventing a number.
+interface Props {
+  title: string;
+  description?: string;
+  subject?: string;
+  questionCount?: number;
+  duration?: string;
+  difficulty?: string;
+  startUrl: string;
+  external?: boolean;
+}
+
+const { title, description, subject, questionCount, duration, difficulty, startUrl, external = false } = Astro.props;
+---
+
+<div class="quiz-card reveal">
+  {subject && <p class="subject">{subject}</p>}
+  <h3>{title}</h3>
+  {description && <p class="description">{description}</p>}
+
+  <dl class="meta">
+    <div>
+      <dt>Questions</dt>
+      <dd>{questionCount ?? '—'}</dd>
+    </div>
+    <div>
+      <dt>Duration</dt>
+      <dd>{duration ?? '—'}</dd>
+    </div>
+    <div>
+      <dt>Difficulty</dt>
+      <dd>{difficulty ?? '—'}</dd>
+    </div>
+  </dl>
+
+  <a class="btn-primary" href={startUrl} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>
+    Start Quiz
+  </a>
+</div>
+
+<style>
+  .quiz-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .quiz-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .subject {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .description {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    margin-bottom: var(--space-5);
+  }
+
+  .meta {
+    display: flex;
+    gap: var(--space-6);
+    padding: var(--space-4) 0;
+    margin-top: auto;
+    margin-bottom: var(--space-5);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .meta dt {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .meta dd {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--text);
+  }
+
+  @media (max-width: 400px) {
+    .meta {
+      gap: var(--space-3);
+    }
+  }
+
+  .btn-primary {
+    display: inline-block;
+    text-align: center;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+</style>
