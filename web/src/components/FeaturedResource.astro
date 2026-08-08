@@ -5,6 +5,7 @@
 // moving the flag. Renders nothing if no resource is featured, so the
 // hub degrades gracefully rather than showing a broken/empty block.
 import type { Resource } from '../lib/resources';
+import { resourceIcon } from '../lib/resources';
 
 interface Props {
   resource?: Resource;
@@ -33,7 +34,7 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
       <h2>{resource.title}</h2>
       <p class="description">{resource.description}</p>
       <div class="footer">
-        <span class:list={['price', resource.status]}>{priceLabel}</span>
+        <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
         <div class="actions">
           {resource.status === 'free' && primaryHref && (
             <a
@@ -49,7 +50,11 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
         </div>
       </div>
     </div>
-    {resource.thumbnail && <div class="icon" set:html={resource.thumbnail} />}
+    {resource.primaryImage ? (
+      <img class="thumb-image" src={resource.primaryImage} alt="" loading="lazy" decoding="async" />
+    ) : (
+      <div class="icon" set:html={resourceIcon(resource)} />
+    )}
   </section>
 )}
 
@@ -110,18 +115,31 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
   .footer {
     display: flex;
     align-items: center;
-    gap: var(--space-5);
+    gap: var(--space-4);
     flex-wrap: wrap;
   }
 
-  .price {
+  .price-badge {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
+    padding: 7px 16px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
   }
 
-  .price.free {
+  .price-badge.free {
     color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  .price-badge.paid {
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
   }
 
   .actions {
@@ -179,6 +197,14 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
     height: 40px;
   }
 
+  .thumb-image {
+    flex-shrink: 0;
+    width: 160px;
+    height: 160px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+  }
+
   @media (max-width: 700px) {
     .featured {
       flex-direction: column;
@@ -194,6 +220,11 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
     .icon :global(svg) {
       width: 28px;
       height: 28px;
+    }
+
+    .thumb-image {
+      width: 100%;
+      height: 180px;
     }
   }
 </style>

@@ -1,25 +1,34 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ResourceDetail from '../../components/ResourceDetail.astro';
-import { RESOURCES } from '../../lib/resources';
+import { getResources, type Resource } from '../../lib/resources';
 
-export function getStaticPaths() {
-  return RESOURCES.map((resource) => ({
+export async function getStaticPaths() {
+  const resources = await getResources();
+  return resources.map((resource) => ({
     params: { slug: resource.slug },
+    props: {
+      resource,
+      related: resources
+        .filter((r) => r.category === resource.category && r.slug !== resource.slug)
+        .slice(0, 3),
+    },
   }));
 }
 
-// Safe: getStaticPaths (above) generates exactly one page per RESOURCES
-// entry, so every built [slug] page has a matching resource by
-// construction — any slug not in RESOURCES never gets a page generated
-// for it in the first place, and resolves to a clean 404 instead.
-const resource = RESOURCES.find((r) => r.slug === Astro.params.slug)!;
-const related = RESOURCES.filter(
-  (r) => r.category === resource.category && r.slug !== resource.slug,
-).slice(0, 3);
+interface Props {
+  resource: Resource;
+  related: Resource[];
+}
+
+const { resource, related } = Astro.props;
 
 const pageUrl = new URL(`/resources/${resource.slug}`, Astro.site).toString();
 const currencyCode = resource.currency ?? 'NGN';
+// The canonical resource image doubles as the social-share image — falls
+// back to BaseLayout's own default (the TECHMED logo) when no primaryImage
+// has been uploaded yet, so OG/Twitter cards are never broken.
+const ogImage = resource.primaryImage;
 
 const jsonLd = [
   {
@@ -37,6 +46,7 @@ const jsonLd = [
         '@type': 'Product',
         name: resource.title,
         description: resource.description,
+        ...(resource.primaryImage ? { image: resource.primaryImage } : {}),
         offers: {
           '@type': 'Offer',
           priceCurrency: currencyCode,
@@ -59,6 +69,7 @@ const jsonLd = [
   title={`${resource.title} | TECHMED Resources`}
   description={resource.description}
   jsonLd={jsonLd}
+  ogImage={ogImage}
 >
   <ResourceDetail resource={resource} related={related} />
 </BaseLayout>

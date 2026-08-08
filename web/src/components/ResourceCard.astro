@@ -4,7 +4,14 @@
 // 2. Full: pass a `resource` from src/lib/resources.ts — renders category,
 //    type, free/paid status, price, and the correct action(s) for that
 //    resource's status (never "Buy" language on a free resource).
+//
+// Equal card height across a grid row is handled by the parent grid
+// (resources.astro sets its wrapper to `display: contents` so this card
+// becomes the real grid item and gets CSS grid's default stretch) — this
+// component just needs height: 100% + flex so the footer lands at the
+// same baseline regardless of description length.
 import type { Resource } from '../lib/resources';
+import { resourceIcon } from '../lib/resources';
 
 interface Props {
   title?: string;
@@ -27,21 +34,30 @@ const priceLabel = resource
 
 const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
 const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
+const icon = resource ? resourceIcon(resource) : undefined;
 ---
 
 {resource ? (
   <div class:list={['resource-card', 'reveal', { featured: resource.featured }]}>
     <a href={`/resources/${resource.slug}`} class="card-top">
-      <div class="top-row">
-        {resource.thumbnail && <div class="icon" set:html={resource.thumbnail} />}
-        {resource.featured && <span class="featured-badge">Featured</span>}
-      </div>
+      {resource.primaryImage ? (
+        <div class="thumb">
+          <img src={resource.primaryImage} alt="" loading="lazy" decoding="async" />
+          {resource.featured && <span class="featured-badge overlay">Featured</span>}
+        </div>
+      ) : (
+        <div class="top-row">
+          {icon && <div class="icon" set:html={icon} />}
+          {resource.featured && <span class="featured-badge">Featured</span>}
+        </div>
+      )}
       <p class="meta">{resource.category} · {resource.type}</p>
       <h3>{resource.title}</h3>
       <p class="description">{resource.description}</p>
+      <span class="preview-affordance">View Details <span aria-hidden="true">&rarr;</span></span>
     </a>
     <div class="card-footer">
-      <span class:list={['price', resource.status]}>{priceLabel}</span>
+      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
       <div class="actions">
         {resource.status === 'free' && primaryHref && (
           <a
@@ -82,6 +98,7 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
   .resource-card {
     display: flex;
     flex-direction: column;
+    height: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
@@ -99,10 +116,32 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
   }
 
   .card-top {
-    display: block;
+    display: flex;
+    flex-direction: column;
     color: inherit;
     text-decoration: none;
     flex: 1;
+  }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface-raised);
+    margin-bottom: var(--space-4);
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb .featured-badge.overlay {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
   }
 
   .top,
@@ -174,6 +213,25 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
     color: var(--text-light);
   }
 
+  .preview-affordance {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    margin-top: var(--space-3);
+  }
+
+  .preview-affordance span {
+    transition: transform 200ms ease;
+  }
+
+  .resource-card:hover .preview-affordance span {
+    transform: translateX(3px);
+  }
+
   .card-footer {
     display: flex;
     align-items: center;
@@ -185,19 +243,27 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
     border-top: 1px solid var(--border);
   }
 
-  .price {
+  .price-badge {
+    display: inline-flex;
+    align-items: center;
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     font-weight: 700;
     white-space: nowrap;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
   }
 
-  .price.free {
+  .price-badge.free {
     color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
   }
 
-  .price.paid {
+  .price-badge.paid {
     color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
   }
 
   .actions {

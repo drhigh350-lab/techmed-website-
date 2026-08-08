@@ -15,10 +15,13 @@
 // buyWhatsApp() flow). When static Paystack links exist, set `paystackUrl`
 // per resource and the Buy with Paystack button appears automatically.
 //
-// This is intentionally a plain typed module, not Sanity-backed — it's the
-// clean seam described in the brief: swap `RESOURCES` for a Sanity fetch
-// (with this exact shape as the query projection) later without touching
-// any component or page that imports from here.
+// Content-managed: getResources() reads from the Sanity `resource` document
+// type (studio/schemaTypes/resource.ts) with FALLBACK_RESOURCES below as
+// the fallback — same pattern as FAQ.astro/FounderWelcome.astro elsewhere
+// in this codebase. Once resources are published in Sanity, they take over
+// automatically; no page or component code needs to change. Publishing a
+// new resource is a Sanity Studio task, not an Astro code change.
+import { fetchSanity } from './sanity';
 
 export type ResourceCategory =
   | 'Academic'
@@ -52,7 +55,13 @@ export interface Resource {
   /** Naira amount. Omitted entirely (not zero) when pricing isn't public yet. */
   price?: number;
   currency?: string;
-  /** Inline SVG markup, matching FeatureCard's icon pattern — no photo assets required. */
+  /** Display order, lower first — same convention as the faqItem schema's `order` field. */
+  order?: number;
+  /** Sanity image asset URL. When absent, the card/detail views fall back to a category icon. */
+  primaryImage?: string;
+  /** Additional Sanity image asset URLs shown on the detail page. */
+  previewImages?: string[];
+  /** Inline SVG markup, matching FeatureCard's icon pattern — not Sanity-editable (arbitrary HTML from a CMS field is an XSS risk); only ever developer-authored in FALLBACK_RESOURCES below. */
   thumbnail?: string;
   featured?: boolean;
   tags?: string[];
@@ -90,7 +99,24 @@ const ICONS = {
   compass: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>`,
 };
 
-export const RESOURCES: Resource[] = [
+// Fallback icon by category — used whenever a resource has neither a real
+// primaryImage nor a hand-picked `thumbnail`, e.g. every resource authored
+// through Sanity (thumbnail is deliberately not a CMS field). Keeps the
+// placeholder meaningful instead of a generic blank box.
+const CATEGORY_ICONS: Record<ResourceCategory, string> = {
+  Academic: ICONS.flask,
+  Admission: ICONS.compass,
+  Quizzes: ICONS.quiz,
+  'Digital Tools': ICONS.guide,
+  Growth: ICONS.bolt,
+  Opportunities: ICONS.flag,
+};
+
+export function resourceIcon(resource: Resource): string {
+  return resource.thumbnail ?? CATEGORY_ICONS[resource.category];
+}
+
+export const FALLBACK_RESOURCES: Resource[] = [
   {
     id: 'admission-intelligence-guide-2026',
     slug: 'techmed-admission-intelligence-guide-2026',
@@ -100,6 +126,7 @@ export const RESOURCES: Resource[] = [
     category: 'Admission',
     type: 'Guide',
     status: 'free',
+    order: 1,
     thumbnail: ICONS.compass,
     featured: true,
     tags: ['Admission', 'Strategy', 'Free'],
@@ -122,6 +149,7 @@ export const RESOURCES: Resource[] = [
     category: 'Quizzes',
     type: 'Quiz',
     status: 'free',
+    order: 2,
     thumbnail: ICONS.quiz,
     tags: ['Quiz', 'Practice', 'Free'],
     actionLabel: 'Start Quiz',
@@ -142,6 +170,7 @@ export const RESOURCES: Resource[] = [
     category: 'Academic',
     type: 'Booster System',
     status: 'paid',
+    order: 3,
     price: 5000,
     currency: 'NGN',
     thumbnail: ICONS.flask,
@@ -164,6 +193,7 @@ export const RESOURCES: Resource[] = [
     category: 'Academic',
     type: 'Booster System',
     status: 'paid',
+    order: 4,
     price: 3000,
     currency: 'NGN',
     thumbnail: ICONS.leaf,
@@ -186,6 +216,7 @@ export const RESOURCES: Resource[] = [
     category: 'Academic',
     type: 'Booster System',
     status: 'paid',
+    order: 5,
     price: 3000,
     currency: 'NGN',
     thumbnail: ICONS.bolt,
@@ -208,6 +239,7 @@ export const RESOURCES: Resource[] = [
     category: 'Admission',
     type: 'Course',
     status: 'paid',
+    order: 6,
     price: 3000,
     currency: 'NGN',
     thumbnail: ICONS.target,
@@ -230,6 +262,7 @@ export const RESOURCES: Resource[] = [
     category: 'Admission',
     type: 'Guide',
     status: 'paid',
+    order: 7,
     price: 1000,
     currency: 'NGN',
     thumbnail: ICONS.folder,
@@ -252,6 +285,7 @@ export const RESOURCES: Resource[] = [
     category: 'Opportunities',
     type: 'Opportunity',
     status: 'paid',
+    order: 8,
     currency: 'NGN',
     thumbnail: ICONS.flag,
     tags: ['JAMB', 'Challenge', 'Waitlist'],
@@ -273,6 +307,7 @@ export const RESOURCES: Resource[] = [
     category: 'Digital Tools',
     type: 'Tool',
     status: 'free',
+    order: 9,
     thumbnail: ICONS.guide,
     tags: ['Learning', 'Intelligence'],
     actionLabel: 'Open Tool',
@@ -294,19 +329,59 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
   'Opportunities',
 ];
 
-export function getResourceBySlug(slug: string): Resource | undefined {
-  return RESOURCES.find((resource) => resource.slug === slug);
+const RESOURCE_QUERY = `*[_type == "resource"] {
+  "id": _id,
+  "slug": slug.current,
+  title,
+  description,
+  category,
+  type,
+  status,
+  price,
+  currency,
+  order,
+  featured,
+  tags,
+  actionLabel,
+  accessUrl,
+  paystackUrl,
+  whatsappUrl,
+  externalUrl,
+  whatsIncluded,
+  whoItsFor,
+  "primaryImage": primaryImage.asset->url,
+  "previewImages": previewImages[].asset->url
+}`;
+
+function byOrder(a: Resource, b: Resource): number {
+  const orderA = a.order ?? Number.MAX_SAFE_INTEGER;
+  const orderB = b.order ?? Number.MAX_SAFE_INTEGER;
+  if (orderA !== orderB) return orderA - orderB;
+  return a.title.localeCompare(b.title);
 }
 
-export function getFeaturedResource(): Resource | undefined {
-  return RESOURCES.find((resource) => resource.featured);
+// Content-managed: pulls from Sanity's `resource` documents, sorted by
+// `order` (a missing order value sinks to the end, then ties break by
+// title) — falls back to FALLBACK_RESOURCES, already sorted, if Sanity has
+// no resources published yet or is unreachable.
+export async function getResources(): Promise<Resource[]> {
+  const resources = await fetchSanity<Resource[]>(RESOURCE_QUERY, FALLBACK_RESOURCES);
+  return [...resources].sort(byOrder);
 }
 
-export function getResourcesByCategory(category: ResourceCategory | 'All'): Resource[] {
-  if (category === 'All') return RESOURCES;
-  return RESOURCES.filter((resource) => resource.category === category);
+export function getResourceBySlug(resources: Resource[], slug: string): Resource | undefined {
+  return resources.find((resource) => resource.slug === slug);
 }
 
-export function getQuizResources(): Resource[] {
-  return RESOURCES.filter((resource) => resource.type === 'Quiz');
+export function getFeaturedResource(resources: Resource[]): Resource | undefined {
+  return resources.find((resource) => resource.featured);
+}
+
+export function getResourcesByCategory(resources: Resource[], category: ResourceCategory | 'All'): Resource[] {
+  if (category === 'All') return resources;
+  return resources.filter((resource) => resource.category === category);
+}
+
+export function getQuizResources(resources: Resource[]): Resource[] {
+  return resources.filter((resource) => resource.type === 'Quiz');
 }
