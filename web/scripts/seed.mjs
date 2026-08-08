@@ -99,7 +99,7 @@ async function seedFaqItems() {
     {
       question: 'How do I actually join?',
       answer:
-        'Tap "Become a Builder" to join the TECHMED WhatsApp Channel — that\'s where onboarding, your Builder Cohort assignment, and everything else begins.',
+        'Tap "Join Builder Cohort" to join the TECHMED WhatsApp Channel — that\'s where onboarding, your Builder Cohort assignment, and everything else begins.',
     },
   ];
 

@@ -7,8 +7,14 @@
 }
 
 html {
-  scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Smooth in-page scrolling is opt-in per page (BaseLayout's smoothScroll
+   prop) — the homepage benefits from it, but subpages are short enough
+   that it isn't needed and shouldn't affect e.g. skip-link/anchor jumps. */
+html[data-smooth-scroll='true'] {
+  scroll-behavior: smooth;
 }
 
 body {
