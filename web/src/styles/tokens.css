@@ -13,6 +13,14 @@
   --color-gold: #C9A227;
   --color-gold-light: #DBBE5C;
   --color-gold-deep: #A8841E;
+  /* Only for text set directly on a light surface — #C9A227 and #A8841E
+     both read well on dark navy (~5.5:1 and ~4:1) but drop to ~2.3-3.5:1
+     on the light theme's white/near-white surfaces, below the 4.5:1 AA
+     floor. This shade holds the same hue/saturation, just darker, and
+     clears AA (~5.1-5.6:1) even on the warmest surface it sits on (the
+     free-resource badge's gold-tinted background). See --accent-text
+     below. */
+  --color-gold-text: #7E6416;
   --color-white: #F8F9FA;
 
   /* Semantic roles (dark is default, per brand standard) */
@@ -27,6 +35,13 @@
   --accent: var(--color-gold);
   --accent-light: var(--color-gold-light);
   --accent-deep: var(--color-gold-deep);
+  /* Use for accent-colored TEXT (labels, links, badges). Distinct from
+     --accent, which stays the brighter gold for buttons/backgrounds/
+     borders where AA text-contrast rules don't apply. Dark theme keeps
+     the brighter gold here too, since it already contrasts well against
+     the permanently-dark surfaces (Navbar/Footer/Manifesto) that use it
+     directly via --accent, not this token. */
+  --accent-text: var(--accent);
 
   /* Theme-invariant — for surfaces that intentionally stay dark-navy in
      both themes (the sticky Navbar, the Footer, both already using
@@ -73,6 +88,10 @@
   --surface-dark: var(--color-deep-navy);
   --text: var(--color-deep-navy);
   --text-light: #3D5972;
-  --text-muted: var(--color-soft-blue);
+  /* --color-soft-blue (the dark theme's muted tone) only clears ~2.1:1
+     against these light surfaces — same hue/saturation, darkened until
+     it clears AA (~5.3:1 here). */
+  --text-muted: #4C6B85;
   --border: rgba(1, 39, 72, 0.1);
+  --accent-text: var(--color-gold-text);
 }
