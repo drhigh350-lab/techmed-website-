@@ -1,0 +1,27 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ComingSoon from '../components/ComingSoon.astro';
+import PlaceholderPreview from '../components/PlaceholderPreview.astro';
+---
+
+<BaseLayout
+  title="5 Minutes Forward — TECHMED Podcast"
+  description="5 Minutes Forward — a daily habit of intentional growth."
+>
+  <ComingSoon
+    title="5 Minutes Forward"
+    description="Five minutes can change the direction of your day. The daily media and personal-growth layer of the TECHMED ecosystem — episodes and an archive are coming to this page soon."
+  />
+
+  <div class="preview-wrap">
+    <PlaceholderPreview label="5 Minutes Forward — Episode Archive Preview" aspect="16 / 6" />
+  </div>
+</BaseLayout>
+
+<style>
+  .preview-wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-24);
+  }
+</style>
