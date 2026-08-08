@@ -3,6 +3,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import { getWhatsappChannelUrl } from '../lib/sanity';
 
 interface Props {
   title: string;
@@ -10,9 +11,39 @@ interface Props {
   /** Enables CSS smooth-scrolling for in-page anchors. Homepage only by
    * default — subpages are short and don't need it. */
   smoothScroll?: boolean;
+  /** Absolute or root-relative OG/Twitter image. Defaults to the TECHMED
+   * logo — no page-specific social image exists yet for most routes. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  /** Additional JSON-LD objects a page wants injected (e.g. a resource
+   * detail page's Product/Offer or BreadcrumbList). Organization JSON-LD
+   * is always included sitewide, independent of this. */
+  jsonLd?: Record<string, unknown>[];
 }
 
-const { title, description, smoothScroll = false } = Astro.props;
+const {
+  title,
+  description,
+  smoothScroll = false,
+  ogImage = '/images/logo.png',
+  ogType = 'website',
+  jsonLd = [],
+} = Astro.props;
+
+const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage, Astro.site);
+const whatsappChannel = await getWhatsappChannelUrl();
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'TECHMED',
+  url: Astro.site?.toString(),
+  logo: new URL('/images/logo.png', Astro.site).toString(),
+  sameAs: ['https://www.facebook.com/TheTechmedGuy', whatsappChannel],
+};
+
+const structuredData = [organizationSchema, ...jsonLd];
 ---
 
 <!doctype html>
@@ -23,6 +54,27 @@ const { title, description, smoothScroll = false } = Astro.props;
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="TECHMED" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:locale" content="en_NG" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    {structuredData.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
