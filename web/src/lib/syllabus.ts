@@ -48,6 +48,10 @@ export interface Subject {
   requiredText?: string;
   /** Slug of a matching product in the resource catalogue, if one exists. */
   relatedResourceSlug?: string;
+  /** Roadmap preview image asset URL, once uploaded in Sanity. Absent until then — the page shows a placeholder instead. */
+  previewImage?: string;
+  /** Guide document (PDF) asset URL, once uploaded in Sanity. Absent until the real document is ready. */
+  guideFileUrl?: string;
 }
 
 export interface SyllabusTopic {
@@ -417,7 +421,9 @@ const SUBJECT_QUERY = `*[_type == "subject"] | order(order asc) {
   relatedResourceSlug,
   stages[] { name, order, topics[] { title, slug } },
   examStructure[] { section, area, questions },
-  requiredText
+  requiredText,
+  "previewImage": previewImage.asset->url,
+  "guideFileUrl": guideFile.asset->url
 }`;
 
 export async function getSubjects(): Promise<Subject[]> {
