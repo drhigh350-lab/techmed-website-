@@ -938,6 +938,104 @@ const SECOND_ARTICLE = {
   ],
 };
 
+// Content cluster item #1 from the audit's prioritized list (§10) — ranked
+// top because it's heavily searched but answered generically everywhere
+// else ("study 6 hours a day"). The differentiation is tying the number to
+// Plan + Diagnose instead of handing out a universal figure, and being
+// honest that the question itself is usually the wrong first question.
+const THIRD_ARTICLE = {
+  id: 'article-jamb-hours-per-day',
+  slug: 'how-many-hours-a-day-should-you-study-for-jamb',
+  title: 'How Many Hours a Day Should You Study for JAMB?',
+  excerpt:
+    "It's the most common JAMB question, and most answers to it are a guess dressed up as a rule. Here's how to actually work out your number — and why it depends on more than willpower.",
+  categoryId: 'articleCategory-study-strategy',
+  tags: ['Study Plan', 'Study Strategy', 'Time Management', 'JAMB 2027'],
+  authorName: 'Wisdom Johnson',
+  authorRole: 'Founder, TECHMED',
+  publishedAt: '2026-08-09T09:00:00.000Z',
+  featured: false,
+  showMethodDiagram: false,
+  relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
+  relatedResourceSlugs: ['free-quiz-practice'],
+  relatedToolSlugs: ['kairo'],
+  faq: [
+    {
+      question: 'So what is a realistic number of hours per day?',
+      answer:
+        "For most students, two to four focused hours a day, every day, is sustainable and effective — more than that tends to produce diminishing returns once fatigue sets in. But 'realistic' depends on your own schedule and starting point, which is the whole point of working out your own number instead of borrowing someone else's.",
+    },
+    {
+      question: 'Should I increase my hours as the exam gets closer?',
+      answer:
+        "Usually the intensity should increase before the raw hours do — more of your existing time spent on timed practice and diagnosis, less on first-pass learning. If you genuinely have more free time available closer to the exam, use it, but a sudden jump from two hours to eight in the final weeks is rarely sustainable long enough to help.",
+    },
+    {
+      question: 'I can only manage 1–2 hours a day because of school and other responsibilities. Is that enough?',
+      answer:
+        "It can be, if the time is genuinely focused and consistent. Two honest hours a day, every day, for months, adds up to more real preparation than most students with 'more time' actually complete. Consistency is the variable you control; total available hours often isn't.",
+    },
+    {
+      question: 'Is it better to study in one long block or several short sessions?',
+      answer:
+        "Several focused sessions usually beat one long block, because attention quality drops well before most people admit it does. If you have two hours, two separate 50–60 minute sessions with a real break between them will likely teach you more than one unbroken two-hour sitting.",
+    },
+  ],
+  body: [
+    block(
+      'normal',
+      "This is probably the single most-asked JAMB question, and most answers to it are a guess dressed up as a rule — \"study 6 hours a day,\" \"study 10 hours a day,\" numbers that sound serious but aren't actually about you. Here's a more useful way to think about it.",
+    ),
+    block('h2', "Why \"how many hours\" is the wrong first question"),
+    block(
+      'normal',
+      "Hours measure time spent, not preparation gained. Two students can each study four hours a day and end up in completely different places — one reviewing material they've already understood, the other closing real gaps a diagnosis revealed. The honest first question isn't how many hours you should study. It's how many hours of the right kind of work you actually need, and that depends on where you're starting from.",
+    ),
+    block('blockquote', "A study hour spent re-reading familiar notes and a study hour spent under timed, diagnosed practice are not the same currency."),
+    block('h2', 'What actually determines your number'),
+    block('h3', '1. The time you genuinely have'),
+    block(
+      'normal',
+      "Not the time you wish you had — the time that's actually available around school, WAEC prep, family responsibilities and everything else already on your schedule. A plan built on aspirational hours gets abandoned within a week. A plan built on your real schedule gets followed.",
+    ),
+    block('h3', '2. How far your diagnosis says you are from your target'),
+    blockWithLinks('normal', [
+      "This is the part most advice skips entirely. A student close to their target score across most subjects needs far fewer hours than one starting from a genuine knowledge gap in three of five subjects — not because of talent, but because there's simply less distance to cover. You can't know this number without actually ",
+      { text: 'diagnosing', href: '/resources/free-quiz-practice' },
+      ' where you stand first.',
+    ]),
+    block('h3', '3. How much time is left before the exam'),
+    blockWithLinks('normal', [
+      "Time-to-exam changes how your hours should be spent more than how many of them you need. Six months out, hours go mostly toward Understand and Learn. In the final month, the same hours shift toward Practice, Diagnose and Revise — see ",
+      { text: 'the 30-day plan', href: '/blog/how-to-prepare-for-jamb-in-30-days' },
+      ' for what that shift looks like when time is genuinely short.',
+    ]),
+    block('h2', 'A sustainable range — and why consistency beats intensity'),
+    block(
+      'normal',
+      "For most students, two to four focused hours a day, done every day, outperforms an occasional ten-hour session followed by three days of burnout. This isn't about working less — it's about working at a pace you can actually sustain for months, since JAMB preparation is a long-running commitment, not a single push.",
+    ),
+    block(
+      'normal',
+      "An unsustainable schedule doesn't just risk burnout — it actively costs you preparation time. A week of eight-hour days followed by a week of guilt-driven avoidance produces less real work than five weeks of two honest hours a day.",
+    ),
+    block('h2', 'What actually counts as a study hour'),
+    block(
+      'normal',
+      "Not every hour with a book open is doing the same amount of work. Re-reading notes until they feel familiar is real, but it's the lightest form of study there is — familiarity is not the same as being able to produce an answer under exam conditions. An hour spent on timed practice, followed by honestly diagnosing what went wrong, does more for your score than several hours of passive review.",
+    ),
+    block(
+      'normal',
+      "What to do: when you plan your hours, plan what kind of work fills them — Learn, Practice or Diagnose — not just a block of time labelled \"study.\"",
+    ),
+    block('h2', 'The short answer'),
+    block(
+      'normal',
+      "If you need a number to start with today: two to four focused hours, every day, adjusted upward only if your diagnosis shows a genuinely large gap and you have the time to give it. Then let your own results — not a borrowed number — tell you whether to adjust.",
+    ),
+  ],
+};
+
 async function seedArticle(a) {
   await client.createOrReplace({
     _id: a.id,
@@ -986,6 +1084,10 @@ async function seedFirstArticle() {
 
 async function seedSecondArticle() {
   await seedArticle(SECOND_ARTICLE);
+}
+
+async function seedThirdArticle() {
+  await seedArticle(THIRD_ARTICLE);
 }
 
 // The real TECHMED resource catalogue — copied verbatim from
@@ -1250,6 +1352,7 @@ async function main() {
   await seedArticleCategories();
   await seedFirstArticle();
   await seedSecondArticle();
+  await seedThirdArticle();
   console.log('\nDone.');
 }
 
