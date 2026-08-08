@@ -38,3 +38,32 @@ img {
   height: auto;
   display: block;
 }
+
+/* Scroll-reveal: elements start faded/offset, and get .active added by
+   the IntersectionObserver in BaseLayout when they enter the viewport.
+   Content is visible by default (opacity: 1 below) so it never depends
+   on JS running — the reveal starts only once .reveal is present AND JS
+   has run, avoiding a flash-of-hidden-content if a script fails to load. */
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+.js-reveal-ready .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 600ms ease, transform 600ms ease;
+}
+
+.js-reveal-ready .reveal.active {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js-reveal-ready .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
