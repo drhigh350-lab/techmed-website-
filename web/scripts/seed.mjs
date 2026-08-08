@@ -1036,6 +1036,133 @@ const THIRD_ARTICLE = {
   ],
 };
 
+// Content cluster item #2 from the audit's prioritized list (§10). The
+// differentiation called for was reframing the well-worn "mistakes" genre
+// through the Diagnose lens instead of a generic tip-dump — so each
+// "mistake" here is organized around the TECHMED Method step it actually
+// belongs to, and framed as a signal to read, not a failure to feel bad
+// about (consistent with the site's established non-shame voice).
+const FOURTH_ARTICLE = {
+  id: 'article-jamb-common-mistakes',
+  slug: 'jamb-common-mistakes',
+  title: 'JAMB Common Mistakes (And What They’re Actually Telling You)',
+  excerpt:
+    "Every “JAMB mistakes” list reads like a list of things to feel guilty about. Here's a different way to read them: not failures, but signals telling you exactly which step of your system is missing.",
+  categoryId: 'articleCategory-study-strategy',
+  tags: ['Study Strategy', 'Common Mistakes', 'JAMB 2027', 'Exam Strategy'],
+  authorName: 'Wisdom Johnson',
+  authorRole: 'Founder, TECHMED',
+  publishedAt: '2026-08-10T09:00:00.000Z',
+  featured: false,
+  showMethodDiagram: true,
+  relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
+  relatedResourceSlugs: ['free-quiz-practice'],
+  relatedToolSlugs: ['kairo'],
+  faq: [
+    {
+      question: "I recognize myself in several of these. Does that mean I'm behind?",
+      answer:
+        "No — it means you have a system now, which is more than most students preparing right now have. Every one of these mistakes is common precisely because almost everyone makes some of them. Recognizing one is the first step of fixing it, not evidence you've already failed.",
+    },
+    {
+      question: 'Which mistake should I fix first?',
+      answer:
+        "Whichever step of the Method you're currently in. If you haven't started, fix the Understand mistake first. If you're mid-preparation and avoiding a weak subject, that's your priority. There's no universal order — the mistake worth fixing first is the one active in your preparation right now.",
+    },
+    {
+      question: "I've been making the avoidance mistake — sticking to my strong subjects. How do I actually change that?",
+      answer:
+        "Start small and specific: one timed set in your weakest subject, this week, no studying beforehand. You're not trying to fix the whole subject in one sitting — you're breaking the pattern of avoidance with one concrete action, then diagnosing from there.",
+    },
+    {
+      question: 'Do these mistakes look different for different subjects?',
+      answer:
+        "The pattern is the same; only the topic changes. Mistaking recognition for understanding shows up in Chemistry as much as in English — a formula that looks familiar on the page and a formula you can actually apply under pressure are just as different as a passage you've read before and one you can genuinely comprehend cold.",
+    },
+  ],
+  body: [
+    block(
+      'normal',
+      "Most “JAMB mistakes” lists read like a catalogue of things to feel guilty about. That's not useful, and it's not really what a mistake is. A mistake is a signal — it's telling you exactly which step of your preparation is missing something. Here are seven, organized around the same TECHMED Method, each with what it's actually telling you and what to do about it.",
+    ),
+    block('h3', 'Understand: treating the syllabus like a reading list instead of a map'),
+    block(
+      'normal',
+      "Opening a textbook to page one and reading straight through feels productive, but it means you're studying reactively — following the book's order instead of the syllabus's actual structure. What it's telling you: you skipped the step where you see the shape of the subject before you walk through it.",
+    ),
+    blockWithLinks('normal', [
+      'The fix: before you study a single topic, open the ',
+      { text: 'TECHMED Blueprint', href: '/jamb-syllabus-2027' },
+      ' for that subject and look at how the stages connect. Ten minutes here saves hours of studying things in the wrong order.',
+    ]),
+    block('h3', 'Plan: building a schedule your life can’t actually support'),
+    block(
+      'normal',
+      "A six-hour daily plan written in a burst of motivation, abandoned within a week, isn't a discipline problem — it's a planning problem. What it's telling you: the plan was built on the time you wished you had, not the time you actually have.",
+    ),
+    block(
+      'normal',
+      "The fix: rebuild the plan around your real schedule, even if that number is smaller and less impressive. A plan you follow for three months beats one you abandon after four days.",
+    ),
+    block('h3', 'Learn: mistaking recognition for understanding'),
+    block(
+      'normal',
+      "Reading a solution and thinking “yes, I get it” feels like progress. Watching hours of explainer videos without ever producing an answer yourself feels like progress too. Both are the lightest form of learning there is. What it's telling you: you're building familiarity with the material, not the ability to produce it from scratch under pressure — which is the only version that shows up on exam day.",
+    ),
+    block(
+      'normal',
+      "The fix: after learning a topic, close the book and explain it out loud, or solve a fresh problem, without looking anything up. If you can't, you recognize the material — you don't know it yet.",
+    ),
+    block('h3', 'Practice: avoiding your weakest subject because it’s uncomfortable'),
+    block(
+      'normal',
+      "This is the quietest mistake and one of the most costly. It rarely looks like avoidance from the inside — it looks like “I'll get to it after I finish strengthening what I'm already good at.” What it's telling you: you're optimizing your study time for how it feels, not for how much it moves your score. The subject you're avoiding is very often the one with the most room to improve.",
+    ),
+    blockWithLinks('normal', [
+      "The fix: one timed set of ",
+      { text: 'real past questions', href: '/resources/free-quiz-practice' },
+      " in your weakest subject, this week, before you add another hour to a subject you're already comfortable in.",
+    ]),
+    block('h3', 'Diagnose: reviewing wrong answers only to check what the right one was'),
+    block(
+      'normal',
+      "Marking a wrong answer and moving on — or worse, not reviewing wrong answers at all — means you generated useful data and then threw it away. What it's telling you: you're treating practice as the finish line, when practice is actually where the real information starts.",
+    ),
+    block(
+      'normal',
+      "The fix: for every wrong answer, ask which of three things happened — you didn't know it, you rushed and misread it, or you ran out of time to reach it. Each needs a different fix, and you can't choose the right one without asking the question.",
+    ),
+    block('h3', 'Revise: re-reading the whole syllabus again from the beginning'),
+    block(
+      'normal',
+      "Close to the exam, this feels safe and thorough. It's usually neither — it's re-learning material you already know at the expense of the material your diagnosis actually flagged as weak. What it's telling you: revision has quietly become a form of productive-looking avoidance.",
+    ),
+    block(
+      'normal',
+      "The fix: revise from your diagnosed weak-list, not from page one. If a topic never shows up wrong in practice, it doesn't need more of your limited remaining time.",
+    ),
+    block('h3', 'Prepare: never practicing under real timed conditions until exam day'),
+    block(
+      'normal',
+      "Studying calmly at your own pace and performing under a strict time limit with real pressure are different skills, and the second one only gets built by practicing it. What it's telling you: your first real stress-test is happening on the day it matters most, instead of before it.",
+    ),
+    block(
+      'normal',
+      "The fix: in your final stretch, simulate the real thing — same time of day, same time limit, no pausing, no looking anything up.",
+    ),
+    block('h2', 'The mistake underneath all the others'),
+    blockWithLinks('normal', [
+      "If there's one meta-mistake behind most of the seven above, it's measuring your preparation against someone else's — their pace, their hours, their timeline. Someone else's six-month plan isn't a standard you're failing to meet if you have thirty days; it's simply a different plan, for a different starting point. See ",
+      { text: 'How to Prepare for JAMB in 30 Days', href: '/blog/how-to-prepare-for-jamb-in-30-days' },
+      " if that's your actual situation — the comparison was never the useful part.",
+    ]),
+    block(
+      'normal',
+      "None of these seven mean you've failed at preparing. They mean you now know exactly which step of the system to pay attention to next — which was the point of naming them.",
+    ),
+  ],
+};
+
 async function seedArticle(a) {
   await client.createOrReplace({
     _id: a.id,
@@ -1088,6 +1215,10 @@ async function seedSecondArticle() {
 
 async function seedThirdArticle() {
   await seedArticle(THIRD_ARTICLE);
+}
+
+async function seedFourthArticle() {
+  await seedArticle(FOURTH_ARTICLE);
 }
 
 // The real TECHMED resource catalogue — copied verbatim from
@@ -1353,6 +1484,7 @@ async function main() {
   await seedFirstArticle();
   await seedSecondArticle();
   await seedThirdArticle();
+  await seedFourthArticle();
   console.log('\nDone.');
 }
 
