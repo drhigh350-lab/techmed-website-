@@ -38,7 +38,7 @@ const faqs = await fetchSanity<{ q: string; a: string }[]>(
   <h2>Frequently Asked Questions</h2>
   <div class="list">
     {faqs.map((item) => (
-      <details>
+      <details class="reveal">
         <summary>{item.q}</summary>
         <p>{item.a}</p>
       </details>
@@ -67,6 +67,11 @@ const faqs = await fetchSanity<{ q: string; a: string }[]>(
     border-radius: var(--radius);
     padding: var(--space-5) var(--space-6);
     margin-bottom: var(--space-3);
+    transition: border-color 200ms ease;
+  }
+
+  details:hover {
+    border-color: var(--accent);
   }
 
   summary {
