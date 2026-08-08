@@ -2,6 +2,7 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SubjectCard from '../../components/SubjectCard.astro';
 import PlaceholderPreview from '../../components/PlaceholderPreview.astro';
+import NoteBox from '../../components/NoteBox.astro';
 import { getSubjects, type Subject } from '../../lib/syllabus';
 import { getResources } from '../../lib/resources';
 
@@ -104,15 +105,19 @@ const jsonLd = [
       </div>
     </section>
 
-    <div class="note reveal">
-      <strong>How to read this page:</strong> the topic names are JAMB's official syllabus content. The
-      stage groupings below ("01 — Foundations", etc.) are TECHMED's own study-order structure, built to
-      make the syllabus easier to follow — not JAMB's official sectioning.
+    <div class="reveal">
+      <NoteBox>
+        <strong>How to read this page:</strong> the topic names are JAMB's official syllabus content. The
+        stage groupings below ("01 — Foundations", etc.) are TECHMED's own study-order structure, built to
+        make the syllabus easier to follow — not JAMB's official sectioning.
+      </NoteBox>
     </div>
 
     {subject.keyDependencies && (
-      <div class="dependency-note reveal">
-        <strong>Where to focus early:</strong> {subject.keyDependencies}
+      <div class="reveal">
+        <NoteBox tone="accent">
+          <strong>Where to focus early:</strong> {subject.keyDependencies}
+        </NoteBox>
       </div>
     )}
 
@@ -251,31 +256,20 @@ const jsonLd = [
     padding: 6px 14px;
   }
 
+  /* An inset box-shadow for the top accent bar instead of border-top:
+     mixing a 1px border with a thicker, differently-colored border-top
+     miters into a visible seam at the rounded corner. box-shadow respects
+     the box's own border-radius natively — same technique as
+     NoteBox.astro's accent bar. */
   .guide-card {
-    position: relative;
-    overflow: hidden;
     display: flex;
     gap: var(--space-6);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: inset 0 2px 0 0 var(--accent);
     padding: var(--space-6);
     margin-bottom: var(--space-6);
-  }
-
-  /* A flat overlay bar reads far cleaner at a rounded corner than mixing
-     border-top (2px, accent) with border (1px, faint) on the same box —
-     the two different widths/colors miter into a visible diagonal seam
-     right where the corner curves. Layering the accent on top avoids that
-     seam entirely; overflow: hidden clips it to the box's own radius. */
-  .guide-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--accent);
   }
 
   .guide-preview {
@@ -370,43 +364,6 @@ const jsonLd = [
 
   .btn-secondary:hover {
     border-color: var(--accent);
-  }
-
-  .note,
-  .dependency-note {
-    position: relative;
-    overflow: hidden;
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: var(--text-light);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: var(--space-5) var(--space-6) var(--space-5) calc(var(--space-6) + var(--space-2));
-    margin-bottom: var(--space-6);
-  }
-
-  /* Same reasoning as .guide-card::before: a flat overlay bar instead of
-     border-left avoids the mitered-corner seam a differently-sized/colored
-     border produces against a rounded box. */
-  .note::before,
-  .dependency-note::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    width: 3px;
-    background: var(--color-soft-blue);
-  }
-
-  .dependency-note::before {
-    background: var(--accent);
-  }
-
-  .note strong,
-  .dependency-note strong {
-    color: var(--text);
   }
 
   .exam-structure {

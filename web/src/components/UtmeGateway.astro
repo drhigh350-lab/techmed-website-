@@ -30,28 +30,18 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
     padding: var(--space-16) var(--space-6);
   }
 
+  /* An inset box-shadow for the top accent bar instead of border-top:
+     mixing a 1px border with a thicker, differently-colored border-top
+     miters into a visible seam at the rounded corner. box-shadow respects
+     the box's own border-radius natively, so there's no separate border
+     segment to miter against — same technique as NoteBox.astro. */
   .gateway-inner {
-    position: relative;
-    overflow: hidden;
     background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: inset 0 2px 0 0 var(--accent);
     padding: var(--space-10) var(--space-8);
     text-align: center;
-  }
-
-  /* Overlay bar instead of border-top — mixing a 1px border with a
-     thicker, differently-colored border-top miters into a visible seam at
-     the rounded corner. Same fix as the note boxes on the UTME Hub and
-     subject pages. */
-  .gateway-inner::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: var(--accent);
   }
 
   .eyebrow {
