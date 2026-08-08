@@ -6,3 +6,11 @@ dist/
 .env.*
 !.env.example
 
+# Local-only drop-in files for scripts/seed.mjs — uploaded to Sanity, not
+# meant to live in the repo. See scripts/assets/README.md.
+scripts/assets/roadmaps/*
+scripts/assets/guides/*
+!scripts/assets/roadmaps/.gitkeep
+!scripts/assets/guides/.gitkeep
+!scripts/assets/README.md
+
