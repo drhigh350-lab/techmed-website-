@@ -6,6 +6,7 @@
 // of one. Every relationship here is optional and renders nothing when
 // absent, per the article schema's design.
 import { renderArticleBody, type Article } from '../lib/articles';
+import PlaceholderPreview from './PlaceholderPreview.astro';
 
 interface Props {
   article: Article;
@@ -53,7 +54,7 @@ const authorName = article.author?.name ?? 'TECHMED';
       </div>
     </div>
 
-    {article.featuredImage && (
+    {article.featuredImage ? (
       <img
         class="featured-image"
         src={article.featuredImage}
@@ -61,6 +62,10 @@ const authorName = article.author?.name ?? 'TECHMED';
         loading="eager"
         decoding="async"
       />
+    ) : (
+      <div class="featured-image-placeholder">
+        <PlaceholderPreview label={`${article.title} — Featured Image`} aspect="16 / 9" />
+      </div>
     )}
   </header>
 

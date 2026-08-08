@@ -634,96 +634,220 @@ function block(style, text, opts = {}) {
     children: [{ _type: 'span', _key: key('s'), text, marks: [] }],
   };
 }
+// Like block(), but takes a mix of plain strings and {text, href} segments
+// so a sentence can carry a real inline link (e.g. to a Blueprint) without
+// hand-writing markDefs/marks each time.
+function blockWithLinks(style, segments) {
+  const markDefs = [];
+  const children = segments.map((seg) => {
+    if (typeof seg === 'string') {
+      return { _type: 'span', _key: key('s'), text: seg, marks: [] };
+    }
+    const linkKey = key('link');
+    markDefs.push({ _key: linkKey, _type: 'link', href: seg.href });
+    return { _type: 'span', _key: key('s'), text: seg.text, marks: [linkKey] };
+  });
+  return { _type: 'block', _key: key('b'), style, markDefs, children };
+}
 
-// The first real Blog article — genuinely useful content, not written to
-// chase a keyword. It's built around the same UNDERSTAND -> PLAN -> LEARN
-// -> PRACTICE -> DIAGNOSE -> REVISE -> PREPARE framework already live on
-// /utme-2027 (real, existing TECHMED content, not invented for this
-// article), so it stays consistent with the rest of the site rather than
-// introducing a second framework. No fabricated stats, dates or author —
-// published today, byline left empty so it renders as written by TECHMED.
+// The first real Blog article — v2, after a research/audit pass against
+// the live search landscape for "how to prepare for JAMB" and its related
+// query cluster. Still built entirely around the same real UNDERSTAND ->
+// PLAN -> LEARN -> PRACTICE -> DIAGNOSE -> REVISE -> PREPARE system
+// already live on /utme-2027 — now branded "The TECHMED Method" per
+// direct instruction, not a new framework. No fabricated stats/dates;
+// author is Wisdom Johnson (real founder, see studio/schemaTypes/founder.ts
+// and its seeded bio below), not invented. Kept evergreen in substance —
+// no hard dates in the body — while the title targets 2027 search intent,
+// per the explicit decision to decouple those two things.
+//
+// _id is intentionally NOT slug-derived (unlike every other seeded type)
+// so the slug/title can keep evolving without orphaning documents under a
+// stale id — ARTICLE_OLD_IDS below is the one-time cleanup for the first
+// version's slug-derived id, seeded before this was decided.
+const ARTICLE_OLD_IDS = ['article-how-to-start-preparing-for-jamb'];
 const FIRST_ARTICLE = {
-  slug: 'how-to-start-preparing-for-jamb',
-  title: 'How to Start Preparing for JAMB: A Framework That Actually Works',
+  id: 'article-jamb-2027-study-system',
+  slug: 'how-to-prepare-for-jamb-2027',
+  title: 'How to Prepare for JAMB 2027: A Step-by-Step Study System',
   excerpt:
-    "Most students don't fail JAMB because they lack intelligence — they fail because they never had a system. Here's the seven-step framework behind every TECHMED Blueprint and resource.",
+    "Most students don't fail JAMB because they lack intelligence — they fail because they never had a system. This is the TECHMED Method: the same seven-step system behind every TECHMED Blueprint, resource and tool.",
   categoryId: 'articleCategory-getting-started',
-  tags: ['Study Plan', 'JAMB Syllabus', 'JAMB 2027'],
+  tags: ['Study Plan', 'JAMB Syllabus', 'JAMB 2027', 'UTME 2027'],
+  authorName: 'Wisdom Johnson',
+  authorRole: 'Founder, TECHMED',
   publishedAt: '2026-08-08T09:00:00.000Z',
+  updatedAt: '2026-08-08T15:30:00.000Z',
   featured: true,
   relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
   relatedResourceSlugs: ['free-quiz-practice'],
   relatedToolSlugs: ['kairo'],
   body: [
-    block('h2', 'Why "just start reading" doesn\'t work'),
     block(
       'normal',
-      "Most JAMB preparation advice comes down to one instruction: read. But reading without a plan is how students end up three months in, having covered a fraction of the syllabus, with no real sense of whether they're actually ready. The problem usually isn't effort — it's the absence of a system.",
+      "If you're reading this, you're probably trying to figure out where to actually start. This is the TECHMED Method — the same seven-step system behind every TECHMED Blueprint, resource and tool. By the end, you'll know exactly what to do next, not just what to feel motivated about.",
     ),
+    block('h2', 'I know what this feels like'),
     block(
       'normal',
-      'At TECHMED, every subject Blueprint and every resource is built around the same seven-step framework: a structure for turning "I need to prepare for JAMB" into an actual plan you can follow, day by day.',
+      'Maybe you\'ve already bought materials and still don\'t know what to read first. Maybe you started strong and stopped a few weeks in. Maybe everyone around you keeps saying "JAMB is coming" and it\'s starting to feel less like a countdown and more like pressure. If any of that sounds familiar, you\'re not behind — you just haven\'t had a system yet. That\'s what this is.',
     ),
-    block('h2', 'The seven steps'),
+    block('blockquote', "You don't need more motivation. You need a system that keeps working after the motivation runs out."),
+    block('h2', 'The TECHMED Method'),
+    block(
+      'normal',
+      'Every TECHMED Blueprint, resource and tool is built around the same seven-step system — not seven random tips, one repeatable cycle: Understand, Plan, Learn, Practice, Diagnose, Revise, Prepare. Most JAMB advice hands you a list. This is a loop — you move through it once per topic, then again, until exam day.',
+    ),
     block('h3', '1. Understand'),
     block(
       'normal',
-      "Before you can plan anything, you need to know what you're actually preparing for — what topics each subject covers, how those topics relate to each other, and which ones carry more weight than others. A syllabus on its own is just a list. Understanding means seeing the structure behind the list: which topics are foundational, and which ones depend on those foundations.",
+      'Before you plan anything, you need to actually know what you\'re preparing for — not the fear of "JAMB," but the real shape of it: what each subject covers, how the topics connect, and which ones everything else depends on. A syllabus by itself is just a list. Understanding it means seeing the structure underneath the list.',
+    ),
+    blockWithLinks('normal', [
+      'What to do: open your subject\'s ',
+      { text: 'TECHMED Blueprint', href: '/jamb-syllabus-2027' },
+      ' and look at the stages before you look at a single topic in detail. You\'re mapping the terrain before you walk it.',
+    ]),
+    block(
+      'normal',
+      'The mistake most students make here: opening a textbook to page one and reading in order, instead of understanding the shape of the whole subject first.',
     ),
     block('h3', '2. Plan'),
     block(
       'normal',
-      "Once you understand the shape of what you're preparing for, turn it into a schedule you can actually follow. A realistic plan accounts for the time you genuinely have, not the time you wish you had. Two focused hours a day that you'll actually keep beats a six-hour plan you'll abandon in a week.",
+      "Once you understand what you're preparing for, turn it into a schedule you'll actually follow. A plan you can't keep isn't a plan — it's a wish with a timetable attached.",
+    ),
+    block(
+      'normal',
+      'How much time you have changes what your plan should look like. Six months lets you move through the syllabus at a steady pace, with room to revisit weak topics twice. Three months means prioritizing high-weight topics first. Thirty days looks less like "cover everything" and more like triage — and that\'s its own conversation, one we\'ll go deeper on in a dedicated guide.',
+    ),
+    block(
+      'normal',
+      "What to do: block out the time you genuinely have — not the time you wish you had — and assign it to subjects based on what your Blueprint tells you carries the most weight.",
+    ),
+    block(
+      'normal',
+      "The mistake: building a six-hour daily plan in a burst of motivation, keeping it for four days, then quietly abandoning it. Two honest hours a day beats six hours you won't sustain.",
     ),
     block('h3', '3. Learn'),
     block(
       'normal',
-      "This is where most of your preparation time goes — working through each topic with real study material, not just re-reading notes. Learning means being able to explain a concept in your own words, not just recognizing it when you see it.",
+      "This is where most of your time goes — working through each topic with real material, not just re-reading notes until they feel familiar. Familiar isn't the same as understood.",
+    ),
+    block(
+      'normal',
+      "What to do: after studying a topic, close the book and explain it out loud, in your own words, like you're teaching someone else. If you can't, you don't know it yet — you recognize it.",
+    ),
+    block(
+      'normal',
+      'The mistake: mistaking recognition for understanding. You read a solution and think "yes, I get it" — but getting it while reading and producing it from scratch under pressure are different skills.',
     ),
     block('h3', '4. Practice'),
     block(
       'normal',
-      "Understanding a concept and applying it under exam conditions are two different skills. Practice — past questions, timed quizzes, mock exams — is where you build the second one. It's also where you find out what you don't actually know yet, which brings you to the next step.",
+      'Understanding a concept and applying it under exam conditions are two different skills. Practice — real past questions, under a timer — is where you build the second one.',
+    ),
+    blockWithLinks('normal', [
+      'What to do: once you\'ve learned a topic, immediately test it with ',
+      { text: 'real past questions', href: '/resources/free-quiz-practice' },
+      ' under a timer — not "whenever you feel ready," right after, while it\'s fresh.',
+    ]),
+    block(
+      'normal',
+      'The mistake: practicing untimed, then being surprised by how different the exam feels when the clock is real.',
     ),
     block('h3', '5. Diagnose'),
     block(
       'normal',
-      'Practice is only useful if you look at the results. Diagnosing means going through what you got wrong and asking why — a knowledge gap, a careless mistake and a timing problem are three different issues with three different fixes. Skipping this step is the most common reason students practice for months without actually improving.',
+      "Practice only helps you if you actually look at what went wrong — and more importantly, why. This is the step almost every study guide skips, and it's the one that actually moves your score.",
+    ),
+    block('normal', "When you get a question wrong, it's usually one of three things, and each one needs a different fix:"),
+    block('normal', "A knowledge gap — you didn't know it. Go back and relearn it.", { listItem: 'bullet' }),
+    block('normal', 'A careless mistake — you knew it but rushed or misread the question. Slow down on similar questions next time.', {
+      listItem: 'bullet',
+    }),
+    block('normal', "A timing problem — you knew it but ran out of time to get there. Practice pacing, not just content.", {
+      listItem: 'bullet',
+    }),
+    block(
+      'normal',
+      'Most students treat every wrong answer the same way: "I need to read more." Sometimes that\'s true. Often it isn\'t.',
     ),
     block('h3', '6. Revise'),
     block(
       'normal',
-      "Revision is not re-reading everything from the beginning. It's closing the specific gaps your diagnosis revealed — spending your remaining time on what you're actually weak on, not what feels comfortable to review.",
+      "Revision is not re-reading everything from the beginning — that's just re-learning, slower. Real revision is closing the specific gaps your diagnosis found, spending your remaining time on what you're actually weak on, not what feels comfortable to review.",
+    ),
+    block(
+      'normal',
+      "What to do: keep a running list of exactly which topics you got wrong and why. That list is your revision plan — not the syllabus from page one again.",
     ),
     block('h3', '7. Prepare'),
     block(
       'normal',
-      "The final stage isn't academic — it's logistical and mental. Knowing your exam format, practicing under real time pressure, and having a plan for the day itself all matter as much as the studying that came before it.",
+      "The final stage isn't academic — it's logistical and mental. Knowing your exam format, practicing under real time pressure, and having an actual plan for exam day all matter as much as the studying that came before it.",
+    ),
+    block(
+      'normal',
+      'What to do: in your last week, simulate the real thing — same time of day, same time limit, no pausing. The exam shouldn\'t be the first time your brain works under those exact conditions.',
+    ),
+    block('h2', 'Frequently Asked Questions'),
+    block('h3', 'How many hours a day should I study for JAMB?'),
+    block(
+      'normal',
+      'Less than you think, done consistently, beats more than you can sustain. Two to four focused hours a day, every day, will take you further than an occasional ten-hour session followed by three days of burnout. Consistency is the variable that actually matters.',
+    ),
+    block('h3', 'Can I really prepare for JAMB in one month?'),
+    block(
+      'normal',
+      "You can meaningfully improve your readiness in a month — but it looks different from a six-month plan. It's less about covering everything and more about triage: high-weight topics first, heavy practice, and honest diagnosis of what's actually fixable in the time you have left. We'll go deeper on exactly how in a dedicated 30-day guide.",
+    ),
+    block('h3', "What's the actual difference between practice and revision?"),
+    block(
+      'normal',
+      "Practice is how you find out what you don't know yet. Revision is what you do about it. Skipping straight to revision without practice means you're guessing at your own weaknesses instead of knowing them.",
+    ),
+    block('h3', 'How do I know if I\'m actually ready?'),
+    block(
+      'normal',
+      'Not by how you feel — by your diagnosed results. If your practice scores are consistently near your target, your careless-mistake rate is low, and you can finish within the time limit, that\'s readiness. "Ready" is a measurement, not a feeling.',
     ),
     block('h2', 'Where to start'),
+    blockWithLinks('normal', [
+      'If you haven\'t started yet: begin with Understand. Open your subject\'s ',
+      { text: 'TECHMED Blueprint', href: '/jamb-syllabus-2027' },
+      ' — it takes the JAMB syllabus and organizes it into a clearer study order, so you\'re not figuring out the structure entirely on your own.',
+    ]),
+    block('blockquote', 'Practice tells you what you can answer. Diagnosis tells you why you couldn\'t.'),
     block(
       'normal',
-      'If you haven\'t started yet, the first two steps are where to begin: understand what each subject\'s syllabus actually covers, then build a plan around it. TECHMED\'s Blueprints exist for exactly this — each one takes the JAMB syllabus for a subject and organizes it into a clearer study order, so "understand" isn\'t something you have to work out entirely on your own.',
-    ),
-    block('blockquote', "You don't need more motivation. You need a system that keeps working after the motivation runs out."),
-    block(
-      'normal',
-      'Preparation isn\'t a single decision made once — it\'s this cycle, repeated until exam day: understand, plan, learn, practice, diagnose, revise, prepare. Every TECHMED Blueprint, resource and tool is built to support one part of it.',
+      'Preparation isn\'t a single decision made once — it\'s this cycle, repeated per topic, until exam day: understand, plan, learn, practice, diagnose, revise, prepare. Every TECHMED Blueprint, resource and tool exists to support one part of it.',
     ),
   ],
 };
 
 async function seedFirstArticle() {
   const a = FIRST_ARTICLE;
+
+  for (const oldId of ARTICLE_OLD_IDS) {
+    try {
+      await client.delete(oldId);
+    } catch {
+      // Fine if it was never seeded on this dataset — nothing to clean up.
+    }
+  }
+
   await client.createOrReplace({
-    _id: `article-${a.slug}`,
+    _id: a.id,
     _type: 'article',
     title: a.title,
     slug: { _type: 'slug', current: a.slug },
     excerpt: a.excerpt,
     category: { _type: 'reference', _ref: a.categoryId },
     tags: a.tags,
+    author: { name: a.authorName, role: a.authorRole },
     publishedAt: a.publishedAt,
+    updatedAt: a.updatedAt,
     featured: a.featured,
     body: a.body,
     relatedBlueprints: a.relatedBlueprintSlugs.map((slug) => ({
