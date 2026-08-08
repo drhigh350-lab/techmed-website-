@@ -388,6 +388,8 @@ const jsonLd = [
 
   /* 3. Blueprints */
   .blueprints-note {
+    position: relative;
+    overflow: hidden;
     max-width: 720px;
     margin: 0 auto var(--space-10);
     font-size: 0.92rem;
@@ -396,9 +398,22 @@ const jsonLd = [
     text-align: left;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--color-soft-blue);
     border-radius: var(--radius);
-    padding: var(--space-5) var(--space-6);
+    padding: var(--space-5) var(--space-6) var(--space-5) calc(var(--space-6) + var(--space-2));
+  }
+
+  /* Overlay bar instead of border-left — mixing a 1px border with a
+     thicker, differently-colored border-left miters into a visible seam
+     at the rounded corner. See the identical fix on the subject page's
+     .note/.dependency-note for the full reasoning. */
+  .blueprints-note::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: var(--color-soft-blue);
   }
 
   .blueprints-note strong {

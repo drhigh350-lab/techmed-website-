@@ -201,12 +201,21 @@ const jsonLd = [
     padding: var(--space-12) var(--space-6);
   }
 
+  /* Flexbox + centered wrap rather than a fixed 2-column grid: a grid
+     leaves a single item pinned to the left column with an empty gap
+     beside it, instead of centered — flex handles 1 item and several
+     items equally well. */
   .quiz-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
     gap: var(--space-5);
     max-width: 800px;
     margin: 0 auto;
+  }
+
+  .quiz-grid > :global(*) {
+    flex: 0 1 340px;
   }
 
   .quizzes .empty-state {
@@ -285,9 +294,12 @@ const jsonLd = [
   }
 
   @media (max-width: 800px) {
-    .resource-grid,
-    .quiz-grid {
+    .resource-grid {
       grid-template-columns: 1fr;
+    }
+
+    .quiz-grid > :global(*) {
+      flex-basis: 100%;
     }
   }
 </style>
