@@ -1,0 +1,81 @@
+---
+// New homepage section per the v1.1 brief. Route mapping is deliberate,
+// not arbitrary: only 8 real routes exist right now (About, Cohort,
+// Resources, Tools, Podcast, Blog, Contact, Legal), so ecosystem items
+// map to whichever existing page covers that concept — KAIRO, Study
+// Planner and CBT Practice all live under /tools (the "product tools"
+// hub); Resources, Study Blueprints and Free Quizzes under /resources.
+// Each target page explains what lives there. Revisit this mapping once
+// any of these get a dedicated route.
+import SectionHeading from './SectionHeading.astro';
+import FeatureCard from './FeatureCard.astro';
+
+const icons = {
+  kairo:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.2h7.6l-6 4.8 2.4 7.2-6-4.8-6 4.8 2.4-7.2-6-4.8h7.6z"/></svg>',
+  resources:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>',
+  blueprint:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M3 9h18"/></svg>',
+  quiz:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>',
+  podcast:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4"/></svg>',
+  planner:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  cbt:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+  community:
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+};
+
+const items = [
+  { title: 'KAIRO', description: 'The intelligent learning system that understands your journey and helps you know what to do next.', href: '/tools', icon: icons.kairo },
+  { title: 'Resources', description: 'Boosters, structured revision materials and research files built around what actually matters.', href: '/resources', icon: icons.resources },
+  { title: 'Study Blueprints', description: 'Structured study plans and learning systems, built around how students actually improve.', href: '/resources', icon: icons.blueprint },
+  { title: 'Free Quizzes', description: 'Thousands of practice questions with detailed solutions, no sign-up required.', href: '/resources', icon: icons.quiz },
+  { title: 'Podcast', description: '5 Minutes Forward — a daily habit of intentional growth and discipline.', href: '/podcast', icon: icons.podcast },
+  { title: 'Study Planner', description: 'Turn a syllabus into a realistic weekly rhythm you can actually stick to.', href: '/tools', icon: icons.planner },
+  { title: 'CBT Practice', description: 'Timed, exam-format practice that builds real speed and confidence under pressure.', href: '/tools', icon: icons.cbt },
+  { title: 'Builder Community', description: 'Your Builder Cohort — an assigned classroom, not a public group. You don\'t prepare alone.', href: '/cohort', icon: icons.community },
+];
+---
+
+<section class="section ecosystem">
+  <SectionHeading
+    eyebrow="The Ecosystem"
+    title="Explore the TECHMED Ecosystem"
+    subtitle="Everything built to help students prepare smarter."
+  />
+  <div class="grid">
+    {items.map((item) => (
+      <FeatureCard title={item.title} description={item.description} href={item.href} icon={item.icon} />
+    ))}
+  </div>
+</section>
+
+<style>
+  .section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 960px) {
+    .grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 560px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

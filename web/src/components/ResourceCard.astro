@@ -1,0 +1,74 @@
+---
+interface Props {
+  title: string;
+  description: string;
+  tag?: string;
+  comingSoon?: boolean;
+}
+
+const { title, description, tag, comingSoon = false } = Astro.props;
+---
+
+<div class="resource-card reveal">
+  <div class="top">
+    {tag && <span class="tag">{tag}</span>}
+    {comingSoon && <span class="badge">Coming Soon</span>}
+  </div>
+  <h3>{title}</h3>
+  <p>{description}</p>
+</div>
+
+<style>
+  .resource-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .resource-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .top {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .tag {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .badge {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: var(--space-2);
+  }
+
+  p {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+</style>
