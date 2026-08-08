@@ -60,6 +60,21 @@ const jsonLd = [
       logo: { '@type': 'ImageObject', url: new URL('/images/logo.png', Astro.site).toString() },
     },
   },
+  // Built directly from article.faq — real structured data, not scraped
+  // from prose, so it can never drift from what's actually on the page.
+  ...(article.faq && article.faq.length > 0
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: article.faq.map((item) => ({
+            '@type': 'Question',
+            name: item.question,
+            acceptedAnswer: { '@type': 'Answer', text: item.answer },
+          })),
+        },
+      ]
+    : []),
 ];
 ---
 

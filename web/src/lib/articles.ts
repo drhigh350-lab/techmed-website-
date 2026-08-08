@@ -34,6 +34,11 @@ export interface RelatedBlueprintRef {
   description?: string;
 }
 
+export interface ArticleFaqItem {
+  question: string;
+  answer: string;
+}
+
 export interface ArticleSeo {
   metaTitle?: string;
   metaDescription?: string;
@@ -58,7 +63,12 @@ export interface Article {
   relatedResources?: RelatedResourceRef[];
   relatedTools?: RelatedResourceRef[];
   relatedBlueprints?: RelatedBlueprintRef[];
+  faq?: ArticleFaqItem[];
   seo?: ArticleSeo;
+  /** True when this article should show the TECHMED Method diagram — set
+   * deliberately per article, not inferred, since not every article is
+   * about the seven-step system. */
+  showMethodDiagram?: boolean;
 }
 
 export const FALLBACK_ARTICLES: Article[] = [];
@@ -84,6 +94,8 @@ const ARTICLE_QUERY = `*[_type == "article" && !(_id in path("drafts.**"))] | or
   publishedAt,
   updatedAt,
   featured,
+  showMethodDiagram,
+  faq,
   body[]{
     ...,
     _type == "image" => {

@@ -7,6 +7,7 @@
 // absent, per the article schema's design.
 import { renderArticleBody, type Article } from '../lib/articles';
 import PlaceholderPreview from './PlaceholderPreview.astro';
+import TechmedMethodDiagram from './TechmedMethodDiagram.astro';
 
 interface Props {
   article: Article;
@@ -69,12 +70,28 @@ const authorName = article.author?.name ?? 'TECHMED';
     )}
   </header>
 
+  {article.showMethodDiagram && <TechmedMethodDiagram />}
+
   <div class="body reveal" set:html={bodyHtml} />
 
   {article.tags && article.tags.length > 0 && (
     <ul class="tags">
       {article.tags.map((tag) => <li>{tag}</li>)}
     </ul>
+  )}
+
+  {article.faq && article.faq.length > 0 && (
+    <section class="faq reveal">
+      <h2>Frequently Asked Questions</h2>
+      <div class="faq-list">
+        {article.faq.map((item) => (
+          <details>
+            <summary>{item.question}</summary>
+            <p>{item.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
   )}
 
   {article.relatedBlueprints && article.relatedBlueprints.length > 0 && (
@@ -312,6 +329,61 @@ const authorName = article.author?.name ?? 'TECHMED';
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     padding: 5px 12px;
+  }
+
+  .faq {
+    margin-bottom: var(--space-10);
+  }
+
+  .faq h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--space-5);
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .faq details {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    transition: border-color 200ms ease;
+  }
+
+  .faq details:hover {
+    border-color: var(--accent);
+  }
+
+  .faq summary {
+    font-family: var(--font-display);
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.5;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq summary::marker {
+    content: '';
+    display: none;
+  }
+
+  .faq details[open] summary {
+    margin-bottom: var(--space-3);
+  }
+
+  .faq details p {
+    font-size: 0.92rem;
+    line-height: 1.75;
+    color: var(--text-light);
   }
 
   .blueprint-callout {

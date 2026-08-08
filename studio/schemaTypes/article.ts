@@ -102,6 +102,13 @@ export default defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'showMethodDiagram',
+      title: 'Show the TECHMED Method Diagram',
+      type: 'boolean',
+      description: 'Shows the seven-step (Understand -> Prepare) visual near the top of the article. Only turn this on for articles that actually walk through the Method — not every article should show it.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'array',
@@ -149,6 +156,23 @@ export default defineType({
         },
       ],
       validation: (Rule) => Rule.required(),
+    }),
+    defineField({
+      name: 'faq',
+      title: 'Frequently Asked Questions',
+      type: 'array',
+      description: 'Optional. Kept as structured Q&A rather than part of the body so it can render as a real accordion and power FAQPage structured data — not just prose that happens to look like questions.',
+      of: [
+        {
+          type: 'object',
+          name: 'faqItem',
+          fields: [
+            defineField({ name: 'question', title: 'Question', type: 'string', validation: (Rule) => Rule.required() }),
+            defineField({ name: 'answer', title: 'Answer', type: 'text', rows: 3, validation: (Rule) => Rule.required() }),
+          ],
+          preview: { select: { title: 'question' } },
+        },
+      ],
     }),
     defineField({
       name: 'relatedResources',
