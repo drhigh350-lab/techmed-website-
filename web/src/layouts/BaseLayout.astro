@@ -5,9 +5,28 @@ import '../styles/global.css';
 interface Props {
   title: string;
   description: string;
+  /** Absolute or site-relative canonical URL. Defaults to the current page. */
+  canonical?: string;
+  /** Absolute image URL for Open Graph/Twitter cards. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  noindex?: boolean;
+  /** JSON-LD objects to embed as <script type="application/ld+json"> tags. */
+  structuredData?: Record<string, unknown>[];
 }
 
-const { title, description } = Astro.props;
+const {
+  title,
+  description,
+  canonical,
+  ogImage,
+  ogType = 'website',
+  noindex = false,
+  structuredData = [],
+} = Astro.props;
+
+const canonicalUrl = new URL(canonical ?? Astro.url.pathname, Astro.site).toString();
+const ogImageUrl = ogImage ? new URL(ogImage, Astro.site).toString() : undefined;
 ---
 
 <!doctype html>
@@ -18,12 +37,32 @@ const { title, description } = Astro.props;
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    {ogImageUrl && <meta property="og:image" content={ogImageUrl} />}
+
+    <meta name="twitter:card" content={ogImageUrl ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    {ogImageUrl && <meta name="twitter:image" content={ogImageUrl} />}
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
+    {
+      structuredData.map((data) => (
+        <script type="application/ld+json" set:html={JSON.stringify(data)} />
+      ))
+    }
   </head>
   <body>
     <slot />

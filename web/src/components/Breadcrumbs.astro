@@ -1,0 +1,78 @@
+---
+// Reusable breadcrumb nav + matching BreadcrumbList JSON-LD. The last item
+// is treated as the current page (rendered as plain text, not a link).
+interface Crumb {
+  label: string;
+  href: string;
+}
+
+interface Props {
+  items: Crumb[];
+}
+
+const { items } = Astro.props;
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((item, index) => ({
+    '@type': 'ListItem',
+    position: index + 1,
+    name: item.label,
+    item: new URL(item.href, Astro.site).toString(),
+  })),
+};
+---
+
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <ol>
+    {
+      items.map((item, index) => (
+        <li>
+          {index < items.length - 1 ? (
+            <a href={item.href}>{item.label}</a>
+          ) : (
+            <span aria-current="page">{item.label}</span>
+          )}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+<style>
+  .breadcrumbs ol {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2);
+    list-style: none;
+    font-size: 0.85rem;
+  }
+
+  .breadcrumbs li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .breadcrumbs li:not(:last-child)::after {
+    content: '/';
+    color: var(--text-muted);
+  }
+
+  .breadcrumbs a {
+    color: var(--text-light);
+    text-decoration: none;
+  }
+
+  .breadcrumbs a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .breadcrumbs span[aria-current='page'] {
+    color: var(--text-muted);
+  }
+</style>

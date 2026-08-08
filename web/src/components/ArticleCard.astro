@@ -1,0 +1,125 @@
+---
+import { imageUrl } from '../lib/image';
+import type { ArticleSummary } from '../lib/types';
+
+interface Props {
+  article: ArticleSummary;
+  priority?: boolean;
+}
+
+const { article, priority = false } = Astro.props;
+const cover = imageUrl(article.featuredImage, { width: 640 });
+const dateLabel = article.publishedAt
+  ? new Date(article.publishedAt).toLocaleDateString('en-NG', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  : null;
+---
+
+<article class="card">
+  <a class="card-link" href={`/blog/${article.slug}/`}>
+    <div class="cover">
+      {cover ? (
+        <img
+          src={cover}
+          alt=""
+          loading={priority ? 'eager' : 'lazy'}
+          width="640"
+          height="360"
+        />
+      ) : (
+        <div class="cover-placeholder" aria-hidden="true" />
+      )}
+    </div>
+    <div class="body">
+      {article.category && <p class="category">{article.category.title}</p>}
+      <h3>{article.title}</h3>
+      {article.excerpt && <p class="excerpt">{article.excerpt}</p>}
+      <p class="meta">
+        {dateLabel}
+        <span class="read-more">Read Article →</span>
+      </p>
+    </div>
+  </a>
+</article>
+
+<style>
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    height: 100%;
+  }
+
+  .card-link {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .cover {
+    aspect-ratio: 16 / 9;
+    background: var(--surface-raised);
+  }
+
+  .cover img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cover-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--surface-raised), var(--surface-dark));
+  }
+
+  .body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding: var(--space-6);
+    flex: 1;
+  }
+
+  .category {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  h3 {
+    font-size: 1.15rem;
+    line-height: 1.35;
+  }
+
+  .excerpt {
+    color: var(--text-light);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    flex: 1;
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+  }
+
+  .read-more {
+    color: var(--accent);
+    font-weight: 600;
+  }
+</style>

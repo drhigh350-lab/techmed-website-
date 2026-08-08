@@ -1,0 +1,92 @@
+---
+import { imageUrl } from '../lib/image';
+import type { RelatedLink } from '../lib/types';
+
+interface Props {
+  heading: string;
+  items?: RelatedLink[];
+}
+
+const { heading, items = [] } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="related" aria-labelledby={`related-${heading.replace(/\s+/g, '-').toLowerCase()}`}>
+      <h2 id={`related-${heading.replace(/\s+/g, '-').toLowerCase()}`}>{heading}</h2>
+      <ul>
+        {items.map((item) => {
+          const cover = imageUrl(item.image, { width: 320 });
+          return (
+            <li>
+              <a href={item.url} class="related-link">
+                {cover && <img src={cover} alt="" loading="lazy" width="320" height="180" />}
+                <span class="related-text">
+                  <span class="related-title">{item.title}</span>
+                  {item.description && <span class="related-description">{item.description}</span>}
+                </span>
+              </a>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .related {
+    margin-block: var(--space-8);
+  }
+
+  .related h2 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .related ul {
+    list-style: none;
+    display: grid;
+    gap: var(--space-4);
+  }
+
+  .related-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 0.15s ease;
+  }
+
+  .related-link:hover {
+    border-color: var(--accent);
+  }
+
+  .related-link img {
+    width: 96px;
+    height: 54px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    flex-shrink: 0;
+  }
+
+  .related-text {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .related-title {
+    font-weight: 600;
+  }
+
+  .related-description {
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+</style>

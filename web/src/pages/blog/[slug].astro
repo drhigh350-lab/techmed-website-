@@ -1,0 +1,315 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ArticleCard from '../../components/ArticleCard.astro';
+import RelatedContent from '../../components/RelatedContent.astro';
+import { sanityFetch } from '../../lib/sanity';
+import { ARTICLE_BY_SLUG_QUERY, ARTICLE_SLUGS_QUERY, RELATED_ARTICLES_QUERY } from '../../lib/queries';
+import { imageUrl } from '../../lib/image';
+import { renderBody } from '../../lib/portableText';
+import type { Article, ArticleSummary } from '../../lib/types';
+
+// Static output: every published article is built at deploy time. An
+// unpublished/nonexistent slug simply has no page generated, so it falls
+// through to the site's 404 — no runtime lookup, no broken page.
+export async function getStaticPaths() {
+  const slugs = await sanityFetch<{ slug: string }[]>(ARTICLE_SLUGS_QUERY, {}, []);
+  return slugs.map(({ slug }) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+const article = await sanityFetch<Article | null>(ARTICLE_BY_SLUG_QUERY, { slug }, null);
+
+// getStaticPaths only generates paths for slugs that exist, so reaching
+// this with no article means the article was unpublished between the slug
+// listing and this fetch — a build-time inconsistency, not a real
+// user-facing 404 (those are handled by the page simply not existing in
+// the static output). Fail the build for this one page rather than ship a
+// broken article route.
+if (!article) {
+  throw new Error(`Article with slug "${slug}" disappeared during build.`);
+}
+
+const relatedArticles = article.category
+  ? await sanityFetch<ArticleSummary[]>(
+      RELATED_ARTICLES_QUERY,
+      { slug: article.slug, categorySlug: article.category.slug },
+      []
+    )
+  : [];
+
+const bodyHtml = renderBody(article.body);
+const featuredImageUrl = imageUrl(article.featuredImage, { width: 1600 });
+const socialImageUrl =
+  imageUrl(article.seo?.socialImage, { width: 1200 }) ?? featuredImageUrl ?? undefined;
+
+const publishedDate = article.publishedAt ? new Date(article.publishedAt) : null;
+const updatedDate = article.updatedAt ? new Date(article.updatedAt) : null;
+const formatDate = (d: Date) =>
+  d.toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+const seoTitle = article.seo?.title || `${article.title} — TECHMED`;
+const seoDescription = article.seo?.description || article.excerpt || '';
+
+const breadcrumbItems = [
+  { label: 'Home', href: '/' },
+  { label: 'Blog', href: '/blog/' },
+  ...(article.category ? [{ label: article.category.title, href: '/blog/' }] : []),
+  { label: article.title, href: `/blog/${article.slug}/` },
+];
+
+// TECHMED publishes educational guidance and strategy — never an official
+// JAMB source. When no author is set, attribution goes to the org, not a
+// fabricated person.
+const authorStructuredData = article.author
+  ? { '@type': 'Person', name: article.author.name }
+  : { '@type': 'Organization', name: 'TECHMED' };
+
+const structuredData = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: seoDescription,
+    ...(publishedDate ? { datePublished: publishedDate.toISOString() } : {}),
+    ...(updatedDate ? { dateModified: updatedDate.toISOString() } : {}),
+    author: authorStructuredData,
+    publisher: {
+      '@type': 'Organization',
+      name: 'TECHMED',
+    },
+    ...(socialImageUrl ? { image: socialImageUrl } : {}),
+    mainEntityOfPage: new URL(`/blog/${article.slug}/`, Astro.site).toString(),
+  },
+];
+---
+
+<BaseLayout
+  title={seoTitle}
+  description={seoDescription}
+  canonical={article.seo?.canonical || `/blog/${article.slug}/`}
+  ogImage={socialImageUrl}
+  ogType="article"
+  structuredData={structuredData}
+>
+  <main class="article-page">
+    <div class="wrap">
+      <Breadcrumbs items={breadcrumbItems} />
+
+      <header class="article-header">
+        {article.category && <p class="category">{article.category.title}</p>}
+        <h1>{article.title}</h1>
+        {article.excerpt && <p class="excerpt">{article.excerpt}</p>}
+
+        <div class="byline">
+          {
+            article.author ? (
+              <span class="author">{article.author.name}</span>
+            ) : (
+              <span class="author">TECHMED</span>
+            )
+          }
+          {publishedDate && <span class="date">{formatDate(publishedDate)}</span>}
+          {updatedDate && <span class="updated">Updated {formatDate(updatedDate)}</span>}
+        </div>
+      </header>
+
+      {
+        featuredImageUrl && (
+          <img
+            class="featured-image"
+            src={featuredImageUrl}
+            alt={article.featuredImage?.alt || ''}
+            width="1600"
+            height="900"
+          />
+        )
+      }
+
+      <div class="article-body" set:html={bodyHtml} />
+
+      {article.tags && article.tags.length > 0 && (
+        <ul class="tags">
+          {article.tags.map((tag) => (
+            <li>{tag}</li>
+          ))}
+        </ul>
+      )}
+
+      <RelatedContent heading="Related Blueprint" items={article.relatedBlueprints} />
+      <RelatedContent heading="Related Resources" items={article.relatedResources} />
+      <RelatedContent heading="Related Tools" items={article.relatedTools} />
+
+      {
+        relatedArticles.length > 0 && (
+          <section class="related-articles">
+            <h2>More from the Knowledge Base</h2>
+            <div class="grid">
+              {relatedArticles.map((related) => (
+                <ArticleCard article={related} />
+              ))}
+            </div>
+          </section>
+        )
+      }
+    </div>
+  </main>
+</BaseLayout>
+
+<style>
+  .article-page {
+    padding-block: var(--space-16) var(--space-24);
+  }
+
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    padding-inline: var(--space-6);
+  }
+
+  .article-header {
+    margin-block: var(--space-8) var(--space-6);
+  }
+
+  .category {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 4vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    margin-bottom: var(--space-4);
+  }
+
+  .excerpt {
+    font-size: 1.1rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .byline {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .author {
+    font-weight: 600;
+    color: var(--text-light);
+  }
+
+  .featured-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-8);
+  }
+
+  .article-body {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text);
+  }
+
+  .article-body :global(h2) {
+    font-size: 1.5rem;
+    margin-block: var(--space-8) var(--space-4);
+  }
+
+  .article-body :global(h3) {
+    font-size: 1.25rem;
+    margin-block: var(--space-6) var(--space-3);
+  }
+
+  .article-body :global(h4) {
+    font-size: 1.1rem;
+    margin-block: var(--space-6) var(--space-3);
+  }
+
+  .article-body :global(p) {
+    margin-bottom: var(--space-4);
+  }
+
+  .article-body :global(ul),
+  .article-body :global(ol) {
+    margin: 0 0 var(--space-4) var(--space-6);
+  }
+
+  .article-body :global(li) {
+    margin-bottom: var(--space-2);
+  }
+
+  .article-body :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+
+  .article-body :global(blockquote) {
+    border-left: 3px solid var(--accent);
+    background: var(--surface);
+    padding: var(--space-4) var(--space-6);
+    border-radius: var(--radius);
+    margin-block: var(--space-6);
+    color: var(--text-light);
+  }
+
+  .article-body :global(figure) {
+    margin-block: var(--space-6);
+  }
+
+  .article-body :global(figure img) {
+    border-radius: var(--radius);
+  }
+
+  .article-body :global(figcaption) {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    text-align: center;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    margin-top: var(--space-8);
+  }
+
+  .tags li {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 4px 12px;
+  }
+
+  .related-articles {
+    margin-top: var(--space-16);
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border);
+  }
+
+  .related-articles h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--space-6);
+  }
+
+  .related-articles .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: var(--space-6);
+  }
+</style>
