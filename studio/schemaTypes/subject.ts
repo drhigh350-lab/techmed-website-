@@ -124,6 +124,20 @@ export default defineType({
       type: 'string',
       description: 'Slug of a matching product in the resource catalogue (e.g. "chemistry-booster-system"), if one exists. Leave empty if none does.',
     }),
+    defineField({
+      name: 'previewImage',
+      title: 'Roadmap Preview Image',
+      type: 'image',
+      options: { hotspot: true },
+      description: 'The subject roadmap graphic shown on the subject page. Leave empty to show a "coming soon" placeholder instead.',
+    }),
+    defineField({
+      name: 'guideFile',
+      title: 'Guide Document (PDF)',
+      type: 'file',
+      options: { accept: '.pdf' },
+      description: 'The full subject guide students can view and download. Leave empty until the document is ready — the page shows a "Full guide coming soon" state instead of a broken link.',
+    }),
   ],
   orderings: [
     { title: 'Display order', name: 'orderAsc', by: [{ field: 'order', direction: 'asc' }] },

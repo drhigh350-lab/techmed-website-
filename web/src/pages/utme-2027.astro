@@ -102,13 +102,13 @@ const jsonLd = [
       title="The Five TECHMED JAMB Blueprints"
       align="center"
     />
-    <p class="blueprints-framing">
-      Every Blueprint is built from the official JAMB syllabus and optimized by TECHMED into a
-      clearer, more strategic learning roadmap — the same required content, organized by how
-      concepts actually depend on each other rather than JAMB's original listing order. TECHMED is
-      not affiliated with or endorsed by JAMB; each Blueprint is TECHMED's own study structure,
-      built on top of JAMB's published syllabus.
-    </p>
+    <div class="blueprints-note reveal">
+      <strong>About the Blueprints:</strong> built from the official JAMB syllabus and optimized by
+      TECHMED into a clearer, more strategic learning roadmap — the same required content, organized
+      by how concepts actually depend on each other rather than JAMB's original listing order.
+      TECHMED is not affiliated with or endorsed by JAMB; each Blueprint is TECHMED's own study
+      structure, built on top of JAMB's published syllabus.
+    </div>
     <div class="subject-grid">
       {subjects.map((subject) => (
         <SubjectCard subject={subject} />
@@ -387,13 +387,22 @@ const jsonLd = [
   }
 
   /* 3. Blueprints */
-  .blueprints-framing {
-    max-width: 760px;
+  .blueprints-note {
+    max-width: 720px;
     margin: 0 auto var(--space-10);
-    font-size: 0.98rem;
-    line-height: 1.8;
+    font-size: 0.92rem;
+    line-height: 1.75;
     color: var(--text-light);
-    text-align: center;
+    text-align: left;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--color-soft-blue);
+    border-radius: var(--radius);
+    padding: var(--space-5) var(--space-6);
+  }
+
+  .blueprints-note strong {
+    color: var(--text);
   }
 
   .subject-grid {
