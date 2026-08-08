@@ -19,6 +19,10 @@ interface Props {
    * detail page's Product/Offer or BreadcrumbList). Organization JSON-LD
    * is always included sitewide, independent of this. */
   jsonLd?: Record<string, unknown>[];
+  /** Overrides the auto-computed canonical URL (current path). Only
+   * needed where a page's own content can specify one, e.g. an article's
+   * optional SEO.canonicalUrl — every other page keeps the default. */
+  canonicalUrl?: string;
 }
 
 const {
@@ -28,9 +32,10 @@ const {
   ogImage = '/images/logo.png',
   ogType = 'website',
   jsonLd = [],
+  canonicalUrl,
 } = Astro.props;
 
-const canonicalURL = new URL(Astro.url.pathname, Astro.site);
+const canonicalURL = canonicalUrl ? new URL(canonicalUrl, Astro.site) : new URL(Astro.url.pathname, Astro.site);
 const ogImageURL = new URL(ogImage, Astro.site);
 const whatsappChannel = await getWhatsappChannelUrl();
 

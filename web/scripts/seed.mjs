@@ -573,6 +573,42 @@ async function seedSubjects() {
   }
 }
 
+// Starter taxonomy for the Blog, from the agreed content architecture —
+// not articles, just the category shelf they'll be filed under. Seeding
+// these (rather than requiring them to be hand-created in Studio) doesn't
+// invent any content: no article exists in any of them yet.
+const ARTICLE_CATEGORIES = [
+  'Getting Started',
+  'JAMB / UTME',
+  'Syllabus',
+  'Subject Preparation',
+  'Study Strategy',
+  'Examination Strategy',
+  'Admission',
+  'Student Guides',
+];
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .replace(/\//g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+async function seedArticleCategories() {
+  for (const title of ARTICLE_CATEGORIES) {
+    const slug = slugify(title);
+    await client.createOrReplace({
+      _id: `articleCategory-${slug}`,
+      _type: 'articleCategory',
+      title,
+      slug: { _type: 'slug', current: slug },
+    });
+  }
+  console.log(`✓ articleCategory (${ARTICLE_CATEGORIES.length} documents)`);
+}
+
 async function main() {
   console.log(`Seeding project ${process.env.SANITY_PROJECT_ID} / dataset ${process.env.SANITY_DATASET}\n`);
   await seedSiteSettings();
@@ -580,6 +616,7 @@ async function main() {
   await seedFaqItems();
   await seedFounder();
   await seedSubjects();
+  await seedArticleCategories();
   console.log('\nDone.');
 }
 

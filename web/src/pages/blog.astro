@@ -1,19 +1,77 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import ComingSoon from '../components/ComingSoon.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ArticleCard from '../components/ArticleCard.astro';
+import { getArticles, getFeaturedArticle } from '../lib/articles';
+
+const articles = await getArticles();
+const featured = getFeaturedArticle(articles);
+const rest = articles.filter((article) => article.slug !== featured?.slug);
+
+const pageUrl = new URL('/blog', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'TECHMED Blog',
+    url: pageUrl,
+    description: 'Writing on JAMB/UTME preparation, study strategy and the Builder journey.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: pageUrl },
+    ],
+  },
+];
 ---
 
 <BaseLayout
-  title="Blog — TECHMED"
-  description="Writing on strategy, preparation and the Builder journey."
+  title="TECHMED Blog — JAMB/UTME Preparation & Student Guides"
+  description="Writing on JAMB/UTME preparation, study strategy, the syllabus and the Builder journey."
+  jsonLd={jsonLd}
 >
-  <ComingSoon
-    title="The TECHMED Blog"
-    description="Writing on strategy, preparation and the Builder journey is coming to this page soon."
-  />
-  <p class="hub-link">
-    Preparing for JAMB 2027 right now? Start at the <a href="/utme-2027">UTME 2027 Hub</a>.
-  </p>
+  {articles.length === 0 ? (
+    <>
+      <ComingSoon
+        title="The TECHMED Blog"
+        description="Writing on strategy, preparation and the Builder journey is coming to this page soon."
+      />
+      <p class="hub-link">
+        Preparing for JAMB 2027 right now? Start at the <a href="/utme-2027">UTME 2027 Hub</a>.
+      </p>
+    </>
+  ) : (
+    <>
+      <section class="hero">
+        <p class="eyebrow">TECHMED BLOG</p>
+        <h1>Writing built to help you prepare.</h1>
+        <p class="subtitle">
+          JAMB/UTME preparation, study strategy and the Builder journey — real answers, not filler.
+        </p>
+      </section>
+
+      {featured && (
+        <section class="featured-section">
+          <ArticleCard article={featured} featured />
+        </section>
+      )}
+
+      {rest.length > 0 && (
+        <section class="grid-section">
+          <SectionHeading title="All Articles" align="center" />
+          <div class="article-grid">
+            {rest.map((article) => (
+              <ArticleCard article={article} />
+            ))}
+          </div>
+        </section>
+      )}
+    </>
+  )}
 </BaseLayout>
 
 <style>
@@ -34,5 +92,55 @@ import ComingSoon from '../components/ComingSoon.astro';
 
   .hub-link a:hover {
     text-decoration: underline;
+  }
+
+  .hero {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-12);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: var(--space-4);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+  }
+
+  .featured-section,
+  .grid-section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-16);
+  }
+
+  .article-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  @media (max-width: 800px) {
+    .article-grid {
+      grid-template-columns: 1fr;
+    }
   }
 </style>
