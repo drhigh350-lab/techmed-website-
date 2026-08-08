@@ -1,0 +1,109 @@
+---
+// Homepage gateway into the UTME 2027 Hub (/utme-2027) — Path 1 of the two
+// required discovery routes (the other being the "UTME 2027" nav item).
+// Deliberately concise: discovery + positioning + invitation only. The Hub
+// itself owns orientation + navigation — this section must not duplicate it.
+import { getSubjects } from '../lib/syllabus';
+
+const subjects = await getSubjects();
+const subjectNames = subjects.map((subject) => subject.name).join(' · ');
+---
+
+<section class="gateway reveal">
+  <div class="gateway-inner">
+    <p class="eyebrow">TECHMED &times; 2027</p>
+    <h2>UTME 2027. Built To Last.</h2>
+    <p class="lede">
+      Every student preparing for UTME 2027 has one place to start: the JAMB
+      Blueprints, TECHMED's Resources and Tools, and the Builder Cohort —
+      organized so you always know what to do next.
+    </p>
+    <p class="subjects">{subjectNames}</p>
+    <a class="cta" href="/utme-2027">Explore UTME 2027 <span aria-hidden="true">&rarr;</span></a>
+  </div>
+</section>
+
+<style>
+  .gateway {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .gateway-inner {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  h2 {
+    font-size: clamp(1.6rem, 4vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .lede {
+    max-width: 56ch;
+    margin: 0 auto var(--space-5);
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+  }
+
+  .subjects {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-7);
+  }
+
+  .cta {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .cta span {
+    transition: transform 200ms ease;
+  }
+
+  .cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .cta:hover span {
+    transform: translateX(3px);
+  }
+
+  @media (max-width: 600px) {
+    .gateway-inner {
+      padding: var(--space-8) var(--space-5);
+    }
+  }
+</style>
