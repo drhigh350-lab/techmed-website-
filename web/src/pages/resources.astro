@@ -1,0 +1,60 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ComingSoon from '../components/ComingSoon.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ResourceCard from '../components/ResourceCard.astro';
+---
+
+<BaseLayout
+  title="Resources — TECHMED"
+  description="Boosters, revision materials and structured resources."
+>
+  <ComingSoon
+    title="Resources"
+    description="Boosters, revision materials and structured resources — built around what actually matters, not everything you could possibly study."
+  />
+
+  <section class="preview-section">
+    <SectionHeading title="What's coming to this page" align="center" />
+    <div class="grid">
+      <ResourceCard
+        title="Booster Systems"
+        description="High-yield revision packages for Chemistry, Biology and Physics — formula banks, examiner traps and fast revision systems."
+        tag="Revision"
+        comingSoon
+      />
+      <ResourceCard
+        title="Study Blueprints"
+        description="Structured study plans and learning systems, built around how students actually improve."
+        tag="Planning"
+        comingSoon
+      />
+      <ResourceCard
+        title="Free Quizzes"
+        description="Thousands of practice questions with detailed solutions, no sign-up required."
+        tag="Practice"
+        comingSoon
+      />
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .preview-section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-24);
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  @media (max-width: 800px) {
+    .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

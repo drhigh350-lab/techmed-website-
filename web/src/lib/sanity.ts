@@ -52,6 +52,15 @@ function installStragglerGuard() {
 }
 installStragglerGuard();
 
+// Every page includes Navbar + Footer, both of which call
+// getWhatsappChannelUrl() independently — across a growing number of
+// pages that's a lot of identical requests for the same siteSettings
+// document. Cache by query string for the lifetime of the build process
+// (a fresh Node process per build, so this never serves stale data
+// across builds) and share the in-flight Promise so concurrent callers
+// during the same prerender pass don't each start their own request.
+const queryCache = new Map<string, Promise<unknown>>();
+
 // Fetches are defensive by design: if Sanity is unreachable at build time
 // (misconfigured env, network issue, project not yet seeded), the site
 // still builds using the caller's fallback rather than failing the deploy.
@@ -59,13 +68,23 @@ export async function fetchSanity<T>(query: string, fallback: T): Promise<T> {
   const sanity = getClient();
   if (!sanity) return fallback;
 
+  let pending = queryCache.get(query) as Promise<T> | undefined;
+  if (!pending) {
+    pending = sanity.fetch<T>(query);
+    queryCache.set(query, pending);
+  }
+
   try {
-    const result = await sanity.fetch<T>(query);
+    const result = await pending;
     if (result === null || result === undefined || (Array.isArray(result) && result.length === 0)) {
       return fallback;
     }
     return result;
   } catch (err) {
+    // Don't cache a failure — a transient network blip on the first page
+    // shouldn't permanently doom every later page in the same build to
+    // the fallback when a retry might succeed.
+    queryCache.delete(query);
     console.warn('[sanity] fetch failed, using fallback content:', (err as Error).message);
     return fallback;
   }
