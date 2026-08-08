@@ -9,7 +9,9 @@
     "start": "sanity start"
   },
   "dependencies": {
+    "@portabletext/block-tools": "^1.1.38",
     "@sanity/vision": "^3.68.0",
+    "marked": "^15.0.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "sanity": "^3.68.0",
