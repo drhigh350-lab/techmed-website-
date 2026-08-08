@@ -337,7 +337,9 @@ export const RESOURCE_CATEGORIES: ResourceCategory[] = [
   'Opportunities',
 ];
 
-const RESOURCE_QUERY = `*[_type == "resource"] {
+// Excludes drafts — see the identical fix/comment on SUBJECT_QUERY in
+// src/lib/syllabus.ts for why this matters.
+const RESOURCE_QUERY = `*[_type == "resource" && !(_id in path("drafts.**"))] {
   "id": _id,
   "slug": slug.current,
   title,

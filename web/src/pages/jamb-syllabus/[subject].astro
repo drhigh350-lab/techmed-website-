@@ -252,14 +252,30 @@ const jsonLd = [
   }
 
   .guide-card {
+    position: relative;
+    overflow: hidden;
     display: flex;
     gap: var(--space-6);
     background: var(--surface);
     border: 1px solid var(--border);
-    border-top: 2px solid var(--accent);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
     margin-bottom: var(--space-6);
+  }
+
+  /* A flat overlay bar reads far cleaner at a rounded corner than mixing
+     border-top (2px, accent) with border (1px, faint) on the same box —
+     the two different widths/colors miter into a visible diagonal seam
+     right where the corner curves. Layering the accent on top avoids that
+     seam entirely; overflow: hidden clips it to the box's own radius. */
+  .guide-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
   }
 
   .guide-preview {
@@ -358,19 +374,34 @@ const jsonLd = [
 
   .note,
   .dependency-note {
+    position: relative;
+    overflow: hidden;
     font-size: 0.9rem;
     line-height: 1.7;
     color: var(--text-light);
     background: var(--surface);
     border: 1px solid var(--border);
-    border-left: 3px solid var(--color-soft-blue);
     border-radius: var(--radius);
-    padding: var(--space-4) var(--space-5);
+    padding: var(--space-4) var(--space-5) var(--space-4) calc(var(--space-5) + 3px);
     margin-bottom: var(--space-6);
   }
 
-  .dependency-note {
-    border-left-color: var(--accent);
+  /* Same reasoning as .guide-card::before: a flat overlay bar instead of
+     border-left avoids the mitered-corner seam a differently-sized/colored
+     border produces against a rounded box. */
+  .note::before,
+  .dependency-note::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 3px;
+    background: var(--color-soft-blue);
+  }
+
+  .dependency-note::before {
+    background: var(--accent);
   }
 
   .note strong,

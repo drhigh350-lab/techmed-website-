@@ -411,7 +411,11 @@ export const FALLBACK_SUBJECTS: Subject[] = [
   },
 ];
 
-const SUBJECT_QUERY = `*[_type == "subject"] | order(order asc) {
+// The draft exclusion matters: without it, an editor's unpublished draft
+// (e.g. saved before a field existed, or mid-edit) can be returned
+// alongside — or instead of, depending on sort order — the real published
+// document, since drafts share the same _type. Only ever read what's live.
+const SUBJECT_QUERY = `*[_type == "subject" && !(_id in path("drafts.**"))] | order(order asc) {
   name,
   "slug": slug.current,
   description,
@@ -440,7 +444,7 @@ export async function getSubjectBySlug(slug: string): Promise<Subject | undefine
 // captured on the subject itself). An empty result here means the
 // /jamb-syllabus/[subject]/[topic] route builds zero pages, which is the
 // correct behaviour until genuine content exists per topic.
-const SYLLABUS_TOPIC_QUERY = `*[_type == "syllabusTopic"] {
+const SYLLABUS_TOPIC_QUERY = `*[_type == "syllabusTopic" && !(_id in path("drafts.**"))] {
   title,
   "slug": slug.current,
   "subjectSlug": subject->slug.current,
