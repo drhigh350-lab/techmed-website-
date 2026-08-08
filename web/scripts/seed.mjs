@@ -20,6 +20,11 @@
 // is seeded with its text content only and no error — re-run this script
 // later once the file exists to attach it, no code changes needed. See
 // scripts/assets/README.md.
+//
+// Also seeds: the real resource catalogue (with their existing images from
+// public/images/resources/), the Blog's starter category taxonomy, and one
+// real first Blog article — see RESOURCES and FIRST_ARTICLE below for what
+// each one actually contains.
 
 import { createClient } from '@sanity/client';
 import { readFile } from 'node:fs/promises';
@@ -609,6 +614,388 @@ async function seedArticleCategories() {
   console.log(`✓ articleCategory (${ARTICLE_CATEGORIES.length} documents)`);
 }
 
+// Portable-text block builder — keeps the article content below readable
+// as prose instead of a wall of _key/_type boilerplate. Random keys are
+// fine: Sanity only needs uniqueness within the array, and createOrReplace
+// swaps the whole body each run anyway, so keys don't need to be stable
+// across seed runs.
+let keyCounter = 0;
+function key(prefix) {
+  keyCounter += 1;
+  return `${prefix}-${keyCounter}`;
+}
+function block(style, text, opts = {}) {
+  return {
+    _type: 'block',
+    _key: key('b'),
+    style,
+    ...(opts.listItem ? { listItem: opts.listItem, level: 1 } : {}),
+    markDefs: [],
+    children: [{ _type: 'span', _key: key('s'), text, marks: [] }],
+  };
+}
+
+// The first real Blog article — genuinely useful content, not written to
+// chase a keyword. It's built around the same UNDERSTAND -> PLAN -> LEARN
+// -> PRACTICE -> DIAGNOSE -> REVISE -> PREPARE framework already live on
+// /utme-2027 (real, existing TECHMED content, not invented for this
+// article), so it stays consistent with the rest of the site rather than
+// introducing a second framework. No fabricated stats, dates or author —
+// published today, byline left empty so it renders as written by TECHMED.
+const FIRST_ARTICLE = {
+  slug: 'how-to-start-preparing-for-jamb',
+  title: 'How to Start Preparing for JAMB: A Framework That Actually Works',
+  excerpt:
+    "Most students don't fail JAMB because they lack intelligence — they fail because they never had a system. Here's the seven-step framework behind every TECHMED Blueprint and resource.",
+  categoryId: 'articleCategory-getting-started',
+  tags: ['Study Plan', 'JAMB Syllabus', 'JAMB 2027'],
+  publishedAt: '2026-08-08T09:00:00.000Z',
+  featured: true,
+  relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
+  relatedResourceSlugs: ['free-quiz-practice'],
+  relatedToolSlugs: ['kairo'],
+  body: [
+    block('h2', 'Why "just start reading" doesn\'t work'),
+    block(
+      'normal',
+      "Most JAMB preparation advice comes down to one instruction: read. But reading without a plan is how students end up three months in, having covered a fraction of the syllabus, with no real sense of whether they're actually ready. The problem usually isn't effort — it's the absence of a system.",
+    ),
+    block(
+      'normal',
+      'At TECHMED, every subject Blueprint and every resource is built around the same seven-step framework: a structure for turning "I need to prepare for JAMB" into an actual plan you can follow, day by day.',
+    ),
+    block('h2', 'The seven steps'),
+    block('h3', '1. Understand'),
+    block(
+      'normal',
+      "Before you can plan anything, you need to know what you're actually preparing for — what topics each subject covers, how those topics relate to each other, and which ones carry more weight than others. A syllabus on its own is just a list. Understanding means seeing the structure behind the list: which topics are foundational, and which ones depend on those foundations.",
+    ),
+    block('h3', '2. Plan'),
+    block(
+      'normal',
+      "Once you understand the shape of what you're preparing for, turn it into a schedule you can actually follow. A realistic plan accounts for the time you genuinely have, not the time you wish you had. Two focused hours a day that you'll actually keep beats a six-hour plan you'll abandon in a week.",
+    ),
+    block('h3', '3. Learn'),
+    block(
+      'normal',
+      "This is where most of your preparation time goes — working through each topic with real study material, not just re-reading notes. Learning means being able to explain a concept in your own words, not just recognizing it when you see it.",
+    ),
+    block('h3', '4. Practice'),
+    block(
+      'normal',
+      "Understanding a concept and applying it under exam conditions are two different skills. Practice — past questions, timed quizzes, mock exams — is where you build the second one. It's also where you find out what you don't actually know yet, which brings you to the next step.",
+    ),
+    block('h3', '5. Diagnose'),
+    block(
+      'normal',
+      'Practice is only useful if you look at the results. Diagnosing means going through what you got wrong and asking why — a knowledge gap, a careless mistake and a timing problem are three different issues with three different fixes. Skipping this step is the most common reason students practice for months without actually improving.',
+    ),
+    block('h3', '6. Revise'),
+    block(
+      'normal',
+      "Revision is not re-reading everything from the beginning. It's closing the specific gaps your diagnosis revealed — spending your remaining time on what you're actually weak on, not what feels comfortable to review.",
+    ),
+    block('h3', '7. Prepare'),
+    block(
+      'normal',
+      "The final stage isn't academic — it's logistical and mental. Knowing your exam format, practicing under real time pressure, and having a plan for the day itself all matter as much as the studying that came before it.",
+    ),
+    block('h2', 'Where to start'),
+    block(
+      'normal',
+      'If you haven\'t started yet, the first two steps are where to begin: understand what each subject\'s syllabus actually covers, then build a plan around it. TECHMED\'s Blueprints exist for exactly this — each one takes the JAMB syllabus for a subject and organizes it into a clearer study order, so "understand" isn\'t something you have to work out entirely on your own.',
+    ),
+    block('blockquote', "You don't need more motivation. You need a system that keeps working after the motivation runs out."),
+    block(
+      'normal',
+      'Preparation isn\'t a single decision made once — it\'s this cycle, repeated until exam day: understand, plan, learn, practice, diagnose, revise, prepare. Every TECHMED Blueprint, resource and tool is built to support one part of it.',
+    ),
+  ],
+};
+
+async function seedFirstArticle() {
+  const a = FIRST_ARTICLE;
+  await client.createOrReplace({
+    _id: `article-${a.slug}`,
+    _type: 'article',
+    title: a.title,
+    slug: { _type: 'slug', current: a.slug },
+    excerpt: a.excerpt,
+    category: { _type: 'reference', _ref: a.categoryId },
+    tags: a.tags,
+    publishedAt: a.publishedAt,
+    featured: a.featured,
+    body: a.body,
+    relatedBlueprints: a.relatedBlueprintSlugs.map((slug) => ({
+      _type: 'reference',
+      _key: key('rb'),
+      _ref: `subject-${slug}`,
+    })),
+    relatedResources: a.relatedResourceSlugs.map((slug) => ({
+      _type: 'reference',
+      _key: key('rr'),
+      _ref: `resource-${slug}`,
+    })),
+    relatedTools: a.relatedToolSlugs.map((slug) => ({
+      _type: 'reference',
+      _key: key('rt'),
+      _ref: `resource-${slug}`,
+    })),
+  });
+  console.log(`✓ article: ${a.title}`);
+}
+
+// The real TECHMED resource catalogue — copied verbatim from
+// FALLBACK_RESOURCES in web/src/lib/resources.ts (real prices, real
+// WhatsApp acquisition links, real descriptions — see that file's own
+// header comment for provenance). Resources have only ever lived in that
+// code-level fallback until now; seeding them here is what makes the
+// Blog's relatedResources/relatedTools reference fields resolve to real
+// documents instead of dangling references, and lets these become
+// Studio-editable going forward instead of requiring a code change.
+const WHATSAPP_NUMBER = '2347044255045';
+function whatsapp(text) {
+  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
+}
+
+const RESOURCES = [
+  {
+    slug: 'techmed-admission-intelligence-guide-2026',
+    title: 'TECHMED Admission Intelligence Guide 2026',
+    description:
+      'The complete Nigerian university admission roadmap — how to secure admission or move forward strategically without wasting years.',
+    category: 'Admission',
+    type: 'Guide',
+    status: 'free',
+    order: 1,
+    featured: true,
+    tags: ['Admission', 'Strategy', 'Free'],
+    actionLabel: 'View Guide',
+    accessUrl: '/techmed-admission-intelligence-guide-2026.pdf',
+    whatsIncluded: [
+      'A full breakdown of how Nigerian university admission actually works',
+      'Strategic planning guidance for choosing courses and universities',
+      'How to move forward if a previous attempt did not go as planned',
+    ],
+    whoItsFor:
+      'Any student — first-time candidate or one rewriting UTME — who wants a clear, strategic view of the admission process before making decisions.',
+    imageFile: 'admission-intelligence-guide-2026.jpg',
+  },
+  {
+    slug: 'free-quiz-practice',
+    title: 'Free & Unlimited Quiz Practice',
+    description:
+      'Thousands of UTME and Post-UTME questions with detailed solutions — no sign-up required.',
+    category: 'Quizzes',
+    type: 'Quiz',
+    status: 'free',
+    order: 2,
+    tags: ['Quiz', 'Practice', 'Free'],
+    actionLabel: 'Start Quiz',
+    externalUrl: 'https://quizboot.com/page/techmedofficial',
+    whatsIncluded: [
+      'Unlimited UTME and Post-UTME practice questions',
+      'Detailed solutions for every question',
+      'No account or sign-up required to start',
+    ],
+    whoItsFor: 'Students who want consistent, low-friction practice without a paywall.',
+    imageFile: 'free-quiz-practice.jpg',
+  },
+  {
+    slug: 'chemistry-booster-system',
+    title: 'Chemistry Booster System',
+    description:
+      'High-yield revision for maximum Chemistry score — the Mole Concept Cure plus the Ultimate Formula Bank, covering stoichiometry, acids and bases, equilibrium, electrolysis, organic chemistry and more.',
+    category: 'Academic',
+    type: 'Booster System',
+    status: 'paid',
+    order: 3,
+    price: 5000,
+    currency: 'NGN',
+    tags: ['Chemistry', 'Revision'],
+    actionLabel: 'Get via WhatsApp',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Chemistry Booster System. Price: ₦5,000. My name is ______.'),
+    whatsIncluded: [
+      'The Mole Concept Cure',
+      'The Ultimate Chemistry Formula Bank',
+      'Coverage of stoichiometry, acids/bases, equilibrium, electrolysis and organic chemistry',
+    ],
+    whoItsFor: 'UTME candidates who want a fast, high-yield route to a stronger Chemistry score.',
+    imageFile: 'chemistry-booster-system.jpg',
+  },
+  {
+    slug: 'biology-booster-system',
+    title: 'Biology Booster System',
+    description:
+      'Memory aids, recall shortcuts and frequently tested patterns — rapid revision tables, common misconceptions and exam-oriented content for maximum Biology score.',
+    category: 'Academic',
+    type: 'Booster System',
+    status: 'paid',
+    order: 4,
+    price: 3000,
+    currency: 'NGN',
+    tags: ['Biology', 'Revision'],
+    actionLabel: 'Get via WhatsApp',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Biology Booster System. Price: ₦3,000. My name is ______.'),
+    whatsIncluded: [
+      'Rapid revision tables built for recall under exam pressure',
+      'Common misconceptions and how examiners test them',
+      'Exam-oriented content across the full Biology syllabus',
+    ],
+    whoItsFor: 'UTME candidates who want to lock in Biology recall quickly before exam day.',
+    imageFile: 'biology-booster-system.jpg',
+  },
+  {
+    slug: 'physics-booster-system',
+    title: 'Physics Booster System',
+    description:
+      'Master calculations, solve smart, score high — the Ultimate Formula Bank, the Examiner Traps Playbook, and a strategy cheatsheet for step-by-step problem-solving speed.',
+    category: 'Academic',
+    type: 'Booster System',
+    status: 'paid',
+    order: 5,
+    price: 3000,
+    currency: 'NGN',
+    tags: ['Physics', 'Revision'],
+    actionLabel: 'Get via WhatsApp',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Physics Booster System. Price: ₦3,000. My name is ______.'),
+    whatsIncluded: [
+      'The Ultimate Physics Formula Bank',
+      'The Examiner Traps Playbook',
+      'A step-by-step problem-solving strategy cheatsheet',
+    ],
+    whoItsFor: 'UTME candidates who want faster, more accurate Physics problem-solving under time pressure.',
+    imageFile: 'physics-booster-system.jpg',
+  },
+  {
+    slug: 'post-utme-brainstorming-hub',
+    title: 'Post Brainstorming Hub — All Universities',
+    description:
+      'A structured system for Post-UTME preparation across universities that require it — daily drills, timed practice exams, performance tracking and focused review.',
+    category: 'Admission',
+    type: 'Course',
+    status: 'paid',
+    order: 6,
+    price: 3000,
+    currency: 'NGN',
+    tags: ['Post-UTME', 'Admission'],
+    actionLabel: 'Get via WhatsApp',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Post Brainstorming Hub — All Universities. Price: ₦3,000. My name is ______.'),
+    whatsIncluded: [
+      'Daily Post-UTME practice drills',
+      'Weekly timed practice exams',
+      'Performance tracking and likely-question focus areas',
+    ],
+    whoItsFor: 'Students preparing for Post-UTME at any university that runs a screening exam.',
+    imageFile: 'post-utme-brainstorming-hub.jpg',
+  },
+  {
+    slug: 'university-research-file',
+    title: 'Detailed University Research File',
+    description:
+      'Everything you need to gain admission at a specific university — 5-year Post-UTME trends, detailed solutions, departmental cut-offs, merit list info, admission guidance and scholarship tips, all in one file.',
+    category: 'Admission',
+    type: 'Guide',
+    status: 'paid',
+    order: 7,
+    price: 1000,
+    currency: 'NGN',
+    tags: ['Admission', 'Research'],
+    actionLabel: 'Get via WhatsApp',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Detailed University Research File. Price: ₦1,000. My name is ______.'),
+    whatsIncluded: [
+      '5-year Post-UTME question trends for your chosen university',
+      'Departmental cut-off marks and merit list information',
+      'Admission guidance and scholarship tips specific to that university',
+    ],
+    whoItsFor: 'Students who already know which university they are targeting and want the full research done for them.',
+    imageFile: 'university-research-file.jpg',
+  },
+  {
+    slug: 'operation-100',
+    title: 'Operation 100 — 2027 Edition',
+    description:
+      'A focused daily challenge for serious JAMB candidates — 100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics and English, built to sharpen speed, accuracy and exam confidence.',
+    category: 'Opportunities',
+    type: 'Opportunity',
+    status: 'paid',
+    order: 8,
+    currency: 'NGN',
+    tags: ['JAMB', 'Challenge', 'Waitlist'],
+    actionLabel: 'Join the Waitlist',
+    whatsappUrl: whatsapp('Hi TECHMED, I want to join the Operation 100 2027 waitlist. My name is ______ and I am preparing for JAMB. Please notify me when registration opens.'),
+    whatsIncluded: [
+      '100 daily past questions across Physics, Chemistry, Biology, Mathematics and English',
+      'A consistent, structured daily practice rhythm',
+      'A competitive environment built around consistency, not cramming',
+    ],
+    whoItsFor: 'JAMB candidates who want daily accountability and structured practice in the run-up to their exam.',
+    imageFile: 'operation-100.jpg',
+  },
+  {
+    slug: 'kairo',
+    title: 'Kairo',
+    description:
+      'Kairo is a student intelligence and learning platform designed to understand the learner’s journey and help them make meaningful progress.',
+    category: 'Digital Tools',
+    type: 'Tool',
+    status: 'free',
+    order: 9,
+    tags: ['Learning', 'Intelligence'],
+    actionLabel: 'Open Tool',
+    accessUrl: '/tools',
+    whatsIncluded: [
+      'A view into where you are in your own learning journey',
+      'Guidance built around your actual progress, not a generic study plan',
+    ],
+    whoItsFor: 'Students who want a clearer picture of their own progress and what to focus on next.',
+    imageFile: null,
+  },
+];
+
+async function seedResources() {
+  for (const r of RESOURCES) {
+    let imageAssetId;
+    if (r.imageFile) {
+      try {
+        const imagePath = path.join(__dirname, '..', 'public', 'images', 'resources', r.imageFile);
+        const imageBuffer = await readFile(imagePath);
+        const asset = await client.assets.upload('image', imageBuffer, { filename: r.imageFile });
+        imageAssetId = asset._id;
+      } catch (err) {
+        console.warn(`  Could not upload image for ${r.title}, continuing without it:`, err.message);
+      }
+    }
+
+    const doc = {
+      _id: `resource-${r.slug}`,
+      _type: 'resource',
+      title: r.title,
+      slug: { _type: 'slug', current: r.slug },
+      description: r.description,
+      category: r.category,
+      type: r.type,
+      status: r.status,
+      order: r.order,
+      actionLabel: r.actionLabel,
+      tags: r.tags,
+      whatsIncluded: r.whatsIncluded,
+      whoItsFor: r.whoItsFor,
+    };
+
+    if (r.featured) doc.featured = true;
+    if (r.price) doc.price = r.price;
+    if (r.currency) doc.currency = r.currency;
+    if (r.accessUrl) doc.accessUrl = r.accessUrl;
+    if (r.externalUrl) doc.externalUrl = r.externalUrl;
+    if (r.whatsappUrl) doc.whatsappUrl = r.whatsappUrl;
+    if (imageAssetId) doc.primaryImage = { _type: 'image', asset: { _type: 'reference', _ref: imageAssetId } };
+
+    await client.createOrReplace(doc);
+    console.log(`✓ resource: ${r.title}`);
+  }
+}
+
 async function main() {
   console.log(`Seeding project ${process.env.SANITY_PROJECT_ID} / dataset ${process.env.SANITY_DATASET}\n`);
   await seedSiteSettings();
@@ -616,7 +1003,9 @@ async function main() {
   await seedFaqItems();
   await seedFounder();
   await seedSubjects();
+  await seedResources();
   await seedArticleCategories();
+  await seedFirstArticle();
   console.log('\nDone.');
 }
 
