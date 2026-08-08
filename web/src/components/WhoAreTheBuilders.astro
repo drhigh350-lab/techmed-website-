@@ -18,27 +18,27 @@
 
   <p class="build-label">Every Builder is building far more than exam success:</p>
   <div class="grid">
-    <div class="item">
+    <div class="item reveal">
       <h3>Knowledge</h3>
       <p>Not memorization. Understanding.</p>
     </div>
-    <div class="item">
+    <div class="item reveal">
       <h3>Discipline</h3>
       <p>Showing up even when motivation disappears.</p>
     </div>
-    <div class="item">
+    <div class="item reveal">
       <h3>Confidence</h3>
       <p>Earned through preparation. Never borrowed.</p>
     </div>
-    <div class="item">
+    <div class="item reveal">
       <h3>Character</h3>
       <p>Integrity, curiosity, humility, consistency.</p>
     </div>
-    <div class="item">
+    <div class="item reveal">
       <h3>Systems</h3>
       <p>Study plans, revision methods, reflection habits.</p>
     </div>
-    <div class="item">
+    <div class="item reveal">
       <h3>The Future</h3>
       <p>UTME is one chapter. Not the entire story.</p>
     </div>
@@ -105,6 +105,12 @@
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .item:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
   }
 
   .item h3 {

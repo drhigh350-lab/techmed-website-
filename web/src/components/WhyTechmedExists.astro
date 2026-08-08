@@ -10,7 +10,7 @@
     not because information is scarce, but because structure is scarce.
   </p>
 
-  <div class="problems">
+  <div class="problems reveal">
     <p class="problems-label">Students often experience:</p>
     <ul>
       <li>Information overload</li>
@@ -56,6 +56,12 @@
     border-radius: var(--radius-lg);
     padding: var(--space-8);
     margin-bottom: var(--space-8);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .problems:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
   }
 
   .problems-label {

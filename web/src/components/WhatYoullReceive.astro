@@ -40,7 +40,7 @@ const items = [
   <h2>What You'll Receive</h2>
   <div class="grid">
     {items.map((item) => (
-      <div class="item">
+      <div class="item reveal">
         <h3>{item.title}</h3>
         <p>{item.description}</p>
       </div>
@@ -75,6 +75,12 @@ const items = [
     border-radius: var(--radius-lg);
     padding: var(--space-6);
     border-top: 2px solid var(--accent);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+
+  .item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
   }
 
   .item h3 {
