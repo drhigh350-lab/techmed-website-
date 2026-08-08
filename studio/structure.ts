@@ -23,4 +23,8 @@ export const structure: StructureResolver = (S) =>
         .child(S.document().schemaType('founder').documentId('founder')),
       S.divider(),
       S.documentTypeListItem('faqItem').title('FAQ'),
+      S.divider(),
+      S.documentTypeListItem('resource').title('Resources'),
+      S.documentTypeListItem('subject').title('JAMB Subjects'),
+      S.documentTypeListItem('syllabusTopic').title('Syllabus Topics'),
     ]);
