@@ -28,6 +28,15 @@
   --accent-light: var(--color-gold-light);
   --accent-deep: var(--color-gold-deep);
 
+  /* Theme-invariant — for surfaces that intentionally stay dark-navy in
+     both themes (the sticky Navbar, the Footer, both already using
+     --surface-dark, which itself stays dark-navy in light mode too, see
+     below). --text/--text-light swap per theme, so components that keep
+     a permanently-dark background must use these instead, or their text
+     goes low-contrast the moment light mode is active. */
+  --text-on-dark-surface: var(--color-white);
+  --text-light-on-dark-surface: var(--color-soft-blue);
+
   /* Typography */
   --font-display: 'Montserrat', system-ui, sans-serif;
   --font-main: 'Inter', system-ui, sans-serif;
@@ -50,8 +59,12 @@
 }
 
 /*
-  Light mode is opt-in (data-theme="light"), matching the existing site's
-  theme-toggle behavior — dark is the brand-standard default.
+  Light is the default theme (set on <html data-theme="..."> by
+  BaseLayout, with the visitor's stored preference read before first
+  paint — see the inline script there). Dark stays available as an
+  explicit opt-in: data-theme="dark" (or no attribute at all) keeps the
+  unlabeled :root values above, which remain the brand-standard dark
+  palette unchanged.
 */
 :root[data-theme='light'] {
   --bg: #F8F9FA;

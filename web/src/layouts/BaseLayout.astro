@@ -52,9 +52,24 @@ const structuredData = [organizationSchema, ...jsonLd];
 ---
 
 <!doctype html>
-<html lang="en" data-theme="dark" data-smooth-scroll={smoothScroll ? 'true' : 'false'}>
+<html lang="en" data-theme="light" data-smooth-scroll={smoothScroll ? 'true' : 'false'}>
   <head>
     <meta charset="UTF-8" />
+    <!-- Blocking (is:inline, not deferred) and placed before anything
+         paint-relevant, so a returning visitor's stored theme applies
+         before first paint rather than flashing the default light theme
+         first. Light remains correct for a no-JS visitor via the static
+         data-theme="light" attribute above. -->
+    <script is:inline>
+      (function () {
+        try {
+          var stored = localStorage.getItem('techmed-theme');
+          if (stored === 'dark' || stored === 'light') {
+            document.documentElement.setAttribute('data-theme', stored);
+          }
+        } catch (e) {}
+      })();
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>

@@ -679,9 +679,32 @@ const FIRST_ARTICLE = {
   publishedAt: '2026-08-08T09:00:00.000Z',
   updatedAt: '2026-08-08T15:30:00.000Z',
   featured: true,
+  showMethodDiagram: true,
   relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
   relatedResourceSlugs: ['free-quiz-practice'],
   relatedToolSlugs: ['kairo'],
+  faq: [
+    {
+      question: 'How many hours a day should I study for JAMB?',
+      answer:
+        'Less than you think, done consistently, beats more than you can sustain. Two to four focused hours a day, every day, will take you further than an occasional ten-hour session followed by three days of burnout. Consistency is the variable that actually matters.',
+    },
+    {
+      question: 'Can I really prepare for JAMB in one month?',
+      answer:
+        "You can meaningfully improve your readiness in a month — but it looks different from a six-month plan. It's less about covering everything and more about triage: high-weight topics first, heavy practice, and honest diagnosis of what's actually fixable in the time you have left. We'll go deeper on exactly how in a dedicated 30-day guide.",
+    },
+    {
+      question: "What's the actual difference between practice and revision?",
+      answer:
+        "Practice is how you find out what you don't know yet. Revision is what you do about it. Skipping straight to revision without practice means you're guessing at your own weaknesses instead of knowing them.",
+    },
+    {
+      question: "How do I know if I'm actually ready?",
+      answer:
+        'Not by how you feel — by your diagnosed results. If your practice scores are consistently near your target, your careless-mistake rate is low, and you can finish within the time limit, that\'s readiness. "Ready" is a measurement, not a feeling.',
+    },
+  ],
   body: [
     block(
       'normal',
@@ -791,27 +814,6 @@ const FIRST_ARTICLE = {
       'normal',
       'What to do: in your last week, simulate the real thing — same time of day, same time limit, no pausing. The exam shouldn\'t be the first time your brain works under those exact conditions.',
     ),
-    block('h2', 'Frequently Asked Questions'),
-    block('h3', 'How many hours a day should I study for JAMB?'),
-    block(
-      'normal',
-      'Less than you think, done consistently, beats more than you can sustain. Two to four focused hours a day, every day, will take you further than an occasional ten-hour session followed by three days of burnout. Consistency is the variable that actually matters.',
-    ),
-    block('h3', 'Can I really prepare for JAMB in one month?'),
-    block(
-      'normal',
-      "You can meaningfully improve your readiness in a month — but it looks different from a six-month plan. It's less about covering everything and more about triage: high-weight topics first, heavy practice, and honest diagnosis of what's actually fixable in the time you have left. We'll go deeper on exactly how in a dedicated 30-day guide.",
-    ),
-    block('h3', "What's the actual difference between practice and revision?"),
-    block(
-      'normal',
-      "Practice is how you find out what you don't know yet. Revision is what you do about it. Skipping straight to revision without practice means you're guessing at your own weaknesses instead of knowing them.",
-    ),
-    block('h3', 'How do I know if I\'m actually ready?'),
-    block(
-      'normal',
-      'Not by how you feel — by your diagnosed results. If your practice scores are consistently near your target, your careless-mistake rate is low, and you can finish within the time limit, that\'s readiness. "Ready" is a measurement, not a feeling.',
-    ),
     block('h2', 'Where to start'),
     blockWithLinks('normal', [
       'If you haven\'t started yet: begin with Understand. Open your subject\'s ',
@@ -849,6 +851,8 @@ async function seedFirstArticle() {
     publishedAt: a.publishedAt,
     updatedAt: a.updatedAt,
     featured: a.featured,
+    showMethodDiagram: a.showMethodDiagram,
+    faq: a.faq.map((item) => ({ _type: 'faqItem', _key: key('faq'), ...item })),
     body: a.body,
     relatedBlueprints: a.relatedBlueprintSlugs.map((slug) => ({
       _type: 'reference',
