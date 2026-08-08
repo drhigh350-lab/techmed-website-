@@ -5,12 +5,16 @@ import ResourceCard from '../components/ResourceCard.astro';
 import FeaturedResource from '../components/FeaturedResource.astro';
 import ResourceFilters from '../components/ResourceFilters.astro';
 import QuizCard from '../components/QuizCard.astro';
-import { RESOURCES, RESOURCE_CATEGORIES, getFeaturedResource, getQuizResources } from '../lib/resources';
+import { RESOURCE_CATEGORIES, getResources, getFeaturedResource, getQuizResources, resourceIcon } from '../lib/resources';
 
-const featured = getFeaturedResource();
+const resources = await getResources();
+const featured = getFeaturedResource(resources);
 const categories = ['All', ...RESOURCE_CATEGORIES];
-const quizResources = getQuizResources();
-const kairo = RESOURCES.find((resource) => resource.id === 'kairo');
+const quizResources = getQuizResources(resources);
+// Matched by slug, not _id — the fallback data's id is a hand-picked
+// string, but a Sanity-authored Kairo document will have a random _id.
+// The slug is the one thing guaranteed to stay 'kairo' either way.
+const kairo = resources.find((resource) => resource.slug === 'kairo');
 
 const pageUrl = new URL('/resources', Astro.site).toString();
 const jsonLd = [
@@ -55,8 +59,8 @@ const jsonLd = [
     <ResourceFilters categories={categories} gridSelector="#resource-grid" />
 
     <div class="resource-grid" id="resource-grid">
-      {RESOURCES.map((resource) => (
-        <div data-category={resource.category}>
+      {resources.map((resource) => (
+        <div class="grid-item" data-category={resource.category}>
           <ResourceCard resource={resource} />
         </div>
       ))}
@@ -94,7 +98,11 @@ const jsonLd = [
     <section class="digital-tools">
       <SectionHeading eyebrow="Digital Tools" title="Kairo" align="center" />
       <div class="kairo-card reveal">
-        {kairo.thumbnail && <div class="icon" set:html={kairo.thumbnail} />}
+        {kairo.primaryImage ? (
+          <img class="kairo-image" src={kairo.primaryImage} alt="Kairo" loading="lazy" decoding="async" />
+        ) : (
+          <div class="icon" set:html={resourceIcon(kairo)} />
+        )}
         <p class="positioning">
           Kairo is a student intelligence and learning platform designed to understand the
           learner's journey and help them make meaningful progress.
@@ -167,6 +175,14 @@ const jsonLd = [
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  /* Keeps the data-category wrapper for filtering, but makes ResourceCard
+     itself the real grid item so CSS grid's row-stretch equalizes card
+     height automatically — no JS measurement needed. */
+  .grid-item {
+    display: contents;
   }
 
   .empty-state {
@@ -220,6 +236,14 @@ const jsonLd = [
   .kairo-card .icon :global(svg) {
     width: 28px;
     height: 28px;
+  }
+
+  .kairo-image {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
   }
 
   .positioning {
