@@ -821,24 +821,124 @@ const FIRST_ARTICLE = {
       ' — it takes the JAMB syllabus and organizes it into a clearer study order, so you\'re not figuring out the structure entirely on your own.',
     ]),
     block('blockquote', 'Practice tells you what you can answer. Diagnosis tells you why you couldn\'t.'),
-    block(
-      'normal',
-      'Preparation isn\'t a single decision made once — it\'s this cycle, repeated per topic, until exam day: understand, plan, learn, practice, diagnose, revise, prepare. Every TECHMED Blueprint, resource and tool exists to support one part of it.',
-    ),
+    blockWithLinks('normal', [
+      "Preparation isn't a single decision made once — it's this cycle, repeated per topic, until exam day: understand, plan, learn, practice, diagnose, revise, prepare. Every TECHMED Blueprint, resource and tool exists to support one part of it. If you're working with a month instead of a season, the shape changes — see ",
+      { text: 'How to Prepare for JAMB in 30 Days', href: '/blog/how-to-prepare-for-jamb-in-30-days' },
+      ' for exactly how.',
+    ]),
   ],
 };
 
-async function seedFirstArticle() {
-  const a = FIRST_ARTICLE;
+// Companion piece to FIRST_ARTICLE — the "dedicated 30-day guide" that
+// article's Plan section and FAQ both explicitly promise. Same TECHMED
+// Method, same voice, same no-fabrication rule (no invented stats/results).
+// Content cluster item #3 from the audit's prioritized list (§10).
+const SECOND_ARTICLE = {
+  id: 'article-jamb-30-day-plan',
+  slug: 'how-to-prepare-for-jamb-in-30-days',
+  title: 'How to Prepare for JAMB in 30 Days',
+  excerpt:
+    "Thirty days isn't the plan anyone wants to start with — but it's not too late to start well. This is how to triage, not panic: the TECHMED Method compressed into the one month you actually have.",
+  categoryId: 'articleCategory-study-strategy',
+  tags: ['30-Day Plan', 'Study Plan', 'Exam Strategy', 'JAMB 2027'],
+  authorName: 'Wisdom Johnson',
+  authorRole: 'Founder, TECHMED',
+  publishedAt: '2026-08-08T18:00:00.000Z',
+  featured: false,
+  showMethodDiagram: true,
+  relatedBlueprintSlugs: ['chemistry', 'physics', 'biology', 'mathematics', 'use-of-english'],
+  relatedResourceSlugs: ['free-quiz-practice', 'chemistry-booster-system', 'physics-booster-system', 'biology-booster-system'],
+  relatedToolSlugs: ['kairo'],
+  faq: [
+    {
+      question: 'Is 30 days really enough to prepare for JAMB?',
+      answer:
+        "Enough to meaningfully improve your readiness — not enough to master everything from zero. The honest goal for 30 days is triage: get your strongest possible score from the time you actually have, not the score you'd get with six months. Both are real, they're just different goals.",
+    },
+    {
+      question: "I haven't touched my syllabus at all yet. Where do I even start?",
+      answer:
+        "Start with Understand and Diagnose together, on day one — open each subject's TECHMED Blueprint and take one honest, timed practice set per subject before you study anything. You need to know where you actually stand before you can triage what to spend your 30 days on.",
+    },
+    {
+      question: 'Should I focus on fewer subjects instead of all five?',
+      answer:
+        "Not usually — JAMB scores all five, so dropping one rarely helps. What should shrink is how much of each subject you try to cover. Thirty days is enough to cover the highest-weight, most-connected topics in every subject properly. It's rarely enough to cover every topic in every subject equally well, and trying to is how the month gets wasted.",
+    },
+    {
+      question: 'How is this different from the main TECHMED Method guide?',
+      answer:
+        'Same system, different timeline. The main guide (How to Prepare for JAMB 2027) explains the seven-step method in full, for however much time you have. This piece is that same method compressed and reordered for a month — parallel instead of sequential, triage-first instead of complete-coverage-first.',
+    },
+  ],
+  body: [
+    block(
+      'normal',
+      "If you're reading this with thirty days on the clock, you're probably not looking for encouragement — you're looking for what to actually do. Good. That's what this is. Not a miracle, not a shortcut — a compressed, honest version of the same system behind every TECHMED Blueprint, resource and tool.",
+    ),
+    block('h2', "Be honest about what 30 days can — and can't — do"),
+    block(
+      'normal',
+      "Thirty days will not turn an untouched syllabus into mastery of five subjects. Nobody can promise that truthfully, and anyone who does is selling you something other than a real plan. What thirty days can do is take you from wherever you are right now to meaningfully better — a stronger, more strategic version of your current readiness, built on triage instead of panic.",
+    ),
+    block('blockquote', "The goal of a 30-day plan isn't to finish everything. It's to spend a fixed amount of time where it actually moves your score."),
+    block('h2', 'The same TECHMED Method — compressed, not replaced'),
+    block(
+      'normal',
+      'With six months, you move through Understand, Plan, Learn, Practice, Diagnose, Revise, Prepare once per topic, at a steady pace, mostly one subject at a time. With thirty days, the steps stay the same — you just run them in parallel across all five subjects instead of finishing one before starting the next, and Diagnose moves earlier, because you no longer have time to discover your weak areas by accident.',
+    ),
+    block('h3', 'Days 1–3: Understand and Diagnose, across everything, at once'),
+    blockWithLinks('normal', [
+      "Open every subject's ",
+      { text: 'TECHMED Blueprint', href: '/jamb-syllabus-2027' },
+      " and look at the structure — not to study yet, just to see what's there. Then take one honest, timed practice set per subject, using real ",
+      { text: 'past questions', href: '/resources/free-quiz-practice' },
+      '. Don\'t study beforehand — an untouched-baseline score is the most useful data you\'ll get all month, and it only exists before you\'ve prepared.',
+    ]),
+    block(
+      'normal',
+      "The mistake: skipping this because it feels like wasted time you don't have. It's the opposite — three days spent finding out where you actually stand saves you from spending the next twenty guessing.",
+    ),
+    block('h3', 'Days 4–24: Learn and Practice, on rotation, driven by the diagnosis'),
+    block(
+      'normal',
+      "This is most of your month, and it runs on a simple rule: the topics your diagnosis flagged as weak and high-weight get your time first. Not every topic in the syllabus is equally important to how you're graded — some are foundational and feed into several others, some are self-contained. Your Blueprint's structure is your guide to which is which; your diagnosis tells you which ones you personally still need.",
+    ),
+    block(
+      'normal',
+      "Rotate subjects daily or every two days rather than finishing one subject completely before touching the next. It feels less tidy, but it protects you from the real risk of a 30-day plan: reaching day 25 having gone deep on two subjects and not opened the other three.",
+    ),
+    block(
+      'normal',
+      "What to do: after learning a topic, test it immediately with timed past questions, the same day. In a compressed timeline, the Learn → Practice gap has to be hours, not days.",
+    ),
+    block('h3', 'Days 25–30: Diagnose again, Revise, Prepare'),
+    block(
+      'normal',
+      "Run a second timed practice round per subject and compare it honestly to where you started. This tells you what actually improved and what's still genuinely weak — that's your revision list for the last few days, not the syllabus from the beginning again. Spend your final day or two simulating real exam conditions: same time of day, same time limit, no pausing, no looking anything up.",
+    ),
+    block('h2', "What to let go of, on a 30-day timeline"),
+    block(
+      'normal',
+      "Part of triage is choosing what not to do, on purpose, without guilt about it.",
+    ),
+    block('normal', "Don't try to cover every topic in every subject equally — cover the highest-weight, most-connected ones properly instead.", { listItem: 'bullet' }),
+    block('normal', "Don't collect more materials than you can use — a syllabus, real past questions, and one good revision resource per subject is enough. More materials on a short timeline usually means less depth on any of them.", { listItem: 'bullet' }),
+    block('normal', "Don't measure your 30 days against someone else's six months. You're not running the same race — a realistic, strategic month beats an abandoned six-month plan every time.", { listItem: 'bullet' }),
+    block('h2', 'If this is a rescue plan, not a head start'),
+    block(
+      'normal',
+      "Maybe this isn't the plan you wanted — maybe it's the plan you're left with. That's fine. A late, honest, well-triaged month of preparation is worth more than months of preparation that never had a real structure. The system doesn't require you to have started early. It just requires you to actually run it now.",
+    ),
+    blockWithLinks('normal', [
+      'For the full version of the method behind this plan — the reasoning, not just the compressed schedule — see ',
+      { text: 'How to Prepare for JAMB 2027: A Step-by-Step Study System', href: '/blog/how-to-prepare-for-jamb-2027' },
+      '.',
+    ]),
+  ],
+};
 
-  for (const oldId of ARTICLE_OLD_IDS) {
-    try {
-      await client.delete(oldId);
-    } catch {
-      // Fine if it was never seeded on this dataset — nothing to clean up.
-    }
-  }
-
+async function seedArticle(a) {
   await client.createOrReplace({
     _id: a.id,
     _type: 'article',
@@ -849,7 +949,7 @@ async function seedFirstArticle() {
     tags: a.tags,
     author: { name: a.authorName, role: a.authorRole },
     publishedAt: a.publishedAt,
-    updatedAt: a.updatedAt,
+    ...(a.updatedAt ? { updatedAt: a.updatedAt } : {}),
     featured: a.featured,
     showMethodDiagram: a.showMethodDiagram,
     faq: a.faq.map((item) => ({ _type: 'faqItem', _key: key('faq'), ...item })),
@@ -871,6 +971,21 @@ async function seedFirstArticle() {
     })),
   });
   console.log(`✓ article: ${a.title}`);
+}
+
+async function seedFirstArticle() {
+  for (const oldId of ARTICLE_OLD_IDS) {
+    try {
+      await client.delete(oldId);
+    } catch {
+      // Fine if it was never seeded on this dataset — nothing to clean up.
+    }
+  }
+  await seedArticle(FIRST_ARTICLE);
+}
+
+async function seedSecondArticle() {
+  await seedArticle(SECOND_ARTICLE);
 }
 
 // The real TECHMED resource catalogue — copied verbatim from
@@ -1134,6 +1249,7 @@ async function main() {
   await seedResources();
   await seedArticleCategories();
   await seedFirstArticle();
+  await seedSecondArticle();
   console.log('\nDone.');
 }
 
