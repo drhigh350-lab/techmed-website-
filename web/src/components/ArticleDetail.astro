@@ -1,0 +1,455 @@
+---
+// Main content block for /blog/[slug] — mirrors ResourceDetail's overall
+// shape (breadcrumb, header, body, related section) but for articles:
+// author/date instead of price, portable-text body instead of a fixed
+// whatsIncluded list, and three optional related-content sections instead
+// of one. Every relationship here is optional and renders nothing when
+// absent, per the article schema's design.
+import { renderArticleBody, type Article } from '../lib/articles';
+
+interface Props {
+  article: Article;
+  relatedArticles?: Article[];
+}
+
+const { article, relatedArticles = [] } = Astro.props;
+
+const bodyHtml = renderArticleBody(article.body);
+
+const publishedLabel = new Date(article.publishedAt).toLocaleDateString('en-NG', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+const updatedLabel = article.updatedAt
+  ? new Date(article.updatedAt).toLocaleDateString('en-NG', { year: 'numeric', month: 'long', day: 'numeric' })
+  : undefined;
+
+const authorName = article.author?.name ?? 'TECHMED';
+---
+
+<article class="detail">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/blog">Blog</a>
+    <span aria-hidden="true">/</span>
+    <span>{article.title}</span>
+  </nav>
+
+  <header class="header reveal">
+    {article.category && <p class="category">{article.category.title}</p>}
+    <h1>{article.title}</h1>
+    <p class="excerpt">{article.excerpt}</p>
+
+    <div class="byline">
+      {article.author?.photoUrl && (
+        <img class="author-photo" src={article.author.photoUrl} alt="" loading="eager" decoding="async" />
+      )}
+      <div class="byline-text">
+        <span class="author-name">{authorName}</span>
+        <span class="dates">
+          <time datetime={article.publishedAt}>{publishedLabel}</time>
+          {updatedLabel && <span> · Updated {updatedLabel}</span>}
+        </span>
+      </div>
+    </div>
+
+    {article.featuredImage && (
+      <img
+        class="featured-image"
+        src={article.featuredImage}
+        alt={article.featuredImageAlt ?? ''}
+        loading="eager"
+        decoding="async"
+      />
+    )}
+  </header>
+
+  <div class="body reveal" set:html={bodyHtml} />
+
+  {article.tags && article.tags.length > 0 && (
+    <ul class="tags">
+      {article.tags.map((tag) => <li>{tag}</li>)}
+    </ul>
+  )}
+
+  {article.relatedBlueprints && article.relatedBlueprints.length > 0 && (
+    <section class="blueprint-callout reveal">
+      <p class="callout-label">Want the full syllabus?</p>
+      {article.relatedBlueprints.map((blueprint) => (
+        <a class="blueprint-link" href={`/jamb-syllabus/${blueprint.slug}`}>
+          <span class="blueprint-name">TECHMED {blueprint.name} Blueprint</span>
+          {blueprint.description && <span class="blueprint-desc">{blueprint.description}</span>}
+          <span class="blueprint-cta">View Blueprint <span aria-hidden="true">&rarr;</span></span>
+        </a>
+      ))}
+    </section>
+  )}
+
+  {article.relatedResources && article.relatedResources.length > 0 && (
+    <section class="related-links reveal">
+      <h2>Related Resources</h2>
+      <ul>
+        {article.relatedResources.map((item) => (
+          <li>
+            <a href={`/resources/${item.slug}`}>{item.title}</a>
+            {item.description && <p>{item.description}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  {article.relatedTools && article.relatedTools.length > 0 && (
+    <section class="related-links reveal">
+      <h2>Related Tools</h2>
+      <ul>
+        {article.relatedTools.map((item) => (
+          <li>
+            <a href={`/resources/${item.slug}`}>{item.title}</a>
+            {item.description && <p>{item.description}</p>}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section class="next-step reveal">
+    <h2>Keep building.</h2>
+    <p>See the full UTME 2027 preparation system — Blueprints, Resources, Tools and the Builder Cohort together.</p>
+    <a class="btn-primary" href="/utme-2027">Explore UTME 2027 <span aria-hidden="true">&rarr;</span></a>
+  </section>
+
+  {relatedArticles.length > 0 && (
+    <section class="related-articles reveal">
+      <h2>More From the Blog</h2>
+      <ul>
+        {relatedArticles.map((item) => (
+          <li>
+            <a href={`/blog/${item.slug}`}>{item.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</article>
+
+<style>
+  .detail {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-8);
+  }
+
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent);
+  }
+
+  .header {
+    margin-bottom: var(--space-10);
+  }
+
+  .category {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .excerpt {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-6);
+  }
+
+  .byline {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+  }
+
+  .author-photo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  .byline-text {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .author-name {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .dates {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .featured-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+  }
+
+  /* Portable text body — semantic HTML from the serializer, styled here. */
+  .body {
+    font-size: 1.05rem;
+    line-height: 1.85;
+    color: var(--text-light);
+    max-width: 68ch;
+    margin: 0 auto var(--space-10);
+  }
+
+  .body :global(h2) {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin: var(--space-10) 0 var(--space-4);
+  }
+
+  .body :global(h3) {
+    font-family: var(--font-display);
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: var(--space-8) 0 var(--space-3);
+  }
+
+  .body :global(p) {
+    margin-bottom: var(--space-5);
+  }
+
+  .body :global(ul),
+  .body :global(ol) {
+    margin: 0 0 var(--space-5);
+    padding-left: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .body :global(a) {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+
+  .body :global(strong) {
+    color: var(--text);
+  }
+
+  .body :global(blockquote) {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.15rem;
+    line-height: 1.6;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: var(--space-6);
+    margin: var(--space-8) 0;
+  }
+
+  .body :global(img) {
+    width: 100%;
+    border-radius: var(--radius-lg);
+    margin: var(--space-6) 0;
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    margin-bottom: var(--space-10);
+  }
+
+  .tags li {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 5px 12px;
+  }
+
+  .blueprint-callout {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: inset 3px 0 0 0 var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+
+  .callout-label {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  .blueprint-link {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+  }
+
+  .blueprint-link + .blueprint-link {
+    margin-top: var(--space-4);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .blueprint-name {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.05rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .blueprint-desc {
+    display: block;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin-bottom: var(--space-3);
+  }
+
+  .blueprint-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .related-links {
+    margin-bottom: var(--space-10);
+  }
+
+  .related-links h2,
+  .related-articles h2 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .related-links ul,
+  .related-articles ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .related-links a,
+  .related-articles a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .related-links a:hover,
+  .related-articles a:hover {
+    text-decoration: underline;
+  }
+
+  .related-links p {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    margin-top: 2px;
+  }
+
+  .next-step {
+    text-align: center;
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+
+  .next-step h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--space-3);
+  }
+
+  .next-step p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    max-width: 46ch;
+    margin: 0 auto var(--space-6);
+  }
+
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .related-articles {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 560px) {
+    .byline {
+      align-items: flex-start;
+    }
+  }
+</style>
