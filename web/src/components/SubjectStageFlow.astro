@@ -1,0 +1,109 @@
+---
+// Visualizes one subject's real Blueprint stage sequence — same numbered-
+// node pattern as TechmedMethodDiagram, generalized to take real stage
+// data instead of a hardcoded list. Used on subject-specific Blog
+// articles (see Article.showStageFlow) so the piece has a genuine,
+// data-driven diagram instead of a stock/decorative image.
+interface Props {
+  subjectName: string;
+  stages: string[];
+}
+
+const { subjectName, stages } = Astro.props;
+---
+
+<div class="stage-flow reveal" role="img" aria-label={`The ${subjectName} Blueprint: ${stages.join(', ')}.`}>
+  <ol class="steps">
+    {stages.map((stage, i) => (
+      <li>
+        <span class="node">
+          <span class="number">{i + 1}</span>
+        </span>
+        <span class="label">{stage}</span>
+      </li>
+    ))}
+  </ol>
+</div>
+
+<style>
+  .stage-flow {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+    padding: var(--space-8) var(--space-6);
+    margin: var(--space-8) 0 var(--space-10);
+  }
+
+  .steps {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .steps li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 108px;
+    position: relative;
+  }
+
+  .steps li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 19px;
+    left: calc(50% + 24px);
+    width: calc(100% - 48px);
+    height: 2px;
+    background: var(--border);
+  }
+
+  .node {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-raised);
+    border: 2px solid var(--accent);
+    z-index: 1;
+  }
+
+  .number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+  }
+
+  .label {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.74rem;
+    line-height: 1.35;
+    text-align: center;
+    color: var(--text);
+  }
+
+  @media (max-width: 700px) {
+    .steps li:not(:last-child)::after {
+      display: none;
+    }
+
+    .steps {
+      justify-content: flex-start;
+      gap: var(--space-4) var(--space-2);
+    }
+
+    .steps li {
+      width: 84px;
+    }
+  }
+</style>

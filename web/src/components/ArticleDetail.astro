@@ -8,6 +8,7 @@
 import { renderArticleBody, type Article } from '../lib/articles';
 import PlaceholderPreview from './PlaceholderPreview.astro';
 import TechmedMethodDiagram from './TechmedMethodDiagram.astro';
+import SubjectStageFlow from './SubjectStageFlow.astro';
 
 interface Props {
   article: Article;
@@ -71,6 +72,9 @@ const authorName = article.author?.name ?? 'TECHMED';
   </header>
 
   {article.showMethodDiagram && <TechmedMethodDiagram />}
+  {article.showStageFlow && article.relatedBlueprints?.[0]?.stages && (
+    <SubjectStageFlow subjectName={article.relatedBlueprints[0].name} stages={article.relatedBlueprints[0].stages} />
+  )}
 
   <div class="body reveal" set:html={bodyHtml} />
 
