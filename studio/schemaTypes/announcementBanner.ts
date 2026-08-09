@@ -1,10 +1,12 @@
 import { defineField, defineType } from 'sanity';
 
 // A single sitewide announcement strip — free tutorials, paid tutorials
-// later, JAMB/UTME news, etc. Deliberately text-only, not image-based:
-// this is a fully static site, so an image here would add real bytes and
+// later, JAMB/UTME news, etc. Text is the primary content: this is a
+// fully static site, so a full banner IMAGE would add real bytes and
 // layout-shift risk to every single page load, while text costs almost
-// nothing and is editable from here in seconds with no design/export step.
+// nothing and is editable from here in seconds with no design/export
+// step. The optional icon image below is small and deliberately
+// constrained (see its description) so it stays cheap even when set.
 export default defineType({
   name: 'announcementBanner',
   title: 'Announcement Banner',
@@ -23,6 +25,14 @@ export default defineType({
       type: 'string',
       description: 'Keep this to one short sentence — it renders on a single line on all screen sizes.',
       validation: (Rule) => Rule.max(140),
+    }),
+    defineField({
+      name: 'icon',
+      title: 'Icon (optional)',
+      type: 'image',
+      options: { hotspot: true },
+      description:
+        'Optional small icon shown to the left of the message (e.g. a logo mark or a small graphic). Keep it simple — this renders at about 24px tall, not as a banner image. Leave empty for a text-only banner.',
     }),
     defineField({
       name: 'ctaLabel',

@@ -102,7 +102,7 @@ const jsonLd = [
 
   <!-- 2. WHAT IS A BUILDER? -->
   <section class="what-is">
-    <SectionHeading eyebrow="The Identity" title="What Is a Builder?" align="center" />
+    <SectionHeading eyebrow="The Identity" title="Who Is a Builder?" align="center" />
     <p class="what-is-lede">
       A Builder is a student who has decided to start preparing deliberately. You don't need to
       have everything figured out. You need to be willing to build.
@@ -133,22 +133,24 @@ const jsonLd = [
   <!-- 4. FREE UTME 2027 TUTORIAL + JOIN THE COHORT -->
   {showTutorial && (
     <section class="tutorial reveal">
-      <div class="tutorial-inner">
+      <div class="tutorial-header">
         <p class="eyebrow">Current Builder Experience</p>
         <h2>{settings.tutorialTitle}</h2>
         {tutorialDates && <p class="tutorial-dates">{tutorialDates}</p>}
         <p class="tutorial-copy">{settings.tutorialDescription}</p>
+      </div>
 
-        <div class="cohort-about">
+      <div class="tutorial-modules">
+        <div class="module">
           <h3>What the Cohort Is For</h3>
-          <p>
+          <p class="module-copy">
             The Builder Cohort exists behind the free tutorial experience. Before and after
             tutorial sessions, TECHMED shares relevant challenges, updates and tips from the Blog
             directly in the group — kept focused, not a flood of information.
           </p>
         </div>
 
-        <div class="standard">
+        <div class="module">
           <h3>The 4H Builder Standard</h3>
           <div class="four-h-grid">
             {FOUR_H.map((item) => (
@@ -160,14 +162,16 @@ const jsonLd = [
           </div>
         </div>
 
-        <div class="rules">
+        <div class="module">
           <h3>Builder Rules</h3>
           <p class="rules-intro">To keep the classroom useful for everyone:</p>
           <ul class="rules-list">
             {BUILDER_RULES.map((rule) => <li>{rule}</li>)}
           </ul>
         </div>
+      </div>
 
+      <div class="tutorial-join">
         {settings.joinUrl ? (
           <a class="btn-primary" href={settings.joinUrl} target="_blank" rel="noopener">Join Builder Cohort</a>
         ) : (
@@ -349,17 +353,17 @@ const jsonLd = [
   }
 
   /* 4. Tutorial */
-  .tutorial-inner {
-    max-width: 680px;
-    margin: 0 auto;
-    text-align: center;
-    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-12) var(--space-8);
+  .tutorial {
+    max-width: 900px;
   }
 
-  .tutorial-inner h2 {
+  .tutorial-header {
+    max-width: 620px;
+    margin: 0 auto var(--space-12);
+    text-align: center;
+  }
+
+  .tutorial-header h2 {
     font-size: clamp(1.75rem, 4vw, 2.25rem);
     font-weight: 900;
     letter-spacing: -0.03em;
@@ -379,27 +383,37 @@ const jsonLd = [
     font-size: 1rem;
     line-height: 1.8;
     color: var(--text-light);
-    margin-bottom: var(--space-10);
   }
 
-  .cohort-about,
-  .standard,
-  .rules {
+  /* Each part of the cohort experience (what it's for, the standard, the
+     rules) gets its own bounded card — previously all three ran straight
+     into each other as one continuous block of text with only heading
+     size to tell them apart, which read as cramped and hard to scan. */
+  .tutorial-modules {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .module {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
     text-align: left;
-    margin-bottom: var(--space-10);
   }
 
-  .cohort-about h3,
-  .standard h3,
-  .rules h3 {
+  .module h3 {
     font-family: var(--font-display);
     font-size: 1.15rem;
     font-weight: 700;
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
     text-align: center;
   }
 
-  .cohort-about p {
+  .module-copy {
     font-size: 0.95rem;
     line-height: 1.8;
     color: var(--text-light);
@@ -439,7 +453,7 @@ const jsonLd = [
     text-align: center;
     font-size: 0.92rem;
     color: var(--text-light);
-    margin-bottom: var(--space-4);
+    margin-bottom: var(--space-5);
   }
 
   .rules-list {
@@ -470,9 +484,14 @@ const jsonLd = [
     background: var(--accent);
   }
 
+  .tutorial-join {
+    margin-top: var(--space-10);
+    text-align: center;
+  }
+
   .join-pending {
     max-width: 480px;
-    margin: var(--space-8) auto 0;
+    margin: 0 auto;
     text-align: left;
   }
 
@@ -491,8 +510,8 @@ const jsonLd = [
       grid-template-columns: 1fr;
     }
 
-    .tutorial-inner {
-      padding: var(--space-8) var(--space-5);
+    .module {
+      padding: var(--space-6) var(--space-5);
     }
   }
 </style>

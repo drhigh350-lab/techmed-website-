@@ -8,11 +8,21 @@ import { fetchSanity } from './sanity';
 export interface AnnouncementBanner {
   active: boolean;
   message: string;
+  /** Purely decorative (the message text already carries the meaning),
+   * so it's rendered with alt="" rather than requiring editors to write
+   * alt text for a small accompanying icon. */
+  iconUrl?: string;
   ctaLabel: string;
   ctaUrl: string;
 }
 
-const BANNER_QUERY = `*[_id == "announcementBanner"][0]{active, message, ctaLabel, ctaUrl}`;
+const BANNER_QUERY = `*[_id == "announcementBanner"][0]{
+  active,
+  message,
+  "iconUrl": icon.asset->url,
+  ctaLabel,
+  ctaUrl
+}`;
 
 export async function getAnnouncementBanner(): Promise<AnnouncementBanner | null> {
   const banner = await fetchSanity<Partial<AnnouncementBanner> | null>(BANNER_QUERY, null);
@@ -20,6 +30,7 @@ export async function getAnnouncementBanner(): Promise<AnnouncementBanner | null
   return {
     active: true,
     message: banner.message,
+    iconUrl: banner.iconUrl,
     ctaLabel: banner.ctaLabel,
     ctaUrl: banner.ctaUrl,
   };
