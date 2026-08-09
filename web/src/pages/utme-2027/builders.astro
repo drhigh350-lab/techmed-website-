@@ -1,0 +1,339 @@
+---
+// The UTME 2027 Builder landing page — introduces the Builder identity,
+// the permanent Builders Channel, and (when active) the current free
+// tutorial opportunity. Routes interested students to /utme-2027/builders/join
+// rather than exposing which internal cohort (A/B/C...) is currently open;
+// see web/src/lib/builders.ts and studio/schemaTypes/utmeBuilderSettings.ts
+// for how TECHMED changes the active cohort without a frontend deploy.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import BuilderManifesto from '../../components/BuilderManifesto.astro';
+import { getBuilderSettings, formatDateRange } from '../../lib/builders';
+
+const settings = await getBuilderSettings();
+const tutorialDates = formatDateRange(settings.tutorialStartDate, settings.tutorialEndDate);
+const showTutorial = settings.tutorialActive && settings.tutorialTitle;
+
+const PILLARS = [
+  { name: 'Understanding', copy: "Know what you're actually studying." },
+  { name: 'Consistency', copy: 'Build a preparation routine you can sustain.' },
+  { name: 'Practice', copy: "Turn what you learn into performance." },
+  { name: 'Confidence', copy: 'See your improvement through deliberate work.' },
+];
+
+const pageUrl = new URL('/utme-2027/builders', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'UTME 2027 Builders — TECHMED',
+    url: pageUrl,
+    description:
+      "The UTME 2027 Builder identity, the permanent Builders Channel, and TECHMED's free UTME 2027 tutorial experience.",
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'UTME 2027', item: new URL('/utme-2027', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: 'Builders', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="UTME 2027 Builders — Free Preparation & Tutorials | TECHMED"
+  description="Join the UTME 2027 Builders: TECHMED's free preparation identity and community for UTME 2027 candidates, including the free UTME 2027 tutorial experience."
+  jsonLd={jsonLd}
+  smoothScroll
+>
+  <!-- 1. HERO -->
+  <section class="hero">
+    <div class="hero-bg" aria-hidden="true"></div>
+    <div class="hero-content">
+      <p class="eyebrow">UTME 2027</p>
+      <h1>BUILT TO LAST.</h1>
+      <p class="lede">
+        Preparing for UTME isn't about being perfect from day one. It's about building a
+        preparation you can keep showing up for.
+      </p>
+      <div class="hero-ctas">
+        <a class="btn-primary" href="/utme-2027/builders/join">Join the Builders</a>
+        <a class="btn-secondary" href={settings.channelUrl} target="_blank" rel="noopener">Follow the Builders</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. WHAT IS A BUILDER? -->
+  <section class="what-is">
+    <SectionHeading eyebrow="The Identity" title="What Is a Builder?" align="center" />
+    <p class="what-is-lede">
+      A Builder is a student who has decided to start preparing deliberately. You don't need to
+      have everything figured out. You need to be willing to build.
+    </p>
+    <div class="pillar-grid">
+      {PILLARS.map((pillar) => (
+        <div class="pillar reveal">
+          <h3>{pillar.name}</h3>
+          <p>{pillar.copy}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- 3. FOLLOW THE BUILDERS -->
+  <section class="channel reveal">
+    <div class="channel-inner">
+      <SectionHeading eyebrow="Stay Connected" title="Follow the Builders" align="center" />
+      <p class="channel-copy">
+        The official {settings.channelLabel} is where TECHMED shares updates, useful preparation
+        content, resources, announcements and important information throughout the journey — open
+        to every student, independent of any tutorial cohort.
+      </p>
+      <a class="btn-primary" href={settings.channelUrl} target="_blank" rel="noopener">Follow the Builders</a>
+    </div>
+  </section>
+
+  <!-- 4. FREE UTME 2027 TUTORIAL -->
+  {showTutorial && (
+    <section class="tutorial reveal">
+      <div class="tutorial-inner">
+        <p class="eyebrow">Current Builder Experience</p>
+        <h2>{settings.tutorialTitle}</h2>
+        {tutorialDates && <p class="tutorial-dates">{tutorialDates}</p>}
+        <p class="tutorial-copy">{settings.tutorialDescription}</p>
+        <a class="btn-primary" href="/utme-2027/builders/join">Join the Builders</a>
+        <p class="tutorial-note">Joining connects you to the current Builder Cohort for this free tutorial experience.</p>
+      </div>
+    </section>
+  )}
+
+  <!-- 5. BUILDER MANIFESTO -->
+  <BuilderManifesto />
+</BaseLayout>
+
+<style>
+  section {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 15px 30px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  /* 1. Hero */
+  .hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    max-width: 100%;
+    padding: 0;
+  }
+
+  .hero-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 48px 48px;
+    opacity: 0.35;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, black 30%, transparent 75%);
+  }
+
+  .hero-content {
+    position: relative;
+    z-index: 1;
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--space-20) var(--space-6) var(--space-16);
+    text-align: center;
+  }
+
+  h1 {
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .hero-ctas {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  /* 2. What Is a Builder */
+  .what-is-lede {
+    max-width: 620px;
+    margin: 0 auto var(--space-10);
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    text-align: center;
+  }
+
+  .pillar-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--space-4);
+  }
+
+  .pillar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .pillar:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+  }
+
+  .pillar h3 {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+  }
+
+  .pillar p {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    line-height: 1.6;
+  }
+
+  /* 3. Follow the Builders */
+  .channel {
+    max-width: 100%;
+    background: var(--surface-dark);
+  }
+
+  .channel-inner {
+    max-width: 700px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .channel-copy {
+    font-size: 1.02rem;
+    line-height: 1.8;
+    color: var(--text-light-on-dark-surface);
+    margin-bottom: var(--space-8);
+  }
+
+  .channel :global(.section-heading h2),
+  .channel :global(.section-heading .subtitle) {
+    color: var(--text-on-dark-surface);
+  }
+
+  /* 4. Tutorial */
+  .tutorial-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    text-align: center;
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-12) var(--space-8);
+  }
+
+  .tutorial-inner h2 {
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-3);
+  }
+
+  .tutorial-dates {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    letter-spacing: 0.03em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-5);
+  }
+
+  .tutorial-copy {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-7);
+  }
+
+  .tutorial-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--space-5);
+  }
+
+  @media (max-width: 700px) {
+    .pillar-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .pillar-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .tutorial-inner {
+      padding: var(--space-8) var(--space-5);
+    }
+  }
+</style>

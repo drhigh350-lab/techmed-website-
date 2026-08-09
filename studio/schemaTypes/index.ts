@@ -7,12 +7,14 @@ import subject from './subject';
 import syllabusTopic from './syllabusTopic';
 import article from './article';
 import articleCategory from './articleCategory';
+import utmeBuilderSettings from './utmeBuilderSettings';
 
 export const schemaTypes = [
   siteSettings,
   builderManifesto,
   faqItem,
   founder,
+  utmeBuilderSettings,
   resource,
   subject,
   syllabusTopic,

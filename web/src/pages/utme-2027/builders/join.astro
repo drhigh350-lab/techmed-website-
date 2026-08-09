@@ -1,0 +1,272 @@
+---
+// The Builder join page — deliberately not a form. Its only job is to
+// route a student to whichever Builder Cohort is currently active
+// (settings.joinUrl, from Sanity), without ever asking them to choose
+// between internal cohort identifiers. See web/src/lib/builders.ts.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import SectionHeading from '../../../components/SectionHeading.astro';
+import NoteBox from '../../../components/NoteBox.astro';
+import { getBuilderSettings, formatDateRange } from '../../../lib/builders';
+
+const settings = await getBuilderSettings();
+const tutorialDates = formatDateRange(settings.tutorialStartDate, settings.tutorialEndDate);
+
+const FOUR_H = [
+  {
+    name: 'Honesty',
+    copy: 'Be real about where you are. Ask the question you actually have — not the one you think will make you sound smart.',
+  },
+  {
+    name: 'Humility',
+    copy: 'Every Builder is still building, including the ones ahead of you. No condescension. No ego.',
+  },
+  {
+    name: 'Hard Work',
+    copy: 'Show up. Do the work. This experience rewards consistency, not talk.',
+  },
+  {
+    name: 'Helpfulness',
+    copy: "If you can help another Builder, help them. You're not competing with each other. You're competing with who you were yesterday.",
+  },
+];
+
+const BUILDER_RULES = [
+  'Stay on topic — UTME 2027 preparation and the tutorial.',
+  'No spam or unrelated promotion.',
+  'No exam malpractice or cheating content.',
+  'Respect other Builders.',
+  'Ask questions freely.',
+  'Help when you can.',
+  "Don't discourage another student because they're behind.",
+];
+
+const pageUrl = new URL('/utme-2027/builders/join', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Join the UTME 2027 Builders — TECHMED',
+    url: pageUrl,
+    description: "Join the current UTME 2027 Builder Cohort and take part in TECHMED's free UTME 2027 tutorial experience.",
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'UTME 2027', item: new URL('/utme-2027', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: 'Builders', item: new URL('/utme-2027/builders', Astro.site).toString() },
+      { '@type': 'ListItem', position: 4, name: 'Join', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Join the UTME 2027 Builders | TECHMED"
+  description="Join the current UTME 2027 Builder Cohort and take part in TECHMED's free UTME 2027 tutorial experience — no form, no sign-up."
+  jsonLd={jsonLd}
+>
+  <!-- 1. HERO / JOIN -->
+  <section class="hero">
+    <p class="eyebrow">UTME 2027</p>
+    <h1>Join the Builders</h1>
+    <p class="lede">
+      You're ready to build. Join the current Builder Cohort and take part in the free UTME 2027
+      tutorial experience.
+    </p>
+    {tutorialDates && <p class="dates">{tutorialDates}</p>}
+
+    {settings.joinUrl ? (
+      <a class="btn-primary" href={settings.joinUrl} target="_blank" rel="noopener">Join Builder Cohort</a>
+    ) : (
+      <div class="join-pending">
+        <NoteBox>
+          <strong>The current cohort link is being prepared.</strong> Follow the Builders Channel below
+          and we'll let you know the moment it's ready.
+        </NoteBox>
+        <a class="btn-primary" href={settings.channelUrl} target="_blank" rel="noopener">Follow the Builders</a>
+      </div>
+    )}
+  </section>
+
+  <!-- 2. THE 4H BUILDER STANDARD -->
+  <section class="standard reveal">
+    <SectionHeading eyebrow="Before You Join" title="The 4H Builder Standard" align="center" />
+    <div class="four-h-grid">
+      {FOUR_H.map((item) => (
+        <div class="four-h-item">
+          <h3>{item.name}</h3>
+          <p>{item.copy}</p>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- 3. BUILDER RULES -->
+  <section class="rules reveal">
+    <SectionHeading title="Builder Rules" align="center" subtitle="To keep the classroom useful for everyone:" />
+    <ul class="rules-list">
+      {BUILDER_RULES.map((rule) => <li>{rule}</li>)}
+    </ul>
+  </section>
+
+  <!-- 4. WHAT THE COHORT IS FOR -->
+  <section class="about-cohort reveal">
+    <SectionHeading title="What the Cohort Is For" align="center" />
+    <p class="about-copy">
+      The Builder Cohort exists behind the free tutorial experience. Before and after tutorial
+      sessions, TECHMED shares relevant challenges, updates and tips from the Blog directly in the
+      group — kept focused, not a flood of information.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  section {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-14) var(--space-6);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 16px 32px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+  }
+
+  /* 1. Hero */
+  .hero {
+    text-align: center;
+    padding-top: var(--space-20);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .lede {
+    max-width: 52ch;
+    margin: 0 auto var(--space-4);
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+  }
+
+  .dates {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    letter-spacing: 0.03em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-8);
+  }
+
+  .join-pending {
+    max-width: 480px;
+    margin: 0 auto;
+    text-align: left;
+  }
+
+  .join-pending .btn-primary {
+    display: block;
+    text-align: center;
+    margin-top: var(--space-2);
+  }
+
+  /* 2. 4H Standard */
+  .four-h-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+  }
+
+  .four-h-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+  }
+
+  .four-h-item h3 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
+  }
+
+  .four-h-item p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  /* 3. Builder Rules */
+  .rules-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .rules-list li {
+    position: relative;
+    padding-left: var(--space-6);
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-light);
+  }
+
+  .rules-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.55em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+
+  /* 4. About the cohort */
+  .about-copy {
+    max-width: 60ch;
+    margin: 0 auto;
+    text-align: center;
+    font-size: 0.98rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  @media (max-width: 560px) {
+    .four-h-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

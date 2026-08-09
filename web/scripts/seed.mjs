@@ -165,6 +165,30 @@ async function seedFounder() {
   console.log('✓ founder');
 }
 
+// createIfNotExists, like siteSettings/builderManifesto/founder above —
+// the whole point of this document is that TECHMED can hand-edit joinUrl
+// in Studio (e.g. move new joins from Cohort A to Cohort B once it fills)
+// without a re-run of this script ever overwriting that change.
+async function seedUtmeBuilderSettings() {
+  await client.createIfNotExists({
+    _id: 'utmeBuilderSettings',
+    _type: 'utmeBuilderSettings',
+    title: 'UTME 2027 Builder Settings',
+    active: true,
+    channelUrl: 'https://whatsapp.com/channel/0029Vb8nzXH545v4f8EF103D',
+    channelLabel: 'UTME 2027 Builders Channel',
+    joinUrl: 'https://chat.whatsapp.com/LhrwFeBccaPHYlESb88FoE?s=cl&p=a&ilr=4',
+    joinLabel: 'Builder Cohort A',
+    tutorialActive: true,
+    tutorialTitle: 'Free UTME 2027 Tutorials',
+    tutorialDescription:
+      'TECHMED is providing a free tutorial experience for UTME 2027 candidates. Full details are being finalized and will be shared with Builders as the season approaches.',
+    tutorialStartDate: '2026-10-05',
+    tutorialEndDate: '2026-11-09',
+  });
+  console.log('✓ utmeBuilderSettings');
+}
+
 // Verbatim from web/src/lib/syllabus.ts's FALLBACK_SUBJECTS — the real
 // JAMB/UTME 2027 syllabus content already used as the site's fallback.
 // Keep these in sync if that file changes; this script deliberately
@@ -21294,6 +21318,7 @@ async function main() {
   await seedBuilderManifesto();
   await seedFaqItems();
   await seedFounder();
+  await seedUtmeBuilderSettings();
   await seedSubjects();
   await seedResources();
   await seedArticleCategories();

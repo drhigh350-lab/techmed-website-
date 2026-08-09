@@ -21,6 +21,10 @@ export const structure: StructureResolver = (S) =>
         .title('Founder')
         .id('founder')
         .child(S.document().schemaType('founder').documentId('founder')),
+      S.listItem()
+        .title('UTME 2027 Builder Settings')
+        .id('utmeBuilderSettings')
+        .child(S.document().schemaType('utmeBuilderSettings').documentId('utmeBuilderSettings')),
       S.divider(),
       S.documentTypeListItem('faqItem').title('FAQ'),
       S.divider(),
