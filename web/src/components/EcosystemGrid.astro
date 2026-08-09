@@ -1,12 +1,12 @@
 ---
 // New homepage section per the v1.1 brief. Route mapping is deliberate,
-// not arbitrary: only 8 real routes exist right now (About, Cohort,
-// Resources, Tools, Podcast, Blog, Contact, Legal), so ecosystem items
-// map to whichever existing page covers that concept — KAIRO, Study
-// Planner and CBT Practice all live under /tools (the "product tools"
-// hub); Resources, Study Blueprints and Free Quizzes under /resources.
-// Each target page explains what lives there. Revisit this mapping once
-// any of these get a dedicated route.
+// not arbitrary: KAIRO, Study Planner and CBT Practice all live under
+// /tools (the "product tools" hub, still a placeholder); Resources and
+// Free Quizzes under /resources; Study Blueprints under its own real
+// hub, /jamb-syllabus-2027 (the official JAMB syllabus per subject,
+// reorganized by TECHMED into a study order). Each target page explains
+// what lives there. Revisit this mapping once any remaining placeholder
+// gets a dedicated route.
 import SectionHeading from './SectionHeading.astro';
 import FeatureCard from './FeatureCard.astro';
 
@@ -32,7 +32,7 @@ const icons = {
 const items = [
   { title: 'KAIRO', description: 'The intelligent learning system that understands your journey and helps you know what to do next.', href: '/tools', icon: icons.kairo },
   { title: 'Resources', description: 'Boosters, structured revision materials and research files built around what actually matters.', href: '/resources', icon: icons.resources },
-  { title: 'Study Blueprints', description: 'Structured study plans and learning systems, built around how students actually improve.', href: '/resources', icon: icons.blueprint },
+  { title: 'Study Blueprints', description: "TECHMED's optimized presentation of the official JAMB syllabus for each subject.", href: '/jamb-syllabus-2027', icon: icons.blueprint },
   { title: 'Free Quizzes', description: 'Thousands of practice questions with detailed solutions, no sign-up required.', href: '/resources', icon: icons.quiz },
   { title: 'Podcast', description: '5 Minutes Forward — a daily habit of intentional growth and discipline.', href: '/podcast', icon: icons.podcast },
   { title: 'Study Planner', description: 'Turn a syllabus into a realistic weekly rhythm you can actually stick to.', href: '/tools', icon: icons.planner },
