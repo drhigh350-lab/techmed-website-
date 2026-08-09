@@ -9,9 +9,14 @@
 //   npm install
 //   node scripts/seed.mjs
 //
-// Safe to re-run: every document uses createOrReplace with a fixed _id (or
-// a deterministic id derived from content), so running this twice updates
-// the same documents rather than duplicating them.
+// Safe to re-run, and safe to hand-edit content in Sanity Studio in
+// between runs: every document (except subjects, see seedSubjects' own
+// note) uses createIfNotExists with a fixed _id — the first run creates
+// it, every run after that is a no-op if the document already exists, so
+// it never resets anything edited by hand in Studio since the last run.
+// If you ever need this script to push a deliberate correction to an
+// already-seeded document again, delete that one document in Studio
+// first, then re-run — createIfNotExists will recreate it from scratch.
 //
 // Subject roadmap images / guide PDFs: this script cannot invent those —
 // drop them into scripts/assets/roadmaps/<slug>.(png|jpg) and
@@ -51,7 +56,7 @@ const client = createClient({
 });
 
 async function seedSiteSettings() {
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: 'siteSettings',
     _type: 'siteSettings',
     tagline: 'Think Smart. Perform Elite.',
@@ -61,7 +66,7 @@ async function seedSiteSettings() {
 }
 
 async function seedBuilderManifesto() {
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: 'builderManifesto',
     _type: 'builderManifesto',
     label: 'The Builder Manifesto',
@@ -117,7 +122,7 @@ async function seedFaqItems() {
   ];
 
   for (const [index, faq] of faqs.entries()) {
-    await client.createOrReplace({
+    await client.createIfNotExists({
       _id: `faq-${index + 1}`,
       _type: 'faqItem',
       order: index + 1,
@@ -140,7 +145,7 @@ async function seedFounder() {
     console.warn('  Could not upload founder photo, continuing without it:', err.message);
   }
 
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: 'founder',
     _type: 'founder',
     name: 'Wisdom Johnson',
@@ -518,6 +523,12 @@ async function findAsset(dir, baseName, extensions) {
   return null;
 }
 
+// Deliberately still createOrReplace, not createIfNotExists like everything
+// else in this file: subjects support adding a roadmap image/guide PDF
+// later and re-running this script to attach it (see the file-existence
+// checks below) — createIfNotExists would silently stop that from ever
+// working after the first run. Trade-off: unlike every other document
+// type, hand-edits to a subject in Studio won't survive a re-run.
 async function seedSubjects() {
   const roadmapsDir = path.join(__dirname, 'assets', 'roadmaps');
   const guidesDir = path.join(__dirname, 'assets', 'guides');
@@ -604,7 +615,7 @@ function slugify(value) {
 async function seedArticleCategories() {
   for (const title of ARTICLE_CATEGORIES) {
     const slug = slugify(title);
-    await client.createOrReplace({
+    await client.createIfNotExists({
       _id: `articleCategory-${slug}`,
       _type: 'articleCategory',
       title,
@@ -616,9 +627,10 @@ async function seedArticleCategories() {
 
 // Portable-text block builder — keeps the article content below readable
 // as prose instead of a wall of _key/_type boilerplate. Random keys are
-// fine: Sanity only needs uniqueness within the array, and createOrReplace
-// swaps the whole body each run anyway, so keys don't need to be stable
-// across seed runs.
+// fine: Sanity only needs uniqueness within the array. Note that
+// seedArticle() now uses createIfNotExists (see the top-of-file note) —
+// these keys only ever apply the first time a given article is created,
+// not on every re-run.
 let keyCounter = 0;
 function key(prefix) {
   keyCounter += 1;
@@ -1164,7 +1176,7 @@ const FOURTH_ARTICLE = {
 };
 
 async function seedArticle(a) {
-  await client.createOrReplace({
+  await client.createIfNotExists({
     _id: a.id,
     _type: 'article',
     title: a.title,
@@ -1467,7 +1479,7 @@ async function seedResources() {
     if (r.whatsappUrl) doc.whatsappUrl = r.whatsappUrl;
     if (imageAssetId) doc.primaryImage = { _type: 'image', asset: { _type: 'reference', _ref: imageAssetId } };
 
-    await client.createOrReplace(doc);
+    await client.createIfNotExists(doc);
     console.log(`✓ resource: ${r.title}`);
   }
 }
