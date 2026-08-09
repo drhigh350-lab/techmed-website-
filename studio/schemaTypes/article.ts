@@ -111,6 +111,14 @@ export default defineType({
       initialValue: false,
     }),
     defineField({
+      name: 'showStageFlow',
+      title: 'Show the Subject Stage Flow',
+      type: 'boolean',
+      description:
+        'Shows a visual flow of the Blueprint stages for the FIRST subject in Related Blueprints below. Only meaningful on a subject-specific article with exactly one relevant subject — not the flagship piece that links all five.',
+      initialValue: false,
+    }),
+    defineField({
       name: 'body',
       title: 'Body',
       type: 'array',

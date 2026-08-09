@@ -32,6 +32,9 @@ export interface RelatedBlueprintRef {
   name: string;
   slug: string;
   description?: string;
+  /** Stage names only (no topics) — just enough to draw the StageFlow
+   * diagram on a subject-specific article, not a full syllabus dump. */
+  stages?: string[];
 }
 
 export interface ArticleFaqItem {
@@ -69,6 +72,10 @@ export interface Article {
    * deliberately per article, not inferred, since not every article is
    * about the seven-step system. */
   showMethodDiagram?: boolean;
+  /** Shows a StageFlow diagram for the subject in relatedBlueprints[0] —
+   * only meaningful on a subject-specific article with exactly one
+   * relevant Blueprint, not the flagship piece that links all five. */
+  showStageFlow?: boolean;
 }
 
 export const FALLBACK_ARTICLES: Article[] = [];
@@ -95,6 +102,7 @@ const ARTICLE_QUERY = `*[_type == "article" && !(_id in path("drafts.**"))] | or
   updatedAt,
   featured,
   showMethodDiagram,
+  showStageFlow,
   faq,
   body[]{
     ...,
@@ -105,7 +113,7 @@ const ARTICLE_QUERY = `*[_type == "article" && !(_id in path("drafts.**"))] | or
   },
   "relatedResources": relatedResources[]->{title, "slug": slug.current, description},
   "relatedTools": relatedTools[]->{title, "slug": slug.current, description},
-  "relatedBlueprints": relatedBlueprints[]->{name, "slug": slug.current, description},
+  "relatedBlueprints": relatedBlueprints[]->{name, "slug": slug.current, description, "stages": stages[] | order(order asc).name},
   "seo": {
     "metaTitle": seo.metaTitle,
     "metaDescription": seo.metaDescription,
