@@ -17069,6 +17069,3905 @@ async function seedEleventhArticle() {
 }
 
 
+const TWELFTH_ARTICLE = {
+  id: "article-jamb-cbt-vs-paper",
+  slug: "jamb-cbt-vs-paper-practice",
+  title: "JAMB CBT: What Actually Changes vs. Paper Practice",
+  excerpt: "CBT anxiety is real, but it isn't about your knowledge — it's about the environment you'll use it in. Here's what actually changes between paper practice and the exam screen, and how to get comfortable with it.",
+  categoryId: "articleCategory-examination-strategy",
+  tags: ["CBT","Examination Strategy","JAMB 2027","Exam Day"],
+  authorName: "Wisdom Johnson",
+  authorRole: "CEO, TECHMED",
+  publishedAt: "2026-08-13T09:00:00.000Z",
+  featured: false,
+  showMethodDiagram: false,
+  showStageFlow: false,
+  relatedBlueprintSlugs: [],
+  relatedResourceSlugs: ["free-quiz-practice"],
+  relatedToolSlugs: ["kairo"],
+  faq: [
+    {
+      "question": "Is practising JAMB questions on paper still useful?",
+      "answer": "Yes. Paper practice remains useful for learning concepts, solving questions, working through calculations and reviewing mistakes. It is simply helpful to add some screen-based, timed practice so the CBT environment does not feel completely unfamiliar."
+    },
+    {
+      "question": "What should I do if I am nervous about using a computer for JAMB?",
+      "answer": "Gradually practise reading questions on a screen, selecting answers, navigating between questions and working with a visible timer. If an official orientation or practice session is available to you, use it to become familiar with the examination environment."
+    },
+    {
+      "question": "Can I skip difficult questions during JAMB CBT?",
+      "answer": "Your ability to move between questions depends on the examination interface and its rules. Where the interface allows it, practise moving past questions that are taking too long and returning to them later rather than allowing one difficult question to consume disproportionate time."
+    },
+    {
+      "question": "Does TECHMED have a JAMB CBT simulator?",
+      "answer": "Not yet. TECHMED's Free Quiz Practice and Kairo provide general timed practice content, but neither is an exact simulation of the JAMB CBT interface. Use them for practice, not as a claim of exact format replication."
+    }
+  ],
+  body: [
+    {
+      "_key": "x2",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you have been preparing for JAMB with past questions on paper, there may come a point when somebody tells you:",
+          "_key": "x3"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "But JAMB is CBT o. Have you practised computer?",
+          "_key": "x5"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x6",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And suddenly, the anxiety starts.",
+          "_key": "x7"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "\"What if I don't know how to use the computer?\" \"What if I can't find my question?\" \"What if I waste time?\" \"What if I accidentally submit?\" \"What if I know the answer on paper but everything feels different on the screen?\"",
+          "_key": "x9"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xa",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "These are valid concerns. But let's separate the fear from the actual problem.",
+          "_key": "xb"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xc",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "JAMB being computer-based does not suddenly change what you know. The content you need to prepare for is still the content you need to prepare for. What changes is how you interact with the examination. And that is something you can get comfortable with.",
+          "_key": "xd"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xe",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't need to be a computer expert. You need to stop allowing the CBT format to feel unfamiliar.",
+          "_key": "xf"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xg",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Paper Practice Is Still Useful",
+          "_key": "xh"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xi",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Let's start here because I don't want you to throw away your notebooks and past questions.",
+          "_key": "xj"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xk",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Paper practice is useful. It helps you:",
+          "_key": "xl"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xm",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "learn concepts",
+          "_key": "xn"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xo",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "work through calculations",
+          "_key": "xp"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xq",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "practise past questions",
+          "_key": "xr"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xs",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "identify your weak areas",
+          "_key": "xt"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xu",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "review mistakes",
+          "_key": "xv"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xw",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "build speed and accuracy",
+          "_key": "xx"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xy",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So if most of your preparation has been on paper, you haven't been preparing wrongly. The issue is that you should not let paper practice be your only experience of answering questions under time pressure. Eventually, you need to become comfortable with the screen-based experience too.",
+          "_key": "xz"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x10",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Think of it this way:",
+          "_key": "x11"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x12",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your knowledge is the main thing. CBT is the environment in which you will use that knowledge.",
+          "_key": "x13"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x14",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So What Actually Changes?",
+          "_key": "x15"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x16",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "There are a few important differences.",
+          "_key": "x17"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x18",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "1. Your Questions Are on a Screen",
+          "_key": "x19"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x1a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This sounds obvious, but it matters.",
+          "_key": "x1b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "On paper, you can look at the whole page. You can underline something. Circle a word. Put a mark beside a question. Write something in the margin.",
+          "_key": "x1d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "With CBT, your interaction is primarily through the screen. You read the question. You select an answer. You move through the questions using the available navigation controls.",
+          "_key": "x1f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That can feel strange initially if you're used to spreading your questions across several sheets of paper. The solution isn't to panic. Get used to reading questions on a screen.",
+          "_key": "x1h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "2. You Can't Treat the Screen Like Your Notebook",
+          "_key": "x1j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x1k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This is one of the biggest practical differences.",
+          "_key": "x1l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "When you're solving a question on paper, your page becomes part of your thinking. You might write out an equation, then work through it beside the question, cross something out, draw a quick diagram, write a formula, circle an important figure.",
+          "_key": "x1n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't have that same freedom on the computer screen.",
+          "_key": "x1p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So for subjects where you need calculations or working, you need to become comfortable using the rough/scrap paper provided according to the examination centre's instructions. Don't wait until examination day to discover that you think better when you can physically write things down. Practise that workflow.",
+          "_key": "x1r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Question on screen → identify what you need → work it out on your paper → select answer on screen.",
+          "_key": "x1t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x1u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That should feel normal before the examination.",
+          "_key": "x1v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x1w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "3. You Have to Navigate Digitally",
+          "_key": "x1x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x1y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "On paper, you can flip backwards and forwards through pages. You can physically see where you are.",
+          "_key": "x1z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x20",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "On a computer, you interact with whatever navigation system the examination provides. That means you need to become comfortable with things like moving to the next question, going back to a previous question, reviewing questions, using available navigation or flag/review features, and keeping track of questions you want to revisit.",
+          "_key": "x21"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x22",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The exact interface you encounter should be confirmed from the current official examination instructions or your centre's orientation. So don't build your preparation around assuming that one particular button or screen layout will look exactly the same everywhere. The principle is more important:",
+          "_key": "x23"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x24",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You should be comfortable navigating a timed computer-based test.",
+          "_key": "x25"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x26",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You Don't Have to Answer Everything in Perfect Order",
+          "_key": "x27"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x28",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This is something many students don't realize until they start practising.",
+          "_key": "x29"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Suppose you reach a question and immediately know:",
+          "_key": "x2b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I don't know this one.",
+          "_key": "x2d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x2e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't have to spend several minutes staring at it because you're afraid of moving on. If the examination interface allows you to move past and return to questions, use that strategically. You might:",
+          "_key": "x2f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "answer the questions you know",
+          "_key": "x2h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x2i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "move past questions that are taking too long",
+          "_key": "x2j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x2k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "return to the uncertain ones",
+          "_key": "x2l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x2m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "review your selected answers before time runs out",
+          "_key": "x2n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x2o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The exact controls depend on the examination interface available to you. But the broader skill is important:",
+          "_key": "x2p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't allow one difficult question to control your entire examination.",
+          "_key": "x2r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x2s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Paper Practice Can Hide Time Problems",
+          "_key": "x2t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x2u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Here's another thing. You can be surprisingly fast on paper. You sit comfortably at home. You have your notebook beside you. You flip through pages. You write freely. You pause. You calculate. Nobody is counting down loudly in your head.",
+          "_key": "x2v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then you move to a screen. Suddenly, the experience feels different. You're reading from a screen. You're selecting answers. You're navigating. You're watching the clock. And you realize:",
+          "_key": "x2x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x2y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Ah. This feels different.",
+          "_key": "x2z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x30",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That's exactly why you should introduce timed screen-based practice before examination day. Not because paper practice is useless. Because format familiarity is a skill of its own.",
+          "_key": "x31"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x32",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your Timer Should Become Your Friend",
+          "_key": "x33"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x34",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "One practical thing you can do is practise with a visible timer. Don't always practise casually. Sometimes tell yourself:",
+          "_key": "x35"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x36",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I have this amount of time. Let's see how I perform.",
+          "_key": "x37"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x38",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then start. The purpose isn't to scare yourself. It's to teach your brain: I can think while the clock is running. Over time, the countdown becomes less emotionally distracting. You start focusing on the questions rather than constantly thinking \"How much time is left?\" And that is valuable.",
+          "_key": "x39"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Try This Simple CBT Practice Routine",
+          "_key": "x3b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x3c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't need a fancy system. Take a set of practice questions. Then do this:",
+          "_key": "x3d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Round 1 — Normal Practice",
+          "_key": "x3f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x3g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Answer without worrying excessively about speed. Focus on accuracy. Review your mistakes properly.",
+          "_key": "x3h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Round 2 — Timed Practice",
+          "_key": "x3j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x3k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Use a visible timer. Answer under a realistic time constraint. Don't pause the timer every time something becomes difficult.",
+          "_key": "x3l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Round 3 — Screen Practice",
+          "_key": "x3n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x3o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Move the questions onto a screen where possible. Read them there. Select your answers digitally. Use your rough paper for calculations.",
+          "_key": "x3p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Round 4 — Navigation Practice",
+          "_key": "x3r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x3s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't force yourself to answer everything in the exact order. Practise moving past difficult questions and returning to them later where the practice interface permits.",
+          "_key": "x3t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Round 5 — Review",
+          "_key": "x3v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h3"
+    },
+    {
+      "_key": "x3w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Afterwards, don't just look at your score. Ask:",
+          "_key": "x3x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x3y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Which questions did I miss?",
+          "_key": "x3z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x40",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Which ones took too long?",
+          "_key": "x41"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x42",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Did reading on screen affect me?",
+          "_key": "x43"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x44",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Did I struggle to keep track of questions?",
+          "_key": "x45"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x46",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Did I make mistakes because I rushed?",
+          "_key": "x47"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x48",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Did I spend too long fighting one question?",
+          "_key": "x49"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "x4a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Now you're not just practising JAMB questions. You're practising how you perform inside an examination.",
+          "_key": "x4b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Some Subjects Will Make This More Important",
+          "_key": "x4d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x4e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Think about subjects where you regularly need to work something out. Mathematics. Physics. Chemistry.",
+          "_key": "x4f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You may not simply look at four options and immediately know the answer. You may need to calculate. Write something down. Try an equation. Draw something. Compare values.",
+          "_key": "x4h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That means your preparation should include getting comfortable with the workflow of:",
+          "_key": "x4j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Read → think → work out → select → move on.",
+          "_key": "x4l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x4m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't assume that because you can solve the question beautifully in your notebook, you will automatically feel comfortable doing the same thing while looking at a screen and watching the clock. Practise the complete process.",
+          "_key": "x4n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't Let CBT Anxiety Become a Bigger Problem Than It Is",
+          "_key": "x4p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x4q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "There is something I really want you to avoid. Don't spend so much time worrying about CBT that you forget to prepare for the actual examination.",
+          "_key": "x4r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't need to become a computer technician. You need to become comfortable enough with the basic interaction that the computer stops being the thing you're thinking about. That's the goal. You want to reach the point where:",
+          "_key": "x4t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I'm answering JAMB questions.",
+          "_key": "x4v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x4w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "not:",
+          "_key": "x4x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x4y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I'm trying to operate a computer.",
+          "_key": "x4z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x50",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "What If You're Not Very Good With Computers?",
+          "_key": "x51"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x52",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "First: relax. Being excellent with computers is not the objective. You don't need to know programming. You don't need to understand how the computer works internally.",
+          "_key": "x53"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x54",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You need to be comfortable with basic interaction: reading on a screen, using a mouse, selecting an option, navigating questions, using available review/navigation controls, and working with your allotted time.",
+          "_key": "x55"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x56",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you already use a smartphone regularly, you are not starting from zero. You just need to become comfortable with the specific examination environment.",
+          "_key": "x57"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x58",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And if you have the opportunity to attend an official orientation or practice session provided by the relevant authorities or your examination centre, take it seriously. Use it to understand the interface rather than assuming you will figure everything out on examination day.",
+          "_key": "x59"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't Practise the Wrong Thing",
+          "_key": "x5b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x5c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "There is also a temptation to think:",
+          "_key": "x5d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I need a CBT simulator immediately.",
+          "_key": "x5f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x5g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You should be careful here. A practice website can help you practise questions under time pressure, but that does not automatically mean it perfectly reproduces the actual JAMB examination interface.",
+          "_key": "x5h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "TECHMED currently provides general timed practice content, not a live JAMB CBT-format simulator. You can use ",
+          "_key": "x5j"
+        },
+        {
+          "_type": "span",
+          "marks": [
+            "x1"
+          ],
+          "text": "TECHMED's Free Quiz Practice",
+          "_key": "x5k"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " to practise answering questions under time constraints, but treat it as practice content, not as a claim that you are experiencing the exact JAMB examination interface. That distinction matters.",
+          "_key": "x5l"
+        }
+      ],
+      "markDefs": [
+        {
+          "_key": "x1",
+          "_type": "link",
+          "href": "/resources/free-quiz-practice"
+        }
+      ],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The Real Goal Is Confidence, Not Familiarity With Buttons",
+          "_key": "x5n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x5o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't need to memorize where every button is. You need to remove the feeling of:",
+          "_key": "x5p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I've never done anything like this before.",
+          "_key": "x5r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x5s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That's why even a small amount of deliberate screen-based practice can help. Read questions from a screen. Time yourself. Use rough paper. Move between questions. Return to difficult questions. Review your answers. Get used to thinking while a timer is running.",
+          "_key": "x5t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then gradually, the computer becomes less interesting. And that's exactly what you want.",
+          "_key": "x5v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x5w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your JAMB Preparation Has Two Sides",
+          "_key": "x5x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x5y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I like to think about it this way.",
+          "_key": "x5z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x60",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Side 1: Can you answer the question?",
+          "_key": "x61"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's your academic preparation. You need to understand your syllabus, learn the concepts, practise questions, review your mistakes, strengthen weak areas.",
+          "_key": "x62"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x63",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Side 2: Can you perform under the examination conditions?",
+          "_key": "x64"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's your examination preparation. You need to manage time, attention, navigation, screen reading, rough work, difficult questions, review.",
+          "_key": "x65"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x66",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You need both. Because knowing the answer and successfully navigating an examination are related — but they're not exactly the same skill.",
+          "_key": "x67"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x68",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "A Few Days Before JAMB, Don't Suddenly Change Everything",
+          "_key": "x69"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x6a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Please don't wait until the last few days and decide:",
+          "_key": "x6b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Now I must learn CBT.",
+          "_key": "x6d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x6e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That is unnecessary pressure. Start gradually. You can incorporate timed, screen-based practice into your normal preparation. It doesn't need to replace your normal learning.",
+          "_key": "x6f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "For example: learn on your preferred medium, then practise questions, then occasionally practise those questions on a screen under time pressure. That is enough to begin reducing the unfamiliarity.",
+          "_key": "x6h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And When You Finally Sit Down for the Real Thing...",
+          "_key": "x6j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x6k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You may still feel nervous. That's normal. Your heart may beat faster. You may look around and think:",
+          "_key": "x6l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Okay. This is it.",
+          "_key": "x6n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x6o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That's okay. Take a breath. Read carefully. Start.",
+          "_key": "x6p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't let one difficult question convince you that you've forgotten everything you studied. Don't spend forever fighting one question. Use the examination's available navigation features appropriately. Keep an eye on your time. Use your rough paper intelligently. And keep moving.",
+          "_key": "x6r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't need to feel completely fearless. You just need to be prepared enough to keep functioning while you're nervous.",
+          "_key": "x6t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The Computer Is Not Your Enemy",
+          "_key": "x6v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x6w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I want you to remember this. JAMB CBT can feel intimidating when you've spent most of your preparation answering questions on paper. But the computer is not suddenly testing whether you can operate a computer. Your preparation is still about the subjects and the questions. The format simply changes the environment in which you answer them.",
+          "_key": "x6x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x6y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So don't spend the next few months being afraid of the screen. Gradually introduce it into your preparation. Use a timer. Practise reading on-screen. Get comfortable with your rough-paper workflow. Practise moving past difficult questions. Practise returning to questions.",
+          "_key": "x6z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x70",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And most importantly: keep the main thing the main thing. Learn what you need to learn. Practise what you need to practise. Diagnose your mistakes. Then prepare yourself to perform.",
+          "_key": "x71"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x72",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "By the time you sit down for JAMB, you shouldn't be thinking:",
+          "_key": "x73"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x74",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "How do I use this computer?",
+          "_key": "x75"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x76",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You should be thinking:",
+          "_key": "x77"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x78",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Okay. Let's answer these questions.",
+          "_key": "x79"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x7a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And that's a much better place to be.",
+          "_key": "x7b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    }
+  ],
+};
+
+const THIRTEENTH_ARTICLE = {
+  id: "article-jamb-score-not-improving",
+  slug: "jamb-score-not-improving",
+  title: "What to Do When Your JAMB Score Isn't Improving",
+  excerpt: "A stalled score is discouraging, but it's not a verdict — it's a signal. Here's how to diagnose what's actually happening in your preparation, and how to take care of yourself while you do it.",
+  categoryId: "articleCategory-study-strategy",
+  tags: ["Study Strategy","Diagnosis","JAMB 2027","Mental Health"],
+  authorName: "Wisdom Johnson",
+  authorRole: "CEO, TECHMED",
+  publishedAt: "2026-08-13T14:00:00.000Z",
+  featured: false,
+  showMethodDiagram: false,
+  showStageFlow: false,
+  relatedBlueprintSlugs: [],
+  relatedResourceSlugs: [],
+  relatedToolSlugs: [],
+  faq: [
+    {
+      "question": "What should I do if my JAMB score keeps staying around the same range?",
+      "answer": "Stop taking more tests for a moment and diagnose your previous mistakes. Separate knowledge gaps, application problems, careless mistakes, timing/attention issues and unfamiliar question types. Let the pattern you find determine what you work on next."
+    },
+    {
+      "question": "Should I study more hours if my JAMB score isn't improving?",
+      "answer": "Not automatically. More hours won't necessarily solve the problem if your practice method is ineffective or you're mentally exhausted. Focus first on the quality of your learning, practice, review and recovery."
+    },
+    {
+      "question": "How do I know whether I'm making careless mistakes or I actually don't understand the topic?",
+      "answer": "Review the questions you missed. If you can explain the concept and solve the question correctly when given another chance, the original mistake may have been careless, attention-related or application-related. If you still cannot explain or solve it, you likely have a knowledge or understanding gap."
+    },
+    {
+      "question": "Is it okay to take a break from JAMB preparation?",
+      "answer": "Yes. Rest is part of sustainable preparation. If you are exhausted, taking a proper break, sleeping, praying, reflecting and returning with a clearer mind can be more useful than forcing yourself through another unproductive study session."
+    }
+  ],
+  body: [
+    {
+      "_key": "x7c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "There is a particular kind of frustration that comes with preparing for JAMB.",
+          "_key": "x7d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "It is not the frustration of someone who has not started. It is the frustration of someone who has been trying.",
+          "_key": "x7f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You have been reading. You have been answering questions. You have been checking your scores. Maybe you have even started waking up earlier, studying longer, cutting down on distractions and telling yourself, \"This time, I have to do better.\"",
+          "_key": "x7h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then you sit down for another practice test. You finish. You check your result. And somehow... the score is still around the same place.",
+          "_key": "x7j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Maybe you expected 250 and got 180. You try again and get 184. You try another one. 179. Then 187.",
+          "_key": "x7l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And at some point, you start wondering:",
+          "_key": "x7n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "What am I doing wrong?",
+          "_key": "x7p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x7q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That question can hurt. Especially when you are under pressure. Maybe your parents are expecting a good score. Maybe you have a course you desperately want. Maybe people around you are already talking about their scores. Maybe you have told yourself that this year has to be different. And now you are beginning to wonder if all this effort is actually working.",
+          "_key": "x7r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I understand that feeling. I've experienced it myself while preparing.",
+          "_key": "x7t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And I want you to hear this before we talk about strategies: a score that isn't improving does not automatically mean that you are not improving. But it does mean that something about your current preparation needs to be examined. Not punished. Examined.",
+          "_key": "x7v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x7w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "First, Take a Breath",
+          "_key": "x7x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x7y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I know this sounds almost too simple. But sometimes you are so deep inside the preparation that you forget that you are a human being before you are a JAMB candidate.",
+          "_key": "x7z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x80",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You are not a score. You are not your last mock result. You are not the number your CBT practice produced today. And you don't have to destroy yourself trying to prove that you can succeed.",
+          "_key": "x81"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x82",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you have been studying for hours every day and your brain is exhausted, forcing yourself to sit through another three hours because you feel guilty about taking a break may not be the productivity you think it is.",
+          "_key": "x83"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x84",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Sometimes you need to stop. Sleep. Eat properly. Take a walk. Talk to someone you trust. Pray. Sit quietly and reflect. Tell God honestly how you feel.",
+          "_key": "x85"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x86",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You don't have to pretend that you're not scared. You don't have to pray as though everything is fine when it isn't. You can say:",
+          "_key": "x87"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x88",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "God, I'm trying. I'm tired. I'm scared. I don't know if I'm doing enough. Please help me understand what I need to change and give me the strength to keep going.",
+          "_key": "x89"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x8a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then rest. And come back.",
+          "_key": "x8b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Taking a break is not giving up. Sometimes the most responsible thing you can do for your preparation is to stop for a moment and recover.",
+          "_key": "x8d"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8e",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "But Don't Use \"I'm Tired\" to Avoid the Real Problem",
+          "_key": "x8f"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x8g",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Now, let's be honest with ourselves. Rest is important. But if your score has been stuck for a while, you also need to diagnose the problem.",
+          "_key": "x8h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Because there is a difference between \"I'm tired\" and \"my preparation method isn't producing the result I want.\"",
+          "_key": "x8j"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8k",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Sometimes it is one. Sometimes it is both. And if you don't know which one you're dealing with, you may keep working harder without actually moving forward.",
+          "_key": "x8l"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8m",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "A Plateau Is a Signal, Not a Verdict",
+          "_key": "x8n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x8o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If your score keeps hovering around the same range, don't immediately conclude:",
+          "_key": "x8p"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8q",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I'm not good at JAMB.",
+          "_key": "x8r"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "x8s",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Instead ask: what exactly is happening when I practise?",
+          "_key": "x8t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Because two students can have the same score for completely different reasons. One may understand the material but make many careless mistakes. Another may be working hard but have major knowledge gaps. Another may understand the topics but struggle with the way questions are presented. Another may simply be mentally exhausted.",
+          "_key": "x8v"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8w",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And if you give all four students the same advice — \"read more\" — you haven't actually helped them. So let's find out what is happening with you.",
+          "_key": "x8x"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x8y",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 1: Stop Looking Only at Your Score",
+          "_key": "x8z"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x90",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your score tells you what happened. It doesn't necessarily tell you why it happened.",
+          "_key": "x91"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x92",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you scored 190, the important question isn't simply \"how do I get 250?\" The better question is: \"where did the 60 marks go?\"",
+          "_key": "x93"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x94",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And even that isn't quite enough. You need to know what happened to the questions you missed.",
+          "_key": "x95"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x96",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Take one of your recent practice tests. Don't start another one. Take the old one. Go through the questions you got wrong. And classify them.",
+          "_key": "x97"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x98",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your Mistakes Usually Tell a Story",
+          "_key": "x99"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x9a",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "For every question you missed, ask yourself:",
+          "_key": "x9b"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "x9c",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I genuinely not know this?",
+          "_key": "x9d"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " If yes, that's a knowledge gap. You need to learn or revisit the concept.",
+          "_key": "x9e"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9f",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I know it but forget something?",
+          "_key": "x9g"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's a retention problem. You may need better revision and more active recall.",
+          "_key": "x9h"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9i",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I understand the question but choose the wrong method?",
+          "_key": "x9j"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's an application problem. You need more guided practice.",
+          "_key": "x9k"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9l",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I rush?",
+          "_key": "x9m"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's a timing or exam-behaviour problem.",
+          "_key": "x9n"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9o",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I misread the question?",
+          "_key": "x9p"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's an attention problem.",
+          "_key": "x9q"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9r",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I know the answer but make a silly calculation or spelling mistake?",
+          "_key": "x9s"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's a careless-error pattern.",
+          "_key": "x9t"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9u",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Did I get confused because the question looked unfamiliar?",
+          "_key": "x9v"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " That's important too — it may mean you have learned to recognize familiar examples rather than actually understanding the underlying concept.",
+          "_key": "x9w"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "number"
+    },
+    {
+      "_key": "x9x",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 2: Find Your Pattern",
+          "_key": "x9y"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "x9z",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This is where things start becoming useful. Don't just say \"I made mistakes.\" Look for repetition.",
+          "_key": "xa0"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xa1",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Imagine you review 40 questions you previously got wrong. And you discover that several were from topics you haven't properly learned, several were careless mistakes, several were questions you understood but couldn't apply, and a few were simply because you rushed.",
+          "_key": "xa2"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xa3",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Now you have something to work with. Your problem is no longer \"my JAMB score isn't improving.\" It becomes: \"I have a knowledge problem in these areas, an application problem here, and I'm losing marks through rushing.\"",
+          "_key": "xa4"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xa5",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That's a much better problem. Because you can attack it.",
+          "_key": "xa6"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xa7",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 3: Stop Repeating the Same Practice",
+          "_key": "xa8"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xa9",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This is one of the most painful truths about preparation: you can work very hard and still practise ineffectively.",
+          "_key": "xaa"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xab",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you repeatedly do practice questions, check your score and move on without studying your mistakes, you may simply be repeating the same weaknesses.",
+          "_key": "xac"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xad",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You answer. You mark. You see the answer. You say \"oh, I understand now.\" Then you move on. A few days later, another version of the same question appears. And you miss it again.",
+          "_key": "xae"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xaf",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That isn't because you're unintelligent. You simply didn't complete the learning cycle. A better cycle is:",
+          "_key": "xag"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xah",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Learn → Practise → Diagnose → Correct → Reattempt → Repeat.",
+          "_key": "xai"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "xaj",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The Diagnose step matters. Don't skip it.",
+          "_key": "xak"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xal",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 4: Reattempt the Questions You Got Wrong",
+          "_key": "xam"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xan",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Here's something I want you to try. After reviewing your mistakes, don't immediately jump into another large test.",
+          "_key": "xao"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xap",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Take some of the questions you got wrong. Study the relevant concept. Understand why your original answer was wrong. Then close the explanation. Solve the question again yourself.",
+          "_key": "xaq"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xar",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If you can now solve it, good. But don't stop there. Try another question testing the same underlying idea. That's where you begin finding out whether you've actually fixed the problem. Because seeing a solution and understanding a solution are not always the same thing.",
+          "_key": "xas"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xat",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 5: Separate Knowledge Gaps From Careless Mistakes",
+          "_key": "xau"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xav",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This distinction can completely change your preparation.",
+          "_key": "xaw"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xax",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Imagine you got 10 questions wrong. You might think \"I need to study harder.\" But what if 4 were because you genuinely didn't know the material, 3 were because you rushed, 2 were because you misread the question, and 1 was because of a calculation mistake?",
+          "_key": "xay"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xaz",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then studying for another five hours may not be the best answer. You need to study the four knowledge gaps. But you also need to change how you take the test. Slow down slightly. Read the question properly. Check your calculations. Watch your timing.",
+          "_key": "xb0"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xb1",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "The solution isn't always more studying. Sometimes it is better execution.",
+          "_key": "xb2"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xb3",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 6: Check Whether You're Practising the Right Way",
+          "_key": "xb4"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xb5",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Another question: what kind of questions are you practising?",
+          "_key": "xb6"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xb7",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If every practice session consists of questions that you already find comfortable, your score may look good while your actual ability isn't growing much. On the other hand, if every question you practise is far beyond your current level, you may become frustrated without building enough confidence and understanding.",
+          "_key": "xb8"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xb9",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You need a useful progression. Start with questions that help you understand the concept. Then move into more varied application. Then mix topics. Eventually, practise under conditions that resemble the actual examination.",
+          "_key": "xba"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbb",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your practice should challenge you. But it should also teach you.",
+          "_key": "xbc"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbd",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 7: Stop Chasing Hours",
+          "_key": "xbe"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xbf",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I know the pressure around study hours. You hear \"I studied for 8 hours.\" Someone else says \"I study for 10 hours every day.\" Then you look at your own day and feel guilty because you managed three.",
+          "_key": "xbg"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbh",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Please be careful with this. Hours are not the same thing as learning. You can sit with a book for eight hours while your brain stopped absorbing anything two hours ago. And you can have a focused study session that produces more useful learning than a much longer distracted session.",
+          "_key": "xbi"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbj",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So instead of only asking \"how many hours did I study?\", also ask: \"what did I actually learn today?\" \"What can I now solve that I couldn't solve before?\" \"What mistake did I fix?\"",
+          "_key": "xbk"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbl",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Those questions are much more useful.",
+          "_key": "xbm"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbn",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 8: Check Your Mental State",
+          "_key": "xbo"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xbp",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This part is easy to ignore. But I don't want you to.",
+          "_key": "xbq"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbr",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If every practice test now feels like a judgment of your future, your brain can start approaching every question with fear. You see a difficult question: \"I'm finished.\" You get several questions wrong: \"I'm not improving.\" You see someone else's score: \"I'm behind.\" You don't complete your study target: \"I'm a failure.\"",
+          "_key": "xbs"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbt",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That cycle can become exhausting. And when you're exhausted, your concentration can suffer.",
+          "_key": "xbu"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbv",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "So if your preparation has become a constant battle with yourself, don't just increase the workload. Pause. Ask yourself: am I actually learning, or am I constantly trying to escape the fear of failure? Those are not the same thing.",
+          "_key": "xbw"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xbx",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You Are Allowed to Have a Bad Day",
+          "_key": "xby"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xbz",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Some days, you will perform badly. You will read something and not understand it. You will take a mock and score below your previous result. You will forget something you thought you knew. You may even have a day where you barely study.",
+          "_key": "xc0"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xc1",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "It happens. Don't turn one bad day into a story about your entire future. One bad practice test is data. It is not prophecy. Go through it. Learn from it. Then continue.",
+          "_key": "xc2"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xc3",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 9: Take a Proper Break When You Need One",
+          "_key": "xc4"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xc5",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "A break isn't scrolling social media for three hours while feeling guilty. That's usually not rest.",
+          "_key": "xc6"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xc7",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "A real break can be much simpler. Close the book. Put the phone away if you need to. Sleep. Eat. Stretch. Take a walk. Talk to your family. Pray. Go outside. Listen to something calming. Do something that reminds you that your entire life is not contained inside a JAMB examination.",
+          "_key": "xc8"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xc9",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then return to your preparation with a clearer mind. You are preparing for an examination. You are not fighting a war against yourself.",
+          "_key": "xca"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcb",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Step 10: Build a Smaller, Smarter Plan",
+          "_key": "xcc"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xcd",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If your score isn't moving, don't respond by making your timetable twice as heavy. Instead, make it more specific.",
+          "_key": "xce"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcf",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "For example, your next study cycle could be:",
+          "_key": "xcg"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xch",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Learn (focus on one identified weakness) → Practise (answer questions specifically targeting it) → Diagnose (review every important mistake) → Repair (revisit what caused the mistake) → Reattempt (solve similar questions without assistance) → Test (return to a mixed set later)",
+          "_key": "xci"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "xcj",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That is much more intentional than simply saying \"today I'll study Chemistry for four hours.\"",
+          "_key": "xck"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcl",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "What If Your Score Drops?",
+          "_key": "xcm"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xcn",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This deserves its own conversation. Sometimes you're improving and your practice score still goes down.",
+          "_key": "xco"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcp",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Don't panic immediately. Different questions have different difficulty levels. Your concentration can vary. Your timing can vary. Your mental state can vary. A single score doesn't tell the whole story.",
+          "_key": "xcq"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcr",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Look at the pattern over time, but more importantly, look at the quality of your mistakes. Are you now recognizing mistakes you used to make? Are you solving things that previously confused you? Are certain knowledge gaps disappearing? Are careless errors reducing?",
+          "_key": "xcs"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xct",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Those are signs worth paying attention to.",
+          "_key": "xcu"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcv",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "And Please Don't Compare Your Journey Too Much",
+          "_key": "xcw"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xcx",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Someone will tell you \"I got 280.\" Another person will say \"I'm already scoring 300.\" Someone else may post their mock result online. And suddenly your 190 feels like failure.",
+          "_key": "xcy"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xcz",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "But you don't know the full story behind their preparation. You don't know where they started. You don't know what resources they used. You don't know what their actual conditions were. And most importantly: their score is not your assignment.",
+          "_key": "xd0"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xd1",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your assignment is to understand where you are and improve from there.",
+          "_key": "xd2"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xd3",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If You're Under Pressure From Home",
+          "_key": "xd4"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xd5",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "This one is especially difficult. Maybe your parents have sacrificed a lot for you. Maybe they've told relatives that you're going to study Medicine, Law, Engineering, Pharmacy or something else. Maybe everybody is waiting for you to \"perform.\" And you feel like you cannot afford to disappoint them.",
+          "_key": "xd6"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xd7",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I understand why that pressure can feel heavy. But please don't allow the pressure to convince you that you have to destroy your mental health to prove that you are serious.",
+          "_key": "xd8"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xd9",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Talk to someone. If you can, explain what you're struggling with. And remember: your worth is bigger than the outcome of one examination.",
+          "_key": "xda"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xdb",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Do your best. Prepare seriously. Be disciplined. Ask for help when you need it. Pray. Rest. Keep going. But don't hate yourself into success.",
+          "_key": "xdc"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xdd",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If You Don't Know What to Change, Start Here",
+          "_key": "xde"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xdf",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Take your most recent practice test. Don't take another one today. Get a sheet of paper. Write down:",
+          "_key": "xdg"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xdh",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Knowledge gaps",
+          "_key": "xdi"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " — questions I genuinely didn't know.",
+          "_key": "xdj"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xdk",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Application gaps",
+          "_key": "xdl"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " — questions where I knew the material but couldn't apply it.",
+          "_key": "xdm"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xdn",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Careless mistakes",
+          "_key": "xdo"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " — questions I could have gotten right.",
+          "_key": "xdp"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xdq",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Timing/attention",
+          "_key": "xdr"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " — questions affected by rushing, misreading or concentration.",
+          "_key": "xds"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xdt",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [
+            "strong"
+          ],
+          "text": "Unfamiliar questions",
+          "_key": "xdu"
+        },
+        {
+          "_type": "span",
+          "marks": [],
+          "text": " — questions where I didn't recognize how to approach the problem.",
+          "_key": "xdv"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal",
+      "level": 1,
+      "listItem": "bullet"
+    },
+    {
+      "_key": "xdw",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Then count the patterns. Not because the numbers themselves are magical. But because now you have evidence. Your next study session should respond to what you found. That's diagnosis. And that's much better than simply studying harder because you're scared.",
+          "_key": "xdx"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xdy",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "What I Want You to Remember",
+          "_key": "xdz"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xe0",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "If your score isn't improving right now, I don't want your first thought to be:",
+          "_key": "xe1"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xe2",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Maybe I can't do this.",
+          "_key": "xe3"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "xe4",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I want you to ask:",
+          "_key": "xe5"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xe6",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "What is my preparation trying to tell me?",
+          "_key": "xe7"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "blockquote"
+    },
+    {
+      "_key": "xe8",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Maybe you need to learn something properly. Maybe you need to practise differently. Maybe you need to stop making the same careless mistakes. Maybe you need to review your wrong answers instead of simply counting your score. Maybe you need better questions. Maybe you need sleep. Maybe you need a day off. Maybe you need to talk to someone. Maybe you need to pray and breathe and remember why you started.",
+          "_key": "xe9"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xea",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Whatever the problem is, find the problem before you try to fix it.",
+          "_key": "xeb"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xec",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You Are Not Behind Because You Are Struggling",
+          "_key": "xed"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "h2"
+    },
+    {
+      "_key": "xee",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "I want to end with this because I know somebody reading this is probably tired.",
+          "_key": "xef"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xeg",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You have probably looked at your score more times than you care to admit. You have probably wondered whether all this effort will eventually pay off. Maybe you've cried over it. Maybe you've compared yourself with someone else. Maybe you've started doubting yourself.",
+          "_key": "xeh"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xei",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Please listen to me. You are allowed to be discouraged. You are allowed to say \"this is hard.\" Because sometimes it really is hard.",
+          "_key": "xej"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xek",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "But don't let a difficult season convince you that you are incapable. You don't need to solve your entire JAMB preparation tonight. You don't need to suddenly become the student who studies for ten hours every day. You don't need to know everything at once.",
+          "_key": "xel"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xem",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "You need to understand where you are, identify what is holding you back, and take the next right step. Then another. And another.",
+          "_key": "xen"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xeo",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Pray. Study. Practise. Rest. Reflect. Ask for help. Come back when you fall off. And keep going.",
+          "_key": "xep"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xeq",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Because sometimes progress doesn't look like a dramatic jump in your score. Sometimes progress is finally understanding the question you used to fear. Sometimes it is noticing a careless mistake before submitting. Sometimes it is realizing that you don't need another five hours — you need proper sleep. Sometimes it is simply opening your book again after a very discouraging day.",
+          "_key": "xer"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xes",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "That counts too.",
+          "_key": "xet"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    },
+    {
+      "_key": "xeu",
+      "children": [
+        {
+          "_type": "span",
+          "marks": [],
+          "text": "Your JAMB score is important. Your future matters. Your preparation matters. But you matter too. Don't lose yourself while trying to get the score.",
+          "_key": "xev"
+        }
+      ],
+      "markDefs": [],
+      "_type": "block",
+      "style": "normal"
+    }
+  ],
+};
+
+async function seedTwelfthArticle() {
+  await seedArticle(TWELFTH_ARTICLE);
+}
+
+async function seedThirteenthArticle() {
+  await seedArticle(THIRTEENTH_ARTICLE);
+}
+
+
 async function seedArticle(a) {
   await client.createIfNotExists({
     _id: a.id,
@@ -17398,6 +21297,8 @@ async function main() {
   await seedNinthArticle();
   await seedTenthArticle();
   await seedEleventhArticle();
+  await seedTwelfthArticle();
+  await seedThirteenthArticle();
   console.log('\nDone.');
 }
 
