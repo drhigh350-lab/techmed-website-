@@ -3,6 +3,7 @@ import '../styles/tokens.css';
 import '../styles/global.css';
 import Navbar from '../components/Navbar.astro';
 import Footer from '../components/Footer.astro';
+import AnnouncementBanner from '../components/AnnouncementBanner.astro';
 import { getWhatsappChannelUrl } from '../lib/sanity';
 
 interface Props {
@@ -59,13 +60,26 @@ const structuredData = [organizationSchema, ...jsonLd];
          paint-relevant, so a returning visitor's stored theme applies
          before first paint rather than flashing the default light theme
          first. Light remains correct for a no-JS visitor via the static
-         data-theme="light" attribute above. -->
+         data-theme="light" attribute above.
+
+         Reads BOTH localStorage and a long-lived cookie, not just
+         localStorage: a lot of this site's traffic arrives through the
+         WhatsApp in-app browser and iOS Safari, both of which are known
+         to purge script-writable storage (localStorage included) after
+         about a week of no interaction, or between in-app-browser
+         sessions — the exact "the toggle doesn't stick" symptom. Two
+         independent stores mean either one surviving is enough; whichever
+         wins here also gets written back to the other so they stay in
+         sync going forward. -->
     <script is:inline>
       (function () {
         try {
-          var stored = localStorage.getItem('techmed-theme');
+          var fromCookie = document.cookie.match(/(?:^|; )techmed-theme=(dark|light)/);
+          var stored = localStorage.getItem('techmed-theme') || (fromCookie ? fromCookie[1] : null);
           if (stored === 'dark' || stored === 'light') {
             document.documentElement.setAttribute('data-theme', stored);
+            try { localStorage.setItem('techmed-theme', stored); } catch (e) {}
+            document.cookie = 'techmed-theme=' + stored + '; max-age=315360000; path=/; SameSite=Lax';
           }
         } catch (e) {}
       })();
@@ -111,6 +125,7 @@ const structuredData = [organizationSchema, ...jsonLd];
     />
   </head>
   <body>
+    <AnnouncementBanner />
     <Navbar />
     <slot />
     <Footer />

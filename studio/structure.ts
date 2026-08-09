@@ -25,6 +25,10 @@ export const structure: StructureResolver = (S) =>
         .title('UTME 2027 Builder Settings')
         .id('utmeBuilderSettings')
         .child(S.document().schemaType('utmeBuilderSettings').documentId('utmeBuilderSettings')),
+      S.listItem()
+        .title('Announcement Banner')
+        .id('announcementBanner')
+        .child(S.document().schemaType('announcementBanner').documentId('announcementBanner')),
       S.divider(),
       S.documentTypeListItem('faqItem').title('FAQ'),
       S.divider(),

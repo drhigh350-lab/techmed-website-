@@ -118,12 +118,16 @@ async function seedFaqItems() {
     {
       question: 'How do I actually join?',
       answer:
-        'Tap "Join Builder Cohort" to join the TECHMED WhatsApp Channel — that\'s where onboarding, your Builder Cohort assignment, and everything else begins.',
+        'Tap "Join the Builders" to follow the official UTME 2027 Builders Channel — that\'s where TECHMED shares updates, resources and announcements. When a free tutorial cohort is open, you can join it directly from the Builders page.',
     },
   ];
 
+  // createOrReplace, not createIfNotExists: this content is authored and
+  // corrected entirely through this script (see the identical reasoning
+  // on seedArticle), so a correction like the one above needs to actually
+  // land in Sanity on the next run, not get silently skipped forever.
   for (const [index, faq] of faqs.entries()) {
-    await client.createIfNotExists({
+    await client.createOrReplace({
       _id: `faq-${index + 1}`,
       _type: 'faqItem',
       order: index + 1,
@@ -187,6 +191,22 @@ async function seedUtmeBuilderSettings() {
     tutorialEndDate: '2026-11-09',
   });
   console.log('✓ utmeBuilderSettings');
+}
+
+// createIfNotExists — this is the whole point of the banner: TECHMED
+// hand-edits it in Studio (new message, new CTA, flip active on/off) for
+// whatever's current (free tutorials now, paid tutorials or JAMB news
+// later), and a reseed must never overwrite that.
+async function seedAnnouncementBanner() {
+  await client.createIfNotExists({
+    _id: 'announcementBanner',
+    _type: 'announcementBanner',
+    active: false,
+    message: 'Free UTME 2027 Tutorials — 5 October to 9 November.',
+    ctaLabel: 'Join the Builders',
+    ctaUrl: 'https://whatsapp.com/channel/0029Vb8nzXH545v4f8EF103D',
+  });
+  console.log('✓ announcementBanner');
 }
 
 // Verbatim from web/src/lib/syllabus.ts's FALLBACK_SUBJECTS — the real
@@ -21319,6 +21339,7 @@ async function main() {
   await seedFaqItems();
   await seedFounder();
   await seedUtmeBuilderSettings();
+  await seedAnnouncementBanner();
   await seedSubjects();
   await seedResources();
   await seedArticleCategories();

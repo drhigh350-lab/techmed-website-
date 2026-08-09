@@ -11,4 +11,10 @@ export default defineConfig({
   output: 'static',
   adapter: cloudflare(),
   integrations: [sitemap()],
+  redirects: {
+    // /join's unique content (4H Standard, Builder Rules, the cohort-join
+    // link) was folded into /utme-2027/builders itself, so a student never
+    // has to click through a second page to reach it.
+    '/utme-2027/builders/join': '/utme-2027/builders',
+  },
 });

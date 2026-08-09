@@ -1,0 +1,125 @@
+---
+// Sitewide announcement strip — text only, deliberately: on a fully
+// static site an image here would ship real bytes and layout-shift risk
+// on every single page load, while text costs almost nothing and can be
+// swapped from Sanity in seconds. See web/src/lib/banner.ts.
+import { getAnnouncementBanner } from '../lib/banner';
+
+const banner = await getAnnouncementBanner();
+const isExternal = banner ? /^https?:\/\//.test(banner.ctaUrl) : false;
+// Keyed to the message text itself, not a fixed id — a dismissed banner
+// stays dismissed for that exact announcement, but a new one (different
+// message) shows again even in the same browser session.
+const dismissKey = banner ? `techmed-banner-dismissed:${banner.message}` : '';
+---
+
+{banner && (
+  <div class="banner" data-banner data-dismiss-key={dismissKey}>
+    <div class="banner-inner">
+      <p class="banner-message">
+        {banner.message}
+        {' '}
+        <a
+          class="banner-cta"
+          href={banner.ctaUrl}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener' : undefined}
+        >
+          {banner.ctaLabel} <span aria-hidden="true">&rarr;</span>
+        </a>
+      </p>
+      <button type="button" class="banner-close" data-banner-close aria-label="Dismiss this announcement">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" aria-hidden="true">
+          <path d="M6 6l12 12M18 6L6 18" />
+        </svg>
+      </button>
+    </div>
+    <script is:inline define:vars={{ dismissKey }}>
+      (function () {
+        var banner = document.currentScript.closest('[data-banner]');
+        if (!banner) return;
+        try {
+          if (dismissKey && sessionStorage.getItem(dismissKey) === '1') {
+            banner.classList.add('dismissed');
+          }
+        } catch (e) {}
+        var closeBtn = banner.querySelector('[data-banner-close]');
+        closeBtn?.addEventListener('click', function () {
+          banner.classList.add('dismissed');
+          try {
+            if (dismissKey) sessionStorage.setItem(dismissKey, '1');
+          } catch (e) {}
+        });
+      })();
+    </script>
+  </div>
+)}
+
+<style>
+  .banner {
+    background: var(--surface-dark);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .banner.dismissed {
+    display: none;
+  }
+
+  .banner-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px var(--space-6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+
+  .banner-message {
+    font-size: 0.85rem;
+    color: var(--text-light-on-dark-surface);
+    text-align: center;
+  }
+
+  .banner-cta {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .banner-cta:hover {
+    text-decoration: underline;
+  }
+
+  .banner-close {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    background: none;
+    border: none;
+    color: var(--text-light-on-dark-surface);
+    cursor: pointer;
+    transition: color 150ms ease;
+  }
+
+  .banner-close:hover {
+    color: var(--text-on-dark-surface);
+  }
+
+  @media (max-width: 560px) {
+    .banner-inner {
+      padding: 10px var(--space-4);
+      gap: var(--space-2);
+    }
+
+    .banner-message {
+      font-size: 0.78rem;
+      text-align: left;
+    }
+  }
+</style>

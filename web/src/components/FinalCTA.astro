@@ -1,12 +1,12 @@
 ---
-import { getWhatsappChannelUrl } from '../lib/sanity';
-const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
+import { getBuilderSettings } from '../lib/builders';
+const { channelUrl } = await getBuilderSettings();
 ---
 
 <section class="cta-section reveal">
   <h2>Brick by brick. Day by day.</h2>
   <p>You don't have to prepare alone.</p>
-  <a class="cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Join Builder Cohort</a>
+  <a class="cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
 </section>
 
 <style>

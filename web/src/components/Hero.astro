@@ -4,8 +4,8 @@
 // Standard's primary tagline. Copy is unchanged from v1.0; this pass only
 // adds background/motion polish (blueprint grid, radial glow, subtle
 // float) — restrained, Apple/Linear/Stripe-style, not flashy.
-import { getWhatsappChannelUrl } from '../lib/sanity';
-const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
+import { getBuilderSettings } from '../lib/builders';
+const { channelUrl } = await getBuilderSettings();
 ---
 
 <section class="hero" id="join-builder-cohort">
@@ -22,7 +22,7 @@ const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
       with clarity, guesswork with strategy, and inconsistency with systems
       that keep working — even on the hardest days.
     </p>
-    <a class="cta" href={WHATSAPP_CHANNEL} target="_blank" rel="noopener">Join Builder Cohort</a>
+    <a class="cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
   </div>
 </section>
 

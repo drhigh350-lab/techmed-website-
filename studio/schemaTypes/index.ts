@@ -8,6 +8,7 @@ import syllabusTopic from './syllabusTopic';
 import article from './article';
 import articleCategory from './articleCategory';
 import utmeBuilderSettings from './utmeBuilderSettings';
+import announcementBanner from './announcementBanner';
 
 export const schemaTypes = [
   siteSettings,
@@ -15,6 +16,7 @@ export const schemaTypes = [
   faqItem,
   founder,
   utmeBuilderSettings,
+  announcementBanner,
   resource,
   subject,
   syllabusTopic,
