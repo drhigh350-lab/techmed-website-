@@ -121,6 +121,14 @@ const structuredData = [organizationSchema, ...jsonLd];
       // time it enters the viewport.
       document.body.classList.add('js-reveal-ready');
 
+      // threshold is a fraction of the TARGET's own height, not the
+      // viewport's — a value like 0.15 only works for elements shorter
+      // than ~6-7 viewport heights. A long-form article body can be many
+      // times taller than that, making 15% of its height physically
+      // larger than any viewport, so isIntersecting would never become
+      // true and the element would stay permanently hidden. threshold: 0
+      // fires as soon as any part of an element is visible, which works
+      // regardless of how tall the element is.
       const observer = new IntersectionObserver(
         (entries) => {
           for (const entry of entries) {
@@ -130,7 +138,7 @@ const structuredData = [organizationSchema, ...jsonLd];
             }
           }
         },
-        { threshold: 0.15, rootMargin: '0px 0px -40px 0px' },
+        { threshold: 0, rootMargin: '0px 0px -40px 0px' },
       );
 
       document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));

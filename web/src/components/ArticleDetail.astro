@@ -82,7 +82,7 @@ const authorName = article.author?.name ?? 'TECHMED';
     <SubjectStageFlow subjectName={article.relatedBlueprints[0].name} stages={article.relatedBlueprints[0].stages} />
   )}
 
-  <div class="body reveal" set:html={bodyHtml} />
+  <div class="body" set:html={bodyHtml} />
 
   <div class="end-share reveal">
     <ShareButton url={pageUrl} title={article.title} />
