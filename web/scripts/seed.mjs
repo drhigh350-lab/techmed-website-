@@ -10,13 +10,14 @@
 //   node scripts/seed.mjs
 //
 // Safe to re-run, and safe to hand-edit content in Sanity Studio in
-// between runs: every document (except subjects, see seedSubjects' own
-// note) uses createIfNotExists with a fixed _id — the first run creates
-// it, every run after that is a no-op if the document already exists, so
-// it never resets anything edited by hand in Studio since the last run.
-// If you ever need this script to push a deliberate correction to an
-// already-seeded document again, delete that one document in Studio
-// first, then re-run — createIfNotExists will recreate it from scratch.
+// between runs: every document (except subjects and articles, see
+// seedSubjects' and seedArticle's own notes) uses createIfNotExists with a
+// fixed _id — the first run creates it, every run after that is a no-op if
+// the document already exists, so it never resets anything edited by hand
+// in Studio since the last run. If you ever need this script to push a
+// deliberate correction to an already-seeded document again, delete that
+// one document in Studio first, then re-run — createIfNotExists will
+// recreate it from scratch.
 //
 // Subject roadmap images / guide PDFs: this script cannot invent those —
 // drop them into scripts/assets/roadmaps/<slug>.(png|jpg) and
@@ -628,9 +629,8 @@ async function seedArticleCategories() {
 // Portable-text block builder — keeps the article content below readable
 // as prose instead of a wall of _key/_type boilerplate. Random keys are
 // fine: Sanity only needs uniqueness within the array. Note that
-// seedArticle() now uses createIfNotExists (see the top-of-file note) —
-// these keys only ever apply the first time a given article is created,
-// not on every re-run.
+// seedArticle() uses createOrReplace (see its own comment) — a fresh set
+// of keys is generated and written on every run, not just the first.
 let keyCounter = 0;
 function key(prefix) {
   keyCounter += 1;
@@ -20968,8 +20968,18 @@ async function seedThirteenthArticle() {
 }
 
 
+// Deliberately createOrReplace, not createIfNotExists like everything else
+// in this file: these 13 articles are authored and iterated on entirely
+// through this script (never hand-edited in Studio), so every correction
+// made here — a fixed link, a stripped AI-generation artifact, a new field
+// like showStageFlow — needs to actually land on re-run. With
+// createIfNotExists, the very first run of each article's _id would have
+// permanently frozen whatever that article's body looked like at the time,
+// silently ignoring every later fix in this file unless the document was
+// deleted in Studio first. That mismatch is the leading suspect behind
+// articles appearing to have no body text on the live site.
 async function seedArticle(a) {
-  await client.createIfNotExists({
+  await client.createOrReplace({
     _id: a.id,
     _type: 'article',
     title: a.title,
