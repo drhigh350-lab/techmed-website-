@@ -70,6 +70,14 @@ const structuredData = [organizationSchema, ...jsonLd];
         } catch (e) {}
       })();
     </script>
+    <!-- Tells the browser this page manages its own light/dark appearance
+         (see the theme system above) and already renders correctly in
+         either — without this, some Android browsers apply their own
+         "Force Dark" color-inversion heuristic on top of ours, which can
+         land on text colors that end up matching their own background
+         (selectable, but invisible) on complex injected content like an
+         article body. -->
+    <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
