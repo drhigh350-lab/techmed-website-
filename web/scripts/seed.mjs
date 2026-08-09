@@ -20982,6 +20982,7 @@ async function seedArticle(a) {
     ...(a.updatedAt ? { updatedAt: a.updatedAt } : {}),
     featured: a.featured,
     showMethodDiagram: a.showMethodDiagram,
+    showStageFlow: a.showStageFlow,
     faq: a.faq.map((item) => ({ _type: 'faqItem', _key: key('faq'), ...item })),
     body: a.body,
     relatedBlueprints: a.relatedBlueprintSlugs.map((slug) => ({

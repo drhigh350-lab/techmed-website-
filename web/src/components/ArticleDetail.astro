@@ -9,13 +9,15 @@ import { renderArticleBody, type Article } from '../lib/articles';
 import PlaceholderPreview from './PlaceholderPreview.astro';
 import TechmedMethodDiagram from './TechmedMethodDiagram.astro';
 import SubjectStageFlow from './SubjectStageFlow.astro';
+import ShareButton from './ShareButton.astro';
 
 interface Props {
   article: Article;
   relatedArticles?: Article[];
+  pageUrl: string;
 }
 
-const { article, relatedArticles = [] } = Astro.props;
+const { article, relatedArticles = [], pageUrl } = Astro.props;
 
 const bodyHtml = renderArticleBody(article.body);
 
@@ -31,6 +33,7 @@ const updatedLabel = article.updatedAt
 const authorName = article.author?.name ?? 'TECHMED';
 ---
 
+<div class="layout">
 <article class="detail">
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/blog">Blog</a>
@@ -53,6 +56,9 @@ const authorName = article.author?.name ?? 'TECHMED';
           <time datetime={article.publishedAt}>{publishedLabel}</time>
           {updatedLabel && <span> · Updated {updatedLabel}</span>}
         </span>
+      </div>
+      <div class="byline-share">
+        <ShareButton url={pageUrl} title={article.title} />
       </div>
     </div>
 
@@ -77,6 +83,10 @@ const authorName = article.author?.name ?? 'TECHMED';
   )}
 
   <div class="body reveal" set:html={bodyHtml} />
+
+  <div class="end-share reveal">
+    <ShareButton url={pageUrl} title={article.title} />
+  </div>
 
   {article.tags && article.tags.length > 0 && (
     <ul class="tags">
@@ -146,7 +156,7 @@ const authorName = article.author?.name ?? 'TECHMED';
   </section>
 
   {relatedArticles.length > 0 && (
-    <section class="related-articles reveal">
+    <section class="related-articles mobile-only reveal">
       <h2>More From the Blog</h2>
       <ul>
         {relatedArticles.map((item) => (
@@ -159,11 +169,105 @@ const authorName = article.author?.name ?? 'TECHMED';
   )}
 </article>
 
+{relatedArticles.length > 0 && (
+  <aside class="sidebar" aria-label="More from the Blog">
+    <div class="sidebar-inner">
+      <p class="sidebar-label">More From the Blog</p>
+      <ul>
+        {relatedArticles.map((item) => (
+          <li>
+            <a href={`/blog/${item.slug}`}>{item.title}</a>
+          </li>
+        ))}
+      </ul>
+    </div>
+  </aside>
+)}
+</div>
+
 <style>
+  .layout {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 var(--space-6);
+  }
+
+  @media (min-width: 1100px) {
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 720px) 300px;
+      gap: var(--space-12);
+      align-items: start;
+    }
+
+    .related-articles.mobile-only {
+      display: none;
+    }
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  @media (min-width: 1100px) {
+    .sidebar {
+      display: block;
+      position: sticky;
+      top: calc(var(--space-6) + 88px);
+      padding-top: var(--space-16);
+    }
+  }
+
+  .sidebar-inner {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+  }
+
+  .sidebar-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-4);
+  }
+
+  .sidebar-inner ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .sidebar-inner li {
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-inner li:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .sidebar-inner a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .sidebar-inner a:hover {
+    color: var(--accent-text);
+  }
+
   .detail {
     max-width: 720px;
-    margin: 0 auto;
-    padding: var(--space-16) var(--space-6) var(--space-24);
+    padding: var(--space-16) 0 var(--space-24);
   }
 
   .breadcrumb {
@@ -216,8 +320,19 @@ const authorName = article.author?.name ?? 'TECHMED';
   .byline {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: var(--space-3);
     margin-bottom: var(--space-8);
+  }
+
+  .byline-share {
+    margin-left: auto;
+  }
+
+  .end-share {
+    display: flex;
+    justify-content: center;
+    margin: var(--space-10) 0;
   }
 
   .author-photo {
@@ -531,6 +646,11 @@ const authorName = article.author?.name ?? 'TECHMED';
   @media (max-width: 560px) {
     .byline {
       align-items: flex-start;
+    }
+
+    .byline-share {
+      margin-left: 0;
+      width: 100%;
     }
   }
 </style>
