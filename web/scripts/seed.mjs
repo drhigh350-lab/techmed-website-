@@ -144,7 +144,7 @@ async function seedFounder() {
     _id: 'founder',
     _type: 'founder',
     name: 'Wisdom Johnson',
-    role: 'Tutor TechMed',
+    role: 'CEO, TECHMED',
     label: 'A Note From the Founder',
     ...(photoAssetId
       ? { photo: { _type: 'image', asset: { _type: 'reference', _ref: photoAssetId } } }
