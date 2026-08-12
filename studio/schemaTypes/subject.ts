@@ -80,6 +80,35 @@ export default defineType({
                       type: 'string',
                       description: 'Used at /jamb-syllabus/<subject>/<slug> once this topic has its own syllabusTopic document. Leave empty until then.',
                     }),
+                    defineField({
+                      name: 'examWeight',
+                      title: 'Exam Weight',
+                      type: 'object',
+                      description: 'From the TECHMED Blueprint\'s yield badge (e.g. "HIGH YIELD · ~4-5 of 40"). A directional guide, not an official JAMB figure -- leave empty rather than estimate if no Blueprint badge exists yet for this topic.',
+                      fields: [
+                        defineField({ name: 'min', title: 'Min Questions', type: 'number', validation: (Rule) => Rule.integer().min(0) }),
+                        defineField({ name: 'max', title: 'Max Questions', type: 'number', validation: (Rule) => Rule.integer().min(0) }),
+                        defineField({
+                          name: 'tier',
+                          title: 'Tier',
+                          type: 'string',
+                          options: { list: ['foundational', 'low', 'medium', 'high'] },
+                        }),
+                      ],
+                      preview: {
+                        select: { min: 'min', max: 'max', tier: 'tier' },
+                        prepare({ min, max, tier }) {
+                          return { title: tier ? `${tier} · ~${min}-${max}` : undefined };
+                        },
+                      },
+                    }),
+                    defineField({
+                      name: 'prerequisites',
+                      title: 'Prerequisites',
+                      type: 'array',
+                      of: [{ type: 'string' }],
+                      description: 'Titles of other topics in this same subject that the Blueprint states this one requires (not just "helps with"). Must match another topic\'s Title exactly, elsewhere in this subject\'s stage list.',
+                    }),
                   ],
                   preview: { select: { title: 'title' } },
                 },

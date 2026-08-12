@@ -44,6 +44,10 @@ export interface PlannedTopic {
   topicSlug?: string;
   /** Stable key for tracking completion in storage, independent of array position. */
   key: string;
+  /** From the Blueprint's yield badge, where documented -- drives topicHours() below. Absent for topics the Blueprint hasn't detailed yet. */
+  examWeight?: { min: number; max: number; tier: 'foundational' | 'low' | 'medium' | 'high' };
+  /** Titles (within the same subject) this topic depends on, from the Blueprint's "Before You Start" guidance. Used to keep sequencing dependency-aware instead of pure stage-array order. */
+  prerequisites?: string[];
 }
 
 export interface WeekPlan {
@@ -85,6 +89,37 @@ const HOURS_PER_TOPIC_FIRST_PASS = 2.5;
 const HOURS_PER_TOPIC_REVIEW = 1;
 
 const CONFIDENCE_WEIGHT: Record<ConfidenceLevel, number> = { low: 3, medium: 2, high: 1 };
+
+// Higher-yield topics get proportionally more study time out of a
+// subject's weekly budget; lower-yield ones move faster. A topic with no
+// Blueprint yield data yet (see the Fluids/Heat/Magnetism gap in
+// syllabus.ts) falls back to the 'medium' multiplier -- i.e. behaves
+// exactly like the flat HOURS_PER_TOPIC_FIRST_PASS constant did before
+// this weighting existed.
+const YIELD_HOUR_MULTIPLIER: Record<'foundational' | 'low' | 'medium' | 'high', number> = {
+  foundational: 0.7,
+  low: 0.75,
+  medium: 1,
+  high: 1.35,
+};
+
+function topicHours(topic: Pick<PlannedTopic, 'examWeight'>): number {
+  const tier = topic.examWeight?.tier ?? 'medium';
+  return HOURS_PER_TOPIC_FIRST_PASS * YIELD_HOUR_MULTIPLIER[tier];
+}
+
+/** How many topics (walked in order) a given total hour budget covers, at each topic's own yield-weighted cost -- the coverage-warning counterpart to the weekly assignment loop's accumulator. */
+function topicsFittingBudget(topics: PlannedTopic[], totalHours: number): number {
+  let budget = totalHours;
+  let count = 0;
+  for (const topic of topics) {
+    const cost = topicHours(topic);
+    if (budget < cost) break;
+    budget -= cost;
+    count++;
+  }
+  return count;
+}
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -144,10 +179,42 @@ function flattenSubjectTopics(subject: Subject, startingStageIndex: number): Pla
         topicTitle: topic.title,
         topicSlug: topic.slug,
         key: topicKey(subject.slug, stage.order, topic.title),
+        examWeight: topic.examWeight,
+        prerequisites: topic.prerequisites,
       });
     }
   }
-  return out;
+  return orderByPrerequisites(out);
+}
+
+/**
+ * Stable topological sort: keeps the Blueprint's own stage/array order as
+ * the tie-break, but pulls a topic later whenever one of its stated
+ * prerequisites (from the *same* subject) hasn't been placed yet -- e.g.
+ * Physics's Waves depends on Motion from an earlier stage, and Biology's
+ * Foundations stage has two independent valid starting points rather than
+ * one strict chain. A prerequisite title that isn't present in this list
+ * at all (already covered via startingStageIndex, or a title that doesn't
+ * match anything -- bad data should never crash sequencing) is treated as
+ * already satisfied, not as a block.
+ */
+function orderByPrerequisites(topics: PlannedTopic[]): PlannedTopic[] {
+  const titlesInList = new Set(topics.map((t) => t.topicTitle));
+  const placed = new Set<string>();
+  const remaining = [...topics];
+  const ordered: PlannedTopic[] = [];
+
+  while (remaining.length > 0) {
+    const readyIndex = remaining.findIndex((t) =>
+      (t.prerequisites ?? []).every((p) => !titlesInList.has(p) || placed.has(p)),
+    );
+    // readyIndex === -1 only happens on a prerequisite cycle (bad data) --
+    // fall back to the next topic in original order rather than stalling.
+    const [topic] = remaining.splice(readyIndex === -1 ? 0 : readyIndex, 1);
+    ordered.push(topic);
+    placed.add(topic.topicTitle);
+  }
+  return ordered;
 }
 
 export interface BuildPlanOptions {
@@ -182,10 +249,11 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
     // 8 weeks has 21.6 hrs total, which is a meaningfully different
     // (and correct) topic budget from flooring 2.7/2.5 to "0 extra topics
     // a week" and multiplying that by 8. The per-week assignment loop
-    // below uses the same accumulator logic so this number is honest
-    // about what will actually get scheduled.
+    // below uses the same accumulator logic, walking topics in the same
+    // (now prerequisite-aware, yield-weighted) order, so this number is
+    // honest about what will actually get scheduled.
     const weeklyHours = subjectWeeklyHours[subjectInput.slug] ?? 0;
-    const topicsThatFit = Math.floor((weeklyHours * buildWeeks) / HOURS_PER_TOPIC_FIRST_PASS);
+    const topicsThatFit = topicsFittingBudget(remaining, weeklyHours * buildWeeks);
     if (topicsThatFit < remaining.length) {
       warnings.push({
         subjectSlug: subjectInput.slug,
@@ -218,11 +286,11 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
       const queue = queues.get(subjectInput.slug) ?? [];
       let budget = (hourBudget.get(subjectInput.slug) ?? 0) + weeklyHours;
 
-      while (budget >= HOURS_PER_TOPIC_FIRST_PASS && queue.length > 0) {
+      while (queue.length > 0 && budget >= topicHours(queue[0])) {
         const [topic] = queue.splice(0, 1);
         topics.push(topic);
         covered.push(topic);
-        budget -= HOURS_PER_TOPIC_FIRST_PASS;
+        budget -= topicHours(topic);
       }
       hourBudget.set(subjectInput.slug, budget);
     }

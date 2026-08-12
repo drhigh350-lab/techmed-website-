@@ -18,6 +18,23 @@ export interface SubjectTopicOutline {
   title: string;
   /** Set only once this topic has its own syllabusTopic document to link to. */
   slug?: string;
+  /**
+   * Estimated share of the exam this topic carries, from the TECHMED
+   * Blueprint's per-topic yield badges (e.g. "HIGH YIELD · ~4-5 of 40").
+   * A directional guide only, not an official JAMB figure. Absent where
+   * the Blueprint doesn't (yet) cover this topic in that detail -- never
+   * guessed to fill a gap.
+   */
+  examWeight?: { min: number; max: number; tier: 'foundational' | 'low' | 'medium' | 'high' };
+  /**
+   * Titles of other topics in the same subject this one depends on, from
+   * the Blueprint's "Before You Start" guidance -- only the dependencies
+   * stated as required, not topics noted as merely "helps." Absent/empty
+   * means this is a valid starting point (or one of several) within its
+   * stage, matching the Blueprint's own "Nothing -- this is a good place
+   * to start" framing.
+   */
+  prerequisites?: string[];
 }
 
 export interface SubjectStage {
@@ -88,43 +105,101 @@ export const FALLBACK_SUBJECTS: Subject[] = [
         name: '01 — Foundations',
         order: 1,
         topics: [
-          { title: 'Separation of Mixtures & Purification' },
-          { title: 'Chemical Combination' },
-          { title: 'Kinetic Theory & Gas Laws' },
-          { title: 'Atomic Structure & Bonding' },
+          { title: 'Separation of Mixtures & Purification', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          { title: 'Chemical Combination', examWeight: { min: 4, max: 5, tier: 'high' } },
+          {
+            title: 'Kinetic Theory & Gas Laws',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Chemical Combination'],
+          },
+          { title: 'Atomic Structure & Bonding', examWeight: { min: 6, max: 7, tier: 'high' } },
         ],
       },
       {
         name: '02 — Quantitative Core',
         order: 2,
         topics: [
-          { title: 'Air' },
-          { title: 'Water' },
-          { title: 'Solubility' },
-          { title: 'Environmental Pollution' },
-          { title: 'Acids, Bases & Salts' },
+          {
+            title: 'Air',
+            examWeight: { min: 1, max: 2, tier: 'foundational' },
+            prerequisites: ['Separation of Mixtures & Purification', 'Atomic Structure & Bonding'],
+          },
+          { title: 'Water', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          {
+            title: 'Solubility',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Water', 'Chemical Combination'],
+          },
+          {
+            title: 'Environmental Pollution',
+            examWeight: { min: 1, max: 2, tier: 'foundational' },
+            prerequisites: ['Air', 'Water'],
+          },
+          {
+            title: 'Acids, Bases & Salts',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Chemical Combination', 'Atomic Structure & Bonding'],
+          },
         ],
       },
       {
         name: '03 — Reactions & Energy',
         order: 3,
         topics: [
-          { title: 'Oxidation & Reduction' },
-          { title: 'Electrolysis' },
-          { title: 'Energy Changes' },
-          { title: 'Rates of Chemical Reaction' },
-          { title: 'Chemical Equilibrium' },
+          {
+            title: 'Oxidation & Reduction',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Atomic Structure & Bonding'],
+          },
+          {
+            title: 'Electrolysis',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Oxidation & Reduction'],
+          },
+          {
+            title: 'Energy Changes',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Chemical Combination'],
+          },
+          { title: 'Rates of Chemical Reaction', examWeight: { min: 3, max: 4, tier: 'medium' } },
+          {
+            title: 'Chemical Equilibrium',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Rates of Chemical Reaction', 'Acids, Bases & Salts'],
+          },
         ],
       },
       {
         name: '04 — Applied Inorganic',
         order: 4,
-        topics: [{ title: 'Non-metals & Their Compounds' }, { title: 'Metals & Their Compounds' }],
+        topics: [
+          {
+            title: 'Non-metals & Their Compounds',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Oxidation & Reduction', 'Electrolysis', 'Kinetic Theory & Gas Laws'],
+          },
+          {
+            title: 'Metals & Their Compounds',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Non-metals & Their Compounds', 'Oxidation & Reduction', 'Electrolysis'],
+          },
+        ],
       },
       {
         name: '05 — Organic & Industry',
         order: 5,
-        topics: [{ title: 'Organic Compounds' }, { title: 'Chemistry & Industry' }],
+        topics: [
+          {
+            title: 'Organic Compounds',
+            examWeight: { min: 8, max: 9, tier: 'high' },
+            prerequisites: ['Atomic Structure & Bonding', 'Chemical Combination'],
+          },
+          {
+            title: 'Chemistry & Industry',
+            examWeight: { min: 1, max: 2, tier: 'foundational' },
+            prerequisites: ['Organic Compounds', 'Metals & Their Compounds'],
+          },
+        ],
       },
     ],
   },
@@ -137,21 +212,53 @@ export const FALLBACK_SUBJECTS: Subject[] = [
     topicCount: 38,
     relatedResourceSlug: 'physics-booster-system',
     stages: [
-      { name: '01 — Foundations', order: 1, topics: [{ title: 'Measurements & Units' }, { title: 'Scalars & Vectors' }] },
+      {
+        name: '01 — Foundations',
+        order: 1,
+        topics: [
+          { title: 'Measurements & Units', examWeight: { min: 2, max: 3, tier: 'foundational' } },
+          { title: 'Scalars & Vectors', examWeight: { min: 3, max: 4, tier: 'high' } },
+        ],
+      },
       {
         name: '02 — Mechanics',
         order: 2,
         topics: [
-          { title: 'Motion' },
-          { title: 'Gravitational Field' },
-          { title: 'Equilibrium of Forces' },
-          { title: 'Work, Energy & Power' },
-          { title: 'Friction' },
-          { title: 'Simple Machines' },
-          { title: 'Elasticity' },
+          { title: 'Motion', examWeight: { min: 4, max: 5, tier: 'high' }, prerequisites: ['Scalars & Vectors'] },
+          { title: 'Gravitational Field', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Motion'] },
+          {
+            title: 'Equilibrium of Forces',
+            examWeight: { min: 3, max: 4, tier: 'high' },
+            prerequisites: ['Scalars & Vectors', 'Motion'],
+          },
+          {
+            title: 'Work, Energy & Power',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Motion', 'Equilibrium of Forces'],
+          },
+          {
+            title: 'Friction',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Equilibrium of Forces', 'Work, Energy & Power'],
+          },
+          {
+            title: 'Simple Machines',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Work, Energy & Power', 'Friction'],
+          },
+          {
+            title: 'Elasticity',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Work, Energy & Power'],
+          },
         ],
       },
+      // Fluids: the source Blueprint's per-topic yield/prerequisite detail
+      // for this stage was never written (confirmed absent from the
+      // underlying document, not just unread) -- topics kept, extra
+      // fields left off rather than guessed.
       { name: '03 — Fluids', order: 3, topics: [{ title: 'Pressure' }, { title: 'Liquids at Rest' }] },
+      // Heat & Thermal Physics: same gap as Fluids above.
       {
         name: '04 — Heat & Thermal Physics',
         order: 4,
@@ -170,27 +277,49 @@ export const FALLBACK_SUBJECTS: Subject[] = [
         name: '05 — Waves, Sound & Light',
         order: 5,
         topics: [
-          { title: 'Waves' },
-          { title: 'Propagation of Sound' },
-          { title: 'Characteristics of Sound' },
-          { title: 'Light Energy' },
-          { title: 'Reflection' },
-          { title: 'Refraction' },
-          { title: 'Optical Instruments' },
-          { title: 'Dispersion & Electromagnetic Spectrum' },
+          { title: 'Waves', examWeight: { min: 3, max: 4, tier: 'high' }, prerequisites: ['Motion'] },
+          { title: 'Propagation of Sound', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Waves'] },
+          {
+            title: 'Characteristics of Sound',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Propagation of Sound'],
+          },
+          { title: 'Light Energy', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Waves'] },
+          { title: 'Reflection', examWeight: { min: 3, max: 4, tier: 'high' }, prerequisites: ['Light Energy'] },
+          { title: 'Refraction', examWeight: { min: 4, max: 5, tier: 'high' }, prerequisites: ['Reflection'] },
+          {
+            title: 'Optical Instruments',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Reflection', 'Refraction'],
+          },
+          {
+            title: 'Dispersion & Electromagnetic Spectrum',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Refraction'],
+          },
         ],
       },
       {
         name: '06 — Electricity',
         order: 6,
         topics: [
-          { title: 'Electrostatics' },
-          { title: 'Capacitors' },
-          { title: 'Electric Cells' },
-          { title: 'Current Electricity' },
-          { title: 'Electrical Energy & Power' },
+          { title: 'Electrostatics', examWeight: { min: 3, max: 4, tier: 'high' } },
+          { title: 'Capacitors', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Electrostatics'] },
+          { title: 'Electric Cells', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Electrostatics'] },
+          {
+            title: 'Current Electricity',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Electric Cells', 'Electrostatics'],
+          },
+          {
+            title: 'Electrical Energy & Power',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Current Electricity'],
+          },
         ],
       },
+      // Magnetism & Electromagnetism: same documentation gap as Fluids
+      // and Heat & Thermal Physics above.
       {
         name: '07 — Magnetism & Electromagnetism',
         order: 7,
@@ -201,7 +330,14 @@ export const FALLBACK_SUBJECTS: Subject[] = [
           { title: 'A.C. Circuits' },
         ],
       },
-      { name: '08 — Modern Physics', order: 8, topics: [{ title: 'Electronics' }, { title: 'Atomic & Nuclear Physics' }] },
+      {
+        name: '08 — Modern Physics',
+        order: 8,
+        topics: [
+          { title: 'Electronics', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Current Electricity'] },
+          { title: 'Atomic & Nuclear Physics', examWeight: { min: 3, max: 4, tier: 'high' }, prerequisites: ['Electronics'] },
+        ],
+      },
     ],
   },
   {
@@ -217,47 +353,98 @@ export const FALLBACK_SUBJECTS: Subject[] = [
         name: '01 — Foundations of Life',
         order: 1,
         topics: [
-          { title: 'Living Organisms' },
-          { title: 'Evolution Among Taxonomic Groups' },
-          { title: 'Variety of Organisms' },
-          { title: 'Internal Structure of Flowering Plants & Mammals' },
+          { title: 'Living Organisms', examWeight: { min: 1, max: 2, tier: 'medium' } },
+          { title: 'Evolution Among Taxonomic Groups', examWeight: { min: 2, max: 3, tier: 'high' } },
+          // No yield badge for this topic in the source Blueprint -- left
+          // off rather than estimated.
+          { title: 'Variety of Organisms', prerequisites: ['Evolution Among Taxonomic Groups'] },
+          {
+            title: 'Internal Structure of Flowering Plants & Mammals',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Living Organisms'],
+          },
         ],
       },
       {
         name: '02 — Form & Function I: Sustaining Life',
         order: 2,
-        topics: [{ title: 'Nutrition' }, { title: 'Transport' }, { title: 'Respiration' }, { title: 'Excretion' }],
+        topics: [
+          {
+            title: 'Nutrition',
+            examWeight: { min: 3, max: 4, tier: 'high' },
+            prerequisites: ['Internal Structure of Flowering Plants & Mammals'],
+          },
+          { title: 'Transport', examWeight: { min: 1, max: 2, tier: 'medium' }, prerequisites: ['Nutrition'] },
+          { title: 'Respiration', examWeight: { min: 1, max: 2, tier: 'medium' }, prerequisites: ['Transport'] },
+          {
+            title: 'Excretion',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Respiration', 'Transport'],
+          },
+        ],
       },
       {
         name: '03 — Form & Function II: Continuing Life',
         order: 3,
         topics: [
-          { title: 'Support & Movement' },
-          { title: 'Reproduction' },
-          { title: 'Growth' },
-          { title: 'Coordination & Control' },
+          {
+            title: 'Support & Movement',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Respiration'],
+          },
+          { title: 'Reproduction', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          { title: 'Growth', examWeight: { min: 1, max: 2, tier: 'foundational' }, prerequisites: ['Reproduction'] },
+          {
+            title: 'Coordination & Control',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Growth', 'Reproduction', 'Support & Movement'],
+          },
         ],
       },
       {
         name: '04 — Ecology',
         order: 4,
         topics: [
-          { title: 'Factors Affecting Distribution' },
-          { title: 'Symbiotic Interactions & Energy Flow' },
-          { title: 'Natural Habitats' },
-          { title: 'Local Nigerian Biomes' },
-          { title: 'Ecology of Populations' },
-          { title: 'Soil' },
-          { title: 'Humans & Environment' },
+          { title: 'Factors Affecting Distribution', examWeight: { min: 1, max: 2, tier: 'medium' } },
+          {
+            title: 'Symbiotic Interactions & Energy Flow',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Factors Affecting Distribution'],
+          },
+          {
+            title: 'Natural Habitats',
+            examWeight: { min: 1, max: 2, tier: 'foundational' },
+            prerequisites: ['Symbiotic Interactions & Energy Flow'],
+          },
+          {
+            title: 'Local Nigerian Biomes',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Natural Habitats'],
+          },
+          {
+            title: 'Ecology of Populations',
+            examWeight: { min: 2, max: 3, tier: 'high' },
+            prerequisites: ['Local Nigerian Biomes', 'Symbiotic Interactions & Energy Flow'],
+          },
+          { title: 'Soil', examWeight: { min: 1, max: 2, tier: 'medium' } },
+          { title: 'Humans & Environment', examWeight: { min: 3, max: 4, tier: 'high' }, prerequisites: ['Soil'] },
         ],
       },
       {
         name: '05 — Heredity, Variation & Evolution',
         order: 5,
         topics: [
-          { title: 'Variation in Population' },
-          { title: 'Heredity' },
-          { title: 'Theories & Evidence of Evolution' },
+          {
+            title: 'Variation in Population',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Evolution Among Taxonomic Groups'],
+          },
+          { title: 'Heredity', examWeight: { min: 2, max: 4, tier: 'high' }, prerequisites: ['Variation in Population'] },
+          {
+            title: 'Theories & Evidence of Evolution',
+            examWeight: { min: 1, max: 2, tier: 'medium' },
+            prerequisites: ['Heredity', 'Variation in Population'],
+          },
         ],
       },
     ],
@@ -274,49 +461,105 @@ export const FALLBACK_SUBJECTS: Subject[] = [
         name: '01 — Foundations & Number Sense',
         order: 1,
         topics: [
-          { title: 'Number Bases' },
-          { title: 'Fractions, Decimals, Approximations & Percentages' },
-          { title: 'Indices, Logarithms & Surds' },
-          { title: 'Sets' },
+          { title: 'Number Bases', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          { title: 'Fractions, Decimals, Approximations & Percentages', examWeight: { min: 4, max: 5, tier: 'high' } },
+          {
+            title: 'Indices, Logarithms & Surds',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Number Bases', 'Fractions, Decimals, Approximations & Percentages'],
+          },
+          { title: 'Sets', examWeight: { min: 3, max: 4, tier: 'medium' } },
         ],
       },
       {
         name: '02 — Algebra & Functions',
         order: 2,
         topics: [
-          { title: 'Polynomials' },
-          { title: 'Variation' },
-          { title: 'Inequalities' },
-          { title: 'Progression' },
-          { title: 'Binary Operations' },
-          { title: 'Matrices & Determinants' },
+          {
+            title: 'Polynomials',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Indices, Logarithms & Surds'],
+          },
+          { title: 'Variation', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          { title: 'Inequalities', examWeight: { min: 2, max: 3, tier: 'medium' }, prerequisites: ['Polynomials'] },
+          {
+            title: 'Progression',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Indices, Logarithms & Surds'],
+          },
+          { title: 'Binary Operations', examWeight: { min: 1, max: 2, tier: 'low' }, prerequisites: ['Sets'] },
+          {
+            title: 'Matrices & Determinants',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Binary Operations'],
+          },
         ],
       },
       {
         name: '03 — Geometry, Trigonometry & Spatial Reasoning',
         order: 3,
         topics: [
-          { title: 'Euclidean Geometry' },
-          { title: 'Mensuration' },
-          { title: 'Loci' },
-          { title: 'Coordinate Geometry' },
-          { title: 'Trigonometry' },
+          { title: 'Euclidean Geometry', examWeight: { min: 4, max: 5, tier: 'high' } },
+          {
+            title: 'Mensuration',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Euclidean Geometry'],
+          },
+          { title: 'Loci', examWeight: { min: 1, max: 2, tier: 'low' }, prerequisites: ['Euclidean Geometry'] },
+          {
+            title: 'Coordinate Geometry',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Polynomials', 'Euclidean Geometry'],
+          },
+          {
+            title: 'Trigonometry',
+            examWeight: { min: 5, max: 6, tier: 'high' },
+            prerequisites: ['Euclidean Geometry'],
+          },
         ],
       },
       {
         name: '04 — Calculus & Mathematical Modelling',
         order: 4,
-        topics: [{ title: 'Differentiation' }, { title: 'Application of Differentiation' }, { title: 'Integration' }],
+        topics: [
+          {
+            title: 'Differentiation',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Indices, Logarithms & Surds', 'Coordinate Geometry', 'Trigonometry'],
+          },
+          {
+            title: 'Application of Differentiation',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Differentiation'],
+          },
+          { title: 'Integration', examWeight: { min: 3, max: 4, tier: 'medium' }, prerequisites: ['Differentiation'] },
+        ],
       },
       {
         name: '05 — Statistics & Probability',
         order: 5,
         topics: [
-          { title: 'Representation of Data' },
-          { title: 'Measures of Location' },
-          { title: 'Measures of Dispersion' },
-          { title: 'Permutation & Combination' },
-          { title: 'Probability' },
+          { title: 'Representation of Data', examWeight: { min: 2, max: 3, tier: 'medium' } },
+          {
+            title: 'Measures of Location',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Representation of Data', 'Fractions, Decimals, Approximations & Percentages'],
+          },
+          {
+            title: 'Measures of Dispersion',
+            examWeight: { min: 2, max: 3, tier: 'medium' },
+            prerequisites: ['Measures of Location'],
+          },
+          {
+            title: 'Permutation & Combination',
+            examWeight: { min: 3, max: 4, tier: 'medium' },
+            prerequisites: ['Sets'],
+          },
+          {
+            title: 'Probability',
+            examWeight: { min: 4, max: 5, tier: 'high' },
+            prerequisites: ['Sets', 'Permutation & Combination'],
+          },
         ],
       },
     ],
@@ -423,7 +666,7 @@ const SUBJECT_QUERY = `*[_type == "subject" && !(_id in path("drafts.**"))] | or
   topicCount,
   keyDependencies,
   relatedResourceSlug,
-  stages[] { name, order, topics[] { title, slug } },
+  stages[] { name, order, topics[] { title, slug, examWeight, prerequisites } },
   examStructure[] { section, area, questions },
   requiredText,
   "previewImage": previewImage.asset->url,
