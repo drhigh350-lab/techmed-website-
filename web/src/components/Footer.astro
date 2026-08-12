@@ -1,8 +1,12 @@
 ---
 import { getWhatsappChannelUrl } from '../lib/sanity';
+import { getContactChannels } from '../lib/contact';
 
 const WHATSAPP_CHANNEL = await getWhatsappChannelUrl();
-const FACEBOOK_URL = 'https://www.facebook.com/TheTechmedGuy';
+// Sourced from the same siteSettings.facebookUrl field the Contact page
+// uses (official handle: @heytechmed) — previously hard-coded here to a
+// different, stale Facebook page.
+const { facebookUrl: FACEBOOK_URL } = await getContactChannels();
 const year = new Date().getFullYear();
 
 const columns = [
