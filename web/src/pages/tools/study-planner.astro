@@ -1,0 +1,755 @@
+---
+// The Study Planner -- a client-side tool (no accounts, no backend; see
+// src/lib/plannerEngine.ts for why) that turns a student's own exam date,
+// available time, subjects and confidence into a realistic week-by-week
+// roadmap sequenced against the real TECHMED Blueprint data already in
+// Sanity (src/lib/syllabus.ts). Plans persist in localStorage on this
+// device only.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getSubjects } from '../../lib/syllabus';
+
+const subjects = await getSubjects();
+// Only the subjects with real Blueprint stage/topic data can be sequenced
+// meaningfully -- matches the "using TECHMED Blueprint where available"
+// wording in the brief exactly, rather than silently including subjects
+// with no stages to plan against.
+const plannableSubjects = subjects.filter((s) => s.stages && s.stages.length > 0);
+
+const pageUrl = new URL('/tools/study-planner', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: 'TECHMED Study Planner',
+    url: pageUrl,
+    applicationCategory: 'EducationApplication',
+    description: 'Turn your UTME subjects, available time and exam date into a realistic weekly study roadmap, sequenced against the TECHMED Blueprint.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Tools', item: new URL('/tools', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: 'Study Planner', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Study Planner — TECHMED"
+  description="Turn your UTME subjects, available time and exam date into a realistic weekly study roadmap, sequenced against the TECHMED Blueprint."
+  jsonLd={jsonLd}
+>
+  <div class="planner" id="planner" data-subjects={JSON.stringify(plannableSubjects)}>
+
+    <section class="intro">
+      <div class="intro-inner">
+        <p class="eyebrow">Tools &middot; Study Planner</p>
+        <h1>A realistic roadmap, not a wish list</h1>
+        <p class="lede">Tell it your subjects, your real available time and your exam date. It sequences topics using the TECHMED Blueprint, gives your weaker subjects more room, and builds in review time before the exam &mdash; not a plan that assumes eight perfect hours a day.</p>
+      </div>
+    </section>
+
+    <!-- SETUP FORM -->
+    <section class="setup" id="setupSection">
+      <form id="plannerForm" class="setup-form">
+
+        <div class="field-group">
+          <label class="field-label" for="targetDate">When is your exam?</label>
+          <input type="date" id="targetDate" name="targetDate" required />
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Which days can you realistically study?</span>
+          <div class="day-toggles" id="dayToggles" role="group" aria-label="Available days">
+            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+              <button type="button" class="day-toggle" data-day={i} aria-pressed="false">{d}</button>
+            ))}
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label" for="hoursPerDay">On a normal available day, how many focused hours can you actually give it?</label>
+          <input type="number" id="hoursPerDay" name="hoursPerDay" min="0.5" max="12" step="0.5" value="3" required />
+        </div>
+
+        <div class="field-group">
+          <span class="field-label">Subjects</span>
+          <p class="field-hint">Use of English is required for every UTME candidate. Choose exactly 3 more.</p>
+          <div class="subject-picker" id="subjectPicker"></div>
+        </div>
+
+        <div id="subjectDetails" class="subject-details"></div>
+
+        <button type="submit" class="btn-primary">Build My Plan</button>
+      </form>
+    </section>
+
+    <!-- RESULTS -->
+    <section class="results" id="resultsSection" hidden>
+
+      <div class="results-toolbar no-print">
+        <div class="summary-line" id="summaryLine"></div>
+        <div class="toolbar-actions">
+          <button type="button" class="btn-secondary" id="printBtn">Print / Save as PDF</button>
+          <button type="button" class="btn-secondary" id="recoverBtn">I've fallen behind &mdash; replan</button>
+          <button type="button" class="btn-text" id="startOverBtn">Start over</button>
+        </div>
+      </div>
+
+      <div id="warningsBox" class="warnings-box no-print" hidden></div>
+
+      <div class="results-grid no-print">
+        <div class="today-card">
+          <p class="card-label">Today</p>
+          <ul class="task-list" id="todayTasks"></ul>
+        </div>
+        <div class="week-card">
+          <p class="card-label">This Week</p>
+          <div id="weekTasks"></div>
+        </div>
+      </div>
+
+      <div class="roadmap" id="roadmapSection">
+        <h2>Full Roadmap</h2>
+        <div id="roadmapWeeks" class="roadmap-weeks"></div>
+      </div>
+
+    </section>
+
+  </div>
+</BaseLayout>
+
+<script>
+  import type { Subject } from '../../lib/syllabus';
+  import {
+    buildPlan,
+    getWeekForDate,
+    getTasksForDate,
+    type PlannerInput,
+    type PlannerSubjectInput,
+    type ConfidenceLevel,
+    type PlannerPlan,
+  } from '../../lib/plannerEngine';
+  import {
+    saveInput,
+    loadInput,
+    clearInput,
+    loadCompletedKeys,
+    markTopicComplete,
+    clearProgress,
+    todayIso,
+  } from '../../lib/plannerStorage';
+
+  const root = document.getElementById('planner') as HTMLElement;
+  const subjects: Subject[] = JSON.parse(root.dataset.subjects || '[]');
+  const subjectBySlug = new Map(subjects.map((s) => [s.slug, s]));
+
+  const ENGLISH_SLUG = 'use-of-english';
+  const ELECTIVE_SLUGS = subjects.map((s) => s.slug).filter((slug) => slug !== ENGLISH_SLUG);
+
+  const setupSection = document.getElementById('setupSection') as HTMLElement;
+  const resultsSection = document.getElementById('resultsSection') as HTMLElement;
+  const form = document.getElementById('plannerForm') as HTMLFormElement;
+  const dayToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('.day-toggle'));
+  const subjectPicker = document.getElementById('subjectPicker') as HTMLElement;
+  const subjectDetails = document.getElementById('subjectDetails') as HTMLElement;
+
+  const selectedElectives = new Set<string>();
+  const MAX_ELECTIVES = 3;
+
+  // --- Build the subject picker (Use of English fixed + up to 3 electives) ---
+  function renderSubjectPicker() {
+    subjectPicker.innerHTML = '';
+
+    const englishSubject = subjectBySlug.get(ENGLISH_SLUG);
+    if (englishSubject) {
+      const chip = document.createElement('div');
+      chip.className = 'subject-chip fixed';
+      chip.textContent = englishSubject.name + ' (required)';
+      subjectPicker.appendChild(chip);
+    }
+
+    for (const slug of ELECTIVE_SLUGS) {
+      const subject = subjectBySlug.get(slug);
+      if (!subject) continue;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'subject-chip';
+      chip.textContent = subject.name;
+      chip.dataset.slug = slug;
+      chip.setAttribute('aria-pressed', 'false');
+      chip.addEventListener('click', () => toggleElective(slug, chip));
+      subjectPicker.appendChild(chip);
+    }
+  }
+
+  function toggleElective(slug: string, chip: HTMLButtonElement) {
+    if (selectedElectives.has(slug)) {
+      selectedElectives.delete(slug);
+      chip.classList.remove('selected');
+      chip.setAttribute('aria-pressed', 'false');
+    } else {
+      if (selectedElectives.size >= MAX_ELECTIVES) return;
+      selectedElectives.add(slug);
+      chip.classList.add('selected');
+      chip.setAttribute('aria-pressed', 'true');
+    }
+    renderSubjectDetails();
+  }
+
+  function currentSubjectSlugs(): string[] {
+    const slugs = [...selectedElectives];
+    if (subjectBySlug.has(ENGLISH_SLUG)) slugs.push(ENGLISH_SLUG);
+    return slugs;
+  }
+
+  // --- Per-subject confidence + starting stage ---
+  function renderSubjectDetails() {
+    subjectDetails.innerHTML = '';
+    for (const slug of currentSubjectSlugs()) {
+      const subject = subjectBySlug.get(slug);
+      if (!subject) continue;
+
+      const wrap = document.createElement('fieldset');
+      wrap.className = 'subject-detail';
+      wrap.dataset.slug = slug;
+
+      const legend = document.createElement('legend');
+      legend.textContent = subject.name;
+      wrap.appendChild(legend);
+
+      const confRow = document.createElement('div');
+      confRow.className = 'confidence-row';
+      confRow.innerHTML = `<span class="mini-label">How confident do you feel in ${subject.name} right now?</span>`;
+      const options: { value: ConfidenceLevel; label: string }[] = [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+      ];
+      const segmented = document.createElement('div');
+      segmented.className = 'segmented';
+      options.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = opt.label;
+        btn.dataset.value = opt.value;
+        btn.className = 'segmented-btn' + (i === 1 ? ' selected' : '');
+        btn.addEventListener('click', () => {
+          segmented.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+        segmented.appendChild(btn);
+      });
+      confRow.appendChild(segmented);
+      wrap.appendChild(confRow);
+
+      const startRow = document.createElement('div');
+      startRow.className = 'start-row';
+      const startLabel = document.createElement('label');
+      startLabel.className = 'mini-label';
+      startLabel.textContent = 'Where should the plan start?';
+      const select = document.createElement('select');
+      select.className = 'stage-select';
+      subject.stages
+        .slice()
+        .sort((a, b) => a.order - b.order)
+        .forEach((stage, i) => {
+          const option = document.createElement('option');
+          option.value = String(i);
+          option.textContent = i === 0 ? `${stage.name} (start from the beginning)` : `${stage.name} (skip earlier stages)`;
+          select.appendChild(option);
+        });
+      startRow.appendChild(startLabel);
+      startRow.appendChild(select);
+      wrap.appendChild(startRow);
+
+      subjectDetails.appendChild(wrap);
+    }
+  }
+
+  dayToggles.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const pressed = btn.getAttribute('aria-pressed') === 'true';
+      btn.setAttribute('aria-pressed', String(!pressed));
+      btn.classList.toggle('selected', !pressed);
+    });
+  });
+
+  renderSubjectPicker();
+
+  // --- Build plan from the form ---
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const targetDate = (document.getElementById('targetDate') as HTMLInputElement).value;
+    const hoursPerAvailableDay = parseFloat((document.getElementById('hoursPerDay') as HTMLInputElement).value);
+    const availableDays = dayToggles
+      .filter((b) => b.getAttribute('aria-pressed') === 'true')
+      .map((b) => parseInt(b.dataset.day || '0', 10));
+
+    if (!targetDate) {
+      alert('Please choose your exam date.');
+      return;
+    }
+    if (availableDays.length === 0) {
+      alert('Select at least one day you can study.');
+      return;
+    }
+    if (selectedElectives.size !== MAX_ELECTIVES) {
+      alert(`Choose exactly ${MAX_ELECTIVES} elective subjects alongside Use of English.`);
+      return;
+    }
+
+    const plannerSubjects: PlannerSubjectInput[] = currentSubjectSlugs().map((slug) => {
+      const detailEl = subjectDetails.querySelector(`fieldset[data-slug="${slug}"]`) as HTMLElement;
+      const confidence = (detailEl?.querySelector('.segmented-btn.selected') as HTMLElement)?.dataset.value as ConfidenceLevel || 'medium';
+      const startingStageIndex = parseInt((detailEl?.querySelector('.stage-select') as HTMLSelectElement)?.value || '0', 10);
+      return { slug, confidence, startingStageIndex };
+    });
+
+    const input: PlannerInput = {
+      targetDate,
+      availableDays,
+      hoursPerAvailableDay,
+      subjects: plannerSubjects,
+      createdAt: todayIso(),
+    };
+
+    saveInput(input);
+    clearProgress();
+    renderResults(input);
+  });
+
+  // --- Results rendering ---
+  function renderResults(input: PlannerInput) {
+    const plan = buildPlan({ input, allSubjects: subjects });
+    setupSection.hidden = true;
+    resultsSection.hidden = false;
+
+    const summaryLine = document.getElementById('summaryLine') as HTMLElement;
+    summaryLine.textContent = `${plan.totalWeeks} weeks to go — ${plan.buildWeeks} building, ${plan.reviewWeeks} pure review. About ${plan.weeklyCapacityHours} hours a week.`;
+
+    const warningsBox = document.getElementById('warningsBox') as HTMLElement;
+    if (plan.warnings.length > 0) {
+      warningsBox.hidden = false;
+      warningsBox.innerHTML =
+        '<p class="warnings-title">Worth knowing before you commit to this plan:</p><ul>' +
+        plan.warnings
+          .map(
+            (w) =>
+              `<li><strong>${w.subjectName}</strong> has ${w.topicCount} topics left, but this timeline realistically fits about ${w.topicsThatFit}. Either free up more time, push the target date, or accept lighter coverage on ${w.subjectName}.</li>`,
+          )
+          .join('') +
+        '</ul>';
+    } else {
+      warningsBox.hidden = true;
+    }
+
+    renderToday(plan);
+    renderWeek(plan);
+    renderRoadmap(plan);
+  }
+
+  function subjectLabel(slug: string): string {
+    return subjectBySlug.get(slug)?.name ?? slug;
+  }
+
+  function renderToday(plan: PlannerPlan) {
+    const today = todayIso();
+    const tasks = getTasksForDate(plan, today);
+    const completed = loadCompletedKeys();
+    const list = document.getElementById('todayTasks') as HTMLElement;
+    list.innerHTML = '';
+
+    if (tasks.length === 0) {
+      const li = document.createElement('li');
+      li.className = 'task-empty';
+      li.textContent = 'No study day scheduled today — enjoy the rest, or get ahead on tomorrow\'s topics below.';
+      list.appendChild(li);
+      return;
+    }
+
+    for (const task of tasks) {
+      const li = document.createElement('li');
+      li.className = 'task-item';
+      const id = `task-${task.key}`.replace(/[^a-zA-Z0-9-]/g, '_');
+      li.innerHTML = `
+        <label>
+          <input type="checkbox" id="${id}" ${completed.has(task.key) ? 'checked' : ''} />
+          <span class="task-subject">${subjectLabel(task.subjectSlug)}</span>
+          <span class="task-topic">${task.topicTitle}</span>
+          <span class="task-kind ${task.kind}">${task.kind === 'review' ? 'Review' : 'New'}</span>
+        </label>`;
+      const checkbox = li.querySelector('input') as HTMLInputElement;
+      checkbox.addEventListener('change', () => markTopicComplete(task.key, checkbox.checked));
+      list.appendChild(li);
+    }
+  }
+
+  function renderWeek(plan: PlannerPlan) {
+    const week = getWeekForDate(plan, todayIso());
+    const container = document.getElementById('weekTasks') as HTMLElement;
+    if (!week) {
+      container.innerHTML = '<p class="empty-note">No week data.</p>';
+      return;
+    }
+    const items = [...week.topics.map((t) => ({ ...t, kind: 'New' })), ...week.reviewTopics.map((t) => ({ ...t, kind: 'Review' }))];
+    if (items.length === 0) {
+      container.innerHTML = '<p class="empty-note">Nothing scheduled this week.</p>';
+      return;
+    }
+    container.innerHTML =
+      `<p class="week-range">${week.startDate} &rarr; ${week.endDate}${week.isReviewWeek ? ' &middot; Review Week' : ''}</p>` +
+      '<ul class="week-list">' +
+      items.map((t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span> ${t.topicTitle} <span class="task-kind">${t.kind}</span></li>`).join('') +
+      '</ul>';
+  }
+
+  function renderRoadmap(plan: PlannerPlan) {
+    const container = document.getElementById('roadmapWeeks') as HTMLElement;
+    container.innerHTML = plan.weeks
+      .map((week) => {
+        const items = [...week.topics.map((t) => `${subjectLabel(t.subjectSlug)}: ${t.topicTitle}`), ...week.reviewTopics.map((t) => `${subjectLabel(t.subjectSlug)}: ${t.topicTitle} (review)`)];
+        return `
+          <details class="roadmap-week" ${week.weekNumber === 1 ? 'open' : ''}>
+            <summary>Week ${week.weekNumber} &middot; ${week.startDate} &rarr; ${week.endDate}${week.isReviewWeek ? ' &middot; Review' : ''}</summary>
+            <ul>${items.length ? items.map((i) => `<li>${i}</li>`).join('') : '<li class="empty-note">Nothing scheduled.</li>'}</ul>
+          </details>`;
+      })
+      .join('');
+  }
+
+  // --- Recovery: replan remaining topics from today to the same target date ---
+  document.getElementById('recoverBtn')?.addEventListener('click', () => {
+    const stored = loadInput();
+    if (!stored) return;
+    if (todayIso() >= stored.targetDate) {
+      alert('Your target date has already passed — start a new plan instead.');
+      return;
+    }
+    const completed = loadCompletedKeys();
+    const replanInput: PlannerInput = { ...stored, createdAt: todayIso() };
+    const plan = buildPlan({ input: replanInput, allSubjects: subjects, alreadyCompletedKeys: completed });
+    saveInput(replanInput);
+    document.getElementById('summaryLine')!.textContent = `Replanned from today — ${plan.totalWeeks} weeks left, ${plan.buildWeeks} building, ${plan.reviewWeeks} review.`;
+    renderToday(plan);
+    renderWeek(plan);
+    renderRoadmap(plan);
+
+    const warningsBox = document.getElementById('warningsBox') as HTMLElement;
+    if (plan.warnings.length > 0) {
+      warningsBox.hidden = false;
+      warningsBox.innerHTML =
+        '<p class="warnings-title">After replanning, still worth knowing:</p><ul>' +
+        plan.warnings.map((w) => `<li><strong>${w.subjectName}</strong>: ${w.topicCount} topics left, about ${w.topicsThatFit} realistically fit before the exam.</li>`).join('') +
+        '</ul>';
+    } else {
+      warningsBox.hidden = true;
+    }
+  });
+
+  document.getElementById('printBtn')?.addEventListener('click', () => window.print());
+
+  document.getElementById('startOverBtn')?.addEventListener('click', () => {
+    if (!confirm('Clear your current plan and start over?')) return;
+    clearInput();
+    clearProgress();
+    resultsSection.hidden = true;
+    setupSection.hidden = false;
+    form.reset();
+    selectedElectives.clear();
+    renderSubjectPicker();
+    subjectDetails.innerHTML = '';
+    dayToggles.forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.classList.remove('selected'); });
+  });
+
+  // --- Returning visitor: skip the form if a plan already exists ---
+  const existing = loadInput();
+  if (existing) {
+    renderResults(existing);
+  }
+</script>
+
+<style>
+  .planner {
+    max-width: 880px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-24);
+  }
+
+  .intro {
+    padding: var(--space-20) 0 var(--space-12);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .intro h1 {
+    font-size: clamp(2rem, 5vw, 2.75rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+    text-wrap: balance;
+  }
+
+  .intro .lede {
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    max-width: 60ch;
+    margin: 0 auto;
+  }
+
+  .setup-form {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: var(--space-3); }
+
+  .field-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .field-hint { font-size: 0.85rem; color: var(--text-muted); margin-top: calc(-1 * var(--space-2)); }
+
+  input[type="date"],
+  input[type="number"],
+  select {
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    max-width: 260px;
+  }
+
+  .day-toggles { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .day-toggle,
+  .subject-chip,
+  .segmented-btn {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .day-toggle.selected,
+  .subject-chip.selected,
+  .segmented-btn.selected {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-color: transparent;
+  }
+
+  .subject-chip.fixed {
+    color: var(--text-muted);
+    cursor: default;
+    background: var(--surface-raised);
+  }
+
+  .subject-picker { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .subject-details { display: flex; flex-direction: column; gap: var(--space-4); }
+
+  .subject-detail {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .subject-detail legend {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+    padding: 0 var(--space-2);
+  }
+
+  .mini-label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: var(--space-2); }
+
+  .confidence-row .segmented { display: flex; gap: var(--space-2); }
+
+  .btn-primary,
+  .btn-secondary,
+  .btn-text {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    border-radius: var(--radius);
+    padding: 12px 24px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: none;
+    align-self: flex-start;
+  }
+
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3); }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover { border-color: var(--accent); }
+
+  .btn-text {
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    text-decoration: underline;
+  }
+
+  .results-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+  }
+
+  .summary-line { font-size: 0.95rem; color: var(--text-light); }
+
+  .toolbar-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+
+  .warnings-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: inset 3px 0 0 0 var(--accent);
+    border-radius: var(--radius);
+    padding: var(--space-5) var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .warnings-title { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; margin-bottom: var(--space-2); }
+  .warnings-box ul { padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
+  .warnings-box li { font-size: 0.9rem; color: var(--text-light); }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+  }
+
+  .today-card, .week-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+  }
+
+  .card-label {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-4);
+  }
+
+  .task-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+
+  .task-item label {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    font-size: 0.92rem;
+    cursor: pointer;
+  }
+
+  .task-subject { font-family: var(--font-display); font-weight: 700; color: var(--accent-text); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
+  .task-topic { color: var(--text); }
+  .task-kind { font-size: 0.72rem; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-full); padding: 1px 8px; }
+  .task-kind.review { color: var(--accent-text); }
+  .task-empty, .empty-note { color: var(--text-muted); font-size: 0.9rem; }
+
+  .week-range { font-size: 0.8rem; color: var(--text-muted); margin-bottom: var(--space-3); }
+  .week-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+  .week-list li { font-size: 0.9rem; color: var(--text-light); display: flex; gap: var(--space-2); align-items: baseline; flex-wrap: wrap; }
+
+  .roadmap h2 { font-size: 1.3rem; margin-bottom: var(--space-5); }
+
+  .roadmap-weeks { display: flex; flex-direction: column; gap: var(--space-3); }
+
+  .roadmap-week {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-5);
+  }
+
+  .roadmap-week summary {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    list-style: none;
+  }
+
+  .roadmap-week summary::-webkit-details-marker { display: none; }
+
+  .roadmap-week ul {
+    list-style: none;
+    padding-top: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .roadmap-week li { font-size: 0.85rem; color: var(--text-light); }
+
+  @media (max-width: 700px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+
+  @media print {
+    .no-print { display: none !important; }
+    .roadmap-week { break-inside: avoid; border: 1px solid #999; }
+    .roadmap-week ul { display: flex !important; } /* force open in print regardless of <details> state */
+  }
+</style>

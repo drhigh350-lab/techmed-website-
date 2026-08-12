@@ -18,10 +18,12 @@ interface Props {
   description?: string;
   tag?: string;
   comingSoon?: boolean;
+  /** Legacy-mode only: when set (and comingSoon is false), the whole card links here instead of showing a "Coming Soon" badge. */
+  href?: string;
   resource?: Resource;
 }
 
-const { title, description, tag, comingSoon = false, resource } = Astro.props;
+const { title, description, tag, comingSoon = false, href, resource } = Astro.props;
 
 const currencySymbol = resource?.currency === 'NGN' ? '₦' : (resource?.currency ?? '');
 const priceLabel = resource
@@ -83,6 +85,15 @@ const icon = resource ? resourceIcon(resource) : undefined;
       </div>
     </div>
   </div>
+) : href ? (
+  <a href={href} class="resource-card reveal">
+    <div class="top">
+      {tag && <span class="tag">{tag}</span>}
+    </div>
+    <h3>{title}</h3>
+    <p class="description">{description}</p>
+    <span class="preview-affordance">Try It <span aria-hidden="true">&rarr;</span></span>
+  </a>
 ) : (
   <div class="resource-card reveal">
     <div class="top">
@@ -103,6 +114,8 @@ const icon = resource ? resourceIcon(resource) : undefined;
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
+    color: inherit;
+    text-decoration: none;
     transition: border-color 200ms ease, transform 200ms ease;
   }
 
