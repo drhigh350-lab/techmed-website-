@@ -5,6 +5,9 @@ import type { StructureResolver } from 'sanity/structure';
 // desk structure below links straight to that one document rather than
 // offering a "create new" list, which would let someone create duplicates
 // that the frontend's `*[_id == "..."][0]` queries would never see anyway.
+// contactPageSettings, fiveMinutesForwardSettings and proofPoint follow the
+// same singleton/list convention but aren't seeded — they're created the
+// first time an editor opens and saves them here.
 export const structure: StructureResolver = (S) =>
   S.list()
     .title('Content')
@@ -29,8 +32,17 @@ export const structure: StructureResolver = (S) =>
         .title('Announcement Banner')
         .id('announcementBanner')
         .child(S.document().schemaType('announcementBanner').documentId('announcementBanner')),
+      S.listItem()
+        .title('Contact Page Settings')
+        .id('contactPageSettings')
+        .child(S.document().schemaType('contactPageSettings').documentId('contactPageSettings')),
+      S.listItem()
+        .title('5 Minutes Forward Settings')
+        .id('fiveMinutesForwardSettings')
+        .child(S.document().schemaType('fiveMinutesForwardSettings').documentId('fiveMinutesForwardSettings')),
       S.divider(),
       S.documentTypeListItem('faqItem').title('FAQ'),
+      S.documentTypeListItem('proofPoint').title('Proof Points'),
       S.divider(),
       S.documentTypeListItem('resource').title('Resources'),
       S.documentTypeListItem('subject').title('JAMB Subjects'),

@@ -11,6 +11,7 @@ import utmeBuilderSettings from './utmeBuilderSettings';
 import announcementBanner from './announcementBanner';
 import contactPageSettings from './contactPageSettings';
 import proofPoint from './proofPoint';
+import fiveMinutesForwardSettings from './fiveMinutesForwardSettings';
 
 export const schemaTypes = [
   siteSettings,
@@ -21,6 +22,7 @@ export const schemaTypes = [
   announcementBanner,
   contactPageSettings,
   proofPoint,
+  fiveMinutesForwardSettings,
   resource,
   subject,
   syllabusTopic,
