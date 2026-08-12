@@ -62,14 +62,30 @@
   --radius-lg: 20px;
   --radius-full: 9999px;
 
-  /* Spacing */
+  /* Spacing — the full 4px-increment scale (matches Tailwind's spacing
+     scale, which every page here was already written against). Only a
+     subset of these were ever actually defined below; every undefined
+     one (--space-1/5/7/9/10/14/20 — used in ~20 files across the site)
+     silently invalidated the ENTIRE declaration it appeared in, not just
+     that one value, per how var() with an undefined custom property
+     behaves — so real spacing across most pages was computing to 0
+     wherever one of these was used alone or as part of a shorthand.
+     Completing the scale here fixes every one of those call sites at
+     once, with no risk of a typo'd one-off replacement per site. */
+  --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
+  --space-7: 28px;
   --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
+  --space-20: 80px;
   --space-24: 96px;
 }
 
