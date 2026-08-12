@@ -9,6 +9,8 @@ import article from './article';
 import articleCategory from './articleCategory';
 import utmeBuilderSettings from './utmeBuilderSettings';
 import announcementBanner from './announcementBanner';
+import contactPageSettings from './contactPageSettings';
+import proofPoint from './proofPoint';
 
 export const schemaTypes = [
   siteSettings,
@@ -17,6 +19,8 @@ export const schemaTypes = [
   founder,
   utmeBuilderSettings,
   announcementBanner,
+  contactPageSettings,
+  proofPoint,
   resource,
   subject,
   syllabusTopic,
