@@ -685,24 +685,15 @@ const jsonLd = [
       return;
     }
 
-    // Explicit about what this is -- "Foundations" alone reads as
-    // ambiguous (completed? starting point? current?). It's neither: it's
-    // the stage each subject is currently working through.
+    // Deliberately no per-subject stage names here (no "Foundations,"
+    // "Quantitative Core," etc.) -- student testing found that showing
+    // TECHMED's internal Blueprint taxonomy up front, even just as
+    // labels, reads as something the student is expected to understand.
+    // The Blueprint stays available as an optional, suggested resource
+    // (this line, the intro note, and each task's "Why this?" link),
+    // never as a structural "here's your current stage" fixture.
     el.innerHTML = `
-      <p class="phase-label">Current Blueprint stage</p>
-      <p class="phase-copy">Where each subject is right now in its TECHMED Blueprint &mdash; the study order that says what to learn, why, and what it connects to. Tap a subject to open its full Blueprint.</p>
-      <div class="phase-chips">
-        ${phase.subjectPhases
-          .map((p) => {
-            const subject = subjectBySlug.get(p.subjectSlug);
-            const href = subject ? `/jamb-syllabus/${subject.slug}` : null;
-            const label = `<strong>${p.subjectName}</strong> ${cleanStageName(p.stageName)}`;
-            return href
-              ? `<a class="phase-chip" href="${href}" target="_blank" rel="noopener">${label}</a>`
-              : `<span class="phase-chip">${label}</span>`;
-          })
-          .join('')}
-      </div>`;
+      <p class="phase-copy">This route follows the TECHMED Blueprint &mdash; the study order behind what's scheduled below. <a href="/jamb-syllabus-2027" target="_blank" rel="noopener">See how it works &rarr;</a></p>`;
   }
 
   function renderConstraintBox(plan: PlannerPlan) {
@@ -1563,25 +1554,8 @@ const jsonLd = [
 
   .phase-copy { font-size: 0.92rem; color: var(--text-light); line-height: 1.6; }
 
-  .phase-chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
-
-  .phase-chip {
-    display: inline-block;
-    font-size: 0.8rem;
-    color: var(--text-light);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-full);
-    padding: 5px 12px;
-    text-decoration: none;
-    transition: border-color 150ms ease;
-  }
-
-  a.phase-chip:hover, a.phase-chip:focus-visible {
-    border-color: var(--accent);
-  }
-
-  .phase-chip strong { color: var(--text); font-weight: 700; margin-right: 4px; }
+  .phase-copy a { color: var(--accent-text); font-weight: 600; text-decoration: none; }
+  .phase-copy a:hover { text-decoration: underline; }
 
   /* ---------- Constraint box ---------- */
   .constraint-box {
