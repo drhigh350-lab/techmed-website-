@@ -155,6 +155,52 @@ export function distributeSubjectAttention(
   return result;
 }
 
+/**
+ * Moves weekly hours from subjects that have more allocated than their
+ * remaining topics actually cost, toward subjects that don't have enough --
+ * run once, before deciding whether a subject's coverage warning is real.
+ * A donor never gives up more than half its own allocation (so a subject
+ * with genuine slack doesn't get starved down to nothing itself), and
+ * hours only move if there's an actual deficit to fill.
+ */
+export function rebalanceSubjectHours(
+  subjects: PlannerSubjectInput[],
+  baselineWeeklyHours: Record<string, number>,
+  buildWeeks: number,
+  requiredHoursBySlug: Record<string, number>,
+): Record<string, number> {
+  const adjusted = { ...baselineWeeklyHours };
+  if (buildWeeks <= 0) return adjusted;
+
+  let pool = 0;
+  for (const s of subjects) {
+    const weekly = adjusted[s.slug] ?? 0;
+    const surplus = weekly * buildWeeks - (requiredHoursBySlug[s.slug] ?? 0);
+    if (surplus <= 0) continue;
+    const maxGiveableWeekly = weekly * 0.5; // never take more than half from any one subject
+    const giveWeekly = Math.min(surplus / buildWeeks, maxGiveableWeekly);
+    adjusted[s.slug] = weekly - giveWeekly;
+    pool += giveWeekly * buildWeeks;
+  }
+
+  const deficits = subjects
+    .map((s) => ({
+      slug: s.slug,
+      deficitTotal: Math.max(0, (requiredHoursBySlug[s.slug] ?? 0) - (adjusted[s.slug] ?? 0) * buildWeeks),
+    }))
+    .filter((d) => d.deficitTotal > 0)
+    .sort((a, b) => b.deficitTotal - a.deficitTotal); // most-short subject filled first
+
+  for (const d of deficits) {
+    if (pool <= 0) break;
+    const fillTotal = Math.min(pool, d.deficitTotal);
+    adjusted[d.slug] = (adjusted[d.slug] ?? 0) + fillTotal / buildWeeks;
+    pool -= fillTotal;
+  }
+
+  return adjusted;
+}
+
 /** Reserve a trailing slice of the timeline as review-only, sized to the timeline itself rather than any fixed calendar date -- a student's own target date drives this, nothing is hard-coded to a specific month. */
 export function splitBuildAndReviewWeeks(totalWeeks: number): { buildWeeks: number; reviewWeeks: number } {
   const reviewWeeks = totalWeeks <= 2 ? (totalWeeks > 1 ? 1 : 0) : Math.max(1, Math.round(totalWeeks * 0.2));
@@ -229,21 +275,34 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
   const weeklyCapacityHours = calculateWeeklyCapacity(input);
   const totalWeeks = calculateTotalWeeks(input.createdAt, input.targetDate);
   const { buildWeeks, reviewWeeks } = splitBuildAndReviewWeeks(totalWeeks);
-  const subjectWeeklyHours = distributeSubjectAttention(input.subjects, weeklyCapacityHours);
+  const baselineWeeklyHours = distributeSubjectAttention(input.subjects, weeklyCapacityHours);
   const completed = alreadyCompletedKeys ?? new Set<string>();
-
-  const warnings: SubjectCoverageWarning[] = [];
 
   // Per-subject queue of not-yet-completed topics, in Blueprint order.
   const queues = new Map<string, PlannedTopic[]>();
   const subjectBySlug = new Map(allSubjects.map((s) => [s.slug, s]));
+  const requiredHoursBySlug: Record<string, number> = {};
   for (const subjectInput of input.subjects) {
     const subject = subjectBySlug.get(subjectInput.slug);
     if (!subject) continue;
     const all = flattenSubjectTopics(subject, subjectInput.startingStageIndex);
     const remaining = all.filter((t) => !completed.has(t.key));
     queues.set(subjectInput.slug, remaining);
+    requiredHoursBySlug[subjectInput.slug] = remaining.reduce((sum, t) => sum + topicHours(t), 0);
+  }
 
+  // Try to actually fix a tight schedule before telling the student it's
+  // tight: a subject with more allocated time than its remaining topics
+  // need gives some of that surplus to a subject running short, rather
+  // than the two subjects just sitting side by side, one wasted, one
+  // squeezed. Only a subject still short *after* this gets a warning.
+  const subjectWeeklyHours = rebalanceSubjectHours(input.subjects, baselineWeeklyHours, buildWeeks, requiredHoursBySlug);
+
+  const warnings: SubjectCoverageWarning[] = [];
+  for (const subjectInput of input.subjects) {
+    const subject = subjectBySlug.get(subjectInput.slug);
+    if (!subject) continue;
+    const remaining = queues.get(subjectInput.slug) ?? [];
     // Total budget across the whole build phase, divided once -- not a
     // per-week floor multiplied out. A subject getting 2.7 hrs/week over
     // 8 weeks has 21.6 hrs total, which is a meaningfully different
@@ -369,6 +428,113 @@ function pickReviewTopics(
     picked.push(pool[(offset + i * step) % pool.length]);
   }
   return picked;
+}
+
+export interface SubjectPhase {
+  subjectSlug: string;
+  subjectName: string;
+  /** The Blueprint's own TECHMED stage name (e.g. "03 — Reactions & Energy") -- never a phase label invented on top of it. */
+  stageName: string;
+}
+
+export interface CurrentPhase {
+  /** True during a full review week, where no subject has new material -- per-subject Blueprint stage names stop being meaningful context at that point, so the caller should show one plain "revision" indicator instead. */
+  isReviewPhase: boolean;
+  subjectPhases: SubjectPhase[];
+}
+
+/**
+ * What stage of its own Blueprint each subject is currently in, as of a
+ * given week -- the "current phase" the student sees is literally the
+ * Blueprint's own stage names, not a separate label layered on top.
+ *
+ * `allSubjects` is optional and only used as a fallback: a subject whose
+ * first topic hasn't been reached yet this early in the plan (e.g. its
+ * weekly hours are small enough that week 1 doesn't unlock anything) has
+ * no scheduled topic to read a stage name off of, but it still has a
+ * stage -- its own first one. Without this fallback that subject would
+ * just silently vanish from the phase list instead of correctly reading
+ * "not started yet."
+ */
+export function getCurrentPhase(plan: PlannerPlan, week: WeekPlan, allSubjects?: Subject[]): CurrentPhase {
+  if (week.isReviewWeek) return { isReviewPhase: true, subjectPhases: [] };
+
+  const latestBySlug = new Map<string, SubjectPhase>();
+  for (const w of plan.weeks) {
+    for (const topic of w.topics) {
+      latestBySlug.set(topic.subjectSlug, {
+        subjectSlug: topic.subjectSlug,
+        subjectName: topic.subjectName,
+        stageName: topic.stageName,
+      });
+    }
+    if (w.weekNumber === week.weekNumber) break;
+  }
+
+  if (allSubjects) {
+    const subjectBySlug = new Map(allSubjects.map((s) => [s.slug, s]));
+    for (const subjectInput of plan.input.subjects) {
+      if (latestBySlug.has(subjectInput.slug)) continue;
+      const subject = subjectBySlug.get(subjectInput.slug);
+      const firstStage = subject ? [...subject.stages].sort((a, b) => a.order - b.order)[subjectInput.startingStageIndex] : undefined;
+      if (subject && firstStage) {
+        latestBySlug.set(subjectInput.slug, { subjectSlug: subject.slug, subjectName: subject.name, stageName: firstStage.name });
+      }
+    }
+  }
+
+  return { isReviewPhase: false, subjectPhases: [...latestBySlug.values()] };
+}
+
+/** topicKey -> the week number it was scheduled for first-pass coverage in a given plan. Deliberately excludes review topics, which rotate by design (see pickReviewTopics) and would just add noise to a "did this move" comparison. */
+export type PlanSnapshot = Record<string, number>;
+
+export function snapshotPlan(plan: PlannerPlan): PlanSnapshot {
+  const snapshot: PlanSnapshot = {};
+  for (const week of plan.weeks) {
+    for (const topic of week.topics) {
+      snapshot[topic.key] = week.weekNumber;
+    }
+  }
+  return snapshot;
+}
+
+export interface SubjectPlanChange {
+  subjectSlug: string;
+  subjectName: string;
+  status: 'on-track' | 'moved-later' | 'moved-earlier';
+}
+
+/**
+ * Compares a saved snapshot against a freshly rebuilt plan and summarises,
+ * per subject, whether its topics landed roughly where they were before or
+ * shifted -- the data behind "Chemistry stayed on track, Physics moved
+ * slightly later" after a replan. A half-week average shift is the
+ * threshold for calling it a real move, so one topic sliding by a single
+ * week among many doesn't read as "moved." Topics with no entry in the old
+ * snapshot (e.g. a newly added subject) aren't counted as a move either
+ * way -- there's nothing to compare them against.
+ */
+export function diffPlans(previous: PlanSnapshot, plan: PlannerPlan): SubjectPlanChange[] {
+  const deltasBySlug = new Map<string, { subjectName: string; deltas: number[] }>();
+  for (const week of plan.weeks) {
+    for (const topic of week.topics) {
+      const prevWeek = previous[topic.key];
+      if (prevWeek === undefined) continue;
+      if (!deltasBySlug.has(topic.subjectSlug)) {
+        deltasBySlug.set(topic.subjectSlug, { subjectName: topic.subjectName, deltas: [] });
+      }
+      deltasBySlug.get(topic.subjectSlug)!.deltas.push(week.weekNumber - prevWeek);
+    }
+  }
+
+  const changes: SubjectPlanChange[] = [];
+  for (const [subjectSlug, { subjectName, deltas }] of deltasBySlug) {
+    const avgDelta = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
+    const status: SubjectPlanChange['status'] = avgDelta > 0.5 ? 'moved-later' : avgDelta < -0.5 ? 'moved-earlier' : 'on-track';
+    changes.push({ subjectSlug, subjectName, status });
+  }
+  return changes;
 }
 
 export function getWeekForDate(plan: PlannerPlan, dateIso: string): WeekPlan | undefined {

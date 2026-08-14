@@ -2,10 +2,15 @@
 // V1 (the site is fully static; see plannerEngine.ts for why). Deliberately
 // thin: this file only knows how to read/write JSON, not how a plan is
 // built or interpreted -- that's plannerEngine.ts's job.
-import type { PlannerInput, PlannerPlan } from './plannerEngine';
+import type { PlannerInput, PlannerPlan, PlanSnapshot } from './plannerEngine';
 
 const PLAN_KEY = 'techmed-study-planner:plan';
 const COMPLETED_KEY = 'techmed-study-planner:completed';
+// Only ever written right before a replan (see savePlanSnapshot's call
+// site) -- a student who builds one plan and never returns never gets
+// this key at all, so "what changed" costs the one-and-done majority
+// nothing while still being there for students who come back.
+const SNAPSHOT_KEY = 'techmed-study-planner:previous-snapshot';
 
 function hasStorage(): boolean {
   try {
@@ -67,4 +72,25 @@ export function clearProgress(): void {
 
 export function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
+}
+
+export function savePlanSnapshot(snapshot: PlanSnapshot): void {
+  if (!hasStorage()) return;
+  localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(snapshot));
+}
+
+export function loadPlanSnapshot(): PlanSnapshot | null {
+  if (!hasStorage()) return null;
+  const raw = localStorage.getItem(SNAPSHOT_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as PlanSnapshot;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPlanSnapshot(): void {
+  if (!hasStorage()) return;
+  localStorage.removeItem(SNAPSHOT_KEY);
 }
