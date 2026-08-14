@@ -89,18 +89,22 @@ const jsonLd = [
         )}
       </div>
       <div class="guide-info">
-        <p class="guide-eyebrow">{subject.name} Blueprint Guide</p>
+        <p class="guide-eyebrow">The {subject.name} Blueprint</p>
         <p class="guide-copy">
-          The complete {subject.name} Blueprint — every stage and topic in one document you can view
-          online or download.
+          Not just a topic list — this is the order to actually study {subject.name} in. What to learn
+          first, why it comes before what follows, and what it connects to later in the syllabus. Open
+          it once and you'll always know what's next.
         </p>
         {subject.guideFileUrl ? (
           <div class="guide-actions">
-            <a class="btn-primary" href={subject.guideFileUrl} target="_blank" rel="noopener">View Guide</a>
+            <a class="btn-primary" href={subject.guideFileUrl} target="_blank" rel="noopener">Open the Blueprint</a>
             <a class="btn-secondary" href={guideDownloadUrl}>Download Guide</a>
           </div>
         ) : (
-          <span class="guide-badge">Full guide coming soon</span>
+          <>
+            <span class="guide-badge">Full document coming soon</span>
+            <p class="guide-fallback-note">The stage-by-stage breakdown below is live already — the downloadable document is on its way.</p>
+          </>
         )}
       </div>
     </section>
@@ -332,6 +336,13 @@ const jsonLd = [
     border-radius: var(--radius-full);
     padding: 6px 14px;
     width: fit-content;
+  }
+
+  .guide-fallback-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    max-width: 44ch;
   }
 
   .btn-primary,

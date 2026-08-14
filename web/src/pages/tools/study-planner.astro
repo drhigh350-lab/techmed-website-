@@ -55,6 +55,7 @@ const jsonLd = [
       <p class="eyebrow">Tools &middot; Study Planner</p>
       <h1>Know what to study next.</h1>
       <p class="lede">You already have timetables, textbooks, YouTube and group chats. What you don't have is one place that answers the actual question: out of everything you could study right now, what makes sense next? Tell it your subjects, your real available time and your exam date &mdash; it builds the route from the TECHMED Blueprint.</p>
+      <p class="intro-blueprint-note">Never seen the Blueprint itself? It's the document behind everything this planner schedules &mdash; what to learn in each topic, why it comes in that order, and what it connects to. <a href="/jamb-syllabus-2027">See it first &rarr;</a></p>
     </section>
 
     <!-- ONBOARDING WIZARD -->
@@ -612,10 +613,17 @@ const jsonLd = [
     // the stage each subject is currently working through.
     el.innerHTML = `
       <p class="phase-label">Current Blueprint stage</p>
-      <p class="phase-copy">Where each subject is right now in its TECHMED Blueprint sequence.</p>
+      <p class="phase-copy">Where each subject is right now in its TECHMED Blueprint &mdash; the study order that says what to learn, why, and what it connects to. Tap a subject to open its full Blueprint.</p>
       <div class="phase-chips">
         ${phase.subjectPhases
-          .map((p) => `<span class="phase-chip"><strong>${p.subjectName}</strong> ${cleanStageName(p.stageName)}</span>`)
+          .map((p) => {
+            const subject = subjectBySlug.get(p.subjectSlug);
+            const href = subject ? `/jamb-syllabus/${subject.slug}` : null;
+            const label = `<strong>${p.subjectName}</strong> ${cleanStageName(p.stageName)}`;
+            return href
+              ? `<a class="phase-chip" href="${href}" target="_blank" rel="noopener">${label}</a>`
+              : `<span class="phase-chip">${label}</span>`;
+          })
           .join('')}
       </div>`;
   }
@@ -690,6 +698,14 @@ const jsonLd = [
     return `It's one of the starting points in your ${task.subjectName} Blueprint (${stage} stage).`;
   }
 
+  /** Deep-links to the topic's own Blueprint page when one exists (topicSlug is only ever set once a real syllabusTopic document backs it -- see syllabus.ts), otherwise falls back to the subject's Blueprint page, which always exists. Either way, this is the "redirect a student who's never opened the Blueprint" link, placed right where they're already asking "why this?" */
+  function blueprintLinkHtml(task: DayTask): string {
+    const href = task.topicSlug
+      ? `/jamb-syllabus/${task.subjectSlug}/${task.topicSlug}`
+      : `/jamb-syllabus/${task.subjectSlug}`;
+    return `<a class="blueprint-link" href="${href}" target="_blank" rel="noopener">See it in the ${task.subjectName} Blueprint &rarr;</a>`;
+  }
+
   /** Scans forward day by day (bounded by the plan's own length) for the next day with something scheduled -- the data behind "you're done for today, here's what's next" instead of a bare empty state. */
   function findNextTask(plan: PlannerPlan, fromDateIso: string): { date: string; task: DayTask } | null {
     const horizonDays = plan.totalWeeks * 7 + 7;
@@ -754,6 +770,7 @@ const jsonLd = [
         <details class="why-next">
           <summary>Why this?</summary>
           <p>${whyThisNext(task)}</p>
+          ${blueprintLinkHtml(task)}
         </details>
         ${task.kind === 'first-pass' ? `<p class="practice-nudge" data-practice-nudge hidden>Nice. When you're ready, test yourself with past questions on &ldquo;${task.topicTitle}.&rdquo;</p>` : ''}
       `;
@@ -1123,6 +1140,23 @@ const jsonLd = [
     margin: 0 auto;
   }
 
+  .intro-blueprint-note {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    max-width: 52ch;
+    margin: var(--space-5) auto 0;
+  }
+
+  .intro-blueprint-note a {
+    color: var(--accent-text);
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .intro-blueprint-note a:hover { text-decoration: underline; }
+
   /* ---------- Wizard ---------- */
   .wizard-progress {
     display: flex;
@@ -1381,12 +1415,19 @@ const jsonLd = [
   .phase-chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
   .phase-chip {
+    display: inline-block;
     font-size: 0.8rem;
     color: var(--text-light);
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-full);
     padding: 5px 12px;
+    text-decoration: none;
+    transition: border-color 150ms ease;
+  }
+
+  a.phase-chip:hover, a.phase-chip:focus-visible {
+    border-color: var(--accent);
   }
 
   .phase-chip strong { color: var(--text); font-weight: 700; margin-right: 4px; }
@@ -1508,6 +1549,17 @@ const jsonLd = [
   .why-next summary::before { content: '▸ '; }
   .why-next[open] summary::before { content: '▾ '; }
   .why-next p { font-size: 0.85rem; color: var(--text-light); margin-top: var(--space-2); line-height: 1.6; }
+
+  .blueprint-link {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent-text);
+    text-decoration: none;
+    margin-top: var(--space-2);
+  }
+
+  .blueprint-link:hover { text-decoration: underline; }
 
   .practice-nudge {
     margin: var(--space-3) 0 0 calc(1.4em + var(--space-3));
