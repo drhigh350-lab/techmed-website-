@@ -218,6 +218,7 @@ const jsonLd = [
     snapshotPlan,
     diffPlans,
     topicHours,
+    topicKey,
     addDays,
     type PlannerInput,
     type PlannerSubjectInput,
@@ -231,6 +232,7 @@ const jsonLd = [
     loadInput,
     clearInput,
     loadCompletedKeys,
+    saveCompletedKeys,
     markTopicComplete,
     clearProgress,
     todayIso,
@@ -459,16 +461,27 @@ const jsonLd = [
       const startSegmented = document.createElement('div');
       startSegmented.className = 'segmented';
       startSegmented.dataset.role = 'coarse-start';
-      const stageSelect = document.createElement('select');
-      stageSelect.className = 'stage-select';
-      stageSelect.hidden = true;
-      stages.forEach((stage, i) => {
-        const option = document.createElement('option');
-        option.value = String(i);
-        option.textContent = cleanStageName(stage.name);
-        stageSelect.appendChild(option);
+
+      // Flat list of the subject's own topic names, in Blueprint order --
+      // never the Blueprint's internal stage labels ("Foundations",
+      // "Quantitative Core"). A student thinks "I've read Mole Concept,"
+      // not "I've finished stage 2" -- asking them to place their own
+      // studying inside our taxonomy is exactly the friction a first-time
+      // user hit. The stage boundaries stay in the data (topicKey below
+      // still needs stage.order) but are never shown.
+      const checklist = document.createElement('div');
+      checklist.className = 'topic-checklist';
+      checklist.dataset.role = 'topic-checklist';
+      checklist.hidden = true;
+      stages.forEach((stage) => {
+        stage.topics.forEach((topic) => {
+          const id = `covered-${slug}-${stage.order}-${topic.title}`.replace(/[^a-zA-Z0-9-]/g, '_');
+          const label = document.createElement('label');
+          label.className = 'topic-check';
+          label.innerHTML = `<input type="checkbox" id="${id}" data-stage-order="${stage.order}" data-title="${topic.title.replace(/"/g, '&quot;')}" /> ${topic.title}`;
+          checklist.appendChild(label);
+        });
       });
-      stageSelect.dataset.startingIndex = '0';
 
       const coarseOptions: { value: CoarseStart; label: string }[] = [
         { value: 'fresh', label: 'Starting fresh' },
@@ -484,21 +497,31 @@ const jsonLd = [
         btn.addEventListener('click', () => {
           startSegmented.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('selected'));
           btn.classList.add('selected');
+          const boxes = Array.from(checklist.querySelectorAll('input[type="checkbox"]')) as HTMLInputElement[];
           if (opt.value === 'fresh') {
-            stageSelect.hidden = true;
-            stageSelect.dataset.startingIndex = '0';
+            checklist.hidden = true;
+            boxes.forEach((b) => { b.checked = false; });
           } else if (opt.value === 'most') {
-            stageSelect.hidden = true;
-            stageSelect.dataset.startingIndex = String(Math.max(0, stages.length - 1));
+            checklist.hidden = false;
+            boxes.forEach((b) => { b.checked = true; });
           } else {
-            stageSelect.hidden = false;
+            checklist.hidden = false;
+            boxes.forEach((b) => { b.checked = false; });
           }
         });
         startSegmented.appendChild(btn);
       });
       startRow.appendChild(startSegmented);
-      startRow.appendChild(stageSelect);
       wrap.appendChild(startRow);
+
+      const checklistHint = document.createElement('p');
+      checklistHint.className = 'checklist-hint';
+      checklistHint.hidden = true;
+      checklistHint.textContent = "Check what you've already studied -- in any form, any source. Don't worry about getting this exact.";
+      const updateHintVisibility = () => { checklistHint.hidden = checklist.hidden; };
+      startSegmented.querySelectorAll('.segmented-btn').forEach((b) => b.addEventListener('click', updateHintVisibility));
+      wrap.appendChild(checklistHint);
+      wrap.appendChild(checklist);
 
       subjectDetails.appendChild(wrap);
     }
@@ -516,6 +539,7 @@ const jsonLd = [
     const formattedDate = targetDate
       ? new Date(targetDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
       : '—';
+    const coveredCount = readInitiallyCompletedKeys().size;
 
     summary.innerHTML = `
       <ul class="review-list">
@@ -523,6 +547,7 @@ const jsonLd = [
         <li><span>Subjects</span><strong>${subjectNames.join(', ')}</strong></li>
         <li><span>Study days</span><strong>${chosenDays.join(', ') || '—'}</strong></li>
         <li><span>Hours per study day</span><strong>${hoursPerDay}h</strong></li>
+        ${coveredCount > 0 ? `<li><span>Already covered</span><strong>${coveredCount} topic${coveredCount === 1 ? '' : 's'}</strong></li>` : ''}
       </ul>`;
   }
 
@@ -545,14 +570,49 @@ const jsonLd = [
       const detailEl = subjectDetails.querySelector(`.subject-detail[data-slug="${slug}"]`) as HTMLElement;
       const confidence =
         (detailEl?.querySelector('[data-role="confidence"] .segmented-btn.selected') as HTMLElement)?.dataset.value as ConfidenceLevel || 'medium';
-      const stageSelect = detailEl?.querySelector('.stage-select') as HTMLSelectElement;
-      const startingStageIndex = stageSelect?.hidden
-        ? parseInt(stageSelect.dataset.startingIndex || '0', 10)
-        : parseInt(stageSelect?.value || '0', 10);
+      const subject = subjectBySlug.get(slug);
+      const stages = subject ? [...subject.stages].sort((a, b) => a.order - b.order) : [];
+      const checkedTitles = new Set(
+        Array.from(detailEl?.querySelectorAll('[data-role="topic-checklist"] input:checked') ?? [])
+          .map((el) => (el as HTMLElement).dataset.title || ''),
+      );
+      // Purely cosmetic now -- which stage to label a not-yet-scheduled
+      // subject with in the results' phase banner (getCurrentPhase's
+      // allSubjects fallback). Actual first-pass skipping is handled
+      // entirely by initiallyCompletedKeys below, topic by topic, not by
+      // this whole-stage index.
+      const startingStageIndex = (() => {
+        for (let i = 0; i < stages.length; i++) {
+          if (!stages[i].topics.every((t) => checkedTitles.has(t.title))) return i;
+        }
+        return Math.max(0, stages.length - 1);
+      })();
       return { slug, confidence, startingStageIndex };
     });
 
     return { targetDate, availableDays, hoursPerAvailableDay, subjects: plannerSubjects, createdAt: todayIso() };
+  }
+
+  /**
+   * Topic keys checked off in the "starting point" step -- fed into
+   * buildPlan()'s alreadyCompletedKeys so first-pass scheduling skips
+   * exactly those topics (not whole stages), and seeded into progress
+   * storage so the progress card gives credit for them from the very
+   * first plan instead of showing 0 done for a student who's already
+   * covered real ground.
+   */
+  function readInitiallyCompletedKeys(): Set<string> {
+    const keys = new Set<string>();
+    for (const slug of currentSubjectSlugs()) {
+      const detailEl = subjectDetails.querySelector(`.subject-detail[data-slug="${slug}"]`) as HTMLElement;
+      const boxes = Array.from(detailEl?.querySelectorAll('[data-role="topic-checklist"] input:checked') ?? []) as HTMLInputElement[];
+      for (const box of boxes) {
+        const stageOrder = parseInt(box.dataset.stageOrder || '0', 10);
+        const title = box.dataset.title || '';
+        if (title) keys.add(topicKey(slug, stageOrder, title));
+      }
+    }
+    return keys;
   }
 
   form.addEventListener('submit', (e) => {
@@ -562,12 +622,14 @@ const jsonLd = [
       showStepError('Something in your setup is incomplete -- go back and check each step.');
       return;
     }
+    const initiallyCompleted = readInitiallyCompletedKeys();
     saveInput(input);
     clearProgress();
+    saveCompletedKeys(initiallyCompleted);
     runBuildingTransition(() => {
       introSection.hidden = true;
       wizardSection.hidden = true;
-      currentPlan = buildPlan({ input, allSubjects: subjects });
+      currentPlan = buildPlan({ input, allSubjects: subjects, alreadyCompletedKeys: initiallyCompleted });
       renderAll(currentPlan);
       resultsSection.hidden = false;
     });
@@ -1372,7 +1434,37 @@ const jsonLd = [
 
   .segmented { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
-  .stage-select { margin-top: var(--space-2); max-width: 100%; }
+  .checklist-hint { font-size: 0.8rem; color: var(--text-muted); margin-top: calc(-1 * var(--space-2)); }
+
+  /* Flat, no stage headers -- deliberately (see the comment where this is
+     built). A tight max-height with its own scroll keeps a long subject
+     like Chemistry (18 topics) from pushing the exam-date/subjects/hours
+     summary further down the wizard than it needs to be. */
+  .topic-checklist:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    max-height: 280px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-3);
+  }
+
+  .topic-check {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    font-size: 0.88rem;
+    color: var(--text);
+    padding: 7px 4px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .topic-check:hover { background: var(--surface-raised); }
+
+  .topic-check input[type="checkbox"] { width: 17px; height: 17px; accent-color: var(--accent); cursor: pointer; flex-shrink: 0; }
 
   .review-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
   .review-list li { display: flex; justify-content: space-between; gap: var(--space-4); font-size: 0.92rem; border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
