@@ -6,6 +6,10 @@ import { toLocalIso, type PlannerInput, type PlannerPlan, type PlanSnapshot } fr
 
 const PLAN_KEY = 'techmed-study-planner:plan';
 const COMPLETED_KEY = 'techmed-study-planner:completed';
+// One short optional note per topic key -- "what's one thing you'd say
+// about this?", offered only after a topic is checked off. Never
+// required, never analyzed; a student who skips it loses nothing.
+const NOTES_KEY = 'techmed-study-planner:notes';
 // Only ever written right before a replan (see savePlanSnapshot's call
 // site) -- a student who builds one plan and never returns never gets
 // this key at all, so "what changed" costs the one-and-done majority
@@ -93,4 +97,29 @@ export function loadPlanSnapshot(): PlanSnapshot | null {
 export function clearPlanSnapshot(): void {
   if (!hasStorage()) return;
   localStorage.removeItem(SNAPSHOT_KEY);
+}
+
+export function loadNotes(): Record<string, string> {
+  if (!hasStorage()) return {};
+  const raw = localStorage.getItem(NOTES_KEY);
+  if (!raw) return {};
+  try {
+    return JSON.parse(raw) as Record<string, string>;
+  } catch {
+    return {};
+  }
+}
+
+export function saveNote(key: string, note: string): void {
+  if (!hasStorage()) return;
+  const notes = loadNotes();
+  const trimmed = note.trim();
+  if (trimmed) notes[key] = trimmed;
+  else delete notes[key];
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+export function clearNotes(): void {
+  if (!hasStorage()) return;
+  localStorage.removeItem(NOTES_KEY);
 }

@@ -198,7 +198,7 @@ const jsonLd = [
     <dialog class="start-over-dialog no-print" id="startOverDialog">
       <p class="dialog-eyebrow">Start over</p>
       <h2>This clears everything &mdash; for good.</h2>
-      <p class="dialog-copy">Your current route, every topic you've marked complete, and where each subject stands in its Blueprint all get wiped. There's no undo and nothing to restore afterward &mdash; you'll set up a fresh plan from scratch.</p>
+      <p class="dialog-copy">Your current route, every topic you've marked complete, and any notes you've added all get wiped. There's no undo and nothing to restore afterward &mdash; you'll set up a fresh plan from scratch.</p>
       <div class="dialog-actions">
         <button type="button" class="btn-primary" id="startOverCancel" autofocus>Keep my current plan</button>
         <button type="button" class="btn-danger" id="startOverConfirm">Clear everything and start over</button>
@@ -239,6 +239,9 @@ const jsonLd = [
     savePlanSnapshot,
     loadPlanSnapshot,
     clearPlanSnapshot,
+    loadNotes,
+    saveNote,
+    clearNotes,
   } from '../../lib/plannerStorage';
 
   const root = document.getElementById('planner') as HTMLElement;
@@ -260,8 +263,12 @@ const jsonLd = [
     return subjectBySlug.get(slug)?.name ?? slug;
   }
 
-  function cleanStageName(name: string): string {
-    return name.replace(/^\d+\s*—\s*/, '');
+  // The only place user-typed text (the reflection note below) gets
+  // interpolated into innerHTML -- everywhere else in this file only
+  // ever injects Blueprint data we control, so this is the one spot that
+  // actually needs it.
+  function escapeHtml(s: string): string {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
   // ============================================================
@@ -759,11 +766,14 @@ const jsonLd = [
     if (task.kind === 'review') {
       return `Coming back to this because it's due another retrieval pass -- that's what makes it stick.`;
     }
-    const stage = cleanStageName(task.stageName);
+    // No stage name here either (see the phase banner's rewrite for why)
+    // -- prerequisite topic titles are real, recognizable names, but
+    // "(Foundations stage)" was the same internal-taxonomy leak in a
+    // quieter spot.
     if (task.prerequisites && task.prerequisites.length > 0) {
-      return `It follows ${task.prerequisites.join(' and ')} in your ${task.subjectName} Blueprint (${stage} stage).`;
+      return `It follows ${task.prerequisites.join(' and ')} in your ${task.subjectName} Blueprint.`;
     }
-    return `It's one of the starting points in your ${task.subjectName} Blueprint (${stage} stage).`;
+    return `It's one of the starting points in your ${task.subjectName} Blueprint.`;
   }
 
   /** Deep-links to the topic's own Blueprint page when one exists (topicSlug is only ever set once a real syllabusTopic document backs it -- see syllabus.ts), otherwise falls back to the subject's Blueprint page, which always exists. Either way, this is the "redirect a student who's never opened the Blueprint" link, placed right where they're already asking "why this?" */
@@ -817,11 +827,14 @@ const jsonLd = [
       return;
     }
 
+    const notes = loadNotes();
     tasks.forEach((task, i) => {
       const li = document.createElement('li');
       li.className = 'task-item';
       const id = `task-${task.key}`.replace(/[^a-zA-Z0-9-]/g, '_');
+      const reflectId = `reflect-${task.key}`.replace(/[^a-zA-Z0-9-]/g, '_');
       const isDone = completed.has(task.key);
+      const existingNote = notes[task.key] || '';
       li.innerHTML = `
         <div class="task-row">
           <span class="task-number">${i + 1}</span>
@@ -841,13 +854,25 @@ const jsonLd = [
           ${blueprintLinkHtml(task)}
         </details>
         ${task.kind === 'first-pass' ? `<p class="practice-nudge" data-practice-nudge hidden>Nice. When you're ready, test yourself with past questions on &ldquo;${task.topicTitle}.&rdquo;</p>` : ''}
+        <div class="reflection" data-reflection hidden>
+          <label class="reflection-label" for="${reflectId}">Optional: what's one thing you'd say about this?</label>
+          <input type="text" id="${reflectId}" class="reflection-input" maxlength="140" placeholder="e.g. I learned how to use a vernier caliper" value="${escapeHtml(existingNote)}" />
+        </div>
       `;
-      const checkbox = li.querySelector('input') as HTMLInputElement;
+      const checkbox = li.querySelector('input[type="checkbox"]') as HTMLInputElement;
       const nudge = li.querySelector('[data-practice-nudge]') as HTMLElement | null;
+      const reflection = li.querySelector('[data-reflection]') as HTMLElement;
+      const reflectionInput = li.querySelector('.reflection-input') as HTMLInputElement;
       if (nudge) nudge.hidden = !isDone;
+      // Only offered once a topic is checked off -- asking "what did you
+      // learn?" before that would be backwards, and it stays fully
+      // skippable: nothing here is required or graded.
+      reflection.hidden = !isDone;
+      reflectionInput.addEventListener('change', () => saveNote(task.key, reflectionInput.value));
       checkbox.addEventListener('change', () => {
         markTopicComplete(task.key, checkbox.checked);
         if (nudge) nudge.hidden = !checkbox.checked;
+        reflection.hidden = !checkbox.checked;
         // A day's tasks are drawn from this same week, so the same topic
         // can appear in both lists -- keep them in lockstep rather than
         // showing a topic as done in one place and not-done in the other.
@@ -992,6 +1017,7 @@ const jsonLd = [
     const week = getWeekForDate(plan, todayIso()) ?? plan.weeks[0];
     const phase = week ? getCurrentPhase(plan, week, subjects) : { isReviewPhase: false, subjectPhases: [] };
     const today = getTasksForDate(plan, todayIso());
+    const completed = loadCompletedKeys();
     const subjectNames = plan.input.subjects.map((s) => subjectLabel(s.slug)).join(', ');
     const generatedOn = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     const examDate = new Date(plan.input.targetDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
@@ -1029,7 +1055,13 @@ const jsonLd = [
       ${
         phase.isReviewPhase
           ? '<p>Revision phase &mdash; most new learning is done; this stretch is retrieval and practice.</p>'
-          : `<ul class="ps-list">${phase.subjectPhases.map((p) => `<li><span class="ps-subject">${p.subjectName}</span> ${cleanStageName(p.stageName)}</li>`).join('')}</ul>`
+          : `<ul class="ps-list">${plan.input.subjects
+              .map((s) => {
+                const total = plan.subjectTopicTotals[s.slug] ?? 0;
+                const done = [...completed].filter((k) => k.startsWith(`${s.slug}::`)).length;
+                return `<li><span class="ps-subject">${subjectLabel(s.slug)}</span> ${done} of ${total} topics covered</li>`;
+              })
+              .join('')}</ul>`
       }
 
       <h2>Full Route</h2>
@@ -1180,6 +1212,7 @@ const jsonLd = [
     clearInput();
     clearProgress();
     clearPlanSnapshot();
+    clearNotes();
     currentPlan = null;
     resultsSection.hidden = true;
     introSection.hidden = false;
@@ -1694,6 +1727,32 @@ const jsonLd = [
     border-left: 2px solid var(--border);
     padding-left: var(--space-3);
   }
+
+  /* :not([hidden]) matters here -- an unguarded `display` on this
+     selector would beat the browser's own [hidden]{display:none} rule
+     (same trap documented on .topic-checklist above), showing the
+     reflection field before a topic is even checked off. */
+  .reflection:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0 calc(1.4em + var(--space-3));
+  }
+
+  .reflection-label { font-size: 0.8rem; color: var(--text-muted); }
+
+  .reflection-input {
+    font-family: var(--font-main);
+    font-size: 0.88rem;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    max-width: 420px;
+  }
+
+  .reflection-input:focus { border-color: var(--accent); outline: none; }
 
   .task-empty, .empty-note { color: var(--text-muted); font-size: 0.9rem; }
 
