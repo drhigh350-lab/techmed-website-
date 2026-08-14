@@ -190,6 +190,21 @@ const jsonLd = [
 
     </section>
 
+    <!-- Start-over confirmation: a native <dialog> instead of a second
+         confirm() -- gets a real focus trap, Esc-to-close and backdrop for
+         free, and lets the copy actually explain what's being lost instead
+         of a one-line browser prompt. Defaults to the safe (Keep) option;
+         the destructive action needs a deliberate click. -->
+    <dialog class="start-over-dialog no-print" id="startOverDialog">
+      <p class="dialog-eyebrow">Start over</p>
+      <h2>This clears everything &mdash; for good.</h2>
+      <p class="dialog-copy">Your current route, every topic you've marked complete, and where each subject stands in its Blueprint all get wiped. There's no undo and nothing to restore afterward &mdash; you'll set up a fresh plan from scratch.</p>
+      <div class="dialog-actions">
+        <button type="button" class="btn-primary" id="startOverCancel" autofocus>Keep my current plan</button>
+        <button type="button" class="btn-danger" id="startOverConfirm">Clear everything and start over</button>
+      </div>
+    </dialog>
+
   </div>
 </BaseLayout>
 
@@ -1063,8 +1078,18 @@ const jsonLd = [
 
   document.getElementById('printBtn')?.addEventListener('click', () => window.print());
 
-  document.getElementById('startOverBtn')?.addEventListener('click', () => {
-    if (!confirm('Clear your current plan and start over?')) return;
+  const startOverDialog = document.getElementById('startOverDialog') as HTMLDialogElement;
+  document.getElementById('startOverBtn')?.addEventListener('click', () => startOverDialog.showModal());
+  document.getElementById('startOverCancel')?.addEventListener('click', () => startOverDialog.close());
+  // Clicking the backdrop (not the dialog's own content) also cancels --
+  // a click that lands directly on <dialog> itself only happens outside
+  // its content box, since the content box would otherwise catch it first.
+  startOverDialog.addEventListener('click', (e) => {
+    if (e.target === startOverDialog) startOverDialog.close();
+  });
+
+  document.getElementById('startOverConfirm')?.addEventListener('click', () => {
+    startOverDialog.close();
     clearInput();
     clearProgress();
     clearPlanSnapshot();
@@ -1668,6 +1693,84 @@ const jsonLd = [
 
   .adjust-edit { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--border); }
   .adjust-edit .btn-primary { align-self: flex-start; }
+
+  /* ---------- Start-over dialog ---------- */
+  .start-over-dialog {
+    width: min(440px, calc(100vw - var(--space-8)));
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.35);
+    padding: var(--space-8);
+  }
+
+  .start-over-dialog::backdrop {
+    background: rgba(1, 39, 72, 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  .dialog-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
+  }
+
+  .start-over-dialog h2 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-4);
+    text-wrap: balance;
+  }
+
+  .dialog-copy {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    margin-bottom: var(--space-6);
+  }
+
+  /* Keep (the safe, recommended path -- also the autofocus default) reads
+     first and carries the page's normal affirmative styling. Clear is
+     deliberately calmer, not a second loud button competing for the same
+     glance -- a student should have to actually read it. */
+  .dialog-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .dialog-actions .btn-primary {
+    width: 100%;
+    text-align: center;
+    justify-content: center;
+  }
+
+  /* Deliberately not a new hue -- the brand's gold accent stays reserved
+     for the affirmative action above, so this reads as the lower-key,
+     deliberate-click option through plain text instead of a second filled
+     button, distinguished by weight rather than color. */
+  .btn-danger {
+    align-self: center;
+    font-family: var(--font-main);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    padding: 6px 8px;
+    cursor: pointer;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    transition: color 150ms ease, text-decoration-color 150ms ease;
+  }
+
+  .btn-danger:hover { color: var(--text); text-decoration-color: currentColor; }
 
   @media print {
     .no-print { display: none !important; }
