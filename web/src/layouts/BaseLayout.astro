@@ -134,6 +134,16 @@ const structuredData = [organizationSchema, ...jsonLd];
     <Navbar />
     <slot />
     <Footer />
+    <style is:global>
+      /* Global, not per-page: no page should have to remember to hide the
+         site chrome itself when printing -- a page opts specific content
+         IN to print via its own CSS (e.g. the Study Planner's
+         .print-sheet), but the banner/nav/footer are never part of that,
+         on any page. */
+      @media print {
+        .banner, .navbar, .footer { display: none !important; }
+      }
+    </style>
     <script>
       // Site-wide scroll-reveal: arms .reveal elements (they stay fully
       // visible via CSS until this class is added, so nothing depends on

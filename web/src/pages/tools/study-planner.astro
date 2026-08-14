@@ -146,6 +146,21 @@ const jsonLd = [
 
       <div class="constraint-box no-print" id="constraintBox" hidden></div>
 
+      <!-- Deliberately right here, not after the roadmap: this is what
+           "Adjust my plan" (in the header above) and the constraint box's
+           own action chips both open, so it needs to appear where a
+           student is already looking, not several cards further down. -->
+      <div class="adjust-panel no-print" id="adjustPanel" hidden>
+        <h3>What's changed?</h3>
+        <div class="adjust-options" id="adjustOptions">
+          <button type="button" data-adjust="missed">I missed some study days</button>
+          <button type="button" data-adjust="less-time">I have less time now</button>
+          <button type="button" data-adjust="more-time">I have more time now</button>
+          <button type="button" data-adjust="date">I want to change my exam date</button>
+        </div>
+        <div class="adjust-edit" id="adjustEdit" hidden></div>
+      </div>
+
       <div class="today-card no-print" id="todayCard">
         <p class="card-label">Today</p>
         <ul class="task-list" id="todayTasks"></ul>
@@ -167,22 +182,10 @@ const jsonLd = [
         <div class="roadmap-weeks" id="roadmapWeeks"></div>
       </details>
 
-      <!-- Printable version: always in the DOM, hidden on screen, forced open for print regardless of the disclosure above (which the student may not have opened) -->
-      <div class="print-roadmap" id="printRoadmap">
-        <h2>Full Roadmap</h2>
-        <div class="roadmap-weeks" id="printRoadmapWeeks"></div>
-      </div>
-
-      <div class="adjust-panel no-print" id="adjustPanel" hidden>
-        <h3>What's changed?</h3>
-        <div class="adjust-options" id="adjustOptions">
-          <button type="button" data-adjust="missed">I missed some study days</button>
-          <button type="button" data-adjust="less-time">I have less time now</button>
-          <button type="button" data-adjust="more-time">I have more time now</button>
-          <button type="button" data-adjust="date">I want to change my exam date</button>
-        </div>
-        <div class="adjust-edit" id="adjustEdit" hidden></div>
-      </div>
+      <!-- Printable version: always in the DOM, hidden on screen -- built
+           fresh, not a raw dump of the on-screen sections (see printBtn's
+           handler for why). -->
+      <div class="print-sheet" id="printSheet"></div>
 
     </section>
 
@@ -580,7 +583,7 @@ const jsonLd = [
     renderWeek(plan);
     renderProgressCard(plan);
     renderRoadmap(plan, 'roadmapWeeks');
-    renderRoadmap(plan, 'printRoadmapWeeks');
+    renderPrintSheet(plan);
   }
 
   function renderHeader(plan: PlannerPlan) {
@@ -797,6 +800,68 @@ const jsonLd = [
       .join('');
   }
 
+  /**
+   * A print/PDF is a document a student keeps and shows other people, not
+   * a dump of whatever happens to be on screen -- so this builds its own
+   * clean, compact, branded summary rather than printing the live results
+   * section (which, un-collapsed, is a 35-week accordion never designed
+   * to be read on paper). Same underlying browser print-to-PDF mechanism
+   * (see printBtn below), just fed deliberately designed content.
+   */
+  function renderPrintSheet(plan: PlannerPlan) {
+    const sheet = document.getElementById('printSheet') as HTMLElement;
+    const week = getWeekForDate(plan, todayIso()) ?? plan.weeks[0];
+    const phase = week ? getCurrentPhase(plan, week, subjects) : { isReviewPhase: false, subjectPhases: [] };
+    const today = getTasksForDate(plan, todayIso());
+    const subjectNames = plan.input.subjects.map((s) => subjectLabel(s.slug)).join(', ');
+    const generatedOn = new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+    const examDate = new Date(plan.input.targetDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+    const taskLine = (t: { subjectSlug: string; topicTitle: string }, kind: 'first-pass' | 'review') =>
+      `<li><span class="ps-subject">${subjectLabel(t.subjectSlug)}</span> ${t.topicTitle}${kind === 'review' ? ' <em>(review)</em>' : ''}</li>`;
+
+    const routeRows = plan.weeks
+      .map((w) => {
+        const items = [...w.topics.map((t) => taskLine(t, 'first-pass')), ...w.reviewTopics.map((t) => taskLine(t, 'review'))];
+        return `
+          <tr>
+            <td>Week ${w.weekNumber}<br /><span class="ps-dates">${w.startDate} &rarr; ${w.endDate}</span>${w.isReviewWeek ? '<br /><span class="ps-dates">Revision</span>' : ''}</td>
+            <td>${items.length ? `<ul>${items.join('')}</ul>` : '&mdash;'}</td>
+          </tr>`;
+      })
+      .join('');
+
+    sheet.innerHTML = `
+      <div class="ps-header">
+        <div class="ps-wordmark">TECHMED</div>
+        <div class="ps-tagline">Think Smart. Perform Elite.</div>
+      </div>
+      <h1>Your UTME Study Plan</h1>
+      <p class="ps-meta">Generated ${generatedOn} &middot; Exam date ${examDate} &middot; ${plan.totalWeeks} weeks to go &middot; about ${plan.weeklyCapacityHours}h a week</p>
+      <p class="ps-meta">Subjects: ${subjectNames}</p>
+
+      <h2>Today</h2>
+      <ul class="ps-list">${today.length ? today.map((t) => taskLine(t, t.kind)).join('') : '<li>Nothing scheduled today.</li>'}</ul>
+
+      <h2>This Week</h2>
+      <ul class="ps-list">${week && (week.topics.length || week.reviewTopics.length) ? [...week.topics.map((t) => taskLine(t, 'first-pass')), ...week.reviewTopics.map((t) => taskLine(t, 'review'))].join('') : '<li>Nothing scheduled this week.</li>'}</ul>
+
+      <h2>Where Things Stand</h2>
+      ${
+        phase.isReviewPhase
+          ? '<p>Revision phase &mdash; most new learning is done; this stretch is retrieval and practice.</p>'
+          : `<ul class="ps-list">${phase.subjectPhases.map((p) => `<li><span class="ps-subject">${p.subjectName}</span> ${cleanStageName(p.stageName)}</li>`).join('')}</ul>`
+      }
+
+      <h2>Full Route</h2>
+      <table class="ps-route"><tbody>${routeRows}</tbody></table>
+
+      <div class="ps-footer">
+        <p><strong>TECHMED</strong> &middot; Admission Intelligence &middot; techmedng.com</p>
+        <p>Built on the TECHMED Blueprint. Continue with Kairo for a revision plan built around exactly where you stand.</p>
+      </div>`;
+  }
+
   // ============================================================
   // ADJUST -- replaces "I've fallen behind, replan": the student's life
   // didn't break the plan, so this never frames it as catching up.
@@ -827,6 +892,7 @@ const jsonLd = [
   function openAdjustEdit(kind: 'less-time' | 'date') {
     adjustPanel.hidden = false;
     adjustEdit.hidden = false;
+    adjustPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
     const stored = loadInput();
     if (!stored) return;
 
@@ -1441,7 +1507,10 @@ const jsonLd = [
   .roadmap-week li { font-size: 0.85rem; color: var(--text-light); }
   .review-note { color: var(--text-muted); font-size: 0.8rem; }
 
-  .print-roadmap { display: none; }
+  /* Screen: hidden. Print: this is the entire page (see @media print
+     below) -- built fresh by renderPrintSheet(), not a copy of the
+     on-screen sections. */
+  .print-sheet { display: none; }
 
   /* ---------- Adjust panel ---------- */
   .adjust-panel {
@@ -1477,9 +1546,28 @@ const jsonLd = [
   @media print {
     .no-print { display: none !important; }
     .planner { max-width: none; padding: 0; }
-    .print-roadmap { display: block !important; }
-    .print-roadmap h2 { font-size: 1.3rem; margin-bottom: var(--space-5); }
-    .roadmap-week { break-inside: avoid; border: 1px solid #999; }
-    .roadmap-week ul { display: flex !important; flex-direction: column; }
+    .print-sheet { display: block; color: #1a1a1a; font-family: var(--font-main); }
+
+    .print-sheet .ps-header { display: flex; align-items: baseline; gap: var(--space-4); border-bottom: 2px solid var(--color-deep-navy); padding-bottom: var(--space-3); margin-bottom: var(--space-5); }
+    .print-sheet .ps-wordmark { font-family: var(--font-display); font-weight: 900; font-size: 1.3rem; letter-spacing: -0.02em; color: var(--color-deep-navy); }
+    .print-sheet .ps-tagline { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-gold-deep); }
+
+    .print-sheet h1 { font-size: 1.4rem; font-weight: 800; margin-bottom: var(--space-2); color: var(--color-deep-navy); }
+    .print-sheet h2 { font-size: 1rem; font-weight: 800; margin: var(--space-6) 0 var(--space-3); color: var(--color-deep-navy); border-bottom: 1px solid #ddd; padding-bottom: var(--space-2); }
+    .print-sheet .ps-meta { font-size: 0.85rem; color: #444; margin-bottom: var(--space-1); }
+
+    .print-sheet .ps-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
+    .print-sheet .ps-list li { font-size: 0.88rem; }
+    .print-sheet .ps-subject { font-family: var(--font-display); font-weight: 700; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--color-gold-deep); margin-right: var(--space-2); }
+
+    .print-sheet table.ps-route { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
+    .print-sheet table.ps-route td { vertical-align: top; padding: var(--space-3) var(--space-2); border-bottom: 1px solid #ddd; break-inside: avoid; }
+    .print-sheet table.ps-route td:first-child { width: 22%; font-weight: 700; white-space: nowrap; }
+    .print-sheet table.ps-route .ps-dates { font-weight: 400; color: #666; font-size: 0.75rem; }
+    .print-sheet table.ps-route ul { list-style: none; display: flex; flex-direction: column; gap: 2px; }
+    .print-sheet table.ps-route em { color: #666; font-style: italic; }
+
+    .print-sheet .ps-footer { margin-top: var(--space-8); padding-top: var(--space-4); border-top: 2px solid var(--color-deep-navy); font-size: 0.8rem; color: #444; }
+    .print-sheet .ps-footer strong { color: var(--color-deep-navy); }
   }
 </style>

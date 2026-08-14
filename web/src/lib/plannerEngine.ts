@@ -343,6 +343,14 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
     const startDate = addDays(input.createdAt, (w - 1) * 7);
     const endDate = addDays(startDate, 6);
     const topics: PlannedTopic[] = [];
+    // Review must only draw from topics covered in *previous* weeks --
+    // snapshotted here, before this week's new topics are pushed into
+    // `covered` below. Without this, a topic introduced this week is
+    // already sitting in `covered` by the time pickReviewTopics runs a
+    // few lines down, so it could get picked to "review" the very week
+    // it was first taught -- which read as the same topic bizarrely
+    // showing up twice under two different tags in one week.
+    const coveredBeforeThisWeek = [...covered];
 
     for (const subjectInput of input.subjects) {
       const weeklyHours = subjectWeeklyHours[subjectInput.slug] ?? 0;
@@ -361,7 +369,7 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
     // Light spaced review inside build weeks: a small slice of hours goes
     // back over recently covered ground rather than 100% new material,
     // even before the dedicated review phase.
-    const reviewTopics = pickReviewTopics(covered, input.subjects, weeklyCapacityHours * 0.15, HOURS_PER_TOPIC_REVIEW, w);
+    const reviewTopics = pickReviewTopics(coveredBeforeThisWeek, input.subjects, weeklyCapacityHours * 0.15, HOURS_PER_TOPIC_REVIEW, w);
 
     weeks.push({ weekNumber: w, startDate, endDate, isReviewWeek: false, subjectHours: subjectWeeklyHours, topics, reviewTopics });
   }
