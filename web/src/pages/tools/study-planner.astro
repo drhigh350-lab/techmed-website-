@@ -795,7 +795,10 @@ const jsonLd = [
       checkbox.addEventListener('change', () => {
         markTopicComplete(task.key, checkbox.checked);
         if (nudge) nudge.hidden = !checkbox.checked;
-        if (currentPlan) renderProgressCard(currentPlan);
+        // A day's tasks are drawn from this same week, so the same topic
+        // can appear in both lists -- keep them in lockstep rather than
+        // showing a topic as done in one place and not-done in the other.
+        if (currentPlan) { renderWeek(currentPlan); renderProgressCard(currentPlan); }
       });
       list.appendChild(li);
     });
@@ -820,14 +823,45 @@ const jsonLd = [
       return;
     }
 
-    summaryEl.textContent = `${total} session${total === 1 ? '' : 's'} · ${newCount} new · ${reviewCount} review${week.isReviewWeek ? ' · Revision week' : ''}`;
-
+    const completed = loadCompletedKeys();
     const items = [...week.topics.map((t) => ({ ...t, kind: 'first-pass' as const })), ...week.reviewTopics.map((t) => ({ ...t, kind: 'review' as const }))];
-    listEl.innerHTML = items
-      .map(
-        (t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span><span class="task-topic">${t.topicTitle}</span>${taskActionHtml(t)}${taskTagHtml(t.kind)}</li>`,
-      )
-      .join('');
+
+    const updateSummary = () => {
+      const doneNow = items.filter((t) => loadCompletedKeys().has(t.key)).length;
+      summaryEl.textContent = `${doneNow} of ${total} done this week · ${newCount} new · ${reviewCount} review${week.isReviewWeek ? ' · Revision week' : ''}`;
+    };
+    updateSummary();
+
+    listEl.innerHTML = '';
+    items.forEach((t) => {
+      const li = document.createElement('li');
+      li.className = 'week-task-item';
+      // Prefixed differently from renderToday's ids -- the same topic can
+      // legitimately appear in both lists (a day's tasks are drawn from
+      // this same week), and duplicate DOM ids break label association.
+      const id = `week-task-${t.key}`.replace(/[^a-zA-Z0-9-]/g, '_');
+      const isDone = completed.has(t.key);
+      li.innerHTML = `
+        <label class="task-main" for="${id}">
+          <input type="checkbox" id="${id}" ${isDone ? 'checked' : ''} />
+          <span class="task-text">
+            <span class="task-subject">${subjectLabel(t.subjectSlug)}</span>
+            <span class="task-topic">${t.topicTitle}</span>
+            ${taskActionHtml(t)}
+          </span>
+          ${taskTagHtml(t.kind)}
+        </label>`;
+      const checkbox = li.querySelector('input') as HTMLInputElement;
+      checkbox.addEventListener('change', () => {
+        markTopicComplete(t.key, checkbox.checked);
+        updateSummary();
+        // Today's list draws from this same week, so the same topic can
+        // appear there too -- re-render it to stay in lockstep rather
+        // than showing a topic as done in one list and not in the other.
+        if (currentPlan) { renderToday(currentPlan); renderProgressCard(currentPlan); }
+      });
+      listEl.appendChild(li);
+    });
   }
 
   function renderProgressCard(plan: PlannerPlan) {
@@ -1605,7 +1639,8 @@ const jsonLd = [
 
   .week-summary { font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-4); }
   .week-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
-  .week-list li { font-size: 0.9rem; color: var(--text-light); display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .week-task-item { border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
+  .week-task-item:last-child { border-bottom: none; padding-bottom: 0; }
   .week-list .task-action { font-size: 0.75rem; }
   .week-list .task-topic { font-size: 0.9rem; font-weight: 500; }
   .week-list .tag { margin-left: auto; }
