@@ -606,8 +606,12 @@ const jsonLd = [
       return;
     }
 
+    // Explicit about what this is -- "Foundations" alone reads as
+    // ambiguous (completed? starting point? current?). It's neither: it's
+    // the stage each subject is currently working through.
     el.innerHTML = `
-      <p class="phase-label">Where each subject stands</p>
+      <p class="phase-label">Current Blueprint stage</p>
+      <p class="phase-copy">Where each subject is right now in its TECHMED Blueprint sequence.</p>
       <div class="phase-chips">
         ${phase.subjectPhases
           .map((p) => `<span class="phase-chip"><strong>${p.subjectName}</strong> ${cleanStageName(p.stageName)}</span>`)
@@ -623,10 +627,10 @@ const jsonLd = [
       return;
     }
     box.hidden = false;
-    const subjectList = plan.warnings.map((w) => w.subjectName).join(', ');
     box.innerHTML = `
       <p class="constraint-title">One thing to know</p>
-      <p class="constraint-copy">At your current weekly study time, covering everything before your target date would take more time than you've made available for <strong>${subjectList}</strong>. Your plan still prioritizes the most important sequence first and protects your revision time.</p>
+      <p class="constraint-copy">Your current plan is realistic, but some coverage will need to be lighter unless you create more study time. It still prioritizes the most important sequence first and protects your revision time.</p>
+      <p class="constraint-lead">What you can do</p>
       <div class="constraint-actions">
         <button type="button" class="chip-action" data-action="open-adjust-time">Add study time</button>
         <button type="button" class="chip-action" data-action="open-adjust-date">Move my target date</button>
@@ -648,6 +652,32 @@ const jsonLd = [
     return kind === 'review' ? '<span class="tag tag-review">Review</span>' : '<span class="tag tag-new">New</span>';
   }
 
+  // Display-only session length -- deliberately NOT the same number as
+  // topicHours() in plannerEngine.ts, which is the multi-hour *total*
+  // budget the scheduler spends on a topic across however many days it
+  // takes to cover it. What a student needs here is "how long is today's
+  // sitting," a much smaller, single-session figure. Review sessions are
+  // shorter by nature (retrieval practice on something already learned,
+  // not first-pass learning).
+  const SESSION_MINUTES_NEW: Record<'foundational' | 'low' | 'medium' | 'high', number> = {
+    foundational: 45,
+    low: 45,
+    medium: 60,
+    high: 75,
+  };
+  const SESSION_MINUTES_REVIEW = 30;
+
+  function taskAction(task: DayTask): { verb: string; minutes: number } {
+    if (task.kind === 'review') return { verb: 'Revisit + practice', minutes: SESSION_MINUTES_REVIEW };
+    const tier = task.examWeight?.tier ?? 'medium';
+    return { verb: 'Learn + practice', minutes: SESSION_MINUTES_NEW[tier] };
+  }
+
+  function taskActionHtml(task: DayTask): string {
+    const { verb, minutes } = taskAction(task);
+    return `<span class="task-action">${verb} &middot; ~${minutes} min</span>`;
+  }
+
   function whyThisNext(task: DayTask): string {
     if (task.kind === 'review') {
       return `Coming back to this because it's due another retrieval pass -- that's what makes it stick.`;
@@ -659,6 +689,32 @@ const jsonLd = [
     return `It's one of the starting points in your ${task.subjectName} Blueprint (${stage} stage).`;
   }
 
+  /** Scans forward day by day (bounded by the plan's own length) for the next day with something scheduled -- the data behind "you're done for today, here's what's next" instead of a bare empty state. */
+  function findNextTask(plan: PlannerPlan, fromDateIso: string): { date: string; task: DayTask } | null {
+    const horizonDays = plan.totalWeeks * 7 + 7;
+    let date = fromDateIso;
+    for (let i = 0; i < horizonDays; i++) {
+      date = addDaysIso(date, 1);
+      if (date > plan.input.targetDate) break;
+      const tasks = getTasksForDate(plan, date);
+      if (tasks.length > 0) return { date, task: tasks[0] };
+    }
+    return null;
+  }
+
+  function addDaysIso(iso: string, days: number): string {
+    const d = new Date(iso + 'T00:00:00');
+    d.setDate(d.getDate() + days);
+    return d.toISOString().slice(0, 10);
+  }
+
+  function formatDayLabel(iso: string): string {
+    const d = new Date(iso + 'T00:00:00');
+    const dayName = d.toLocaleDateString(undefined, { weekday: 'long' });
+    const isWithinWeek = (new Date(iso).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24) < 7;
+    return isWithinWeek ? dayName : `${dayName}, ${d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+  }
+
   function renderToday(plan: PlannerPlan) {
     const today = todayIso();
     const tasks = getTasksForDate(plan, today);
@@ -667,9 +723,17 @@ const jsonLd = [
     list.innerHTML = '';
 
     if (tasks.length === 0) {
+      const next = findNextTask(plan, today);
       const li = document.createElement('li');
       li.className = 'task-empty';
-      li.textContent = "Nothing scheduled today -- take the day, or peek at this week below to get ahead.";
+      if (next) {
+        const { verb, minutes } = taskAction(next.task);
+        li.innerHTML = `
+          <p class="next-up-title">You're done for today.</p>
+          <p class="next-up-copy">Your next study session is <strong>${formatDayLabel(next.date)}</strong> &mdash; ${subjectLabel(next.task.subjectSlug)}: ${next.task.topicTitle} (${verb.toLowerCase()} &middot; ~${minutes} min).</p>`;
+      } else {
+        li.textContent = "Nothing left scheduled between now and your exam date -- take the win.";
+      }
       list.appendChild(li);
       return;
     }
@@ -687,6 +751,7 @@ const jsonLd = [
             <span class="task-text">
               <span class="task-subject">${subjectLabel(task.subjectSlug)}</span>
               <span class="task-topic">${task.topicTitle}</span>
+              ${taskActionHtml(task)}
             </span>
             ${taskTagHtml(task.kind)}
           </label>
@@ -733,7 +798,7 @@ const jsonLd = [
     const items = [...week.topics.map((t) => ({ ...t, kind: 'first-pass' as const })), ...week.reviewTopics.map((t) => ({ ...t, kind: 'review' as const }))];
     listEl.innerHTML = items
       .map(
-        (t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span><span class="task-topic">${t.topicTitle}</span>${taskTagHtml(t.kind)}</li>`,
+        (t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span><span class="task-topic">${t.topicTitle}</span>${taskActionHtml(t)}${taskTagHtml(t.kind)}</li>`,
       )
       .join('');
   }
@@ -771,7 +836,7 @@ const jsonLd = [
     container.innerHTML = `
       <div class="stat">
         <p class="stat-value">${coveredCount} / ${totalCount}</p>
-        <p class="stat-label">Blueprint topics introduced</p>
+        <p class="stat-label">Topics completed</p>
       </div>
       <div class="stat">
         <p class="stat-value">${weekItems.length ? Math.round((weekDone / weekItems.length) * 100) : 0}%</p>
@@ -1343,6 +1408,7 @@ const jsonLd = [
 
   .constraint-title { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; margin-bottom: var(--space-2); }
   .constraint-copy { font-size: 0.9rem; color: var(--text-light); line-height: 1.65; margin-bottom: var(--space-4); }
+  .constraint-lead { font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-bottom: var(--space-2); }
 
   .constraint-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
 
@@ -1411,6 +1477,12 @@ const jsonLd = [
 
   .task-topic { color: var(--text); font-size: 0.98rem; font-weight: 600; }
 
+  /* The executable layer: what kind of work this is, and roughly how
+     long it takes -- a topic name alone ("Measurements & Units") isn't
+     an instruction. Deliberately quiet (not another badge) since the
+     tag already carries the primary New/Review distinction. */
+  .task-action { color: var(--text-muted); font-size: 0.8rem; }
+
   /* Tags -- distinct from everything else on the card by design: NEW is a
      solid filled pill (the thing to act on), REVIEW is an outlined pill
      (something you're returning to). Both stay within the brand's
@@ -1453,9 +1525,16 @@ const jsonLd = [
 
   .task-empty, .empty-note { color: var(--text-muted); font-size: 0.9rem; }
 
+  /* The "you're done for today" state -- always names the next real
+     session rather than leaving the student at a bare empty message. */
+  .next-up-title { font-family: var(--font-display); font-weight: 800; font-size: 1rem; color: var(--text); margin-bottom: var(--space-2); }
+  .next-up-copy { font-size: 0.9rem; color: var(--text-light); line-height: 1.6; }
+  .next-up-copy strong { color: var(--accent-text); }
+
   .week-summary { font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-4); }
   .week-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
   .week-list li { font-size: 0.9rem; color: var(--text-light); display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .week-list .task-action { font-size: 0.75rem; }
   .week-list .task-topic { font-size: 0.9rem; font-weight: 500; }
   .week-list .tag { margin-left: auto; }
 
