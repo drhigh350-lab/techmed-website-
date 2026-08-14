@@ -1,10 +1,16 @@
 ---
 // The Study Planner -- a client-side tool (no accounts, no backend; see
 // src/lib/plannerEngine.ts for why) that turns a student's own exam date,
-// available time, subjects and confidence into a realistic week-by-week
-// roadmap sequenced against the real TECHMED Blueprint data already in
+// available time, subjects and starting point into a realistic sequence of
+// what to study next, using the real TECHMED Blueprint data already in
 // Sanity (src/lib/syllabus.ts). Plans persist in localStorage on this
 // device only.
+//
+// Design intent (per the product redesign this implements): the planner
+// shows the student the DECISION already made for them -- today, this
+// week, why -- not the raw output of the scheduling algorithm. The full
+// 36-week roadmap exists for reassurance, collapsed behind a disclosure,
+// not as the first thing on screen.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import { getSubjects } from '../../lib/syllabus';
 
@@ -23,7 +29,7 @@ const jsonLd = [
     name: 'TECHMED Study Planner',
     url: pageUrl,
     applicationCategory: 'EducationApplication',
-    description: 'Turn your UTME subjects, available time and exam date into a realistic weekly study roadmap, sequenced against the TECHMED Blueprint.',
+    description: 'Turn your UTME subjects, available time and exam date into a realistic sequence of what to study next, sequenced against the TECHMED Blueprint.',
   },
   {
     '@context': 'https://schema.org',
@@ -39,82 +45,143 @@ const jsonLd = [
 
 <BaseLayout
   title="Study Planner — TECHMED"
-  description="Turn your UTME subjects, available time and exam date into a realistic weekly study roadmap, sequenced against the TECHMED Blueprint."
+  description="Know what to study next. Tell it your subjects, your real available time and your exam date -- it sequences the TECHMED Blueprint into today's tasks, this week's route, and the road to your exam."
   jsonLd={jsonLd}
 >
   <div class="planner" id="planner" data-subjects={JSON.stringify(plannableSubjects)}>
 
-    <section class="intro">
-      <div class="intro-inner">
-        <p class="eyebrow">Tools &middot; Study Planner</p>
-        <h1>A realistic roadmap, not a wish list</h1>
-        <p class="lede">Tell it your subjects, your real available time and your exam date. It sequences topics using the TECHMED Blueprint, gives your weaker subjects more room, and builds in review time before the exam &mdash; not a plan that assumes eight perfect hours a day.</p>
-      </div>
+    <!-- INTRO -->
+    <section class="intro" id="introSection">
+      <p class="eyebrow">Tools &middot; Study Planner</p>
+      <h1>Know what to study next.</h1>
+      <p class="lede">You already have timetables, textbooks, YouTube and group chats. What you don't have is one place that answers the actual question: out of everything you could study right now, what makes sense next? Tell it your subjects, your real available time and your exam date &mdash; it builds the route from the TECHMED Blueprint.</p>
     </section>
 
-    <!-- SETUP FORM -->
-    <section class="setup" id="setupSection">
-      <form id="plannerForm" class="setup-form">
+    <!-- ONBOARDING WIZARD -->
+    <section class="wizard" id="wizardSection">
+      <div class="wizard-progress" id="wizardProgress" role="group" aria-label="Setup progress"></div>
 
-        <div class="field-group">
-          <label class="field-label" for="targetDate">When is your exam?</label>
+      <form id="plannerForm" novalidate>
+
+        <div class="wiz-step" data-step="date">
+          <h2>When are you writing UTME?</h2>
+          <p class="step-hint">Your best current estimate is fine &mdash; confirm the exact date on jamb.gov.ng closer to the time.</p>
           <input type="date" id="targetDate" name="targetDate" required />
         </div>
 
-        <div class="field-group">
-          <span class="field-label">Which days can you realistically study?</span>
-          <div class="day-toggles" id="dayToggles" role="group" aria-label="Available days">
-            {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
-              <button type="button" class="day-toggle" data-day={i} aria-pressed="false">{d}</button>
-            ))}
-          </div>
-        </div>
-
-        <div class="field-group">
-          <label class="field-label" for="hoursPerDay">On a normal available day, how many focused hours can you actually give it?</label>
-          <input type="number" id="hoursPerDay" name="hoursPerDay" min="0.5" max="12" step="0.5" value="3" required />
-        </div>
-
-        <div class="field-group">
-          <span class="field-label">Subjects</span>
-          <p class="field-hint">Use of English is required for every UTME candidate. Choose exactly 3 more.</p>
+        <div class="wiz-step" data-step="subjects" hidden>
+          <h2>Which subjects are you taking?</h2>
+          <p class="step-hint">Use of English is required for every UTME candidate. Choose exactly 3 more.</p>
           <div class="subject-picker" id="subjectPicker"></div>
         </div>
 
-        <div id="subjectDetails" class="subject-details"></div>
+        <div class="wiz-step" data-step="capacity" hidden>
+          <h2>How much time can you realistically protect each week?</h2>
+          <p class="step-hint">Not how much you'd <em>like</em> to study &mdash; how much you can actually promise, most weeks.</p>
+          <div class="field-group">
+            <span class="field-label">Days you can usually study</span>
+            <div class="day-toggles" id="dayToggles" role="group" aria-label="Available days">
+              {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+                <button type="button" class="day-toggle" data-day={i} aria-pressed="false">{d}</button>
+              ))}
+            </div>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="hoursPerDay">Focused hours on a normal study day</label>
+            <input type="number" id="hoursPerDay" name="hoursPerDay" min="0.5" max="12" step="0.5" value="2" required />
+          </div>
+        </div>
 
-        <button type="submit" class="btn-primary">Build My Plan</button>
+        <div class="wiz-step" data-step="starting-point" hidden>
+          <h2>Where are you starting from?</h2>
+          <p class="step-hint">Rough is fine &mdash; this isn't a test.</p>
+          <div id="subjectDetails" class="subject-details"></div>
+        </div>
+
+        <div class="wiz-step" data-step="review" hidden>
+          <h2>That's enough.</h2>
+          <p class="step-hint">We'll build your route from the TECHMED Blueprint.</p>
+          <div class="review-summary" id="reviewSummary"></div>
+        </div>
+
+        <p class="step-error" id="stepError" hidden></p>
+
+        <div class="wiz-nav">
+          <button type="button" class="btn-secondary" id="wizBack" hidden>Back</button>
+          <button type="button" class="btn-primary" id="wizNext">Continue</button>
+          <button type="submit" class="btn-primary" id="wizBuild" hidden>Build my plan</button>
+        </div>
       </form>
+    </section>
+
+    <!-- BUILDING TRANSITION -->
+    <section class="building no-print" id="buildingSection" hidden>
+      <p class="building-title">Building your route</p>
+      <ul class="building-steps" id="buildingSteps">
+        <li>Checking your available time&hellip;</li>
+        <li>Sequencing the Blueprint&hellip;</li>
+        <li>Protecting revision time&hellip;</li>
+        <li>Balancing your subjects&hellip;</li>
+      </ul>
     </section>
 
     <!-- RESULTS -->
     <section class="results" id="resultsSection" hidden>
 
-      <div class="results-toolbar no-print">
-        <div class="summary-line" id="summaryLine"></div>
+      <div class="results-header no-print">
+        <div>
+          <p class="eyebrow" id="resultsEyebrow"></p>
+          <h1 id="resultsHeading">Your Plan</h1>
+        </div>
         <div class="toolbar-actions">
-          <button type="button" class="btn-secondary" id="printBtn">Print / Save as PDF</button>
-          <button type="button" class="btn-secondary" id="recoverBtn">I've fallen behind &mdash; replan</button>
+          <button type="button" class="btn-secondary" id="printBtn">Print</button>
+          <button type="button" class="btn-secondary" id="adjustBtn">Adjust my plan</button>
           <button type="button" class="btn-text" id="startOverBtn">Start over</button>
         </div>
       </div>
 
-      <div id="warningsBox" class="warnings-box no-print" hidden></div>
+      <div class="return-banner no-print" id="returnBanner" hidden></div>
 
-      <div class="results-grid no-print">
-        <div class="today-card">
-          <p class="card-label">Today</p>
-          <ul class="task-list" id="todayTasks"></ul>
-        </div>
-        <div class="week-card">
-          <p class="card-label">This Week</p>
-          <div id="weekTasks"></div>
-        </div>
+      <div class="phase-banner no-print" id="phaseBanner"></div>
+
+      <div class="constraint-box no-print" id="constraintBox" hidden></div>
+
+      <div class="today-card no-print" id="todayCard">
+        <p class="card-label">Today</p>
+        <ul class="task-list" id="todayTasks"></ul>
       </div>
 
-      <div class="roadmap" id="roadmapSection">
+      <div class="week-card no-print" id="weekCard">
+        <p class="card-label">This Week</p>
+        <p class="week-summary" id="weekSummary"></p>
+        <ul class="week-list" id="weekTasks"></ul>
+      </div>
+
+      <div class="progress-card no-print" id="progressCard">
+        <p class="card-label">Your Progress</p>
+        <div class="progress-stats" id="progressStats"></div>
+      </div>
+
+      <details class="route-disclosure no-print" id="routeDisclosure">
+        <summary>See your full route</summary>
+        <div class="roadmap-weeks" id="roadmapWeeks"></div>
+      </details>
+
+      <!-- Printable version: always in the DOM, hidden on screen, forced open for print regardless of the disclosure above (which the student may not have opened) -->
+      <div class="print-roadmap" id="printRoadmap">
         <h2>Full Roadmap</h2>
-        <div id="roadmapWeeks" class="roadmap-weeks"></div>
+        <div class="roadmap-weeks" id="printRoadmapWeeks"></div>
+      </div>
+
+      <div class="adjust-panel no-print" id="adjustPanel" hidden>
+        <h3>What's changed?</h3>
+        <div class="adjust-options" id="adjustOptions">
+          <button type="button" data-adjust="missed">I missed some study days</button>
+          <button type="button" data-adjust="less-time">I have less time now</button>
+          <button type="button" data-adjust="more-time">I have more time now</button>
+          <button type="button" data-adjust="date">I want to change my exam date</button>
+        </div>
+        <div class="adjust-edit" id="adjustEdit" hidden></div>
       </div>
 
     </section>
@@ -123,15 +190,21 @@ const jsonLd = [
 </BaseLayout>
 
 <script>
-  import type { Subject } from '../../lib/syllabus';
+  import type { Subject, SubjectStage } from '../../lib/syllabus';
   import {
     buildPlan,
     getWeekForDate,
     getTasksForDate,
+    getCurrentPhase,
+    snapshotPlan,
+    diffPlans,
+    topicHours,
     type PlannerInput,
     type PlannerSubjectInput,
     type ConfidenceLevel,
     type PlannerPlan,
+    type WeekPlan,
+    type DayTask,
   } from '../../lib/plannerEngine';
   import {
     saveInput,
@@ -141,6 +214,9 @@ const jsonLd = [
     markTopicComplete,
     clearProgress,
     todayIso,
+    savePlanSnapshot,
+    loadPlanSnapshot,
+    clearPlanSnapshot,
   } from '../../lib/plannerStorage';
 
   const root = document.getElementById('planner') as HTMLElement;
@@ -149,29 +225,120 @@ const jsonLd = [
 
   const ENGLISH_SLUG = 'use-of-english';
   const ELECTIVE_SLUGS = subjects.map((s) => s.slug).filter((slug) => slug !== ENGLISH_SLUG);
-
-  const setupSection = document.getElementById('setupSection') as HTMLElement;
-  const resultsSection = document.getElementById('resultsSection') as HTMLElement;
-  const form = document.getElementById('plannerForm') as HTMLFormElement;
-  const dayToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('.day-toggle'));
-  const subjectPicker = document.getElementById('subjectPicker') as HTMLElement;
-  const subjectDetails = document.getElementById('subjectDetails') as HTMLElement;
-
-  const selectedElectives = new Set<string>();
   const MAX_ELECTIVES = 3;
 
-  // --- Build the subject picker (Use of English fixed + up to 3 electives) ---
+  const introSection = document.getElementById('introSection') as HTMLElement;
+  const wizardSection = document.getElementById('wizardSection') as HTMLElement;
+  const buildingSection = document.getElementById('buildingSection') as HTMLElement;
+  const resultsSection = document.getElementById('resultsSection') as HTMLElement;
+  const form = document.getElementById('plannerForm') as HTMLFormElement;
+  const stepError = document.getElementById('stepError') as HTMLElement;
+
+  function subjectLabel(slug: string): string {
+    return subjectBySlug.get(slug)?.name ?? slug;
+  }
+
+  function cleanStageName(name: string): string {
+    return name.replace(/^\d+\s*—\s*/, '');
+  }
+
+  // ============================================================
+  // WIZARD -- one focused question per screen, not one long form.
+  // ============================================================
+  const WIZARD_STEPS = ['date', 'subjects', 'capacity', 'starting-point', 'review'] as const;
+  type WizardStep = (typeof WIZARD_STEPS)[number];
+  const STEP_TITLES: Record<WizardStep, string> = {
+    date: 'Exam date',
+    subjects: 'Subjects',
+    capacity: 'Weekly time',
+    'starting-point': 'Starting point',
+    review: 'Review',
+  };
+  let stepIndex = 0;
+
+  const stepEls = new Map<WizardStep, HTMLElement>(
+    WIZARD_STEPS.map((s) => [s, document.querySelector(`.wiz-step[data-step="${s}"]`) as HTMLElement]),
+  );
+  const wizardProgress = document.getElementById('wizardProgress') as HTMLElement;
+  const wizBack = document.getElementById('wizBack') as HTMLButtonElement;
+  const wizNext = document.getElementById('wizNext') as HTMLButtonElement;
+  const wizBuild = document.getElementById('wizBuild') as HTMLButtonElement;
+
+  function renderWizardProgress() {
+    wizardProgress.innerHTML =
+      `<span class="wizard-step-label">Step ${stepIndex + 1} of ${WIZARD_STEPS.length} &middot; ${STEP_TITLES[WIZARD_STEPS[stepIndex]]}</span>` +
+      '<span class="wizard-dots">' +
+      WIZARD_STEPS.map((_, i) => `<span class="wizard-dot${i === stepIndex ? ' active' : ''}${i < stepIndex ? ' done' : ''}"></span>`).join('') +
+      '</span>';
+  }
+
+  function showStep(index: number) {
+    stepIndex = index;
+    stepError.hidden = true;
+    for (const [step, el] of stepEls) {
+      el.hidden = WIZARD_STEPS[index] !== step;
+    }
+    wizBack.hidden = index === 0;
+    const isLast = index === WIZARD_STEPS.length - 1;
+    wizNext.hidden = isLast;
+    wizBuild.hidden = !isLast;
+    renderWizardProgress();
+    if (WIZARD_STEPS[index] === 'starting-point') renderSubjectDetails();
+    if (WIZARD_STEPS[index] === 'review') renderReviewSummary();
+  }
+
+  function showStepError(message: string) {
+    stepError.textContent = message;
+    stepError.hidden = false;
+  }
+
+  function validateCurrentStep(): boolean {
+    const step = WIZARD_STEPS[stepIndex];
+    if (step === 'date') {
+      const value = (document.getElementById('targetDate') as HTMLInputElement).value;
+      if (!value) return showStepError('Pick a date to continue.'), false;
+      if (value <= todayIso()) return showStepError('Pick a date after today.'), false;
+      return true;
+    }
+    if (step === 'subjects') {
+      if (selectedElectives.size !== MAX_ELECTIVES) {
+        return showStepError(`Choose exactly ${MAX_ELECTIVES} electives alongside Use of English.`), false;
+      }
+      return true;
+    }
+    if (step === 'capacity') {
+      const days = dayToggles.filter((b) => b.getAttribute('aria-pressed') === 'true');
+      if (days.length === 0) return showStepError('Select at least one day.'), false;
+      return true;
+    }
+    return true;
+  }
+
+  wizNext.addEventListener('click', () => {
+    if (!validateCurrentStep()) return;
+    showStep(stepIndex + 1);
+    wizardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+  wizBack.addEventListener('click', () => {
+    showStep(stepIndex - 1);
+    wizardSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  // --- Subject picker (Use of English fixed + up to 3 electives) ---
+  const subjectPicker = document.getElementById('subjectPicker') as HTMLElement;
+  const subjectDetails = document.getElementById('subjectDetails') as HTMLElement;
+  const selectedElectives = new Set<string>();
+
   function renderSubjectPicker() {
     subjectPicker.innerHTML = '';
-
     const englishSubject = subjectBySlug.get(ENGLISH_SLUG);
     if (englishSubject) {
       const chip = document.createElement('div');
       chip.className = 'subject-chip fixed';
-      chip.textContent = englishSubject.name + ' (required)';
+      chip.textContent = englishSubject.name;
+      chip.innerHTML += '<span class="chip-note">Required</span>';
       subjectPicker.appendChild(chip);
     }
-
     for (const slug of ELECTIVE_SLUGS) {
       const subject = subjectBySlug.get(slug);
       if (!subject) continue;
@@ -197,7 +364,6 @@ const jsonLd = [
       chip.classList.add('selected');
       chip.setAttribute('aria-pressed', 'true');
     }
-    renderSubjectDetails();
   }
 
   function currentSubjectSlugs(): string[] {
@@ -206,70 +372,8 @@ const jsonLd = [
     return slugs;
   }
 
-  // --- Per-subject confidence + starting stage ---
-  function renderSubjectDetails() {
-    subjectDetails.innerHTML = '';
-    for (const slug of currentSubjectSlugs()) {
-      const subject = subjectBySlug.get(slug);
-      if (!subject) continue;
-
-      const wrap = document.createElement('fieldset');
-      wrap.className = 'subject-detail';
-      wrap.dataset.slug = slug;
-
-      const legend = document.createElement('legend');
-      legend.textContent = subject.name;
-      wrap.appendChild(legend);
-
-      const confRow = document.createElement('div');
-      confRow.className = 'confidence-row';
-      confRow.innerHTML = `<span class="mini-label">How confident do you feel in ${subject.name} right now?</span>`;
-      const options: { value: ConfidenceLevel; label: string }[] = [
-        { value: 'low', label: 'Low' },
-        { value: 'medium', label: 'Medium' },
-        { value: 'high', label: 'High' },
-      ];
-      const segmented = document.createElement('div');
-      segmented.className = 'segmented';
-      options.forEach((opt, i) => {
-        const btn = document.createElement('button');
-        btn.type = 'button';
-        btn.textContent = opt.label;
-        btn.dataset.value = opt.value;
-        btn.className = 'segmented-btn' + (i === 1 ? ' selected' : '');
-        btn.addEventListener('click', () => {
-          segmented.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('selected'));
-          btn.classList.add('selected');
-        });
-        segmented.appendChild(btn);
-      });
-      confRow.appendChild(segmented);
-      wrap.appendChild(confRow);
-
-      const startRow = document.createElement('div');
-      startRow.className = 'start-row';
-      const startLabel = document.createElement('label');
-      startLabel.className = 'mini-label';
-      startLabel.textContent = 'Where should the plan start?';
-      const select = document.createElement('select');
-      select.className = 'stage-select';
-      subject.stages
-        .slice()
-        .sort((a, b) => a.order - b.order)
-        .forEach((stage, i) => {
-          const option = document.createElement('option');
-          option.value = String(i);
-          option.textContent = i === 0 ? `${stage.name} (start from the beginning)` : `${stage.name} (skip earlier stages)`;
-          select.appendChild(option);
-        });
-      startRow.appendChild(startLabel);
-      startRow.appendChild(select);
-      wrap.appendChild(startRow);
-
-      subjectDetails.appendChild(wrap);
-    }
-  }
-
+  // --- Capacity: day toggles ---
+  const dayToggles = Array.from(document.querySelectorAll<HTMLButtonElement>('#dayToggles .day-toggle'));
   dayToggles.forEach((btn) => {
     btn.addEventListener('click', () => {
       const pressed = btn.getAttribute('aria-pressed') === 'true';
@@ -278,83 +382,278 @@ const jsonLd = [
     });
   });
 
+  // --- Starting point: coarse per-subject picker, precise only on request ---
+  // "Starting fresh" / "Mostly covered" need no further input at all --
+  // only "Covered some" reveals the stage list, and only for someone who
+  // asked for that precision. Matches the brief's "don't ask them to rate
+  // 150 topics" instruction.
+  type CoarseStart = 'fresh' | 'some' | 'most';
+
+  function renderSubjectDetails() {
+    subjectDetails.innerHTML = '';
+    for (const slug of currentSubjectSlugs()) {
+      const subject = subjectBySlug.get(slug);
+      if (!subject) continue;
+      const stages = [...subject.stages].sort((a, b) => a.order - b.order);
+
+      const wrap = document.createElement('div');
+      wrap.className = 'subject-detail';
+      wrap.dataset.slug = slug;
+
+      const heading = document.createElement('p');
+      heading.className = 'subject-detail-name';
+      heading.textContent = subject.name;
+      wrap.appendChild(heading);
+
+      // Confidence
+      const confRow = document.createElement('div');
+      confRow.className = 'detail-row';
+      confRow.innerHTML = `<span class="mini-label">How confident do you feel right now?</span>`;
+      const confOptions: { value: ConfidenceLevel; label: string }[] = [
+        { value: 'low', label: 'Low' },
+        { value: 'medium', label: 'Medium' },
+        { value: 'high', label: 'High' },
+      ];
+      const confSegmented = document.createElement('div');
+      confSegmented.className = 'segmented';
+      confSegmented.dataset.role = 'confidence';
+      confOptions.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = opt.label;
+        btn.dataset.value = opt.value;
+        btn.className = 'segmented-btn' + (i === 1 ? ' selected' : '');
+        btn.addEventListener('click', () => {
+          confSegmented.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+        });
+        confSegmented.appendChild(btn);
+      });
+      confRow.appendChild(confSegmented);
+      wrap.appendChild(confRow);
+
+      // Coarse starting point
+      const startRow = document.createElement('div');
+      startRow.className = 'detail-row';
+      startRow.innerHTML = `<span class="mini-label">Where are you starting from?</span>`;
+      const startSegmented = document.createElement('div');
+      startSegmented.className = 'segmented';
+      startSegmented.dataset.role = 'coarse-start';
+      const stageSelect = document.createElement('select');
+      stageSelect.className = 'stage-select';
+      stageSelect.hidden = true;
+      stages.forEach((stage, i) => {
+        const option = document.createElement('option');
+        option.value = String(i);
+        option.textContent = cleanStageName(stage.name);
+        stageSelect.appendChild(option);
+      });
+      stageSelect.dataset.startingIndex = '0';
+
+      const coarseOptions: { value: CoarseStart; label: string }[] = [
+        { value: 'fresh', label: 'Starting fresh' },
+        { value: 'some', label: "I've covered some" },
+        { value: 'most', label: 'Mostly covered' },
+      ];
+      coarseOptions.forEach((opt, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.textContent = opt.label;
+        btn.dataset.value = opt.value;
+        btn.className = 'segmented-btn' + (i === 0 ? ' selected' : '');
+        btn.addEventListener('click', () => {
+          startSegmented.querySelectorAll('.segmented-btn').forEach((b) => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          if (opt.value === 'fresh') {
+            stageSelect.hidden = true;
+            stageSelect.dataset.startingIndex = '0';
+          } else if (opt.value === 'most') {
+            stageSelect.hidden = true;
+            stageSelect.dataset.startingIndex = String(Math.max(0, stages.length - 1));
+          } else {
+            stageSelect.hidden = false;
+          }
+        });
+        startSegmented.appendChild(btn);
+      });
+      startRow.appendChild(startSegmented);
+      startRow.appendChild(stageSelect);
+      wrap.appendChild(startRow);
+
+      subjectDetails.appendChild(wrap);
+    }
+  }
+
+  function renderReviewSummary() {
+    const summary = document.getElementById('reviewSummary') as HTMLElement;
+    const targetDate = (document.getElementById('targetDate') as HTMLInputElement).value;
+    const hoursPerDay = (document.getElementById('hoursPerDay') as HTMLInputElement).value;
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const chosenDays = dayToggles
+      .filter((b) => b.getAttribute('aria-pressed') === 'true')
+      .map((b) => dayNames[parseInt(b.dataset.day || '0', 10)]);
+    const subjectNames = currentSubjectSlugs().map(subjectLabel);
+    const formattedDate = targetDate
+      ? new Date(targetDate + 'T00:00:00').toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+      : '—';
+
+    summary.innerHTML = `
+      <ul class="review-list">
+        <li><span>Exam date</span><strong>${formattedDate}</strong></li>
+        <li><span>Subjects</span><strong>${subjectNames.join(', ')}</strong></li>
+        <li><span>Study days</span><strong>${chosenDays.join(', ') || '—'}</strong></li>
+        <li><span>Hours per study day</span><strong>${hoursPerDay}h</strong></li>
+      </ul>`;
+  }
+
   renderSubjectPicker();
+  showStep(0);
 
-  // --- Build plan from the form ---
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-
+  // ============================================================
+  // BUILD -- submit the wizard, show the brief "building" transition,
+  // then reveal the results screen.
+  // ============================================================
+  function readPlannerInputFromForm(): PlannerInput | null {
     const targetDate = (document.getElementById('targetDate') as HTMLInputElement).value;
     const hoursPerAvailableDay = parseFloat((document.getElementById('hoursPerDay') as HTMLInputElement).value);
     const availableDays = dayToggles
       .filter((b) => b.getAttribute('aria-pressed') === 'true')
       .map((b) => parseInt(b.dataset.day || '0', 10));
-
-    if (!targetDate) {
-      alert('Please choose your exam date.');
-      return;
-    }
-    if (availableDays.length === 0) {
-      alert('Select at least one day you can study.');
-      return;
-    }
-    if (selectedElectives.size !== MAX_ELECTIVES) {
-      alert(`Choose exactly ${MAX_ELECTIVES} elective subjects alongside Use of English.`);
-      return;
-    }
+    if (!targetDate || availableDays.length === 0 || selectedElectives.size !== MAX_ELECTIVES) return null;
 
     const plannerSubjects: PlannerSubjectInput[] = currentSubjectSlugs().map((slug) => {
-      const detailEl = subjectDetails.querySelector(`fieldset[data-slug="${slug}"]`) as HTMLElement;
-      const confidence = (detailEl?.querySelector('.segmented-btn.selected') as HTMLElement)?.dataset.value as ConfidenceLevel || 'medium';
-      const startingStageIndex = parseInt((detailEl?.querySelector('.stage-select') as HTMLSelectElement)?.value || '0', 10);
+      const detailEl = subjectDetails.querySelector(`.subject-detail[data-slug="${slug}"]`) as HTMLElement;
+      const confidence =
+        (detailEl?.querySelector('[data-role="confidence"] .segmented-btn.selected') as HTMLElement)?.dataset.value as ConfidenceLevel || 'medium';
+      const stageSelect = detailEl?.querySelector('.stage-select') as HTMLSelectElement;
+      const startingStageIndex = stageSelect?.hidden
+        ? parseInt(stageSelect.dataset.startingIndex || '0', 10)
+        : parseInt(stageSelect?.value || '0', 10);
       return { slug, confidence, startingStageIndex };
     });
 
-    const input: PlannerInput = {
-      targetDate,
-      availableDays,
-      hoursPerAvailableDay,
-      subjects: plannerSubjects,
-      createdAt: todayIso(),
-    };
-
-    saveInput(input);
-    clearProgress();
-    renderResults(input);
-  });
-
-  // --- Results rendering ---
-  function renderResults(input: PlannerInput) {
-    const plan = buildPlan({ input, allSubjects: subjects });
-    setupSection.hidden = true;
-    resultsSection.hidden = false;
-
-    const summaryLine = document.getElementById('summaryLine') as HTMLElement;
-    summaryLine.textContent = `${plan.totalWeeks} weeks to go — ${plan.buildWeeks} building, ${plan.reviewWeeks} pure review. About ${plan.weeklyCapacityHours} hours a week.`;
-
-    const warningsBox = document.getElementById('warningsBox') as HTMLElement;
-    if (plan.warnings.length > 0) {
-      warningsBox.hidden = false;
-      warningsBox.innerHTML =
-        '<p class="warnings-title">Worth knowing before you commit to this plan:</p><ul>' +
-        plan.warnings
-          .map(
-            (w) =>
-              `<li><strong>${w.subjectName}</strong> has ${w.topicCount} topics left, but this timeline realistically fits about ${w.topicsThatFit}. Either free up more time, push the target date, or accept lighter coverage on ${w.subjectName}.</li>`,
-          )
-          .join('') +
-        '</ul>';
-    } else {
-      warningsBox.hidden = true;
-    }
-
-    renderToday(plan);
-    renderWeek(plan);
-    renderRoadmap(plan);
+    return { targetDate, availableDays, hoursPerAvailableDay, subjects: plannerSubjects, createdAt: todayIso() };
   }
 
-  function subjectLabel(slug: string): string {
-    return subjectBySlug.get(slug)?.name ?? slug;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = readPlannerInputFromForm();
+    if (!input) {
+      showStepError('Something in your setup is incomplete -- go back and check each step.');
+      return;
+    }
+    saveInput(input);
+    clearProgress();
+    runBuildingTransition(() => {
+      introSection.hidden = true;
+      wizardSection.hidden = true;
+      currentPlan = buildPlan({ input, allSubjects: subjects });
+      renderAll(currentPlan);
+      resultsSection.hidden = false;
+    });
+  });
+
+  function runBuildingTransition(onDone: () => void) {
+    wizardSection.hidden = true;
+    buildingSection.hidden = false;
+    const lines = Array.from(document.querySelectorAll('#buildingSteps li'));
+    lines.forEach((li) => li.classList.remove('done'));
+    lines.forEach((li, i) => {
+      setTimeout(() => li.classList.add('done'), 180 * (i + 1));
+    });
+    setTimeout(() => {
+      buildingSection.hidden = true;
+      onDone();
+    }, 180 * lines.length + 260);
+  }
+
+  // ============================================================
+  // RESULTS
+  // ============================================================
+  let currentPlan: PlannerPlan | null = null;
+
+  function renderAll(plan: PlannerPlan) {
+    renderHeader(plan);
+    renderPhaseBanner(plan);
+    renderConstraintBox(plan);
+    renderToday(plan);
+    renderWeek(plan);
+    renderProgressCard(plan);
+    renderRoadmap(plan, 'roadmapWeeks');
+    renderRoadmap(plan, 'printRoadmapWeeks');
+  }
+
+  function renderHeader(plan: PlannerPlan) {
+    const eyebrow = document.getElementById('resultsEyebrow') as HTMLElement;
+    const heading = document.getElementById('resultsHeading') as HTMLElement;
+    eyebrow.textContent = `${plan.totalWeeks} weeks to your exam · about ${plan.weeklyCapacityHours}h a week`;
+    heading.textContent = 'Your Plan';
+  }
+
+  function renderPhaseBanner(plan: PlannerPlan) {
+    const el = document.getElementById('phaseBanner') as HTMLElement;
+    const week = getWeekForDate(plan, todayIso()) ?? plan.weeks[0];
+    if (!week) { el.innerHTML = ''; return; }
+    const phase = getCurrentPhase(plan, week, subjects);
+
+    if (phase.isReviewPhase) {
+      el.innerHTML = `
+        <p class="phase-label">Revision phase</p>
+        <p class="phase-copy">Most new learning is done. Your plan is shifting toward retrieval and practice before the exam.</p>`;
+      return;
+    }
+
+    el.innerHTML = `
+      <p class="phase-label">Where each subject stands</p>
+      <div class="phase-chips">
+        ${phase.subjectPhases
+          .map((p) => `<span class="phase-chip"><strong>${p.subjectName}</strong> ${cleanStageName(p.stageName)}</span>`)
+          .join('')}
+      </div>`;
+  }
+
+  function renderConstraintBox(plan: PlannerPlan) {
+    const box = document.getElementById('constraintBox') as HTMLElement;
+    if (plan.warnings.length === 0) {
+      box.hidden = true;
+      box.innerHTML = '';
+      return;
+    }
+    box.hidden = false;
+    const subjectList = plan.warnings.map((w) => w.subjectName).join(', ');
+    box.innerHTML = `
+      <p class="constraint-title">One thing to know</p>
+      <p class="constraint-copy">At your current weekly study time, covering everything before your target date would take more time than you've made available for <strong>${subjectList}</strong>. Your plan still prioritizes the most important sequence first and protects your revision time.</p>
+      <div class="constraint-actions">
+        <button type="button" class="chip-action" data-action="open-adjust-time">Add study time</button>
+        <button type="button" class="chip-action" data-action="open-adjust-date">Move my target date</button>
+        <button type="button" class="chip-action ghost" data-action="dismiss-constraint">Continue with this plan</button>
+      </div>
+      <details class="constraint-details">
+        <summary>See the numbers</summary>
+        <ul>
+          ${plan.warnings.map((w) => `<li><strong>${w.subjectName}</strong>: about ${w.topicsThatFit} of ${w.topicCount} topics realistically fit.</li>`).join('')}
+        </ul>
+      </details>`;
+
+    box.querySelector('[data-action="dismiss-constraint"]')?.addEventListener('click', () => { box.hidden = true; });
+    box.querySelector('[data-action="open-adjust-time"]')?.addEventListener('click', () => openAdjustEdit('less-time'));
+    box.querySelector('[data-action="open-adjust-date"]')?.addEventListener('click', () => openAdjustEdit('date'));
+  }
+
+  function taskTagHtml(kind: DayTask['kind']): string {
+    return kind === 'review' ? '<span class="tag tag-review">Review</span>' : '<span class="tag tag-new">New</span>';
+  }
+
+  function whyThisNext(task: DayTask): string {
+    if (task.kind === 'review') {
+      return `Coming back to this because it's due another retrieval pass -- that's what makes it stick.`;
+    }
+    const stage = cleanStageName(task.stageName);
+    if (task.prerequisites && task.prerequisites.length > 0) {
+      return `It follows ${task.prerequisites.join(' and ')} in your ${task.subjectName} Blueprint (${stage} stage).`;
+    }
+    return `It's one of the starting points in your ${task.subjectName} Blueprint (${stage} stage).`;
   }
 
   function renderToday(plan: PlannerPlan) {
@@ -367,89 +666,257 @@ const jsonLd = [
     if (tasks.length === 0) {
       const li = document.createElement('li');
       li.className = 'task-empty';
-      li.textContent = 'No study day scheduled today — enjoy the rest, or get ahead on tomorrow\'s topics below.';
+      li.textContent = "Nothing scheduled today -- take the day, or peek at this week below to get ahead.";
       list.appendChild(li);
       return;
     }
 
-    for (const task of tasks) {
+    tasks.forEach((task, i) => {
       const li = document.createElement('li');
       li.className = 'task-item';
       const id = `task-${task.key}`.replace(/[^a-zA-Z0-9-]/g, '_');
+      const isDone = completed.has(task.key);
       li.innerHTML = `
-        <label>
-          <input type="checkbox" id="${id}" ${completed.has(task.key) ? 'checked' : ''} />
-          <span class="task-subject">${subjectLabel(task.subjectSlug)}</span>
-          <span class="task-topic">${task.topicTitle}</span>
-          <span class="task-kind ${task.kind}">${task.kind === 'review' ? 'Review' : 'New'}</span>
-        </label>`;
+        <div class="task-row">
+          <span class="task-number">${i + 1}</span>
+          <label class="task-main" for="${id}">
+            <input type="checkbox" id="${id}" ${isDone ? 'checked' : ''} />
+            <span class="task-text">
+              <span class="task-subject">${subjectLabel(task.subjectSlug)}</span>
+              <span class="task-topic">${task.topicTitle}</span>
+            </span>
+            ${taskTagHtml(task.kind)}
+          </label>
+        </div>
+        <details class="why-next">
+          <summary>Why this?</summary>
+          <p>${whyThisNext(task)}</p>
+        </details>
+        ${task.kind === 'first-pass' ? `<p class="practice-nudge" data-practice-nudge hidden>Nice. When you're ready, test yourself with past questions on &ldquo;${task.topicTitle}.&rdquo;</p>` : ''}
+      `;
       const checkbox = li.querySelector('input') as HTMLInputElement;
-      checkbox.addEventListener('change', () => markTopicComplete(task.key, checkbox.checked));
+      const nudge = li.querySelector('[data-practice-nudge]') as HTMLElement | null;
+      if (nudge) nudge.hidden = !isDone;
+      checkbox.addEventListener('change', () => {
+        markTopicComplete(task.key, checkbox.checked);
+        if (nudge) nudge.hidden = !checkbox.checked;
+        if (currentPlan) renderProgressCard(currentPlan);
+      });
       list.appendChild(li);
-    }
+    });
   }
 
   function renderWeek(plan: PlannerPlan) {
     const week = getWeekForDate(plan, todayIso());
-    const container = document.getElementById('weekTasks') as HTMLElement;
+    const summaryEl = document.getElementById('weekSummary') as HTMLElement;
+    const listEl = document.getElementById('weekTasks') as HTMLElement;
     if (!week) {
-      container.innerHTML = '<p class="empty-note">No week data.</p>';
+      summaryEl.textContent = '';
+      listEl.innerHTML = '<li class="empty-note">No week data.</li>';
       return;
     }
-    const items = [...week.topics.map((t) => ({ ...t, kind: 'New' })), ...week.reviewTopics.map((t) => ({ ...t, kind: 'Review' }))];
-    if (items.length === 0) {
-      container.innerHTML = '<p class="empty-note">Nothing scheduled this week.</p>';
+    const newCount = week.topics.length;
+    const reviewCount = week.reviewTopics.length;
+    const total = newCount + reviewCount;
+
+    if (total === 0) {
+      summaryEl.textContent = week.isReviewWeek ? 'Revision week -- no new topics, review only.' : 'Nothing scheduled this week.';
+      listEl.innerHTML = '';
       return;
     }
-    container.innerHTML =
-      `<p class="week-range">${week.startDate} &rarr; ${week.endDate}${week.isReviewWeek ? ' &middot; Review Week' : ''}</p>` +
-      '<ul class="week-list">' +
-      items.map((t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span> ${t.topicTitle} <span class="task-kind">${t.kind}</span></li>`).join('') +
-      '</ul>';
+
+    summaryEl.textContent = `${total} session${total === 1 ? '' : 's'} · ${newCount} new · ${reviewCount} review${week.isReviewWeek ? ' · Revision week' : ''}`;
+
+    const items = [...week.topics.map((t) => ({ ...t, kind: 'first-pass' as const })), ...week.reviewTopics.map((t) => ({ ...t, kind: 'review' as const }))];
+    listEl.innerHTML = items
+      .map(
+        (t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span><span class="task-topic">${t.topicTitle}</span>${taskTagHtml(t.kind)}</li>`,
+      )
+      .join('');
   }
 
-  function renderRoadmap(plan: PlannerPlan) {
-    const container = document.getElementById('roadmapWeeks') as HTMLElement;
+  function renderProgressCard(plan: PlannerPlan) {
+    const container = document.getElementById('progressStats') as HTMLElement;
+    const completed = loadCompletedKeys();
+    const selectedSlugs = new Set(plan.input.subjects.map((s) => s.slug));
+
+    // Coverage: distinct topics ever marked complete, against the total
+    // topics each subject is responsible for from its own starting point.
+    let coveredCount = 0;
+    let totalCount = 0;
+    for (const slug of selectedSlugs) totalCount += plan.subjectTopicTotals[slug] ?? 0;
+    // completed keys are formatted `${slug}::${stageOrder}::${title}` (see topicKey in plannerEngine.ts)
+    for (const key of completed) {
+      const slug = key.split('::')[0];
+      if (selectedSlugs.has(slug)) coveredCount++;
+    }
+
+    // This week's plan completion.
+    const week = getWeekForDate(plan, todayIso());
+    const weekItems = week ? [...week.topics, ...week.reviewTopics] : [];
+    const weekDone = weekItems.filter((t) => completed.has(t.key)).length;
+
+    // Time: planned vs. completed, using the same yield-weighted hour
+    // estimate the scheduler itself used -- not a flat guess.
+    const plannedHours = week
+      ? week.isReviewWeek
+        ? plan.weeklyCapacityHours
+        : plan.input.subjects.reduce((sum, s) => sum + (plan.subjectWeeklyHours[s.slug] ?? 0), 0)
+      : 0;
+    const completedHours = weekItems.filter((t) => completed.has(t.key)).reduce((sum, t) => sum + topicHours(t), 0);
+
+    container.innerHTML = `
+      <div class="stat">
+        <p class="stat-value">${coveredCount} / ${totalCount}</p>
+        <p class="stat-label">Blueprint topics introduced</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value">${weekItems.length ? Math.round((weekDone / weekItems.length) * 100) : 0}%</p>
+        <p class="stat-label">of this week's plan completed</p>
+      </div>
+      <div class="stat">
+        <p class="stat-value">${completedHours.toFixed(1)}h / ${plannedHours.toFixed(1)}h</p>
+        <p class="stat-label">study time this week</p>
+      </div>`;
+  }
+
+  function renderRoadmap(plan: PlannerPlan, targetId: string) {
+    const container = document.getElementById(targetId) as HTMLElement;
     container.innerHTML = plan.weeks
-      .map((week) => {
-        const items = [...week.topics.map((t) => `${subjectLabel(t.subjectSlug)}: ${t.topicTitle}`), ...week.reviewTopics.map((t) => `${subjectLabel(t.subjectSlug)}: ${t.topicTitle} (review)`)];
+      .map((week: WeekPlan) => {
+        const items = [
+          ...week.topics.map((t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span> ${t.topicTitle}</li>`),
+          ...week.reviewTopics.map((t) => `<li><span class="task-subject">${subjectLabel(t.subjectSlug)}</span> ${t.topicTitle} <span class="review-note">(review)</span></li>`),
+        ];
         return `
-          <details class="roadmap-week" ${week.weekNumber === 1 ? 'open' : ''}>
-            <summary>Week ${week.weekNumber} &middot; ${week.startDate} &rarr; ${week.endDate}${week.isReviewWeek ? ' &middot; Review' : ''}</summary>
-            <ul>${items.length ? items.map((i) => `<li>${i}</li>`).join('') : '<li class="empty-note">Nothing scheduled.</li>'}</ul>
+          <details class="roadmap-week">
+            <summary>Week ${week.weekNumber} &middot; ${week.startDate} &rarr; ${week.endDate}${week.isReviewWeek ? ' &middot; Revision' : ''}</summary>
+            <ul>${items.length ? items.join('') : '<li class="empty-note">Nothing scheduled.</li>'}</ul>
           </details>`;
       })
       .join('');
   }
 
-  // --- Recovery: replan remaining topics from today to the same target date ---
-  document.getElementById('recoverBtn')?.addEventListener('click', () => {
-    const stored = loadInput();
-    if (!stored) return;
-    if (todayIso() >= stored.targetDate) {
-      alert('Your target date has already passed — start a new plan instead.');
-      return;
-    }
-    const completed = loadCompletedKeys();
-    const replanInput: PlannerInput = { ...stored, createdAt: todayIso() };
-    const plan = buildPlan({ input: replanInput, allSubjects: subjects, alreadyCompletedKeys: completed });
-    saveInput(replanInput);
-    document.getElementById('summaryLine')!.textContent = `Replanned from today — ${plan.totalWeeks} weeks left, ${plan.buildWeeks} building, ${plan.reviewWeeks} review.`;
-    renderToday(plan);
-    renderWeek(plan);
-    renderRoadmap(plan);
+  // ============================================================
+  // ADJUST -- replaces "I've fallen behind, replan": the student's life
+  // didn't break the plan, so this never frames it as catching up.
+  // ============================================================
+  const adjustBtn = document.getElementById('adjustBtn') as HTMLButtonElement;
+  const adjustPanel = document.getElementById('adjustPanel') as HTMLElement;
+  const adjustEdit = document.getElementById('adjustEdit') as HTMLElement;
+  const returnBanner = document.getElementById('returnBanner') as HTMLElement;
 
-    const warningsBox = document.getElementById('warningsBox') as HTMLElement;
-    if (plan.warnings.length > 0) {
-      warningsBox.hidden = false;
-      warningsBox.innerHTML =
-        '<p class="warnings-title">After replanning, still worth knowing:</p><ul>' +
-        plan.warnings.map((w) => `<li><strong>${w.subjectName}</strong>: ${w.topicCount} topics left, about ${w.topicsThatFit} realistically fit before the exam.</li>`).join('') +
-        '</ul>';
+  adjustBtn.addEventListener('click', () => {
+    adjustPanel.hidden = !adjustPanel.hidden;
+    adjustEdit.hidden = true;
+    adjustEdit.innerHTML = '';
+    if (!adjustPanel.hidden) adjustPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  });
+
+  document.getElementById('adjustOptions')?.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-adjust]') as HTMLButtonElement | null;
+    if (!btn) return;
+    const kind = btn.dataset.adjust as 'missed' | 'less-time' | 'more-time' | 'date';
+    if (kind === 'missed') {
+      performReplan({});
     } else {
-      warningsBox.hidden = true;
+      openAdjustEdit(kind === 'less-time' || kind === 'more-time' ? 'less-time' : 'date');
     }
   });
+
+  function openAdjustEdit(kind: 'less-time' | 'date') {
+    adjustPanel.hidden = false;
+    adjustEdit.hidden = false;
+    const stored = loadInput();
+    if (!stored) return;
+
+    if (kind === 'less-time') {
+      const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      adjustEdit.innerHTML = `
+        <div class="field-group">
+          <span class="field-label">Days you can usually study</span>
+          <div class="day-toggles" id="adjustDayToggles" role="group" aria-label="Available days"></div>
+        </div>
+        <div class="field-group">
+          <label class="field-label" for="adjustHoursPerDay">Focused hours on a normal study day</label>
+          <input type="number" id="adjustHoursPerDay" min="0.5" max="12" step="0.5" value="${stored.hoursPerAvailableDay}" />
+        </div>
+        <button type="button" class="btn-primary" id="adjustSave">Save &amp; rebuild</button>`;
+      const toggleWrap = document.getElementById('adjustDayToggles') as HTMLElement;
+      dayNames.forEach((d, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'day-toggle';
+        btn.textContent = d;
+        btn.dataset.day = String(i);
+        const pressed = stored.availableDays.includes(i);
+        btn.setAttribute('aria-pressed', String(pressed));
+        if (pressed) btn.classList.add('selected');
+        btn.addEventListener('click', () => {
+          const isPressed = btn.getAttribute('aria-pressed') === 'true';
+          btn.setAttribute('aria-pressed', String(!isPressed));
+          btn.classList.toggle('selected', !isPressed);
+        });
+        toggleWrap.appendChild(btn);
+      });
+      document.getElementById('adjustSave')?.addEventListener('click', () => {
+        const hoursPerAvailableDay = parseFloat((document.getElementById('adjustHoursPerDay') as HTMLInputElement).value);
+        const availableDays = Array.from(toggleWrap.querySelectorAll<HTMLButtonElement>('.day-toggle'))
+          .filter((b) => b.getAttribute('aria-pressed') === 'true')
+          .map((b) => parseInt(b.dataset.day || '0', 10));
+        if (availableDays.length === 0) return;
+        performReplan({ hoursPerAvailableDay, availableDays });
+      });
+    } else {
+      adjustEdit.innerHTML = `
+        <div class="field-group">
+          <label class="field-label" for="adjustTargetDate">New exam date</label>
+          <input type="date" id="adjustTargetDate" value="${stored.targetDate}" />
+        </div>
+        <button type="button" class="btn-primary" id="adjustSave">Save &amp; rebuild</button>`;
+      document.getElementById('adjustSave')?.addEventListener('click', () => {
+        const targetDate = (document.getElementById('adjustTargetDate') as HTMLInputElement).value;
+        if (!targetDate || targetDate <= todayIso()) return;
+        performReplan({ targetDate });
+      });
+    }
+  }
+
+  function performReplan(overrides: Partial<PlannerInput>) {
+    const stored = loadInput();
+    if (!stored) return;
+    if (currentPlan) savePlanSnapshot(snapshotPlan(currentPlan));
+
+    const completed = loadCompletedKeys();
+    const newInput: PlannerInput = { ...stored, ...overrides, createdAt: todayIso() };
+    const plan = buildPlan({ input: newInput, allSubjects: subjects, alreadyCompletedKeys: completed });
+    saveInput(newInput);
+    currentPlan = plan;
+    renderAll(plan);
+
+    const prevSnapshot = loadPlanSnapshot();
+    if (prevSnapshot) {
+      const changes = diffPlans(prevSnapshot, plan);
+      renderReturnBanner(changes);
+      clearPlanSnapshot();
+    }
+
+    adjustPanel.hidden = true;
+    document.getElementById('todayCard')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderReturnBanner(changes: import('../../lib/plannerEngine').SubjectPlanChange[]) {
+    const moved = changes.filter((c) => c.status !== 'on-track');
+    returnBanner.hidden = false;
+    returnBanner.innerHTML = `
+      <p class="return-title">Welcome back.</p>
+      <p class="return-copy">You don't need to catch up on everything at once &mdash; we've adjusted the plan around where things stand now.${
+        moved.length
+          ? ' ' + moved.map((c) => `${c.subjectName} moved ${c.status === 'moved-later' ? 'a little later' : 'a little earlier'} to keep your revision time protected.`).join(' ')
+          : ' Everything else stayed on track.'
+      }</p>`;
+    setTimeout(() => { returnBanner.hidden = true; }, 12000);
+  }
 
   document.getElementById('printBtn')?.addEventListener('click', () => window.print());
 
@@ -457,31 +924,49 @@ const jsonLd = [
     if (!confirm('Clear your current plan and start over?')) return;
     clearInput();
     clearProgress();
+    clearPlanSnapshot();
+    currentPlan = null;
     resultsSection.hidden = true;
-    setupSection.hidden = false;
+    introSection.hidden = false;
+    wizardSection.hidden = false;
     form.reset();
     selectedElectives.clear();
     renderSubjectPicker();
     subjectDetails.innerHTML = '';
     dayToggles.forEach((b) => { b.setAttribute('aria-pressed', 'false'); b.classList.remove('selected'); });
+    showStep(0);
   });
 
-  // --- Returning visitor: skip the form if a plan already exists ---
+  // --- Returning visitor: skip straight to results if a plan exists ---
   const existing = loadInput();
   if (existing) {
-    renderResults(existing);
+    introSection.hidden = true;
+    wizardSection.hidden = true;
+    currentPlan = buildPlan({ input: existing, allSubjects: subjects, alreadyCompletedKeys: loadCompletedKeys() });
+    renderAll(currentPlan);
+    resultsSection.hidden = false;
   }
 </script>
 
-<style>
+<style is:global>
+  /* Global, deliberately: most of this page's content (tags, chips, task
+     rows, phase banner, roadmap weeks, the adjust panel) is built with
+     client-side JS (innerHTML/createElement) rather than the static Astro
+     template. Astro's default CSS scoping requires an element to carry a
+     build-time data-attribute that only server-rendered elements get --
+     a scoped rule like `.week-list li { }` silently never matches an
+     `<li>` created by client JS, even though the ancestor `.week-list`
+     (which IS in the static template) matches fine. Every class name
+     here is specific to this page, so going global costs nothing. */
   .planner {
-    max-width: 880px;
+    max-width: 760px;
     margin: 0 auto;
     padding: 0 var(--space-6) var(--space-24);
   }
 
+  /* ---------- Intro ---------- */
   .intro {
-    padding: var(--space-20) 0 var(--space-12);
+    padding: var(--space-16) 0 var(--space-10);
     text-align: center;
   }
 
@@ -492,8 +977,9 @@ const jsonLd = [
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--accent-text);
-    margin-bottom: var(--space-3);
   }
+
+  .intro .eyebrow { margin-bottom: var(--space-3); }
 
   .intro h1 {
     font-size: clamp(2rem, 5vw, 2.75rem);
@@ -504,21 +990,74 @@ const jsonLd = [
   }
 
   .intro .lede {
-    font-size: 1.08rem;
+    font-size: 1.05rem;
     line-height: 1.75;
     color: var(--text-light);
-    max-width: 60ch;
+    max-width: 58ch;
     margin: 0 auto;
   }
 
-  .setup-form {
+  /* ---------- Wizard ---------- */
+  .wizard-progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .wizard-step-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .wizard-dots { display: flex; gap: var(--space-2); }
+
+  .wizard-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--border);
+  }
+
+  .wizard-dot.done { background: var(--accent-deep); }
+  .wizard-dot.active { background: var(--accent); transform: scale(1.3); }
+
+  /* :not([hidden]) matters here -- an author rule that sets `display` on
+     an element unconditionally overrides the browser's own `[hidden] {
+     display: none }` UA rule (equal specificity, author wins), so without
+     this guard every step would render stacked regardless of its hidden
+     attribute. Same reasoning applies to every other hidden-toggled
+     element below that needs a non-default display value. */
+  .wiz-step:not([hidden]) {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: var(--space-8);
+    gap: var(--space-5);
+  }
+
+  .wiz-step h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+
+  .step-hint { font-size: 0.92rem; line-height: 1.6; color: var(--text-light); margin-top: calc(-1 * var(--space-3)); }
+
+  .step-error {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--accent-text);
+    margin-top: var(--space-4);
   }
 
   .field-group { display: flex; flex-direction: column; gap: var(--space-3); }
@@ -530,26 +1069,25 @@ const jsonLd = [
     color: var(--text);
   }
 
-  .field-hint { font-size: 0.85rem; color: var(--text-muted); margin-top: calc(-1 * var(--space-2)); }
-
   input[type="date"],
   input[type="number"],
   select {
     font-family: var(--font-main);
-    font-size: 0.95rem;
+    font-size: 1rem;
     color: var(--text);
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 10px 14px;
-    max-width: 260px;
+    padding: 12px 14px;
+    max-width: 280px;
   }
 
   .day-toggles { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
   .day-toggle,
   .subject-chip,
-  .segmented-btn {
+  .segmented-btn,
+  .chip-action {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 0.85rem;
@@ -557,7 +1095,7 @@ const jsonLd = [
     background: var(--bg);
     border: 1px solid var(--border);
     border-radius: var(--radius);
-    padding: 8px 14px;
+    padding: 9px 16px;
     cursor: pointer;
     transition: all 150ms ease;
   }
@@ -574,11 +1112,24 @@ const jsonLd = [
     color: var(--text-muted);
     cursor: default;
     background: var(--surface-raised);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .chip-note {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-text);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 1px 8px;
   }
 
   .subject-picker { display: flex; gap: var(--space-2); flex-wrap: wrap; }
 
-  .subject-details { display: flex; flex-direction: column; gap: var(--space-4); }
+  .subject-details { display: flex; flex-direction: column; gap: var(--space-5); }
 
   .subject-detail {
     border: 1px solid var(--border);
@@ -589,21 +1140,32 @@ const jsonLd = [
     gap: var(--space-4);
   }
 
-  .subject-detail legend {
+  .subject-detail-name {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.95rem;
+    font-weight: 800;
+    font-size: 1rem;
     color: var(--accent-text);
-    padding: 0 var(--space-2);
   }
 
-  .mini-label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: var(--space-2); }
+  .detail-row { display: flex; flex-direction: column; gap: var(--space-2); }
 
-  .confidence-row .segmented { display: flex; gap: var(--space-2); }
+  .mini-label { font-size: 0.85rem; color: var(--text-light); }
 
-  .btn-primary,
-  .btn-secondary,
-  .btn-text {
+  .segmented { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .stage-select { margin-top: var(--space-2); max-width: 100%; }
+
+  .review-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  .review-list li { display: flex; justify-content: space-between; gap: var(--space-4); font-size: 0.92rem; border-bottom: 1px solid var(--border); padding-bottom: var(--space-3); }
+  .review-list li:last-child { border-bottom: none; padding-bottom: 0; }
+  .review-list span { color: var(--text-muted); }
+  .review-list strong { color: var(--text); text-align: right; }
+
+  .wiz-nav { display: flex; justify-content: space-between; align-items: center; margin-top: var(--space-6); gap: var(--space-3); }
+  .wiz-nav .btn-primary { margin-left: auto; }
+
+  /* ---------- Buttons (shared) ---------- */
+  .btn-primary, .btn-secondary, .btn-text {
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 0.9rem;
@@ -617,68 +1179,120 @@ const jsonLd = [
     color: #1a0a00;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
     border: none;
-    align-self: flex-start;
   }
 
   .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3); }
 
-  .btn-secondary {
-    color: var(--text);
-    background: transparent;
-    border: 1px solid var(--border);
-  }
-
+  .btn-secondary { color: var(--text); background: transparent; border: 1px solid var(--border); }
   .btn-secondary:hover { border-color: var(--accent); }
 
-  .btn-text {
-    color: var(--text-muted);
-    background: none;
-    border: none;
-    text-decoration: underline;
+  .btn-text { color: var(--text-muted); background: none; border: none; text-decoration: underline; padding: 12px 8px; }
+
+  /* ---------- Building transition ---------- */
+  .building { text-align: center; padding: var(--space-16) 0; }
+
+  .building-title {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin-bottom: var(--space-5);
   }
 
-  .results-toolbar {
+  .building-steps { list-style: none; display: inline-flex; flex-direction: column; gap: var(--space-3); text-align: left; }
+
+  .building-steps li {
+    font-size: 0.92rem;
+    color: var(--text-muted);
+    opacity: 0.5;
+    transition: opacity 200ms ease, color 200ms ease;
+  }
+
+  .building-steps li.done { opacity: 1; color: var(--accent-text); }
+
+  /* ---------- Results header ---------- */
+  .results-header {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
     gap: var(--space-4);
-    padding: var(--space-6);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
     margin-bottom: var(--space-6);
   }
 
-  .summary-line { font-size: 0.95rem; color: var(--text-light); }
+  .results-header h1 { font-size: 1.6rem; font-weight: 900; letter-spacing: -0.01em; }
+  .results-header .eyebrow { margin-bottom: var(--space-2); }
 
-  .toolbar-actions { display: flex; gap: var(--space-3); flex-wrap: wrap; align-items: center; }
+  .toolbar-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; align-items: center; }
 
-  .warnings-box {
+  /* ---------- Return banner ---------- */
+  .return-banner {
     background: var(--surface);
     border: 1px solid var(--border);
     box-shadow: inset 3px 0 0 0 var(--accent);
     border-radius: var(--radius);
     padding: var(--space-5) var(--space-6);
+    margin-bottom: var(--space-5);
+  }
+
+  .return-title { font-family: var(--font-display); font-weight: 800; margin-bottom: var(--space-1); }
+  .return-copy { font-size: 0.9rem; color: var(--text-light); line-height: 1.6; }
+
+  /* ---------- Phase banner ---------- */
+  .phase-banner { margin-bottom: var(--space-5); }
+
+  .phase-label {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+  }
+
+  .phase-copy { font-size: 0.92rem; color: var(--text-light); line-height: 1.6; }
+
+  .phase-chips { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .phase-chip {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 5px 12px;
+  }
+
+  .phase-chip strong { color: var(--text); font-weight: 700; margin-right: 4px; }
+
+  /* ---------- Constraint box ---------- */
+  .constraint-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: inset 3px 0 0 0 var(--accent);
+    border-radius: var(--radius);
+    padding: var(--space-6);
     margin-bottom: var(--space-6);
   }
 
-  .warnings-title { font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; margin-bottom: var(--space-2); }
-  .warnings-box ul { padding-left: var(--space-5); display: flex; flex-direction: column; gap: var(--space-2); }
-  .warnings-box li { font-size: 0.9rem; color: var(--text-light); }
+  .constraint-title { font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; margin-bottom: var(--space-2); }
+  .constraint-copy { font-size: 0.9rem; color: var(--text-light); line-height: 1.65; margin-bottom: var(--space-4); }
 
-  .results-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    margin-bottom: var(--space-10);
-  }
+  .constraint-actions { display: flex; gap: var(--space-2); flex-wrap: wrap; margin-bottom: var(--space-3); }
 
-  .today-card, .week-card {
+  .chip-action.ghost { background: none; border-color: transparent; text-decoration: underline; color: var(--text-muted); }
+
+  .constraint-details { font-size: 0.85rem; }
+  .constraint-details summary { cursor: pointer; color: var(--text-muted); }
+  .constraint-details ul { list-style: none; padding-top: var(--space-2); display: flex; flex-direction: column; gap: var(--space-1); color: var(--text-light); }
+
+  /* ---------- Today / Week cards ---------- */
+  .today-card, .week-card, .progress-card {
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
+    margin-bottom: var(--space-5);
   }
 
   .card-label {
@@ -691,30 +1305,120 @@ const jsonLd = [
     margin-bottom: var(--space-4);
   }
 
-  .task-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  .task-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-4); }
 
-  .task-item label {
-    display: flex;
-    align-items: center;
-    gap: var(--space-2);
-    flex-wrap: wrap;
-    font-size: 0.92rem;
-    cursor: pointer;
+  .task-item { border-bottom: 1px solid var(--border); padding-bottom: var(--space-4); }
+  .task-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .task-row { display: flex; align-items: flex-start; gap: var(--space-3); }
+
+  .task-number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    min-width: 1.4em;
+    padding-top: 2px;
   }
 
-  .task-subject { font-family: var(--font-display); font-weight: 700; color: var(--accent-text); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.04em; }
-  .task-topic { color: var(--text); }
-  .task-kind { font-size: 0.72rem; color: var(--text-muted); border: 1px solid var(--border); border-radius: var(--radius-full); padding: 1px 8px; }
-  .task-kind.review { color: var(--accent-text); }
+  .task-main {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    cursor: pointer;
+    flex: 1;
+  }
+
+  .task-main input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer; }
+
+  .task-text { display: flex; flex-direction: column; gap: 2px; }
+
+  .task-subject {
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: var(--accent-text);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .task-topic { color: var(--text); font-size: 0.98rem; font-weight: 600; }
+
+  /* Tags -- distinct from everything else on the card by design: NEW is a
+     solid filled pill (the thing to act on), REVIEW is an outlined pill
+     (something you're returning to). Both stay within the brand's
+     gold-only accent system rather than introducing new colors per tag. */
+  .tag {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-radius: var(--radius-full);
+    padding: 3px 11px;
+    white-space: nowrap;
+    margin-left: auto;
+  }
+
+  .tag-new { color: #1a0a00; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); }
+  .tag-review { color: var(--accent-text); background: transparent; border: 1px solid var(--accent-deep); }
+
+  .why-next { margin: var(--space-2) 0 0 calc(1.4em + var(--space-3)); }
+  .why-next summary {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    list-style: none;
+  }
+  .why-next summary::-webkit-details-marker { display: none; }
+  .why-next summary::before { content: '▸ '; }
+  .why-next[open] summary::before { content: '▾ '; }
+  .why-next p { font-size: 0.85rem; color: var(--text-light); margin-top: var(--space-2); line-height: 1.6; }
+
+  .practice-nudge {
+    margin: var(--space-3) 0 0 calc(1.4em + var(--space-3));
+    font-size: 0.85rem;
+    color: var(--text-light);
+    font-style: italic;
+    border-left: 2px solid var(--border);
+    padding-left: var(--space-3);
+  }
+
   .task-empty, .empty-note { color: var(--text-muted); font-size: 0.9rem; }
 
-  .week-range { font-size: 0.8rem; color: var(--text-muted); margin-bottom: var(--space-3); }
-  .week-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-2); }
-  .week-list li { font-size: 0.9rem; color: var(--text-light); display: flex; gap: var(--space-2); align-items: baseline; flex-wrap: wrap; }
+  .week-summary { font-size: 0.85rem; color: var(--text-muted); margin-bottom: var(--space-4); }
+  .week-list { list-style: none; display: flex; flex-direction: column; gap: var(--space-3); }
+  .week-list li { font-size: 0.9rem; color: var(--text-light); display: flex; gap: var(--space-3); align-items: center; flex-wrap: wrap; }
+  .week-list .task-topic { font-size: 0.9rem; font-weight: 500; }
+  .week-list .tag { margin-left: auto; }
 
-  .roadmap h2 { font-size: 1.3rem; margin-bottom: var(--space-5); }
+  /* ---------- Progress ---------- */
+  .progress-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-5); }
 
-  .roadmap-weeks { display: flex; flex-direction: column; gap: var(--space-3); }
+  .stat-value { font-family: var(--font-display); font-weight: 900; font-size: 1.4rem; font-variant-numeric: tabular-nums; color: var(--text); }
+  .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: var(--space-1); line-height: 1.4; }
+
+  /* ---------- Route disclosure ---------- */
+  .route-disclosure {
+    margin-bottom: var(--space-6);
+  }
+
+  .route-disclosure > summary {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent-text);
+    cursor: pointer;
+    list-style: none;
+    padding: var(--space-4) 0;
+  }
+
+  .route-disclosure > summary::-webkit-details-marker { display: none; }
+  .route-disclosure > summary::before { content: '▸ '; }
+  .route-disclosure[open] > summary::before { content: '▾ '; }
+
+  .roadmap-weeks { display: flex; flex-direction: column; gap: var(--space-3); padding-top: var(--space-3); }
 
   .roadmap-week {
     background: var(--surface);
@@ -726,30 +1430,56 @@ const jsonLd = [
   .roadmap-week summary {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     cursor: pointer;
     list-style: none;
   }
 
   .roadmap-week summary::-webkit-details-marker { display: none; }
 
-  .roadmap-week ul {
-    list-style: none;
-    padding-top: var(--space-3);
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
+  .roadmap-week ul { list-style: none; padding-top: var(--space-3); display: flex; flex-direction: column; gap: var(--space-2); }
   .roadmap-week li { font-size: 0.85rem; color: var(--text-light); }
+  .review-note { color: var(--text-muted); font-size: 0.8rem; }
 
-  @media (max-width: 700px) {
-    .results-grid { grid-template-columns: 1fr; }
+  .print-roadmap { display: none; }
+
+  /* ---------- Adjust panel ---------- */
+  .adjust-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    margin-top: var(--space-6);
   }
+
+  .adjust-panel h3 { font-size: 1.05rem; font-weight: 800; margin-bottom: var(--space-4); }
+
+  .adjust-options { display: flex; gap: var(--space-2); flex-wrap: wrap; }
+
+  .adjust-options button {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text-light);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: border-color 150ms ease;
+  }
+
+  .adjust-options button:hover { border-color: var(--accent); }
+
+  .adjust-edit { display: flex; flex-direction: column; gap: var(--space-4); margin-top: var(--space-5); padding-top: var(--space-5); border-top: 1px solid var(--border); }
+  .adjust-edit .btn-primary { align-self: flex-start; }
 
   @media print {
     .no-print { display: none !important; }
+    .planner { max-width: none; padding: 0; }
+    .print-roadmap { display: block !important; }
+    .print-roadmap h2 { font-size: 1.3rem; margin-bottom: var(--space-5); }
     .roadmap-week { break-inside: avoid; border: 1px solid #999; }
-    .roadmap-week ul { display: flex !important; } /* force open in print regardless of <details> state */
+    .roadmap-week ul { display: flex !important; flex-direction: column; }
   }
 </style>

@@ -79,6 +79,8 @@ export interface PlannerPlan {
   weeks: WeekPlan[];
   /** Non-empty when the available time genuinely can't cover a subject's full topic list at a realistic pace -- surfaced rather than silently compressed, so "realistic" is actually true. */
   warnings: SubjectCoverageWarning[];
+  /** Total topics each subject is responsible for from its chosen starting stage onward (i.e. excluding whatever the student said they'd already covered) -- the denominator for a "Blueprint coverage" progress figure. Not the same as topicCount on a warning, which only exists for subjects currently short on time. */
+  subjectTopicTotals: Record<string, number>;
 }
 
 // A first-pass heuristic, not a measured constant -- deliberately simple
@@ -103,7 +105,7 @@ const YIELD_HOUR_MULTIPLIER: Record<'foundational' | 'low' | 'medium' | 'high', 
   high: 1.35,
 };
 
-function topicHours(topic: Pick<PlannedTopic, 'examWeight'>): number {
+export function topicHours(topic: Pick<PlannedTopic, 'examWeight'>): number {
   const tier = topic.examWeight?.tier ?? 'medium';
   return HOURS_PER_TOPIC_FIRST_PASS * YIELD_HOUR_MULTIPLIER[tier];
 }
@@ -282,6 +284,7 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
   const queues = new Map<string, PlannedTopic[]>();
   const subjectBySlug = new Map(allSubjects.map((s) => [s.slug, s]));
   const requiredHoursBySlug: Record<string, number> = {};
+  const subjectTopicTotals: Record<string, number> = {};
   for (const subjectInput of input.subjects) {
     const subject = subjectBySlug.get(subjectInput.slug);
     if (!subject) continue;
@@ -289,6 +292,7 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
     const remaining = all.filter((t) => !completed.has(t.key));
     queues.set(subjectInput.slug, remaining);
     requiredHoursBySlug[subjectInput.slug] = remaining.reduce((sum, t) => sum + topicHours(t), 0);
+    subjectTopicTotals[subjectInput.slug] = all.length;
   }
 
   // Try to actually fix a tight schedule before telling the student it's
@@ -381,7 +385,7 @@ export function buildPlan({ input, allSubjects, alreadyCompletedKeys }: BuildPla
     });
   }
 
-  return { input, totalWeeks, buildWeeks, reviewWeeks, weeklyCapacityHours, subjectWeeklyHours, weeks, warnings };
+  return { input, totalWeeks, buildWeeks, reviewWeeks, weeklyCapacityHours, subjectWeeklyHours, weeks, warnings, subjectTopicTotals };
 }
 
 /**
@@ -549,6 +553,12 @@ export interface DayTask {
   topicSlug?: string;
   key: string;
   kind: 'first-pass' | 'review';
+  /** The Blueprint stage this topic belongs to -- e.g. "This comes from your Chemistry Reactions & Energy stage." */
+  stageName: string;
+  /** Required topics (same subject) this one follows, where the Blueprint documents it -- the data behind "why this is next." Empty/absent for a topic that's a valid starting point. */
+  prerequisites?: string[];
+  /** Carried through so the UI can estimate hours spent via topicHours() -- e.g. a "time completed this week" figure that reflects the same yield-weighted cost the scheduler itself used, not a flat guess. */
+  examWeight?: { min: number; max: number; tier: 'foundational' | 'low' | 'medium' | 'high' };
 }
 
 /** Distributes a week's topics + review topics across that week's available days, round-robin by subject so no single day is overloaded with one subject, then returns just the slice for one specific day. */
@@ -559,9 +569,21 @@ export function getTasksForDate(plan: PlannerPlan, dateIso: string): DayTask[] {
   const weekday = new Date(dateIso + 'T00:00:00').getDay();
   if (!plan.input.availableDays.includes(weekday)) return [];
 
+  const toTask = (t: PlannedTopic, kind: DayTask['kind']): DayTask => ({
+    subjectSlug: t.subjectSlug,
+    subjectName: t.subjectName,
+    topicTitle: t.topicTitle,
+    topicSlug: t.topicSlug,
+    key: t.key,
+    kind,
+    stageName: t.stageName,
+    prerequisites: t.prerequisites,
+    examWeight: t.examWeight,
+  });
+
   const allItems: DayTask[] = [
-    ...week.topics.map((t) => ({ subjectSlug: t.subjectSlug, subjectName: t.subjectName, topicTitle: t.topicTitle, topicSlug: t.topicSlug, key: t.key, kind: 'first-pass' as const })),
-    ...week.reviewTopics.map((t) => ({ subjectSlug: t.subjectSlug, subjectName: t.subjectName, topicTitle: t.topicTitle, topicSlug: t.topicSlug, key: t.key, kind: 'review' as const })),
+    ...week.topics.map((t) => toTask(t, 'first-pass')),
+    ...week.reviewTopics.map((t) => toTask(t, 'review')),
   ];
   if (allItems.length === 0) return [];
 
