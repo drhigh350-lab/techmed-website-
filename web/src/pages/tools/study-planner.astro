@@ -242,6 +242,9 @@ const jsonLd = [
     loadNotes,
     saveNote,
     clearNotes,
+    saveCurrentWeekSnapshot,
+    loadCurrentWeekSnapshot,
+    clearCurrentWeekSnapshot,
   } from '../../lib/plannerStorage';
 
   const root = document.getElementById('planner') as HTMLElement;
@@ -633,10 +636,12 @@ const jsonLd = [
     saveInput(input);
     clearProgress();
     saveCompletedKeys(initiallyCompleted);
+    clearCurrentWeekSnapshot();
     runBuildingTransition(() => {
       introSection.hidden = true;
       wizardSection.hidden = true;
       currentPlan = buildPlan({ input, allSubjects: subjects, alreadyCompletedKeys: initiallyCompleted });
+      freezeCurrentWeek(currentPlan);
       renderAll(currentPlan);
       resultsSection.hidden = false;
     });
@@ -660,6 +665,36 @@ const jsonLd = [
   // RESULTS
   // ============================================================
   let currentPlan: PlannerPlan | null = null;
+
+  /** Takes a freshly-built plan's current week as the new frozen baseline -- used after any DELIBERATE change (a fresh build, Start Over, an explicit Adjust), where the student has just asked for a recompute and should see its real result immediately, today included. */
+  function freezeCurrentWeek(plan: PlannerPlan): void {
+    const week = getWeekForDate(plan, todayIso());
+    if (week) saveCurrentWeekSnapshot(week);
+  }
+
+  /**
+   * Swaps a freshly-built plan's current week for a previously frozen
+   * version of that *same* week (matched by week number and start date),
+   * if one exists -- keeps Today and This Week visually stable across a
+   * passive page reload. Without this, reloading the page after checking
+   * a topic off would silently recompute the whole schedule, and since
+   * that topic is now excluded from the queue, a different topic slides
+   * into today's slot to fill the gap -- the topic you just did
+   * disappears, replaced by something else, with no explanation. Once the
+   * calendar actually moves to a new week, there's nothing to reconcile
+   * against and this takes a fresh freeze instead.
+   */
+  function reconcileCurrentWeek(plan: PlannerPlan): PlannerPlan {
+    const freshWeek = getWeekForDate(plan, todayIso());
+    if (!freshWeek) return plan;
+    const frozen = loadCurrentWeekSnapshot();
+    if (frozen && frozen.weekNumber === freshWeek.weekNumber && frozen.startDate === freshWeek.startDate) {
+      const weeks = plan.weeks.map((w) => (w.weekNumber === freshWeek.weekNumber ? frozen : w));
+      return { ...plan, weeks };
+    }
+    saveCurrentWeekSnapshot(freshWeek);
+    return plan;
+  }
 
   function renderAll(plan: PlannerPlan) {
     renderHeader(plan);
@@ -1168,6 +1203,10 @@ const jsonLd = [
     const newInput: PlannerInput = { ...stored, ...overrides, createdAt: todayIso() };
     const plan = buildPlan({ input: newInput, allSubjects: subjects, alreadyCompletedKeys: completed });
     saveInput(newInput);
+    // A deliberate replan (not a passive reload) -- the student explicitly
+    // asked for this recompute, so today's view should show its real
+    // result rather than reconciling against the old frozen week.
+    freezeCurrentWeek(plan);
     currentPlan = plan;
     renderAll(plan);
 
@@ -1213,6 +1252,7 @@ const jsonLd = [
     clearProgress();
     clearPlanSnapshot();
     clearNotes();
+    clearCurrentWeekSnapshot();
     currentPlan = null;
     resultsSection.hidden = true;
     introSection.hidden = false;
@@ -1230,7 +1270,7 @@ const jsonLd = [
   if (existing) {
     introSection.hidden = true;
     wizardSection.hidden = true;
-    currentPlan = buildPlan({ input: existing, allSubjects: subjects, alreadyCompletedKeys: loadCompletedKeys() });
+    currentPlan = reconcileCurrentWeek(buildPlan({ input: existing, allSubjects: subjects, alreadyCompletedKeys: loadCompletedKeys() }));
     renderAll(currentPlan);
     resultsSection.hidden = false;
   }

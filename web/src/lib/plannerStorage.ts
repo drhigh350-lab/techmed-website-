@@ -2,7 +2,7 @@
 // V1 (the site is fully static; see plannerEngine.ts for why). Deliberately
 // thin: this file only knows how to read/write JSON, not how a plan is
 // built or interpreted -- that's plannerEngine.ts's job.
-import { toLocalIso, type PlannerInput, type PlannerPlan, type PlanSnapshot } from './plannerEngine';
+import { toLocalIso, type PlannerInput, type PlannerPlan, type PlanSnapshot, type WeekPlan } from './plannerEngine';
 
 const PLAN_KEY = 'techmed-study-planner:plan';
 const COMPLETED_KEY = 'techmed-study-planner:completed';
@@ -15,6 +15,15 @@ const NOTES_KEY = 'techmed-study-planner:notes';
 // this key at all, so "what changed" costs the one-and-done majority
 // nothing while still being there for students who come back.
 const SNAPSHOT_KEY = 'techmed-study-planner:previous-snapshot';
+// buildPlan() recomputes the entire schedule from scratch on every call,
+// including a plain page reload -- removing a newly-completed topic from
+// the queue shifts every later topic one slot earlier, which can pull a
+// *different* topic into today's already-shown slot. This holds the
+// current week's assignment steady across passive reloads (see
+// reconcileCurrentWeek in study-planner.astro); a deliberate action
+// (Adjust, Start Over, a fresh build) intentionally overwrites it with a
+// new baseline instead of reconciling against the old one.
+const CURRENT_WEEK_KEY = 'techmed-study-planner:current-week';
 
 function hasStorage(): boolean {
   try {
@@ -122,4 +131,25 @@ export function saveNote(key: string, note: string): void {
 export function clearNotes(): void {
   if (!hasStorage()) return;
   localStorage.removeItem(NOTES_KEY);
+}
+
+export function saveCurrentWeekSnapshot(week: WeekPlan): void {
+  if (!hasStorage()) return;
+  localStorage.setItem(CURRENT_WEEK_KEY, JSON.stringify(week));
+}
+
+export function loadCurrentWeekSnapshot(): WeekPlan | null {
+  if (!hasStorage()) return null;
+  const raw = localStorage.getItem(CURRENT_WEEK_KEY);
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as WeekPlan;
+  } catch {
+    return null;
+  }
+}
+
+export function clearCurrentWeekSnapshot(): void {
+  if (!hasStorage()) return;
+  localStorage.removeItem(CURRENT_WEEK_KEY);
 }
