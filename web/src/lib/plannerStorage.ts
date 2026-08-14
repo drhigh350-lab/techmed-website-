@@ -2,7 +2,7 @@
 // V1 (the site is fully static; see plannerEngine.ts for why). Deliberately
 // thin: this file only knows how to read/write JSON, not how a plan is
 // built or interpreted -- that's plannerEngine.ts's job.
-import type { PlannerInput, PlannerPlan, PlanSnapshot } from './plannerEngine';
+import { toLocalIso, type PlannerInput, type PlannerPlan, type PlanSnapshot } from './plannerEngine';
 
 const PLAN_KEY = 'techmed-study-planner:plan';
 const COMPLETED_KEY = 'techmed-study-planner:completed';
@@ -71,7 +71,7 @@ export function clearProgress(): void {
 }
 
 export function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalIso(new Date());
 }
 
 export function savePlanSnapshot(snapshot: PlanSnapshot): void {

@@ -125,10 +125,28 @@ function topicsFittingBudget(topics: PlannedTopic[], totalHours: number): number
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function addDays(iso: string, days: number): string {
+/**
+ * Formats a Date's own LOCAL calendar date as YYYY-MM-DD -- never
+ * `.toISOString().slice(0, 10)`, which converts to UTC first. For anyone
+ * in a positive UTC offset (Nigeria is UTC+1; plenty of other timezones
+ * are further ahead), local midnight -- or even local 5am -- can land on
+ * the *previous* UTC calendar day, so that pattern silently returns
+ * yesterday's date. That was the exact bug behind "week 1 started
+ * 2026-08-13 when today is 2026-08-14": addDays() below builds each
+ * week's start/end date this way, so every date in every plan was
+ * quietly off by a day for anyone east of Greenwich.
+ */
+export function toLocalIso(d: Date): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+export function addDays(iso: string, days: number): string {
   const d = new Date(iso + 'T00:00:00');
   d.setDate(d.getDate() + days);
-  return d.toISOString().slice(0, 10);
+  return toLocalIso(d);
 }
 
 function daysBetween(fromIso: string, toIso: string): number {
