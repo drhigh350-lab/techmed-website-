@@ -1,0 +1,243 @@
+---
+// Deliberately generates zero pages today: getSyllabusTopics() has no
+// fallback and no syllabusTopic documents exist in Sanity yet (no real
+// per-topic guidance content has been supplied beyond what already lives
+// on the subject page). The route is fully wired so a topic page appears
+// automatically, with no code changes, the moment one is published.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { getSyllabusTopics, getSubjectBySlug, type SyllabusTopic } from '../../../lib/syllabus';
+import { getResources } from '../../../lib/resources';
+
+export async function getStaticPaths() {
+  const topics = await getSyllabusTopics();
+  return Promise.all(
+    topics.map(async (topic) => {
+      const subject = await getSubjectBySlug(topic.subjectSlug);
+      return {
+        params: { subject: topic.subjectSlug, topic: topic.slug },
+        props: { topic, subjectName: subject?.name ?? topic.subjectSlug },
+      };
+    }),
+  );
+}
+
+interface Props {
+  topic: SyllabusTopic;
+  subjectName: string;
+}
+
+const { topic, subjectName } = Astro.props;
+
+const relatedResources = topic.relatedResourceSlugs?.length
+  ? (await getResources()).filter((r) => topic.relatedResourceSlugs?.includes(r.slug))
+  : [];
+
+const pageUrl = new URL(`/jamb-syllabus/${topic.subjectSlug}/${topic.slug}`, Astro.site).toString();
+const title = topic.metaTitle ?? `JAMB ${subjectName} ${topic.title}: What to Know & Study Order | TECHMED`;
+const description = topic.metaDescription ?? `Everything covered by JAMB's official syllabus for ${topic.title} in ${subjectName}, plus TECHMED's guidance on how to approach it.`;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: topic.title,
+    url: pageUrl,
+    description,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'JAMB Syllabus 2027', item: new URL('/jamb-syllabus-2027', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: subjectName, item: new URL(`/jamb-syllabus/${topic.subjectSlug}`, Astro.site).toString() },
+      { '@type': 'ListItem', position: 4, name: topic.title, item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout title={title} description={description} jsonLd={jsonLd}>
+  <article class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/jamb-syllabus-2027">JAMB Syllabus 2027</a>
+      <span aria-hidden="true">/</span>
+      <a href={`/jamb-syllabus/${topic.subjectSlug}`}>{subjectName}</a>
+      <span aria-hidden="true">/</span>
+      <span>{topic.title}</span>
+    </nav>
+
+    <h1>{topic.title}</h1>
+
+    {topic.officialScope && (
+      <section class="block official">
+        <h2>Official JAMB Scope</h2>
+        <p>{topic.officialScope}</p>
+      </section>
+    )}
+
+    {topic.whyThisMatters && (
+      <section class="block">
+        <h2>Why This Matters</h2>
+        <p>{topic.whyThisMatters}</p>
+      </section>
+    )}
+
+    {topic.beforeYouStart && (
+      <section class="block">
+        <h2>Before You Start</h2>
+        <p>{topic.beforeYouStart}</p>
+      </section>
+    )}
+
+    {topic.thisTopicUnlocks && (
+      <section class="block">
+        <h2>This Topic Unlocks</h2>
+        <p>{topic.thisTopicUnlocks}</p>
+      </section>
+    )}
+
+    {topic.commonTraps && topic.commonTraps.length > 0 && (
+      <section class="block">
+        <h2>Common Traps</h2>
+        <ul>
+          {topic.commonTraps.map((trap) => <li>{trap}</li>)}
+        </ul>
+      </section>
+    )}
+
+    {topic.historicalAnalysis && (
+      <section class="block historical">
+        <h2>Historical Analysis</h2>
+        <p>{topic.historicalAnalysis}</p>
+        <p class="disclaimer">Based on past-paper patterns — a directional estimate, not an official JAMB figure.</p>
+      </section>
+    )}
+
+    {relatedResources.length > 0 && (
+      <section class="block">
+        <h2>Related Resources</h2>
+        <ul class="link-list">
+          {relatedResources.map((r) => <li><a href={`/resources/${r.slug}`}>{r.title}</a></li>)}
+        </ul>
+      </section>
+    )}
+
+    {topic.relatedTopics && topic.relatedTopics.length > 0 && (
+      <section class="block">
+        <h2>Related Topics</h2>
+        <ul class="link-list">
+          {topic.relatedTopics.map((related) => (
+            <li><a href={`/jamb-syllabus/${related.subjectSlug}/${related.slug}`}>{related.title}</a></li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    {topic.practiceUrl && (
+      <a class="btn-primary" href={topic.practiceUrl}>Practice This Topic</a>
+    )}
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-8);
+  }
+
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent-text);
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-8);
+  }
+
+  .block {
+    margin-bottom: var(--space-8);
+  }
+
+  .block h2 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-3);
+  }
+
+  .block p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  .block.official {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+  }
+
+  .block.historical .disclaimer {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+  }
+
+  .block ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    padding-left: var(--space-6);
+  }
+
+  .block li {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  .link-list {
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .link-list a {
+    color: var(--accent-text);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .link-list a:hover {
+    text-decoration: underline;
+  }
+
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    text-decoration: none;
+  }
+</style>

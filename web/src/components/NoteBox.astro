@@ -1,0 +1,40 @@
+---
+// Shared callout box for "how to read this / where to focus" style notes.
+// Previously duplicated per-page (subject pages' .note/.dependency-note,
+// the UTME Hub's .blueprints-note) with the accent color as a border-left,
+// which miters into a visible seam against a rounded corner. Single
+// implementation now, using an inset box-shadow for the accent bar
+// instead — box-shadow respects the box's own border-radius natively, so
+// there's no separate border segment to miter against the others.
+interface Props {
+  tone?: 'info' | 'accent';
+}
+
+const { tone = 'info' } = Astro.props;
+---
+
+<div class:list={['note-box', tone]}>
+  <slot />
+</div>
+
+<style>
+  .note-box {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: inset 3px 0 0 0 var(--color-soft-blue);
+    padding: var(--space-5) var(--space-6) var(--space-5) calc(var(--space-6) + var(--space-3));
+    margin-bottom: var(--space-6);
+  }
+
+  .note-box.accent {
+    box-shadow: inset 3px 0 0 0 var(--accent);
+  }
+
+  .note-box :global(strong) {
+    color: var(--text);
+  }
+</style>

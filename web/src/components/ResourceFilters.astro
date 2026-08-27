@@ -1,0 +1,112 @@
+---
+// Client-side category filter for the resource grid. No framework
+// hydration — a small vanilla script (same pattern as Navbar's mobile
+// menu toggle) shows/hides cards by their data-category attribute and
+// reveals a graceful empty state when a category has no matches yet.
+interface Props {
+  categories: string[];
+  gridSelector?: string;
+}
+
+const { categories, gridSelector = '.resource-grid' } = Astro.props;
+---
+
+<div class="filters" role="tablist" aria-label="Filter resources by category" data-grid={gridSelector}>
+  {categories.map((category, i) => (
+    <button
+      type="button"
+      class:list={['filter-btn', { active: i === 0 }]}
+      data-filter={category}
+      role="tab"
+      aria-selected={i === 0 ? 'true' : 'false'}
+    >
+      {category}
+    </button>
+  ))}
+</div>
+
+<script>
+  document.querySelectorAll('.filters').forEach((group) => {
+    const gridSelector = group.getAttribute('data-grid');
+    const grid = gridSelector ? document.querySelector(gridSelector) : null;
+    if (!grid) return;
+
+    const buttons = group.querySelectorAll('.filter-btn');
+    const cards = grid.querySelectorAll('[data-category]');
+    const emptyState = grid.parentElement ? grid.parentElement.querySelector('[data-empty-state]') : null;
+
+    buttons.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        buttons.forEach((b) => {
+          b.classList.remove('active');
+          b.setAttribute('aria-selected', 'false');
+        });
+        btn.classList.add('active');
+        btn.setAttribute('aria-selected', 'true');
+
+        const filter = btn.getAttribute('data-filter');
+        let visibleCount = 0;
+        cards.forEach((card) => {
+          const matches = filter === 'All' || card.getAttribute('data-category') === filter;
+          card.style.display = matches ? '' : 'none';
+          if (matches) visibleCount += 1;
+        });
+
+        if (emptyState) {
+          emptyState.style.display = visibleCount === 0 ? 'block' : 'none';
+        }
+      });
+    });
+  });
+</script>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-12);
+  }
+
+  .filter-btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: var(--text-light);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 9px 18px;
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease, background 150ms ease;
+  }
+
+  .filter-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .filter-btn.active {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-color: transparent;
+  }
+
+  @media (max-width: 560px) {
+    .filters {
+      justify-content: flex-start;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: var(--space-2);
+      margin-left: calc(var(--space-6) * -1);
+      margin-right: calc(var(--space-6) * -1);
+      padding-left: var(--space-6);
+      padding-right: var(--space-6);
+    }
+
+    .filter-btn {
+      flex-shrink: 0;
+    }
+  }
+</style>

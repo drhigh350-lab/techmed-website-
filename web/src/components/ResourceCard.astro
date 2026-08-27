@@ -1,0 +1,321 @@
+---
+// Two usage modes, kept backward compatible with the original card:
+// 1. Legacy: title/description/tag/comingSoon (still used by tools.astro).
+// 2. Full: pass a `resource` from src/lib/resources.ts — renders category,
+//    type, free/paid status, price, and the correct action(s) for that
+//    resource's status (never "Buy" language on a free resource).
+//
+// Equal card height across a grid row is handled by the parent grid
+// (resources.astro sets its wrapper to `display: contents` so this card
+// becomes the real grid item and gets CSS grid's default stretch) — this
+// component just needs height: 100% + flex so the footer lands at the
+// same baseline regardless of description length.
+import type { Resource } from '../lib/resources';
+import { resourceIcon } from '../lib/resources';
+
+interface Props {
+  title?: string;
+  description?: string;
+  tag?: string;
+  comingSoon?: boolean;
+  /** Legacy-mode only: when set (and comingSoon is false), the whole card links here instead of showing a "Coming Soon" badge. */
+  href?: string;
+  resource?: Resource;
+}
+
+const { title, description, tag, comingSoon = false, href, resource } = Astro.props;
+
+const currencySymbol = resource?.currency === 'NGN' ? '₦' : (resource?.currency ?? '');
+const priceLabel = resource
+  ? resource.status === 'free'
+    ? 'FREE'
+    : resource.price
+      ? `${currencySymbol}${resource.price.toLocaleString()}`
+      : 'Price coming soon'
+  : '';
+
+const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
+const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
+const icon = resource ? resourceIcon(resource) : undefined;
+---
+
+{resource ? (
+  <div class:list={['resource-card', 'reveal', { featured: resource.featured }]}>
+    <a href={`/resources/${resource.slug}`} class="card-top">
+      {resource.primaryImage ? (
+        <div class="thumb">
+          <img src={resource.primaryImage} alt="" loading="lazy" decoding="async" />
+          {resource.featured && <span class="featured-badge overlay">Featured</span>}
+        </div>
+      ) : (
+        <div class="top-row">
+          {icon && <div class="icon" set:html={icon} />}
+          {resource.featured && <span class="featured-badge">Featured</span>}
+        </div>
+      )}
+      <p class="meta">{resource.category} · {resource.type}</p>
+      <h3>{resource.title}</h3>
+      <p class="description">{resource.description}</p>
+      <span class="preview-affordance">View Details <span aria-hidden="true">&rarr;</span></span>
+    </a>
+    <div class="card-footer">
+      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+      <div class="actions">
+        {resource.status === 'free' && primaryHref && (
+          <a
+            class="btn-primary"
+            href={primaryHref}
+            target={primaryIsExternal ? '_blank' : undefined}
+            rel={primaryIsExternal ? 'noopener' : undefined}
+          >
+            {resource.actionLabel}
+          </a>
+        )}
+        {resource.status === 'free' && !primaryHref && (
+          <a class="btn-primary" href={`/resources/${resource.slug}`}>{resource.actionLabel}</a>
+        )}
+        {resource.status === 'paid' && resource.paystackUrl && (
+          <a class="btn-primary" href={resource.paystackUrl}>Buy with Paystack</a>
+        )}
+        {resource.status === 'paid' && resource.whatsappUrl && (
+          <a class="btn-secondary" href={resource.whatsappUrl} target="_blank" rel="noopener">
+            {resource.paystackUrl ? 'Get via WhatsApp' : resource.actionLabel}
+          </a>
+        )}
+      </div>
+    </div>
+  </div>
+) : href ? (
+  <a href={href} class="resource-card reveal">
+    <div class="top">
+      {tag && <span class="tag">{tag}</span>}
+    </div>
+    <h3>{title}</h3>
+    <p class="description">{description}</p>
+    <span class="preview-affordance">Try It <span aria-hidden="true">&rarr;</span></span>
+  </a>
+) : (
+  <div class="resource-card reveal">
+    <div class="top">
+      {tag && <span class="tag">{tag}</span>}
+      {comingSoon && <span class="badge">Coming Soon</span>}
+    </div>
+    <h3>{title}</h3>
+    <p class="description">{description}</p>
+  </div>
+)}
+
+<style>
+  .resource-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .resource-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .resource-card.featured {
+    border-color: var(--accent);
+  }
+
+  .card-top {
+    display: flex;
+    flex-direction: column;
+    color: inherit;
+    text-decoration: none;
+    flex: 1;
+  }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 16 / 10;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface-raised);
+    margin-bottom: var(--space-4);
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .thumb .featured-badge.overlay {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+  }
+
+  .top,
+  .top-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+  }
+
+  .icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    color: var(--accent-text);
+  }
+
+  .icon :global(svg) {
+    width: 20px;
+    height: 20px;
+  }
+
+  .tag {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .badge,
+  .featured-badge {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--accent-text);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-full);
+    padding: 3px 10px;
+  }
+
+  .meta {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+  }
+
+  h3 {
+    font-size: 1rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .description {
+    font-size: 0.875rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  .preview-affordance {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    margin-top: var(--space-3);
+  }
+
+  .preview-affordance span {
+    transition: transform 200ms ease;
+  }
+
+  .resource-card:hover .preview-affordance span {
+    transform: translateX(3px);
+  }
+
+  .card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-top: var(--space-5);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+  }
+
+  .price-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    white-space: nowrap;
+    padding: 6px 14px;
+    border-radius: var(--radius-full);
+  }
+
+  .price-badge.free {
+    color: var(--accent-text);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  .price-badge.paid {
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-left: auto;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 9px 16px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    white-space: nowrap;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+</style>

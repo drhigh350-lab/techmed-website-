@@ -1,0 +1,365 @@
+---
+import { NAV_ROUTES } from '../lib/routes';
+import { getBuilderSettings } from '../lib/builders';
+
+// The sitewide "Join the Builders" CTA goes straight to the UTME 2027
+// Builders Channel everywhere except /utme-2027/builders itself, which is
+// the one page that also offers the actual current-cohort join link — see
+// that page for why the two are kept separate.
+const { channelUrl } = await getBuilderSettings();
+const currentPath = Astro.url.pathname;
+const isActive = (path: string) => currentPath === path || currentPath === `${path}/`;
+---
+
+<header class="navbar">
+  <nav class="navbar-inner">
+    <a href="/" class="logo">TECHMED</a>
+
+    <ul class="nav-links">
+      {NAV_ROUTES.map((route) => (
+        <li>
+          <a href={route.path} class:list={['nav-link', { active: isActive(route.path) }]}>
+            {route.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+
+    <button class="theme-toggle desktop-theme-toggle" id="themeToggle" aria-label="Switch to dark theme" type="button">
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+
+    <a class="cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
+
+    <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+  </nav>
+
+  <div class="mobile-menu" id="mobileMenu">
+    <ul>
+      {NAV_ROUTES.map((route) => (
+        <li>
+          <a href={route.path} class:list={['mobile-link', { active: isActive(route.path) }]}>
+            {route.label}
+          </a>
+        </li>
+      ))}
+    </ul>
+    <button class="theme-toggle mobile-theme-toggle" id="themeToggleMobile" type="button">
+      <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      <span class="mobile-theme-label">Dark theme</span>
+    </button>
+    <a class="mobile-cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
+  </div>
+</header>
+
+<script>
+  // Theme toggle — persists to the same localStorage key AND a 10-year
+  // cookie that BaseLayout's blocking inline script reads on next load,
+  // so the choice sticks across pages and visits even if one of the two
+  // stores gets cleared (see the long comment on that script — this
+  // matters in practice for the WhatsApp in-app browser and iOS Safari's
+  // storage purging). Two buttons (desktop + mobile) share one piece of
+  // state; both stay in sync via applyTheme().
+  const THEME_KEY = 'techmed-theme';
+  const desktopToggle = document.getElementById('themeToggle');
+  const mobileToggle = document.getElementById('themeToggleMobile');
+  const mobileLabel = mobileToggle?.querySelector('.mobile-theme-label');
+
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    try {
+      localStorage.setItem(THEME_KEY, theme);
+    } catch (e) {}
+    try {
+      document.cookie = `${THEME_KEY}=${theme}; max-age=315360000; path=/; SameSite=Lax`;
+    } catch (e) {}
+    const isDark = theme === 'dark';
+    desktopToggle?.setAttribute('aria-label', isDark ? 'Switch to light theme' : 'Switch to dark theme');
+    if (mobileLabel) mobileLabel.textContent = isDark ? 'Light theme' : 'Dark theme';
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+    applyTheme(current === 'dark' ? 'light' : 'dark');
+  }
+
+  // Sync the button labels to whatever BaseLayout's blocking script
+  // already applied before this script ran (avoids a label mismatch on
+  // a returning dark-mode visitor).
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+  desktopToggle?.addEventListener('click', toggleTheme);
+  mobileToggle?.addEventListener('click', toggleTheme);
+
+  const toggle = document.getElementById('menuToggle');
+  const menu = document.getElementById('mobileMenu');
+
+  toggle?.addEventListener('click', () => {
+    const isOpen = menu?.classList.toggle('open');
+    toggle.classList.toggle('open', isOpen);
+    toggle.setAttribute('aria-expanded', String(Boolean(isOpen)));
+    document.body.style.overflow = isOpen ? 'hidden' : '';
+  });
+
+  // Close the mobile menu on navigation, so it doesn't stay open across
+  // a route change (Astro does full page loads, but this covers the
+  // instant it takes the new page to render).
+  menu?.querySelectorAll('a').forEach((link) => {
+    link.addEventListener('click', () => {
+      menu.classList.remove('open');
+      toggle?.classList.remove('open');
+      toggle?.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = '';
+    });
+  });
+</script>
+
+<style>
+  .navbar {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(1, 39, 72, 0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .navbar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-4) var(--space-6);
+  }
+
+  .logo {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    text-decoration: none;
+    color: var(--text-on-dark-surface);
+    flex-shrink: 0;
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    list-style: none;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .nav-link {
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-light-on-dark-surface);
+    text-decoration: none;
+    padding: var(--space-2) 0;
+    position: relative;
+    transition: color 150ms ease;
+    white-space: nowrap;
+  }
+
+  .nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 200ms ease;
+  }
+
+  .nav-link:hover {
+    color: var(--text-on-dark-surface);
+  }
+
+  .nav-link:hover::after {
+    width: 100%;
+  }
+
+  .nav-link.active {
+    color: var(--text-on-dark-surface);
+  }
+
+  .nav-link.active::after {
+    width: 100%;
+  }
+
+  .theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 50%;
+    color: var(--text-light-on-dark-surface);
+    cursor: pointer;
+    transition: border-color 150ms ease, color 150ms ease;
+  }
+
+  .theme-toggle:hover {
+    color: var(--text-on-dark-surface);
+    border-color: var(--accent);
+  }
+
+  .theme-toggle .icon-moon {
+    display: none;
+  }
+
+  :root[data-theme='dark'] .theme-toggle .icon-sun {
+    display: none;
+  }
+
+  :root[data-theme='dark'] .theme-toggle .icon-moon {
+    display: block;
+  }
+
+  .cta {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 10px 20px;
+    border-radius: var(--radius-full);
+    text-decoration: none;
+    flex-shrink: 0;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .menu-toggle {
+    display: none;
+    flex-direction: column;
+    gap: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: var(--space-2);
+    flex-shrink: 0;
+  }
+
+  .menu-toggle span {
+    display: block;
+    width: 22px;
+    height: 2px;
+    background: var(--text-on-dark-surface);
+    border-radius: 2px;
+    transition: transform 200ms ease, opacity 200ms ease;
+  }
+
+  .menu-toggle.open span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+  }
+  .menu-toggle.open span:nth-child(2) {
+    opacity: 0;
+  }
+  .menu-toggle.open span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+  }
+
+  .mobile-menu {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .nav-links,
+    .cta,
+    .desktop-theme-toggle {
+      display: none;
+    }
+
+    .menu-toggle {
+      display: flex;
+    }
+
+    .mobile-menu {
+      display: block;
+      max-height: 0;
+      overflow: hidden;
+      background: var(--surface-dark);
+      border-top: 1px solid var(--border);
+      transition: max-height 300ms ease;
+    }
+
+    .mobile-menu.open {
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .mobile-menu ul {
+      list-style: none;
+      padding: var(--space-4) var(--space-6);
+    }
+
+    .mobile-link {
+      display: block;
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-light-on-dark-surface);
+      text-decoration: none;
+      padding: var(--space-4) 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .mobile-link.active {
+      color: var(--accent);
+    }
+
+    .mobile-theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--space-3);
+      width: calc(100% - var(--space-6) * 2);
+      height: auto;
+      border: none;
+      border-radius: 0;
+      border-bottom: 1px solid var(--border);
+      padding: var(--space-4) 0;
+      margin: 0 var(--space-6);
+      color: var(--text-light-on-dark-surface);
+    }
+
+    .mobile-theme-label {
+      font-family: var(--font-display);
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .mobile-cta {
+      display: block;
+      margin: 0 var(--space-6) var(--space-6);
+      text-align: center;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: #1a0a00;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      padding: 14px;
+      border-radius: var(--radius);
+      text-decoration: none;
+    }
+  }
+</style>

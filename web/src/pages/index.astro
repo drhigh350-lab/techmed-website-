@@ -1,11 +1,30 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Hero from '../components/Hero.astro';
+import UtmeGateway from '../components/UtmeGateway.astro';
+import WhyTechmedExists from '../components/WhyTechmedExists.astro';
+import WhoAreTheBuilders from '../components/WhoAreTheBuilders.astro';
+import WhatYoullReceive from '../components/WhatYoullReceive.astro';
+import EcosystemGrid from '../components/EcosystemGrid.astro';
+import BuilderManifesto from '../components/BuilderManifesto.astro';
+import FounderWelcome from '../components/FounderWelcome.astro';
+import FAQ from '../components/FAQ.astro';
+import FinalCTA from '../components/FinalCTA.astro';
 ---
 
 <BaseLayout
   title="TECHMED — Built to Last"
   description="TECHMED is a student-success ecosystem helping Nigerian students preparing for UTME move from confusion to clarity, from effort to strategy, and from potential to performance."
+  smoothScroll
 >
   <Hero />
+  <UtmeGateway />
+  <WhyTechmedExists />
+  <WhoAreTheBuilders />
+  <WhatYoullReceive />
+  <EcosystemGrid />
+  <BuilderManifesto />
+  <FounderWelcome />
+  <FAQ />
+  <FinalCTA />
 </BaseLayout>

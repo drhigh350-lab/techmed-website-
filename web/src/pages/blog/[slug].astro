@@ -1,0 +1,90 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ArticleDetail from '../../components/ArticleDetail.astro';
+import { getArticles, getRelatedArticles, type Article } from '../../lib/articles';
+
+export async function getStaticPaths() {
+  const articles = await getArticles();
+  return articles.map((article) => ({
+    params: { slug: article.slug },
+    props: {
+      article,
+      relatedArticles: getRelatedArticles(articles, article),
+    },
+  }));
+}
+
+interface Props {
+  article: Article;
+  relatedArticles: Article[];
+}
+
+const { article, relatedArticles } = Astro.props;
+
+const pageUrl = new URL(`/blog/${article.slug}`, Astro.site).toString();
+// Falls back through: explicit SEO override -> the article's own
+// title/excerpt/featured image -> BaseLayout's own sitewide defaults.
+const metaTitle = article.seo?.metaTitle ?? `${article.title} | TECHMED Blog`;
+const metaDescription = article.seo?.metaDescription ?? article.excerpt;
+const ogImage = article.seo?.socialImage ?? article.featuredImage;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Blog', item: new URL('/blog', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: article.title, item: pageUrl },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: article.title,
+    description: article.excerpt,
+    url: pageUrl,
+    mainEntityOfPage: pageUrl,
+    ...(article.featuredImage ? { image: article.featuredImage } : {}),
+    datePublished: article.publishedAt,
+    dateModified: article.updatedAt ?? article.publishedAt,
+    // Only a Person when a real name was actually entered in Studio for
+    // this article — never invented. Otherwise the byline is TECHMED
+    // itself, so the structured data says the same thing, not a guess.
+    author: article.author?.name
+      ? { '@type': 'Person', name: article.author.name }
+      : { '@type': 'Organization', name: 'TECHMED' },
+    publisher: {
+      '@type': 'Organization',
+      name: 'TECHMED',
+      logo: { '@type': 'ImageObject', url: new URL('/images/logo.png', Astro.site).toString() },
+    },
+  },
+  // Built directly from article.faq — real structured data, not scraped
+  // from prose, so it can never drift from what's actually on the page.
+  ...(article.faq && article.faq.length > 0
+    ? [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: article.faq.map((item) => ({
+            '@type': 'Question',
+            name: item.question,
+            acceptedAnswer: { '@type': 'Answer', text: item.answer },
+          })),
+        },
+      ]
+    : []),
+];
+---
+
+<BaseLayout
+  title={metaTitle}
+  description={metaDescription}
+  jsonLd={jsonLd}
+  ogImage={ogImage}
+  ogType="article"
+  canonicalUrl={article.seo?.canonicalUrl}
+>
+  <ArticleDetail article={article} relatedArticles={relatedArticles} pageUrl={pageUrl} />
+</BaseLayout>

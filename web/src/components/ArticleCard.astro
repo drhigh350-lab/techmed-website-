@@ -1,0 +1,140 @@
+---
+// Card for the /blog index — mirrors ResourceCard's visual language
+// (border, radius, hover lift) but tailored to article fields (category,
+// date, excerpt) instead of price/status, since the data shapes don't
+// overlap enough to share one component.
+import type { Article } from '../lib/articles';
+
+interface Props {
+  article: Article;
+  featured?: boolean;
+}
+
+const { article, featured = false } = Astro.props;
+
+const formattedDate = new Date(article.publishedAt).toLocaleDateString('en-NG', {
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+});
+---
+
+<a href={`/blog/${article.slug}`} class:list={['article-card', 'reveal', { featured }]}>
+  {article.featuredImage && (
+    <div class="thumb">
+      <img src={article.featuredImage} alt={article.featuredImageAlt ?? ''} loading="lazy" decoding="async" />
+    </div>
+  )}
+  <div class="content">
+    {article.category && <p class="category">{article.category.title}</p>}
+    <h3>{article.title}</h3>
+    <p class="excerpt">{article.excerpt}</p>
+    <div class="meta">
+      <time datetime={article.publishedAt}>{formattedDate}</time>
+      <span class="read-more">Read Article <span aria-hidden="true">&rarr;</span></span>
+    </div>
+  </div>
+</a>
+
+<style>
+  .article-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    color: inherit;
+    text-decoration: none;
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .article-card:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .article-card.featured {
+    border-color: var(--accent);
+  }
+
+  .thumb {
+    aspect-ratio: 16 / 9;
+    background: var(--surface-raised);
+  }
+
+  .thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    padding: var(--space-6);
+  }
+
+  .category {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  h3 {
+    font-size: 1.05rem;
+    line-height: 1.4;
+    margin-bottom: var(--space-3);
+  }
+
+  .featured h3 {
+    font-size: 1.3rem;
+  }
+
+  .excerpt {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    flex: 1;
+    margin-bottom: var(--space-5);
+  }
+
+  .meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .meta time {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .read-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    white-space: nowrap;
+  }
+
+  .read-more span {
+    transition: transform 200ms ease;
+  }
+
+  .article-card:hover .read-more span {
+    transform: translateX(3px);
+  }
+</style>

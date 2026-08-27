@@ -1,0 +1,530 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SubjectCard from '../../components/SubjectCard.astro';
+import PlaceholderPreview from '../../components/PlaceholderPreview.astro';
+import NoteBox from '../../components/NoteBox.astro';
+import { getSubjects, type Subject } from '../../lib/syllabus';
+import { getResources } from '../../lib/resources';
+
+export async function getStaticPaths() {
+  const subjects = await getSubjects();
+  return subjects.map((subject) => ({
+    params: { subject: subject.slug },
+    props: { subject, otherSubjects: subjects.filter((s) => s.slug !== subject.slug) },
+  }));
+}
+
+interface Props {
+  subject: Subject;
+  otherSubjects: Subject[];
+}
+
+const { subject, otherSubjects } = Astro.props;
+
+const relatedResource = subject.relatedResourceSlug
+  ? (await getResources()).find((r) => r.slug === subject.relatedResourceSlug)
+  : undefined;
+
+// Sanity file assets support a `?dl=<filename>` query param that forces a
+// download with a readable filename, instead of the CDN's hashed asset name.
+const guideDownloadUrl = subject.guideFileUrl
+  ? `${subject.guideFileUrl}?dl=${encodeURIComponent(`TECHMED ${subject.name} Blueprint.pdf`)}`
+  : undefined;
+
+const pageUrl = new URL(`/jamb-syllabus/${subject.slug}`, Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: `JAMB ${subject.name} Syllabus 2027`,
+    url: pageUrl,
+    description: subject.description,
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'JAMB Syllabus 2027', item: new URL('/jamb-syllabus-2027', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: subject.name, item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title={`JAMB ${subject.name} Syllabus 2027: Complete UTME Topics & Study Guide | TECHMED`}
+  description={`${subject.description} See every topic organized by study stage.`}
+  jsonLd={jsonLd}
+>
+  <article class="page">
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/jamb-syllabus-2027">JAMB Syllabus 2027</a>
+      <span aria-hidden="true">/</span>
+      <span>{subject.name}</span>
+    </nav>
+
+    <header class="header reveal">
+      <p class="eyebrow">JAMB {subject.name} Syllabus 2027</p>
+      <h1>{subject.name}</h1>
+      <p class="description">{subject.description}</p>
+      <div class="meta-row">
+        {subject.topicCount && <span class="meta-badge">{subject.topicCount} official topics</span>}
+        <span class="meta-badge">{subject.stages.length} study stages</span>
+      </div>
+    </header>
+
+    <section class="guide-card reveal">
+      <div class="guide-preview">
+        {subject.previewImage ? (
+          <img
+            class="preview-image"
+            src={subject.previewImage}
+            alt={`${subject.name} Blueprint roadmap preview`}
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <PlaceholderPreview label={`${subject.name} Roadmap Preview`} aspect="0.72" />
+        )}
+      </div>
+      <div class="guide-info">
+        <p class="guide-eyebrow">The {subject.name} Blueprint</p>
+        <p class="guide-copy">
+          Not just a topic list — this is the order to actually study {subject.name} in. What to learn
+          first, why it comes before what follows, and what it connects to later in the syllabus. Open
+          it once and you'll always know what's next.
+        </p>
+        {subject.guideFileUrl ? (
+          <div class="guide-actions">
+            <a class="btn-primary" href={subject.guideFileUrl} target="_blank" rel="noopener">Open the Blueprint</a>
+            <a class="btn-secondary" href={guideDownloadUrl}>Download Guide</a>
+          </div>
+        ) : (
+          <>
+            <span class="guide-badge">Full document coming soon</span>
+            <p class="guide-fallback-note">The stage-by-stage breakdown below is live already — the downloadable document is on its way.</p>
+          </>
+        )}
+      </div>
+    </section>
+
+    <div class="reveal">
+      <NoteBox>
+        <strong>How to read this page:</strong> the topic names are JAMB's official syllabus content. The
+        stage groupings below ("01 — Foundations", etc.) are TECHMED's own study-order structure, built to
+        make the syllabus easier to follow — not JAMB's official sectioning.
+      </NoteBox>
+    </div>
+
+    {subject.keyDependencies && (
+      <div class="reveal">
+        <NoteBox tone="accent">
+          <strong>Where to focus early:</strong> {subject.keyDependencies}
+        </NoteBox>
+      </div>
+    )}
+
+    {subject.examStructure && subject.examStructure.length > 0 && (
+      <section class="exam-structure reveal">
+        <h2>Exam Structure</h2>
+        {subject.requiredText && (
+          <p class="required-text">Required reading text: <strong>{subject.requiredText}</strong></p>
+        )}
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>Section</th><th>Area</th><th>Questions</th></tr>
+            </thead>
+            <tbody>
+              {subject.examStructure.map((row) => (
+                <tr>
+                  <td>{row.section}</td>
+                  <td>{row.area}</td>
+                  <td>{row.questions}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    )}
+
+    <section class="stages">
+      {subject.stages.map((stage) => (
+        <div class="stage reveal">
+          <h2>{stage.name}</h2>
+          <ul>
+            {stage.topics.map((topic) => (
+              <li>
+                {topic.slug ? (
+                  <a href={`/jamb-syllabus/${subject.slug}/${topic.slug}`}>{topic.title}</a>
+                ) : (
+                  topic.title
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </section>
+
+    {relatedResource && (
+      <section class="related-resource reveal">
+        <h2>Related Resource</h2>
+        <a class="resource-link" href={`/resources/${relatedResource.slug}`}>
+          <span class="resource-title">{relatedResource.title}</span>
+          <span class="resource-desc">{relatedResource.description}</span>
+          <span class="resource-cta">View Resource <span aria-hidden="true">&rarr;</span></span>
+        </a>
+      </section>
+    )}
+
+    <section class="other-subjects reveal">
+      <h2>Other Subjects</h2>
+      <div class="subject-grid">
+        {otherSubjects.map((s) => (
+          <SubjectCard subject={s} />
+        ))}
+      </div>
+    </section>
+  </article>
+</BaseLayout>
+
+<style>
+  .page {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-8);
+  }
+
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent-text);
+  }
+
+  .header {
+    margin-bottom: var(--space-8);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-4);
+  }
+
+  .description {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-5);
+  }
+
+  .meta-row {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  .meta-badge {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+  }
+
+  /* An inset box-shadow for the top accent bar instead of border-top:
+     mixing a 1px border with a thicker, differently-colored border-top
+     miters into a visible seam at the rounded corner. box-shadow respects
+     the box's own border-radius natively — same technique as
+     NoteBox.astro's accent bar. */
+  .guide-card {
+    display: flex;
+    gap: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+  }
+
+  .guide-preview {
+    flex-shrink: 0;
+    width: 160px;
+  }
+
+  .guide-preview .preview-image {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .guide-preview :global(.preview) {
+    width: 160px;
+  }
+
+  .guide-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  .guide-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
+  }
+
+  .guide-copy {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+    margin-bottom: var(--space-5);
+    max-width: 48ch;
+  }
+
+  .guide-actions {
+    display: flex;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .guide-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    width: fit-content;
+  }
+
+  .guide-fallback-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--space-2);
+    max-width: 44ch;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 10px 20px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+
+  .exam-structure {
+    margin-bottom: var(--space-10);
+  }
+
+  .exam-structure h2,
+  .stage h2,
+  .related-resource h2,
+  .other-subjects h2 {
+    font-size: 1.2rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .required-text {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    margin-bottom: var(--space-4);
+  }
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid var(--border);
+  }
+
+  th {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: none;
+  }
+
+  .stages {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    margin-bottom: var(--space-10);
+  }
+
+  .stage ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-2) var(--space-6);
+  }
+
+  .stage li {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    padding: var(--space-2) 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stage li a {
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .stage li a:hover {
+    text-decoration: underline;
+  }
+
+  .related-resource {
+    margin-bottom: var(--space-10);
+  }
+
+  .resource-link {
+    display: block;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    text-decoration: none;
+    color: inherit;
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .resource-link:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  .resource-title {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .resource-desc {
+    display: block;
+    font-size: 0.875rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .resource-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-text);
+  }
+
+  .other-subjects .subject-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  @media (max-width: 600px) {
+    .stage ul,
+    .other-subjects .subject-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .guide-card {
+      flex-direction: column;
+    }
+
+    .guide-preview,
+    .guide-preview :global(.preview) {
+      width: 100%;
+      max-width: 200px;
+    }
+  }
+</style>

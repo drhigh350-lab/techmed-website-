@@ -1,0 +1,341 @@
+---
+// The main content block for /resources/[slug]. Takes the resolved
+// resource plus a small set of related resources (same category) for
+// internal linking — real records only, never invented "related" items.
+import type { Resource } from '../lib/resources';
+import { resourceIcon } from '../lib/resources';
+
+interface Props {
+  resource: Resource;
+  related?: Resource[];
+}
+
+const { resource, related = [] } = Astro.props;
+
+const currencySymbol = resource.currency === 'NGN' ? '₦' : (resource.currency ?? '');
+const priceLabel =
+  resource.status === 'free'
+    ? 'FREE'
+    : resource.price
+      ? `${currencySymbol}${resource.price.toLocaleString()}`
+      : 'Price coming soon';
+
+const primaryHref = resource.accessUrl ?? resource.externalUrl;
+const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.accessUrl?.startsWith('http'));
+---
+
+<article class="detail">
+  <nav class="breadcrumb" aria-label="Breadcrumb">
+    <a href="/resources">Resources</a>
+    <span aria-hidden="true">/</span>
+    <span>{resource.title}</span>
+  </nav>
+
+  <header class="header reveal">
+    {resource.primaryImage ? (
+      <img class="hero-image" src={resource.primaryImage} alt="" loading="eager" decoding="async" />
+    ) : (
+      <div class="hero-icon" set:html={resourceIcon(resource)} />
+    )}
+    <p class="meta">{resource.category} · {resource.type}</p>
+    <h1>{resource.title}</h1>
+    <p class="description">{resource.description}</p>
+
+    <div class="cta-row">
+      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+
+      {resource.status === 'free' && primaryHref && (
+        <a
+          class="btn-primary"
+          href={primaryHref}
+          target={primaryIsExternal ? '_blank' : undefined}
+          rel={primaryIsExternal ? 'noopener' : undefined}
+        >
+          {resource.actionLabel}
+        </a>
+      )}
+
+      {resource.status === 'paid' && resource.paystackUrl && (
+        <a class="btn-primary" href={resource.paystackUrl}>Buy with Paystack</a>
+      )}
+
+      {resource.status === 'paid' && resource.whatsappUrl && (
+        <a class="btn-secondary" href={resource.whatsappUrl} target="_blank" rel="noopener">
+          {resource.paystackUrl ? 'Get via WhatsApp' : resource.actionLabel}
+        </a>
+      )}
+    </div>
+  </header>
+
+  <div class="body">
+    {resource.previewImages && resource.previewImages.length > 0 && (
+      <section class="gallery reveal">
+        {resource.previewImages.map((src) => (
+          <img src={src} alt="" loading="lazy" decoding="async" />
+        ))}
+      </section>
+    )}
+
+    {resource.whatsIncluded && resource.whatsIncluded.length > 0 && (
+      <section class="reveal">
+        <h2>What's Included</h2>
+        <ul>
+          {resource.whatsIncluded.map((item) => <li>{item}</li>)}
+        </ul>
+      </section>
+    )}
+
+    {resource.whoItsFor && (
+      <section class="reveal">
+        <h2>Who It's For</h2>
+        <p>{resource.whoItsFor}</p>
+      </section>
+    )}
+  </div>
+
+  {related.length > 0 && (
+    <section class="related reveal">
+      <h2>More From TECHMED Resources</h2>
+      <ul>
+        {related.map((item) => (
+          <li>
+            <a href={`/resources/${item.slug}`}>{item.title}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+</article>
+
+<style>
+  .detail {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-8);
+  }
+
+  .breadcrumb a {
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .breadcrumb a:hover {
+    color: var(--accent-text);
+  }
+
+  .header {
+    margin-bottom: var(--space-12);
+  }
+
+  .hero-image {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-8);
+  }
+
+  .hero-icon {
+    width: 64px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    color: var(--accent-text);
+    margin-bottom: var(--space-6);
+  }
+
+  .hero-icon :global(svg) {
+    width: 32px;
+    height: 32px;
+  }
+
+  .meta {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .description {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .cta-row {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    padding: var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+  }
+
+  .price-badge {
+    display: inline-flex;
+    align-items: center;
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    padding: 8px 18px;
+    border-radius: var(--radius-full);
+    margin-right: auto;
+  }
+
+  .price-badge.free {
+    color: var(--accent-text);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  .price-badge.paid {
+    color: var(--text);
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+
+  .body section {
+    margin-bottom: var(--space-10);
+  }
+
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .gallery img {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .body h2 {
+    font-size: 1.2rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .body p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  .body ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    padding-left: var(--space-6);
+  }
+
+  .body li {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  .related {
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--border);
+  }
+
+  .related h2 {
+    font-size: 1.1rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .related ul {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .related a {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .related a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 560px) {
+    .cta-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .price-badge {
+      margin-right: 0;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>

@@ -1,0 +1,75 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import ResourceDetail from '../../components/ResourceDetail.astro';
+import { getResources, type Resource } from '../../lib/resources';
+
+export async function getStaticPaths() {
+  const resources = await getResources();
+  return resources.map((resource) => ({
+    params: { slug: resource.slug },
+    props: {
+      resource,
+      related: resources
+        .filter((r) => r.category === resource.category && r.slug !== resource.slug)
+        .slice(0, 3),
+    },
+  }));
+}
+
+interface Props {
+  resource: Resource;
+  related: Resource[];
+}
+
+const { resource, related } = Astro.props;
+
+const pageUrl = new URL(`/resources/${resource.slug}`, Astro.site).toString();
+const currencyCode = resource.currency ?? 'NGN';
+// The canonical resource image doubles as the social-share image — falls
+// back to BaseLayout's own default (the TECHMED logo) when no primaryImage
+// has been uploaded yet, so OG/Twitter cards are never broken.
+const ogImage = resource.primaryImage;
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: new URL('/resources', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: resource.title, item: pageUrl },
+    ],
+  },
+  resource.status === 'paid'
+    ? {
+        '@context': 'https://schema.org',
+        '@type': 'Product',
+        name: resource.title,
+        description: resource.description,
+        ...(resource.primaryImage ? { image: resource.primaryImage } : {}),
+        offers: {
+          '@type': 'Offer',
+          priceCurrency: currencyCode,
+          ...(resource.price ? { price: resource.price } : {}),
+          availability: 'https://schema.org/InStock',
+          url: pageUrl,
+        },
+      }
+    : {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        name: resource.title,
+        description: resource.description,
+        url: pageUrl,
+      },
+];
+---
+
+<BaseLayout
+  title={`${resource.title} | TECHMED Resources`}
+  description={resource.description}
+  jsonLd={jsonLd}
+  ogImage={ogImage}
+>
+  <ResourceDetail resource={resource} related={related} />
+</BaseLayout>

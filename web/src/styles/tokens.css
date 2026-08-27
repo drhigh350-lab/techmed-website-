@@ -13,6 +13,14 @@
   --color-gold: #C9A227;
   --color-gold-light: #DBBE5C;
   --color-gold-deep: #A8841E;
+  /* Only for text set directly on a light surface — #C9A227 and #A8841E
+     both read well on dark navy (~5.5:1 and ~4:1) but drop to ~2.3-3.5:1
+     on the light theme's white/near-white surfaces, below the 4.5:1 AA
+     floor. This shade holds the same hue/saturation, just darker, and
+     clears AA (~5.1-5.6:1) even on the warmest surface it sits on (the
+     free-resource badge's gold-tinted background). See --accent-text
+     below. */
+  --color-gold-text: #7E6416;
   --color-white: #F8F9FA;
 
   /* Semantic roles (dark is default, per brand standard) */
@@ -27,6 +35,22 @@
   --accent: var(--color-gold);
   --accent-light: var(--color-gold-light);
   --accent-deep: var(--color-gold-deep);
+  /* Use for accent-colored TEXT (labels, links, badges). Distinct from
+     --accent, which stays the brighter gold for buttons/backgrounds/
+     borders where AA text-contrast rules don't apply. Dark theme keeps
+     the brighter gold here too, since it already contrasts well against
+     the permanently-dark surfaces (Navbar/Footer/Manifesto) that use it
+     directly via --accent, not this token. */
+  --accent-text: var(--accent);
+
+  /* Theme-invariant — for surfaces that intentionally stay dark-navy in
+     both themes (the sticky Navbar, the Footer, both already using
+     --surface-dark, which itself stays dark-navy in light mode too, see
+     below). --text/--text-light swap per theme, so components that keep
+     a permanently-dark background must use these instead, or their text
+     goes low-contrast the moment light mode is active. */
+  --text-on-dark-surface: var(--color-white);
+  --text-light-on-dark-surface: var(--color-soft-blue);
 
   /* Typography */
   --font-display: 'Montserrat', system-ui, sans-serif;
@@ -38,20 +62,40 @@
   --radius-lg: 20px;
   --radius-full: 9999px;
 
-  /* Spacing */
+  /* Spacing — the full 4px-increment scale (matches Tailwind's spacing
+     scale, which every page here was already written against). Only a
+     subset of these were ever actually defined below; every undefined
+     one (--space-1/5/7/9/10/14/20 — used in ~20 files across the site)
+     silently invalidated the ENTIRE declaration it appeared in, not just
+     that one value, per how var() with an undefined custom property
+     behaves — so real spacing across most pages was computing to 0
+     wherever one of these was used alone or as part of a shorthand.
+     Completing the scale here fixes every one of those call sites at
+     once, with no risk of a typo'd one-off replacement per site. */
+  --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
+  --space-7: 28px;
   --space-8: 32px;
+  --space-9: 36px;
+  --space-10: 40px;
   --space-12: 48px;
+  --space-14: 56px;
   --space-16: 64px;
+  --space-20: 80px;
   --space-24: 96px;
 }
 
 /*
-  Light mode is opt-in (data-theme="light"), matching the existing site's
-  theme-toggle behavior — dark is the brand-standard default.
+  Light is the default theme (set on <html data-theme="..."> by
+  BaseLayout, with the visitor's stored preference read before first
+  paint — see the inline script there). Dark stays available as an
+  explicit opt-in: data-theme="dark" (or no attribute at all) keeps the
+  unlabeled :root values above, which remain the brand-standard dark
+  palette unchanged.
 */
 :root[data-theme='light'] {
   --bg: #F8F9FA;
@@ -60,6 +104,10 @@
   --surface-dark: var(--color-deep-navy);
   --text: var(--color-deep-navy);
   --text-light: #3D5972;
-  --text-muted: var(--color-soft-blue);
+  /* --color-soft-blue (the dark theme's muted tone) only clears ~2.1:1
+     against these light surfaces — same hue/saturation, darkened until
+     it clears AA (~5.3:1 here). */
+  --text-muted: #4C6B85;
   --border: rgba(1, 39, 72, 0.1);
+  --accent-text: var(--color-gold-text);
 }

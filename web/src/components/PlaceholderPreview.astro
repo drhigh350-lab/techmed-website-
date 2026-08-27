@@ -1,0 +1,74 @@
+---
+// Tasteful stand-in for real product screenshots/mockups that don't exist
+// yet. Clearly labeled as a preview rather than pretending to be a real
+// screenshot — a blueprint-style grid rather than a fake UI mockup.
+interface Props {
+  label: string;
+  aspect?: string;
+}
+
+const { label, aspect = '16 / 10' } = Astro.props;
+---
+
+<div class="preview" style={`aspect-ratio: ${aspect};`}>
+  <div class="grid-bg"></div>
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-br"></div>
+  <span class="label">{label}</span>
+</div>
+
+<style>
+  .preview {
+    position: relative;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: var(--surface-raised);
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .grid-bg {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 32px 32px;
+    opacity: 0.5;
+    mask-image: radial-gradient(ellipse at center, black 40%, transparent 80%);
+  }
+
+  .corner {
+    position: absolute;
+    width: 24px;
+    height: 24px;
+    border-color: var(--accent);
+    opacity: 0.6;
+  }
+
+  .corner-tl {
+    top: 16px;
+    left: 16px;
+    border-top: 2px solid;
+    border-left: 2px solid;
+  }
+
+  .corner-br {
+    bottom: 16px;
+    right: 16px;
+    border-bottom: 2px solid;
+    border-right: 2px solid;
+  }
+
+  .label {
+    position: relative;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+</style>

@@ -1,0 +1,137 @@
+---
+// The TECHMED Method, visualized — the same seven-step system already
+// live as plain text on /utme-2027 (Understand -> Prepare), rendered here
+// as a real editorial diagram rather than a photo, since there's nothing
+// to photograph: it's a system, not a scene. Pure CSS/inline SVG, no
+// external image dependency, so it stays crisp at any size and costs
+// nothing to load.
+const STEPS = ['Understand', 'Plan', 'Learn', 'Practice', 'Diagnose', 'Revise', 'Prepare'];
+---
+
+<div class="method-diagram reveal" role="img" aria-label={`The TECHMED Method: a repeating cycle of ${STEPS.join(', ')}, until exam day.`}>
+  <ol class="steps">
+    {STEPS.map((step, i) => (
+      <li>
+        <span class="node">
+          <span class="number">{i + 1}</span>
+        </span>
+        <span class="label">{step}</span>
+      </li>
+    ))}
+  </ol>
+  <div class="loop">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <path d="M3 12a9 9 0 1 1 2.64 6.36" />
+      <path d="M3 21v-6h6" />
+    </svg>
+    <span>Repeats per topic, until exam day</span>
+  </div>
+</div>
+
+<style>
+  .method-diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+    padding: var(--space-8) var(--space-6) var(--space-6);
+    margin: var(--space-8) 0 var(--space-10);
+  }
+
+  .steps {
+    list-style: none;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .steps li {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100px;
+    position: relative;
+  }
+
+  /* Connecting line between nodes — drawn on every item except the last,
+     and hidden on the item right after a wrap (::after would otherwise
+     bridge across rows) via the nth-child media-query trick below. */
+  .steps li:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 19px;
+    left: calc(50% + 24px);
+    width: calc(100% - 48px);
+    height: 2px;
+    background: var(--border);
+  }
+
+  .node {
+    width: 40px;
+    height: 40px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-raised);
+    border: 2px solid var(--accent);
+    z-index: 1;
+  }
+
+  .number {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+  }
+
+  .label {
+    margin-top: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-align: center;
+    color: var(--text);
+  }
+
+  .loop {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .loop svg {
+    flex-shrink: 0;
+  }
+
+  .loop span {
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  @media (max-width: 700px) {
+    .steps li:not(:last-child)::after {
+      display: none;
+    }
+
+    .steps {
+      justify-content: flex-start;
+      gap: var(--space-4) var(--space-2);
+    }
+
+    .steps li {
+      width: 72px;
+    }
+  }
+</style>

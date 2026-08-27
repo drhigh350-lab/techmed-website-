@@ -1,0 +1,219 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import SubjectCard from '../components/SubjectCard.astro';
+import { getSubjects } from '../lib/syllabus';
+
+const subjects = await getSubjects();
+
+const pageUrl = new URL('/jamb-syllabus-2027', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'JAMB Syllabus 2027',
+    url: pageUrl,
+    description:
+      'The complete JAMB/UTME 2027 syllabus, broken down by subject — Mathematics, Physics, Chemistry, Biology and Use of English — with TECHMED\'s own study-stage structure for each.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'JAMB Syllabus 2027', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="JAMB Syllabus 2027: Complete UTME Subject Breakdown | TECHMED"
+  description="The full JAMB/UTME 2027 syllabus for Mathematics, Physics, Chemistry, Biology and Use of English — organized into TECHMED's own study stages so you know what to study first."
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <p class="eyebrow">JAMB / UTME 2027</p>
+    <h1>The JAMB syllabus, organized so you know what to study first.</h1>
+    <p class="subtitle">
+      This is the official JAMB syllabus for each subject, reorganized by TECHMED into a clear study
+      order — so you're not just reading a list of topics, you know which ones to master first and
+      why.
+    </p>
+  </section>
+
+  <section class="legend">
+    <div class="legend-item">
+      <span class="dot official" aria-hidden="true"></span>
+      <div>
+        <strong>Official JAMB content</strong>
+        <p>Topics and structure taken directly from JAMB's published syllabus.</p>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="dot techmed" aria-hidden="true"></span>
+      <div>
+        <strong>TECHMED interpretation</strong>
+        <p>Our stage groupings, study order and guidance — not JAMB's own sectioning.</p>
+      </div>
+    </div>
+    <div class="legend-item">
+      <span class="dot historical" aria-hidden="true"></span>
+      <div>
+        <strong>Historical analysis</strong>
+        <p>Directional patterns from past papers, never presented as official JAMB figures.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="subjects">
+    <SectionHeading title="Choose a subject" align="center" />
+    <div class="subject-grid">
+      {subjects.map((subject) => (
+        <SubjectCard subject={subject} />
+      ))}
+    </div>
+  </section>
+
+  <section class="next-step reveal">
+    <h2>Beyond the syllabus</h2>
+    <p>
+      Knowing what to study is the first step. TECHMED's <a href="/resources">Resources</a> hub has
+      revision systems for Chemistry, Biology and Physics, and the <a href="/cohort">Builder Cohort</a>
+      is where structured preparation actually happens — weekly sessions, practice and a community
+      built around the same syllabus. For the complete picture — Blueprints, Resources, Tools and the
+      Builder Cohort together — see the <a href="/utme-2027">UTME 2027 Hub</a>.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-10);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-4);
+  }
+
+  h1 {
+    font-size: clamp(1.9rem, 4.5vw, 2.75rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+  }
+
+  .legend {
+    max-width: 900px;
+    margin: 0 auto var(--space-16);
+    padding: 0 var(--space-6);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  .legend-item {
+    display: flex;
+    gap: var(--space-3);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-4);
+  }
+
+  .dot {
+    flex-shrink: 0;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-top: 6px;
+  }
+
+  .dot.official {
+    background: var(--accent);
+  }
+
+  .dot.techmed {
+    background: var(--color-soft-blue);
+  }
+
+  .dot.historical {
+    background: var(--text-muted);
+  }
+
+  .legend-item strong {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    margin-bottom: 4px;
+  }
+
+  .legend-item p {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--text-light);
+  }
+
+  .subjects {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .subject-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  .next-step {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-24);
+    text-align: center;
+  }
+
+  .next-step h2 {
+    font-size: 1.3rem;
+    margin-bottom: var(--space-4);
+  }
+
+  .next-step p {
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  .next-step a {
+    color: var(--accent-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .next-step a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 800px) {
+    .legend,
+    .subject-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

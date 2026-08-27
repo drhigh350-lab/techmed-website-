@@ -1,0 +1,477 @@
+---
+// The About page — replaces the previous ComingSoon stub. Built almost
+// entirely from real, already-established content: the homepage's own
+// "Why TECHMED Exists" and "Ecosystem" sections are reused directly
+// (not rewritten), the founder section reuses the same real bio/photo/
+// timeline already live on the homepage, and the Method section reuses
+// the same diagram already shipped on the Blog. New copy on this page
+// (hero, positioning intro, Blueprint note, principles, vision) draws
+// only from language already established elsewhere in this repo — see
+// each section's inline comment for its source. Nothing here is
+// invented: no stats, no claims beyond what's actually built.
+import BaseLayout from '../layouts/BaseLayout.astro';
+import WhyTechmedExists from '../components/WhyTechmedExists.astro';
+import EcosystemGrid from '../components/EcosystemGrid.astro';
+import TechmedMethodDiagram from '../components/TechmedMethodDiagram.astro';
+import FounderWelcome from '../components/FounderWelcome.astro';
+
+const pageUrl = new URL('/about', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'AboutPage',
+    name: 'About TECHMED',
+    url: pageUrl,
+    description:
+      'The story behind TECHMED — a student-success ecosystem helping Nigerian UTME candidates move from confusion to clarity — and the people building it.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'About', item: pageUrl },
+    ],
+  },
+];
+
+const visionFlow = [
+  'Discovery',
+  'Orientation',
+  'Planning',
+  'Learning',
+  'Practice',
+  'Diagnosis',
+  'Revision',
+  'Exam Prep',
+  'Admission',
+];
+
+const principles = [
+  { title: 'Clarity over noise.', body: 'Nigeria has no shortage of information. What’s scarce is structure — so clarity is the product, not an afterthought.' },
+  { title: 'Structure over random studying.', body: 'Preparation should not begin with more information. It should begin with better systems.' },
+  { title: 'Practice over passive consumption.', body: 'Reading a solution and producing one from scratch under pressure are different skills. Only one of them shows up on exam day.' },
+  { title: 'Diagnosis over guessing.', body: 'A wrong answer is data. Reviewing why you got it wrong matters more than getting more questions in front of you.' },
+  { title: 'Progress over perfection.', body: 'We do not measure progress by perfection. We measure progress by consistency.' },
+  { title: 'Confidence, earned. Never borrowed.', body: 'Confidence built through real preparation holds up under pressure. Confidence borrowed from hype does not.' },
+];
+---
+
+<BaseLayout
+  title="TECHMED — About | Student Success & UTME Preparation"
+  description="The story behind TECHMED — a student-success ecosystem helping Nigerian UTME candidates move from confusion to clarity — and the people building it."
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <div class="hero-inner reveal">
+      <p class="eyebrow">About TECHMED</p>
+      <h1>From confusion to clarity.</h1>
+      <p class="lede">
+        TECHMED is a student-success ecosystem — built to help Nigerian students preparing for
+        UTME move from confusion to clarity, from effort to strategy, and from potential to
+        performance.
+      </p>
+      <div class="actions">
+        <a class="btn-primary" href="/utme-2027">Explore UTME 2027</a>
+        <a class="btn-secondary" href="/resources">Explore Resources</a>
+      </div>
+    </div>
+  </section>
+
+  <WhyTechmedExists />
+
+  <section class="positioning">
+    <div class="positioning-inner reveal">
+      <h2>Not a tutorial centre. Not a blog. An ecosystem.</h2>
+      <p>
+        TECHMED isn't a collection of PDFs, a coaching brand, or another resource marketplace to
+        add to the pile. It's a connected system built around one idea: help a student understand
+        where they are, understand what they actually need to do next, and get the resources,
+        guidance and tools that move them forward — in one place, not scattered across a dozen
+        unrelated sources.
+      </p>
+    </div>
+  </section>
+
+  <EcosystemGrid />
+
+  <section class="blueprint-note">
+    <div class="note-card reveal">
+      <p class="note-label">A note on the Blueprints</p>
+      <p>
+        Each TECHMED Blueprint takes the official JAMB syllabus for a subject and reorganizes it
+        into a clear study order. The syllabus content stays exactly what JAMB published — the
+        stage groupings, sequencing and study guidance are TECHMED's own interpretation, built to
+        make the syllabus something you can actually plan and study from, not just a list to skim
+        once.
+      </p>
+      <a class="note-link" href="/jamb-syllabus-2027">See how the Blueprints are organized &rarr;</a>
+    </div>
+  </section>
+
+  <section class="method">
+    <div class="method-inner reveal">
+      <p class="eyebrow">How We Think About Student Success</p>
+      <h2>A system, not a checklist.</h2>
+      <p class="lede">
+        Every TECHMED Blueprint, resource and tool is built around the same seven-step cycle —
+        not seven tips to read once, but a loop you move through per topic, again and again,
+        until exam day.
+      </p>
+      <TechmedMethodDiagram />
+      <a class="method-link" href="/blog/how-to-prepare-for-jamb-2027">Read the full framework &rarr;</a>
+    </div>
+  </section>
+
+  <FounderWelcome />
+
+  <section class="approach">
+    <div class="approach-inner">
+      <p class="eyebrow">Our Approach</p>
+      <h2 class="reveal">What we actually believe</h2>
+      <div class="grid">
+        {principles.map((p) => (
+          <div class="principle reveal">
+            <h3>{p.title}</h3>
+            <p>{p.body}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="vision">
+    <div class="vision-inner reveal">
+      <p class="eyebrow">Where We're Going</p>
+      <h2>The ecosystem we're building toward</h2>
+      <p class="lede">
+        TECHMED is being built into a connected student-success ecosystem — one where a student
+        can discover an answer, understand what to do next, learn, practice, diagnose their
+        weaknesses, and keep moving forward, without leaving the system to piece it together
+        themselves. Not every part of that exists yet — this is the direction we're building in,
+        not a claim that all of it is already live.
+      </p>
+      <div class="flow">
+        {visionFlow.map((step, i) => (
+          <>
+            <span class="chip">{step}</span>
+            {i < visionFlow.length - 1 && <span class="arrow" aria-hidden="true">&rarr;</span>}
+          </>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <section class="closing-cta">
+    <div class="reveal">
+      <h2>If you're preparing for UTME, start where you are.</h2>
+      <div class="actions">
+        <a class="btn-primary" href="/utme-2027">Explore UTME 2027</a>
+        <a class="btn-secondary" href="/resources">Explore Resources</a>
+        <a class="btn-secondary" href="/blog">Read the Blog</a>
+      </div>
+    </div>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    background: linear-gradient(180deg, var(--surface-raised) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .hero-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6) var(--space-16);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .hero h1 {
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+    text-wrap: balance;
+  }
+
+  .lede {
+    font-size: 1.1rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 13px 26px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-secondary {
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--accent);
+  }
+
+  .positioning-inner {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-4);
+    text-align: center;
+  }
+
+  .positioning-inner h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-5);
+  }
+
+  .positioning-inner p {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  .blueprint-note {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-16);
+  }
+
+  .note-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    box-shadow: inset 0 2px 0 0 var(--accent);
+  }
+
+  .note-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .note-card p {
+    font-size: 0.98rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    margin-bottom: var(--space-4);
+  }
+
+  .note-link {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .note-link:hover {
+    text-decoration: underline;
+  }
+
+  .method {
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .method-inner {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+    text-align: center;
+  }
+
+  .method-inner h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-4);
+  }
+
+  .method-inner .lede {
+    max-width: 620px;
+    margin: 0 auto var(--space-8);
+    font-size: 1rem;
+  }
+
+  .method-link {
+    display: inline-block;
+    margin-top: var(--space-6);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .method-link:hover {
+    text-decoration: underline;
+  }
+
+  .approach-inner {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--space-24) var(--space-6);
+    text-align: center;
+  }
+
+  .approach-inner h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-10);
+  }
+
+  .approach .grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    text-align: left;
+  }
+
+  .principle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: border-color 200ms ease, transform 200ms ease;
+  }
+
+  .principle:hover {
+    border-color: var(--accent);
+    transform: translateY(-3px);
+  }
+
+  .principle h3 {
+    font-size: 1.02rem;
+    margin-bottom: var(--space-3);
+  }
+
+  .principle p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  .vision-inner {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-20);
+    text-align: center;
+  }
+
+  .vision-inner h2 {
+    font-size: clamp(1.5rem, 3.5vw, 2rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-5);
+  }
+
+  .vision-inner .lede {
+    font-size: 1rem;
+    margin-bottom: var(--space-8);
+  }
+
+  .flow {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .chip {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.82rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 8px 16px;
+    white-space: nowrap;
+  }
+
+  .arrow {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .closing-cta {
+    text-align: center;
+    padding: var(--space-24) var(--space-6);
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border-top: 1px solid var(--border);
+  }
+
+  .closing-cta h2 {
+    font-size: clamp(1.6rem, 3.5vw, 2.25rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    margin-bottom: var(--space-8);
+    max-width: 620px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  @media (max-width: 760px) {
+    .approach .grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 560px) {
+    .actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .actions a {
+      text-align: center;
+    }
+  }
+</style>

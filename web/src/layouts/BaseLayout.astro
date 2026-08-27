@@ -1,23 +1,127 @@
 ---
 import '../styles/tokens.css';
 import '../styles/global.css';
+import Navbar from '../components/Navbar.astro';
+import Footer from '../components/Footer.astro';
+import AnnouncementBanner from '../components/AnnouncementBanner.astro';
+import { getWhatsappChannelUrl } from '../lib/sanity';
+import { getContactChannels } from '../lib/contact';
 
 interface Props {
   title: string;
   description: string;
+  /** Enables CSS smooth-scrolling for in-page anchors. Homepage only by
+   * default — subpages are short and don't need it. */
+  smoothScroll?: boolean;
+  /** Absolute or root-relative OG/Twitter image. Defaults to the TECHMED
+   * logo — no page-specific social image exists yet for most routes. */
+  ogImage?: string;
+  ogType?: 'website' | 'article';
+  /** Additional JSON-LD objects a page wants injected (e.g. a resource
+   * detail page's Product/Offer or BreadcrumbList). Organization JSON-LD
+   * is always included sitewide, independent of this. */
+  jsonLd?: Record<string, unknown>[];
+  /** Overrides the auto-computed canonical URL (current path). Only
+   * needed where a page's own content can specify one, e.g. an article's
+   * optional SEO.canonicalUrl — every other page keeps the default. */
+  canonicalUrl?: string;
 }
 
-const { title, description } = Astro.props;
+const {
+  title,
+  description,
+  smoothScroll = false,
+  ogImage = '/images/logo.png',
+  ogType = 'website',
+  jsonLd = [],
+  canonicalUrl,
+} = Astro.props;
+
+const canonicalURL = canonicalUrl ? new URL(canonicalUrl, Astro.site) : new URL(Astro.url.pathname, Astro.site);
+const ogImageURL = new URL(ogImage, Astro.site);
+const whatsappChannel = await getWhatsappChannelUrl();
+// Real official profile URLs (same Sanity siteSettings fields the Contact
+// page and Footer use) — previously hard-coded to a single, stale
+// Facebook page here.
+const { facebookUrl, instagramUrl, youtubeUrl } = await getContactChannels();
+
+const organizationSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'TECHMED',
+  url: Astro.site?.toString(),
+  logo: new URL('/images/logo.png', Astro.site).toString(),
+  sameAs: [facebookUrl, instagramUrl, youtubeUrl, whatsappChannel],
+};
+
+const structuredData = [organizationSchema, ...jsonLd];
 ---
 
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light" data-smooth-scroll={smoothScroll ? 'true' : 'false'}>
   <head>
     <meta charset="UTF-8" />
+    <!-- Blocking (is:inline, not deferred) and placed before anything
+         paint-relevant, so a returning visitor's stored theme applies
+         before first paint rather than flashing the default light theme
+         first. Light remains correct for a no-JS visitor via the static
+         data-theme="light" attribute above.
+
+         Reads BOTH localStorage and a long-lived cookie, not just
+         localStorage: a lot of this site's traffic arrives through the
+         WhatsApp in-app browser and iOS Safari, both of which are known
+         to purge script-writable storage (localStorage included) after
+         about a week of no interaction, or between in-app-browser
+         sessions — the exact "the toggle doesn't stick" symptom. Two
+         independent stores mean either one surviving is enough; whichever
+         wins here also gets written back to the other so they stay in
+         sync going forward. -->
+    <script is:inline>
+      (function () {
+        try {
+          var fromCookie = document.cookie.match(/(?:^|; )techmed-theme=(dark|light)/);
+          var stored = localStorage.getItem('techmed-theme') || (fromCookie ? fromCookie[1] : null);
+          if (stored === 'dark' || stored === 'light') {
+            document.documentElement.setAttribute('data-theme', stored);
+            try { localStorage.setItem('techmed-theme', stored); } catch (e) {}
+            document.cookie = 'techmed-theme=' + stored + '; max-age=315360000; path=/; SameSite=Lax';
+          }
+        } catch (e) {}
+      })();
+    </script>
+    <!-- Tells the browser this page manages its own light/dark appearance
+         (see the theme system above) and already renders correctly in
+         either — without this, some Android browsers apply their own
+         "Force Dark" color-inversion heuristic on top of ours, which can
+         land on text colors that end up matching their own background
+         (selectable, but invisible) on complex injected content like an
+         article body. -->
+    <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="/favicon.png" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalURL} />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content="TECHMED" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalURL} />
+    <meta property="og:image" content={ogImageURL} />
+    <meta property="og:locale" content="en_NG" />
+
+    <!-- Twitter / X -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImageURL} />
+
+    {structuredData.map((schema) => (
+      <script type="application/ld+json" set:html={JSON.stringify(schema)} />
+    ))}
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -26,6 +130,48 @@ const { title, description } = Astro.props;
     />
   </head>
   <body>
+    <AnnouncementBanner />
+    <Navbar />
     <slot />
+    <Footer />
+    <style is:global>
+      /* Global, not per-page: no page should have to remember to hide the
+         site chrome itself when printing -- a page opts specific content
+         IN to print via its own CSS (e.g. the Study Planner's
+         .print-sheet), but the banner/nav/footer are never part of that,
+         on any page. */
+      @media print {
+        .banner, .navbar, .footer { display: none !important; }
+      }
+    </style>
+    <script>
+      // Site-wide scroll-reveal: arms .reveal elements (they stay fully
+      // visible via CSS until this class is added, so nothing depends on
+      // this script running), then fades/slides each one in the first
+      // time it enters the viewport.
+      document.body.classList.add('js-reveal-ready');
+
+      // threshold is a fraction of the TARGET's own height, not the
+      // viewport's — a value like 0.15 only works for elements shorter
+      // than ~6-7 viewport heights. A long-form article body can be many
+      // times taller than that, making 15% of its height physically
+      // larger than any viewport, so isIntersecting would never become
+      // true and the element would stay permanently hidden. threshold: 0
+      // fires as soon as any part of an element is visible, which works
+      // regardless of how tall the element is.
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add('active');
+              observer.unobserve(entry.target);
+            }
+          }
+        },
+        { threshold: 0, rootMargin: '0px 0px -40px 0px' },
+      );
+
+      document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
+    </script>
   </body>
 </html>

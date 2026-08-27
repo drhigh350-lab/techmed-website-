@@ -1,0 +1,163 @@
+---
+// Real platform features only: the Web Share API (native OS share sheet —
+// WhatsApp, Telegram, Copy, everything the device already offers) where
+// supported, falling back to a direct wa.me link (a real, documented
+// WhatsApp deep link, not a fabricated integration) plus copy-to-clipboard
+// where it isn't. No third-party share SDK, nothing invented.
+interface Props {
+  url: string;
+  title: string;
+}
+
+const { url, title } = Astro.props;
+const whatsappHref = `https://wa.me/?text=${encodeURIComponent(`${title} — ${url}`)}`;
+---
+
+<div class="share" data-share data-url={url} data-title={title}>
+  <button type="button" class="share-trigger" data-share-trigger aria-haspopup="true" aria-expanded="false">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="18" cy="5" r="3" />
+      <circle cx="6" cy="12" r="3" />
+      <circle cx="18" cy="19" r="3" />
+      <path d="M8.59 13.51l6.83 3.98M15.41 6.51L8.59 10.49" />
+    </svg>
+    <span>Share this article</span>
+  </button>
+
+  <div class="share-menu" data-share-menu>
+    <a href={whatsappHref} target="_blank" rel="noopener" class="share-option">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347M12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0012.05 0"/></svg>
+      <span>WhatsApp</span>
+    </a>
+    <button type="button" class="share-option" data-share-copy>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <rect x="9" y="9" width="13" height="13" rx="2" />
+        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+      </svg>
+      <span data-share-copy-label>Copy link</span>
+    </button>
+  </div>
+</div>
+
+<style>
+  .share {
+    position: relative;
+    display: inline-block;
+  }
+
+  .share-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.85rem;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 9px 16px;
+    cursor: pointer;
+    transition: border-color 150ms ease, transform 150ms ease;
+  }
+
+  .share-trigger:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  .share-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 20;
+    flex-direction: column;
+    min-width: 170px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+    padding: var(--space-2);
+  }
+
+  .share-menu.open {
+    display: flex;
+  }
+
+  .share-option {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    width: 100%;
+    font-family: var(--font-main);
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: var(--text);
+    background: none;
+    border: none;
+    text-decoration: none;
+    text-align: left;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 120ms ease;
+  }
+
+  .share-option:hover {
+    background: var(--surface-raised);
+  }
+
+  .share-option svg {
+    flex-shrink: 0;
+    color: var(--accent-text);
+  }
+</style>
+
+<script>
+  function initShare(root: HTMLElement) {
+    const trigger = root.querySelector<HTMLButtonElement>('[data-share-trigger]');
+    const menu = root.querySelector<HTMLElement>('[data-share-menu]');
+    const copyBtn = root.querySelector<HTMLButtonElement>('[data-share-copy]');
+    const copyLabel = root.querySelector<HTMLElement>('[data-share-copy-label]');
+    const url = root.dataset.url ?? '';
+    const title = root.dataset.title ?? '';
+
+    trigger?.addEventListener('click', async () => {
+      if (navigator.share) {
+        try {
+          await navigator.share({ title, url });
+        } catch {
+          // User cancelled the native share sheet — not an error.
+        }
+        return;
+      }
+      const isOpen = menu?.classList.toggle('open');
+      trigger.setAttribute('aria-expanded', String(Boolean(isOpen)));
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!root.contains(e.target as Node) && menu?.classList.contains('open')) {
+        menu.classList.remove('open');
+        trigger?.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    copyBtn?.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        if (copyLabel) {
+          const original = copyLabel.textContent;
+          copyLabel.textContent = 'Copied!';
+          setTimeout(() => {
+            copyLabel.textContent = original;
+          }, 1600);
+        }
+      } catch {
+        // Clipboard API unavailable — the link is still visible/selectable on the page itself.
+      }
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-share]').forEach(initShare);
+</script>

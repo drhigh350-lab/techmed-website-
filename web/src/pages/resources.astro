@@ -1,0 +1,305 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import SectionHeading from '../components/SectionHeading.astro';
+import ResourceCard from '../components/ResourceCard.astro';
+import FeaturedResource from '../components/FeaturedResource.astro';
+import ResourceFilters from '../components/ResourceFilters.astro';
+import QuizCard from '../components/QuizCard.astro';
+import { RESOURCE_CATEGORIES, getResources, getFeaturedResource, getQuizResources, resourceIcon } from '../lib/resources';
+
+const resources = await getResources();
+const featured = getFeaturedResource(resources);
+const categories = ['All', ...RESOURCE_CATEGORIES];
+const quizResources = getQuizResources(resources);
+// Matched by slug, not _id — the fallback data's id is a hand-picked
+// string, but a Sanity-authored Kairo document will have a random _id.
+// The slug is the one thing guaranteed to stay 'kairo' either way.
+const kairo = resources.find((resource) => resource.slug === 'kairo');
+
+const pageUrl = new URL('/resources', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'TECHMED Resources',
+    url: pageUrl,
+    description:
+      'Academic resources, admission guides, quizzes and digital tools built to help Nigerian students prepare with greater clarity and consistency.',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Resources', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="TECHMED Resources — Tools, Guides & Learning Systems"
+  description="Explore TECHMED academic resources, admission guides, quizzes and digital tools designed to help students prepare with greater clarity and consistency."
+  jsonLd={jsonLd}
+>
+  <section class="hero">
+    <p class="eyebrow">TECHMED RESOURCES</p>
+    <h1>Tools for the journey.</h1>
+    <p class="subtitle">
+      Explore academic resources, study systems, admission guides, quizzes and digital tools built
+      to help you prepare with greater clarity and consistency.
+    </p>
+    <a href="#catalog" class="btn-primary">Explore Resources</a>
+  </section>
+
+  <FeaturedResource resource={featured} />
+
+  <section class="catalog" id="catalog">
+    <SectionHeading title="Browse All Resources" align="center" />
+    <ResourceFilters categories={categories} gridSelector="#resource-grid" />
+
+    <div class="resource-grid" id="resource-grid">
+      {resources.map((resource) => (
+        <div class="grid-item" data-category={resource.category}>
+          <ResourceCard resource={resource} />
+        </div>
+      ))}
+    </div>
+
+    <p class="empty-state" data-empty-state>
+      No resources here yet. More resources are being built — check back soon.
+    </p>
+  </section>
+
+  <section class="quizzes">
+    <SectionHeading
+      eyebrow="Practice"
+      title="Test what you know."
+      subtitle="Practice is where understanding becomes performance."
+      align="center"
+    />
+    {quizResources.length > 0 ? (
+      <div class="quiz-grid">
+        {quizResources.map((quiz) => (
+          <QuizCard
+            title={quiz.title}
+            description={quiz.description}
+            startUrl={quiz.externalUrl ?? quiz.accessUrl ?? `/resources/${quiz.slug}`}
+            external={Boolean(quiz.externalUrl)}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">New practice quizzes are coming.</p>
+    )}
+  </section>
+
+  {kairo && (
+    <section class="digital-tools">
+      <SectionHeading eyebrow="Digital Tools" title="Kairo" align="center" />
+      <div class="kairo-card reveal">
+        {kairo.primaryImage ? (
+          <img class="kairo-image" src={kairo.primaryImage} alt="Kairo" loading="lazy" decoding="async" />
+        ) : (
+          <div class="icon" set:html={resourceIcon(kairo)} />
+        )}
+        <p class="positioning">
+          Kairo is a student intelligence and learning platform designed to understand the
+          learner's journey and help them make meaningful progress.
+        </p>
+        <a class="btn-primary" href={kairo.accessUrl}>Open Kairo</a>
+      </div>
+    </section>
+  )}
+
+  <section class="syllabus-link reveal">
+    <p>
+      Not sure what to study yet? See the full <a href="/jamb-syllabus-2027">JAMB Syllabus 2027</a>,
+      broken down by subject and study stage — or visit the <a href="/utme-2027">UTME 2027 Hub</a> for
+      the complete picture: Blueprints, Tools and the Builder Cohort in one place.
+    </p>
+  </section>
+</BaseLayout>
+
+<style>
+  .hero {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6) var(--space-12);
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-4);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 5vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    margin-bottom: var(--space-5);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .btn-primary {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 14px 28px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .catalog,
+  .quizzes,
+  .digital-tools {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .resource-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+    align-items: stretch;
+  }
+
+  /* Keeps the data-category wrapper for filtering, but makes ResourceCard
+     itself the real grid item so CSS grid's row-stretch equalizes card
+     height automatically — no JS measurement needed. */
+  .grid-item {
+    display: contents;
+  }
+
+  .empty-state {
+    display: none;
+    text-align: center;
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    padding: var(--space-12) var(--space-6);
+  }
+
+  /* Flexbox + centered wrap rather than a fixed 2-column grid: a grid
+     leaves a single item pinned to the left column with an empty gap
+     beside it, instead of centered — flex handles 1 item and several
+     items equally well. */
+  .quiz-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--space-5);
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .quiz-grid > :global(*) {
+    flex: 0 1 340px;
+  }
+
+  .quizzes .empty-state {
+    display: block;
+  }
+
+  .digital-tools {
+    max-width: 720px;
+  }
+
+  .kairo-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+  }
+
+  .kairo-card .icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--surface-raised);
+    color: var(--accent-text);
+    margin-bottom: var(--space-6);
+  }
+
+  .kairo-card .icon :global(svg) {
+    width: 28px;
+    height: 28px;
+  }
+
+  .kairo-image {
+    width: 96px;
+    height: 96px;
+    object-fit: cover;
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--space-6);
+  }
+
+  .positioning {
+    font-size: 1.1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    max-width: 52ch;
+    margin-bottom: var(--space-6);
+  }
+
+  .syllabus-link {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 var(--space-6) var(--space-24);
+    text-align: center;
+  }
+
+  .syllabus-link p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+  }
+
+  .syllabus-link a {
+    color: var(--accent-text);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  .syllabus-link a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 800px) {
+    .resource-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .quiz-grid > :global(*) {
+      flex-basis: 100%;
+    }
+  }
+</style>
