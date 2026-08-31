@@ -5,13 +5,16 @@ interface Props {
   href: string;
   /** Inline SVG markup (kept tiny + monochrome, matching the brief's "avoid unnecessary icons" guidance). */
   icon: string;
+  /** Optional small stage label above the title (e.g. "Know What Matters"), used by EcosystemGrid to group products around the student journey rather than presenting them as a flat catalogue. */
+  eyebrow?: string;
 }
 
-const { title, description, href, icon } = Astro.props;
+const { title, description, href, icon, eyebrow } = Astro.props;
 ---
 
 <a href={href} class="feature-card reveal">
   <div class="icon" set:html={icon} />
+  {eyebrow && <p class="stage-eyebrow">{eyebrow}</p>}
   <h3>{title}</h3>
   <p>{description}</p>
   <span class="learn-more">Learn More <span aria-hidden="true">&rarr;</span></span>
@@ -51,6 +54,16 @@ const { title, description, href, icon } = Astro.props;
   .icon :global(svg) {
     width: 22px;
     height: 22px;
+  }
+
+  .stage-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-2);
   }
 
   h3 {

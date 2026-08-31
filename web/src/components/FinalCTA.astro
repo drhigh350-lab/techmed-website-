@@ -4,9 +4,10 @@ const { channelUrl } = await getBuilderSettings();
 ---
 
 <section class="cta-section reveal">
-  <h2>Brick by brick. Day by day.</h2>
-  <p>You don't have to prepare alone.</p>
-  <a class="cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
+  <h2>You Don't Have To Prepare Alone.</h2>
+  <p>Brick by brick. Day by day.</p>
+  <a class="cta" href={channelUrl} target="_blank" rel="noopener">Become a Builder <span aria-hidden="true">&rarr;</span></a>
+  <p class="cta-note">Because things built well last.</p>
 </section>
 
 <style>
@@ -30,7 +31,9 @@ const { channelUrl } = await getBuilderSettings();
   }
 
   .cta {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 700;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
@@ -44,5 +47,12 @@ const { channelUrl } = await getBuilderSettings();
   .cta:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+  }
+
+  .cta-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--space-5);
+    margin-bottom: 0;
   }
 </style>
