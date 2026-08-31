@@ -1,9 +1,9 @@
 ---
-// Landing page hero — copy pulled directly from the UTME 2027 Campaign
-// Operating Manual (Chapter 39, Landing Page Structure) and the Branding
-// Standard's primary tagline. Copy is unchanged from v1.0; this pass only
-// adds background/motion polish (blueprint grid, radial glow, subtle
-// float) — restrained, Apple/Linear/Stripe-style, not flashy.
+// Homepage hero — v2 per the "Built to Last" refinement brief. The primary
+// value proposition ("Stop Guessing. Start Building.") now leads; BUILT TO
+// LAST moves to a small brand badge so it stays present as the campaign
+// identity without competing with the actual message. Only one CTA
+// ("Become a Builder") — no competing high-emphasis action.
 import { getBuilderSettings } from '../lib/builders';
 const { channelUrl } = await getBuilderSettings();
 ---
@@ -13,16 +13,17 @@ const { channelUrl } = await getBuilderSettings();
   <div class="hero-glow" aria-hidden="true"></div>
 
   <div class="hero-content">
-    <p class="eyebrow">TECHMED</p>
-    <h1>BUILT TO LAST</h1>
-    <p class="tagline">Think Smart. Perform Elite.</p>
+    <p class="badge">TECHMED &middot; Built to Last</p>
+    <h1>Stop Guessing. Start Building.</h1>
     <p class="lede">
-      Most students do not fail because they lack intelligence. They fail
-      because they prepare without a clear system. TECHMED replaces confusion
-      with clarity, guesswork with strategy, and inconsistency with systems
-      that keep working — even on the hardest days.
+      Your UTME 2027 preparation needs more than more questions, more notes,
+      and more hours. TECHMED gives serious students a structured system for
+      knowing what to study, how to practise, what to fix, and what to do
+      next — so you can prepare strategically instead of guessing your way
+      to exam day.
     </p>
-    <a class="cta" href={channelUrl} target="_blank" rel="noopener">Join the Builders</a>
+    <a class="cta" href={channelUrl} target="_blank" rel="noopener">Become a Builder <span aria-hidden="true">&rarr;</span></a>
+    <p class="cta-note">Free to start. Built for the journey.</p>
   </div>
 </section>
 
@@ -85,30 +86,26 @@ const { channelUrl } = await getBuilderSettings();
     }
   }
 
-  .eyebrow {
+  .badge {
+    display: inline-block;
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     font-weight: 700;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
     color: var(--accent-text);
-    margin-bottom: var(--space-3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 6px 16px;
+    margin-bottom: var(--space-5);
   }
 
   h1 {
-    font-size: clamp(2.5rem, 6vw, 4rem);
+    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
     font-weight: 900;
     letter-spacing: -0.03em;
-    margin-bottom: var(--space-3);
-  }
-
-  .tagline {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--text-light);
+    line-height: 1.1;
     margin-bottom: var(--space-6);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
   }
 
   .lede {
@@ -119,7 +116,9 @@ const { channelUrl } = await getBuilderSettings();
   }
 
   .cta {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 700;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
@@ -134,5 +133,11 @@ const { channelUrl } = await getBuilderSettings();
   .cta:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+  }
+
+  .cta-note {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: var(--space-4);
   }
 </style>

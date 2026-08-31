@@ -1,31 +1,41 @@
 ---
 // Source: Campaign Operating Manual, Chapter 3 — Why TECHMED Exists.
+// Copy sharpened per the "Built to Last" refinement brief: leads with the
+// system-vs-information distinction, then the five concrete shifts
+// TECHMED moves a student through, replacing the older generic "problems"
+// checklist so the section states one point clearly instead of listing
+// symptoms.
+const shifts = [
+  ['Confusion', 'Clarity'],
+  ['Passive Reading', 'Active Learning'],
+  ['Random Practice', 'Deliberate Practice'],
+  ['Effort', 'Strategy'],
+  ['Potential', 'Performance'],
+];
 ---
 
 <section class="section">
-  <h2>Why TECHMED Exists</h2>
+  <p class="eyebrow">Why TECHMED Exists</p>
+  <h2>You Don't Need More Information.<br />You Need A System.</h2>
   <p class="lede">
-    Nigeria has no shortage of tutorial centres. Students can already find
-    questions, notes, videos, past questions. Yet thousands remain confused —
-    not because information is scarce, but because structure is scarce.
+    Nigeria has no shortage of textbooks, past questions, videos, tutorials
+    and study materials. The problem is knowing what matters, what to do
+    with it, and what to do next.
+  </p>
+  <p class="lede">
+    TECHMED brings preparation together into one structured ecosystem — so
+    students can move from:
   </p>
 
-  <div class="problems reveal">
-    <p class="problems-label">Students often experience:</p>
-    <ul>
-      <li>Information overload</li>
-      <li>Poor planning</li>
-      <li>Inconsistent study habits</li>
-      <li>Lack of accountability</li>
-      <li>Isolation</li>
-      <li>Fear-based preparation</li>
-    </ul>
+  <div class="shifts reveal">
+    {shifts.map(([from, to]) => (
+      <div class="shift">
+        <span class="from">{from}</span>
+        <span class="arrow" aria-hidden="true">&rarr;</span>
+        <span class="to">{to}</span>
+      </div>
+    ))}
   </div>
-
-  <p class="close">
-    TECHMED exists to solve those problems. We believe preparation should
-    not begin with more information. It should begin with better systems.
-  </p>
 </section>
 
 <style>
@@ -35,10 +45,22 @@
     padding: var(--space-24) var(--space-6);
   }
 
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    text-align: center;
+    margin-bottom: var(--space-4);
+  }
+
   h2 {
     font-size: clamp(1.75rem, 4vw, 2.5rem);
     font-weight: 800;
     letter-spacing: -0.03em;
+    line-height: 1.25;
     margin-bottom: var(--space-6);
     text-align: center;
   }
@@ -47,68 +69,55 @@
     font-size: 1.1rem;
     line-height: 1.8;
     color: var(--text-light);
-    margin-bottom: var(--space-8);
+    text-align: center;
+    margin-bottom: var(--space-5);
   }
 
-  .problems {
+  .shifts {
+    margin-top: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .shift {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-8);
-    margin-bottom: var(--space-8);
+    border-radius: var(--radius);
+    padding: var(--space-4) var(--space-6);
+    font-family: var(--font-display);
+    font-weight: 700;
     transition: border-color 200ms ease, transform 200ms ease;
   }
 
-  .problems:hover {
+  .shift:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
   }
 
-  .problems-label {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--accent-text);
-    margin-bottom: var(--space-4);
-  }
-
-  .problems ul {
-    list-style: none;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-3);
-  }
-
-  .problems li {
+  .from {
+    color: var(--text-muted);
     font-size: 0.95rem;
-    color: var(--text-light);
-    padding-left: var(--space-4);
-    position: relative;
   }
 
-  .problems li::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0.5em;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
+  .arrow {
+    color: var(--accent-text);
   }
 
-  .close {
-    font-size: 1.15rem;
-    font-weight: 600;
-    line-height: 1.7;
-    text-align: center;
+  .to {
+    color: var(--text);
+    font-size: 0.95rem;
   }
 
-  @media (max-width: 600px) {
-    .problems ul {
-      grid-template-columns: 1fr;
+  @media (max-width: 560px) {
+    .shift {
+      flex-wrap: wrap;
+      gap: var(--space-2);
+      text-align: center;
     }
   }
 </style>
