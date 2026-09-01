@@ -1,30 +1,75 @@
 ---
 // The UTME 2027 Builder page — the single, consolidated home for the
-// Builder identity, the permanent Builders Channel, and (when active) the
-// current free tutorial cohort. Previously split across this page and
-// /utme-2027/builders/join; merged into one page (with a redirect from
-// the old URL, see astro.config.mjs) so a student isn't routed through
-// multiple pages to do one thing. Every other "Join the Builders" CTA
-// sitewide points straight at the permanent Channel — this is the only
-// page that also surfaces the actual current-cohort join link, since
-// that's the one destination TECHMED needs to be able to change (a full
-// vs. new cohort) without touching any other page on the site. See
-// web/src/lib/builders.ts and studio/schemaTypes/utmeBuilderSettings.ts.
+// Builder identity, the Builder culture (4H Standard, Builder Rules, the
+// Manifesto) and the permanent Builders Channel. Previously also carried
+// the "Current Builder Experience" — the free tutorial cohort, with its
+// dates and a direct join link — but that section has been pulled
+// entirely at the site owner's request until the 30-day Free UTME
+// Foundation Protocol is finalized; nothing here should promise or
+// reference an active cohort/classroom experience until it's back.
+// Every "Join the Builders" CTA sitewide, this page's included, points at
+// the permanent Builders Channel — see web/src/lib/builders.ts.
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import SectionHeading from '../../components/SectionHeading.astro';
-import NoteBox from '../../components/NoteBox.astro';
 import BuilderManifesto from '../../components/BuilderManifesto.astro';
-import { getBuilderSettings, formatDateRange } from '../../lib/builders';
+import { getBuilderSettings } from '../../lib/builders';
 
-const settings = await getBuilderSettings();
-const tutorialDates = formatDateRange(settings.tutorialStartDate, settings.tutorialEndDate);
-const showTutorial = settings.tutorialActive && settings.tutorialTitle;
+const { channelUrl, channelLabel } = await getBuilderSettings();
 
 const PILLARS = [
   { name: 'Understanding', copy: "Know what you're actually studying." },
   { name: 'Consistency', copy: 'Build a preparation routine you can sustain.' },
   { name: 'Practice', copy: "Turn what you learn into performance." },
   { name: 'Confidence', copy: 'See your improvement through deliberate work.' },
+];
+
+// Verbatim from WhoAreTheBuilders.astro (Campaign Operating Manual, Chapters
+// 6 and 11), reused here rather than importing that component so this
+// section can get its own editorial layout instead of the homepage's card
+// grid. Keep in sync with that component by hand if the source copy changes.
+const BUILDER_TRAITS = [
+  { name: 'Knowledge', copy: 'Not memorization. Understanding.' },
+  { name: 'Discipline', copy: 'Showing up even when motivation disappears.' },
+  { name: 'Confidence', copy: 'Earned through preparation. Never borrowed.' },
+  { name: 'Character', copy: 'Integrity, curiosity, humility, consistency.' },
+  { name: 'Systems', copy: 'Study plans, revision methods, reflection habits.' },
+  { name: 'The Future', copy: 'UTME is one chapter. Not the entire story.' },
+];
+
+// Same seven stages as /utme-2027's "The TECHMED System" section, repeated
+// here (not imported) so this page doesn't depend on that page's internals.
+// Keep the two arrays in sync by hand if the system copy ever changes.
+const SYSTEM_STEPS = [
+  { name: 'Understand', copy: 'Know what JAMB 2027 actually expects, subject by subject.' },
+  { name: 'Plan', copy: 'Turn the syllabus into a study order you can actually follow.' },
+  { name: 'Learn', copy: 'Work through each topic with real material, not guesswork.' },
+  { name: 'Practice', copy: "Apply what you've learned under real conditions." },
+  { name: 'Diagnose', copy: "Find out exactly where you're strong and where you're not." },
+  { name: 'Revise', copy: 'Close the gaps the diagnosis reveals.' },
+  { name: 'Prepare', copy: 'Walk into the exam ready, not hopeful.' },
+];
+
+// Verbatim from WhatYoullReceive.astro (Campaign Operating Manual, Chapter
+// 39). Only the items independent of the current-cohort tutorial schedule
+// are used here — "Community" and "Builder Sessions" both describe the
+// assigned-classroom cohort experience, paused sitewide for now.
+const WHAT_YOULL_FIND = [
+  {
+    name: 'Study Strategy',
+    copy: 'Blueprint Tuesday: study planning, timetables and learning systems built around how students actually improve — not generic advice.',
+  },
+  {
+    name: 'Challenges',
+    copy: 'Practice days built around questions, quizzes and mocks that sharpen speed, accuracy and exam confidence through repetition.',
+  },
+  {
+    name: "Builder's Table",
+    copy: "TECHMED's signature monthly live event — every Builder, one room. Teaching, reflection, questions answered, progress celebrated.",
+  },
+  {
+    name: 'Podcast',
+    copy: '5 Minutes Forward — a daily habit of intentional growth. Discipline, consistency, resilience: the character behind the score.',
+  },
 ];
 
 const FOUR_H = [
@@ -64,7 +109,7 @@ const jsonLd = [
     name: 'UTME 2027 Builders — TECHMED',
     url: pageUrl,
     description:
-      "The UTME 2027 Builder identity, the permanent Builders Channel, and TECHMED's free UTME 2027 tutorial experience.",
+      "The UTME 2027 Builder identity, culture and the permanent Builders Channel — TECHMED's free preparation community for UTME 2027 candidates.",
   },
   {
     '@context': 'https://schema.org',
@@ -79,8 +124,8 @@ const jsonLd = [
 ---
 
 <BaseLayout
-  title="UTME 2027 Builders — Free Preparation & Tutorials | TECHMED"
-  description="Join the UTME 2027 Builders: TECHMED's free preparation identity and community for UTME 2027 candidates, including the free UTME 2027 tutorial experience."
+  title="UTME 2027 Builders — TECHMED"
+  description="Join the UTME 2027 Builders: TECHMED's free preparation identity and community for UTME 2027 candidates."
   jsonLd={jsonLd}
   smoothScroll
 >
@@ -90,24 +135,20 @@ const jsonLd = [
     <div class="hero-content">
       <p class="eyebrow">UTME 2027</p>
       <h1>BUILT TO LAST.</h1>
-      <p class="lede">
-        Preparing for UTME isn't about being perfect from day one. It's about building a
-        preparation you can keep showing up for.
-      </p>
+      <p class="lede">You don't need to have everything figured out. You need to be willing to build.</p>
       <div class="hero-ctas">
-        <a class="btn-primary" href={settings.channelUrl} target="_blank" rel="noopener">Join the Builders</a>
+        <a class="cta-primary" href={channelUrl} target="_blank" rel="noopener">
+          JOIN THE BUILDERS <span aria-hidden="true">&rarr;</span>
+        </a>
       </div>
     </div>
   </section>
 
-  <!-- 2. WHAT IS A BUILDER? -->
-  <section class="what-is">
+  <!-- 2. WHO IS A BUILDER? -->
+  <section class="identity-strip">
     <SectionHeading eyebrow="The Identity" title="Who Is a Builder?" align="center" />
-    <p class="what-is-lede">
-      A Builder is a student who has decided to start preparing deliberately. You don't need to
-      have everything figured out. You need to be willing to build.
-    </p>
-    <div class="pillar-grid">
+    <p class="identity-lede">A Builder is a student who has decided to start preparing deliberately.</p>
+    <div class="pillar-row">
       {PILLARS.map((pillar) => (
         <div class="pillar reveal">
           <h3>{pillar.name}</h3>
@@ -117,84 +158,153 @@ const jsonLd = [
     </div>
   </section>
 
-  <!-- 3. FOLLOW THE BUILDERS -->
+  <!-- 3. WHO ARE THE BUILDERS? -->
+  <section class="identity-deep">
+    <div class="identity-deep-inner">
+      <p class="eyebrow">Builder Identity</p>
+      <h2>Who Are The Builders?</h2>
+      <p class="deep-lede">
+        Students who join TECHMED are not "members." Not "followers." Not
+        "subscribers." They are <strong>Builders</strong> — because Builders
+        create, improve, stay committed, and return after failure.
+      </p>
+      <blockquote class="reveal">
+        "I am not preparing only for UTME. I am building the person who will
+        succeed long after UTME."
+      </blockquote>
+      <p class="build-label">Every Builder is building far more than exam success:</p>
+      <div class="traits-row">
+        {BUILDER_TRAITS.map((trait) => (
+          <div class="trait reveal">
+            <h3>{trait.name}</h3>
+            <p>{trait.copy}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. WHAT YOU'LL FIND INSIDE -->
+  <section class="receive">
+    <p class="eyebrow center">What You'll Find Inside</p>
+    <h2 class="center">What You'll Receive</h2>
+    <div class="receive-list">
+      {WHAT_YOULL_FIND.map((item, i) => (
+        <div class="receive-item reveal">
+          <span class="receive-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{item.name}</h3>
+            <p>{item.copy}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  </section>
+
+  <!-- 5. THE BUILDER JOURNEY -->
+  <section class="journey">
+    <p class="eyebrow center">The TECHMED System</p>
+    <h2 class="center">The Builder Journey</h2>
+    <p class="journey-intro">
+      TECHMED is built around a simple seven-stage preparation process. The Builder community is
+      the environment around that system.
+    </p>
+    <ol class="journey-path" aria-label="The TECHMED preparation system">
+      {SYSTEM_STEPS.map((step, i) => (
+        <>
+          <li>{step.name}</li>
+          {i < SYSTEM_STEPS.length - 1 && <span aria-hidden="true">&rarr;</span>}
+        </>
+      ))}
+    </ol>
+  </section>
+
+  <!-- 6. FOLLOW THE BUILDERS -->
   <section class="channel reveal">
     <div class="channel-inner">
       <SectionHeading eyebrow="Stay Connected" title="Follow the Builders" align="center" />
       <p class="channel-copy">
-        The official {settings.channelLabel} is where TECHMED shares updates, useful preparation
-        content, resources, announcements and important information throughout the journey — open
-        to every student, independent of any tutorial cohort.
+        The official {channelLabel} is where TECHMED shares updates, useful preparation content,
+        resources, announcements and important information throughout the journey — open to every
+        student, independent of any tutorial cohort.
       </p>
-      <a class="text-link-dark" href={settings.channelUrl} target="_blank" rel="noopener">Open the Builders Channel <span aria-hidden="true">&rarr;</span></a>
+      <a class="text-link-dark" href={channelUrl} target="_blank" rel="noopener">Open the Builders Channel <span aria-hidden="true">&rarr;</span></a>
     </div>
   </section>
 
-  <!-- 4. FREE UTME 2027 TUTORIAL + JOIN THE COHORT -->
-  {showTutorial && (
-    <section class="tutorial reveal">
-      <div class="tutorial-header">
-        <p class="eyebrow">Current Builder Experience</p>
-        <h2>{settings.tutorialTitle}</h2>
-        {tutorialDates && <p class="tutorial-dates">{tutorialDates}</p>}
-        <p class="tutorial-copy">{settings.tutorialDescription}</p>
-      </div>
-
-      <div class="tutorial-modules">
-        <div class="module">
-          <h3>What the Cohort Is For</h3>
-          <p class="module-copy">
-            The Builder Cohort exists behind the free tutorial experience. Before and after
-            tutorial sessions, TECHMED shares relevant challenges, updates and tips from the Blog
-            directly in the group — kept focused, not a flood of information.
-          </p>
-        </div>
-
-        <div class="module">
-          <h3>The 4H Builder Standard</h3>
-          <div class="four-h-grid">
-            {FOUR_H.map((item) => (
-              <div class="four-h-item">
-                <h4>{item.name}</h4>
-                <p>{item.copy}</p>
-              </div>
-            ))}
+  <!-- 7. THE 4H BUILDER STANDARD -->
+  <section class="four-h">
+    <p class="eyebrow center">The Culture</p>
+    <h2 class="center">The 4H Builder Standard</h2>
+    <div class="constitution">
+      {FOUR_H.map((item, i) => (
+        <article class="article reveal">
+          <span class="article-mark" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+          <div>
+            <h3>{item.name}</h3>
+            <p>{item.copy}</p>
           </div>
-        </div>
+        </article>
+      ))}
+    </div>
+  </section>
 
-        <div class="module">
-          <h3>Builder Rules</h3>
-          <p class="rules-intro">To keep the classroom useful for everyone:</p>
-          <ul class="rules-list">
-            {BUILDER_RULES.map((rule) => <li>{rule}</li>)}
-          </ul>
-        </div>
-      </div>
+  <!-- 8. BUILDER RULES -->
+  <section class="rules">
+    <h2 class="center">Builder Rules</h2>
+    <ul class="rules-list">
+      {BUILDER_RULES.map((rule) => <li>{rule}</li>)}
+    </ul>
+  </section>
 
-      <div class="tutorial-join">
-        {settings.joinUrl ? (
-          <a class="btn-primary" href={settings.joinUrl} target="_blank" rel="noopener">Join Builder Cohort</a>
-        ) : (
-          <div class="join-pending">
-            <NoteBox>
-              <strong>The current cohort link is being prepared.</strong> Follow the Builders
-              Channel above and we'll let you know the moment it's ready.
-            </NoteBox>
-          </div>
-        )}
-      </div>
-    </section>
-  )}
-
-  <!-- 5. BUILDER MANIFESTO -->
+  <!-- 9. BUILDER MANIFESTO -->
   <BuilderManifesto />
+
+  <!-- 10. FINAL CTA -->
+  <section class="final-cta reveal">
+    <p class="eyebrow">UTME 2027 Starts Now</p>
+    <h2>READY TO BUILD?</h2>
+    <a class="cta-primary" href={channelUrl} target="_blank" rel="noopener">
+      JOIN THE BUILDERS <span aria-hidden="true">&rarr;</span>
+    </a>
+    <p class="supporting-line">Brick by brick. Day by day.</p>
+    <p class="brand-line">Because things built well last.</p>
+  </section>
+
+  <!-- Mobile sticky CTA — hidden while the Hero or Final CTA (which both
+       already show the same button) or the Footer are in view. -->
+  <div class="sticky-cta" id="stickyCta">
+    <a class="cta-primary" href={channelUrl} target="_blank" rel="noopener">
+      JOIN THE BUILDERS <span aria-hidden="true">&rarr;</span>
+    </a>
+  </div>
 </BaseLayout>
+
+<script>
+  const stickyCta = document.getElementById('stickyCta');
+  const hideTargets = document.querySelectorAll('.hero, .final-cta, .footer');
+
+  if (stickyCta && hideTargets.length) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const anyVisible = entries.some((entry) => entry.isIntersecting);
+        stickyCta.classList.toggle('is-hidden', anyVisible);
+      },
+      { threshold: 0.1 },
+    );
+    hideTargets.forEach((el) => observer.observe(el));
+  }
+</script>
 
 <style>
   section {
     max-width: 1000px;
     margin: 0 auto;
     padding: var(--space-16) var(--space-6);
+  }
+
+  .center {
+    text-align: center;
   }
 
   .eyebrow {
@@ -207,11 +317,24 @@ const jsonLd = [
     margin-bottom: var(--space-3);
   }
 
-  .btn-primary {
-    display: inline-block;
+  .eyebrow.center {
+    text-align: center;
+  }
+
+  h2 {
+    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+  }
+
+  .cta-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 0.9rem;
+    letter-spacing: 0.02em;
     padding: 15px 30px;
     border-radius: var(--radius);
     text-decoration: none;
@@ -220,9 +343,17 @@ const jsonLd = [
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .btn-primary:hover {
+  .cta-primary span {
+    transition: transform 200ms ease;
+  }
+
+  .cta-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+  }
+
+  .cta-primary:hover span {
+    transform: translateX(3px);
   }
 
   /* 1. Hero */
@@ -248,24 +379,40 @@ const jsonLd = [
   .hero-content {
     position: relative;
     z-index: 1;
-    max-width: 680px;
+    max-width: 720px;
     margin: 0 auto;
     padding: var(--space-20) var(--space-6) var(--space-16);
     text-align: center;
   }
 
+  .hero-content .eyebrow {
+    text-align: center;
+  }
+
   h1 {
-    font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+    font-size: clamp(2.2rem, 8vw, 4.5rem);
     font-weight: 900;
-    letter-spacing: -0.03em;
+    letter-spacing: -0.035em;
+    line-height: 1.05;
     margin-bottom: var(--space-5);
   }
 
+  h1::after {
+    content: '';
+    display: block;
+    width: 64px;
+    height: 4px;
+    margin: var(--space-5) auto 0;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: var(--radius-full);
+  }
+
   .lede {
-    font-size: 1.1rem;
+    font-size: 1.15rem;
     line-height: 1.75;
     color: var(--text-light);
-    margin-bottom: var(--space-8);
+    max-width: 52ch;
+    margin: 0 auto var(--space-8);
   }
 
   .hero-ctas {
@@ -274,49 +421,238 @@ const jsonLd = [
     justify-content: center;
   }
 
-  /* 2. What Is a Builder */
-  .what-is-lede {
-    max-width: 620px;
+  /* 2. Who Is a Builder */
+  .identity-lede {
+    max-width: 560px;
     margin: 0 auto var(--space-10);
-    font-size: 1.05rem;
-    line-height: 1.8;
-    color: var(--text-light);
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--text);
     text-align: center;
   }
 
-  .pillar-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: var(--space-4);
+  .pillar-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 880px;
+    margin: 0 auto;
   }
 
   .pillar {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    transition: border-color 200ms ease, transform 200ms ease;
+    flex: 1 1 180px;
+    padding: 0 var(--space-6);
+    text-align: center;
+    border-left: 1px solid var(--border);
+    transition: transform 200ms ease;
+  }
+
+  .pillar:first-child {
+    border-left: none;
   }
 
   .pillar:hover {
-    border-color: var(--accent);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
 
   .pillar h3 {
     font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 700;
+    font-weight: 800;
+    font-size: 1.05rem;
     margin-bottom: var(--space-2);
+    transition: color 200ms ease;
+  }
+
+  .pillar:hover h3 {
+    color: var(--accent-text);
   }
 
   .pillar p {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
     color: var(--text-light);
     line-height: 1.6;
   }
 
-  /* 3. Follow the Builders */
+  /* 3. Who Are The Builders */
+  .identity-deep {
+    max-width: 100%;
+    background: var(--surface-raised);
+  }
+
+  .identity-deep-inner {
+    max-width: 720px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .identity-deep .eyebrow {
+    text-align: center;
+  }
+
+  .identity-deep h2 {
+    margin-bottom: var(--space-6);
+  }
+
+  .deep-lede {
+    font-size: 1.08rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-8);
+  }
+
+  .deep-lede strong {
+    color: var(--text);
+  }
+
+  .identity-deep blockquote {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-style: italic;
+    font-size: 1.2rem;
+    line-height: 1.6;
+    color: var(--text);
+    border-left: 3px solid var(--accent);
+    padding-left: var(--space-6);
+    text-align: left;
+    max-width: 520px;
+    margin: 0 auto var(--space-10);
+  }
+
+  .build-label {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-6);
+  }
+
+  .traits-row {
+    display: flex;
+    flex-direction: column;
+    text-align: left;
+    max-width: 620px;
+    margin: 0 auto;
+  }
+
+  .trait {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-4);
+    padding: var(--space-4) 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .trait:first-child {
+    border-top: none;
+  }
+
+  .trait h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1rem;
+    color: var(--accent-text);
+    flex: 0 0 130px;
+  }
+
+  .trait p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    flex: 1 1 200px;
+  }
+
+  /* 4. What You'll Receive */
+  .receive h2 {
+    margin-bottom: var(--space-10);
+  }
+
+  .receive-list {
+    display: flex;
+    flex-direction: column;
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .receive-item {
+    display: flex;
+    gap: var(--space-5);
+    padding: var(--space-6) 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .receive-item:first-child {
+    border-top: none;
+  }
+
+  .receive-index {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: var(--accent);
+    flex-shrink: 0;
+    width: 44px;
+  }
+
+  .receive-item h3 {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin-bottom: var(--space-2);
+  }
+
+  .receive-item p {
+    font-size: 0.92rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  /* 5. The Builder Journey */
+  .journey h2 {
+    margin-bottom: var(--space-6);
+  }
+
+  .journey-intro {
+    max-width: 560px;
+    margin: 0 auto var(--space-10);
+    text-align: center;
+    font-size: 1rem;
+    line-height: 1.8;
+    color: var(--text-light);
+  }
+
+  .journey-path {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2) 8px;
+    max-width: 720px;
+    margin: 0 auto;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .journey-path li {
+    white-space: nowrap;
+    padding: 8px 14px;
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .journey-path span {
+    color: var(--accent-text);
+  }
+
+  /* 6. Follow the Builders */
   .channel {
     max-width: 100%;
     background: var(--surface-dark);
@@ -352,125 +688,76 @@ const jsonLd = [
     text-decoration: underline;
   }
 
-  /* 4. Tutorial */
-  .tutorial {
-    max-width: 900px;
+  /* 7. The 4H Builder Standard */
+  .four-h h2 {
+    margin-bottom: var(--space-12);
   }
 
-  .tutorial-header {
-    max-width: 620px;
-    margin: 0 auto var(--space-12);
-    text-align: center;
-  }
-
-  .tutorial-header h2 {
-    font-size: clamp(1.75rem, 4vw, 2.25rem);
-    font-weight: 900;
-    letter-spacing: -0.03em;
-    margin-bottom: var(--space-3);
-  }
-
-  .tutorial-dates {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 1rem;
-    letter-spacing: 0.03em;
-    color: var(--accent-text);
-    margin-bottom: var(--space-5);
-  }
-
-  .tutorial-copy {
-    font-size: 1rem;
-    line-height: 1.8;
-    color: var(--text-light);
-  }
-
-  /* Each part of the cohort experience (what it's for, the standard, the
-     rules) gets its own bounded card — previously all three ran straight
-     into each other as one continuous block of text with only heading
-     size to tell them apart, which read as cramped and hard to scan. */
-  .tutorial-modules {
+  .constitution {
     display: flex;
     flex-direction: column;
-    gap: var(--space-6);
     max-width: 760px;
     margin: 0 auto;
   }
 
-  .module {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-8);
-    text-align: left;
+  .article {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: var(--space-6);
+    padding: var(--space-8) 0;
+    border-top: 1px solid var(--border);
   }
 
-  .module h3 {
+  .article:first-child {
+    border-top: 2px solid var(--accent);
+  }
+
+  .article-mark {
     font-family: var(--font-display);
-    font-size: 1.15rem;
-    font-weight: 700;
-    margin-bottom: var(--space-5);
-    text-align: center;
+    font-weight: 900;
+    font-size: 2.25rem;
+    line-height: 1;
+    color: var(--accent);
+    opacity: 0.55;
   }
 
-  .module-copy {
-    font-size: 0.95rem;
+  .article h3 {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+  }
+
+  .article p {
+    font-size: 1rem;
     line-height: 1.8;
     color: var(--text-light);
-    text-align: center;
     max-width: 56ch;
-    margin: 0 auto;
   }
 
-  .four-h-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: var(--space-4);
-  }
-
-  .four-h-item {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5);
-  }
-
-  .four-h-item h4 {
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 700;
-    color: var(--accent-text);
-    margin-bottom: var(--space-2);
-  }
-
-  .four-h-item p {
-    font-size: 0.88rem;
-    line-height: 1.65;
-    color: var(--text-light);
-  }
-
-  .rules-intro {
-    text-align: center;
-    font-size: 0.92rem;
-    color: var(--text-light);
-    margin-bottom: var(--space-5);
+  /* 8. Builder Rules */
+  .rules h2 {
+    margin-bottom: var(--space-8);
   }
 
   .rules-list {
     list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-3);
-    max-width: 480px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3) var(--space-8);
+    max-width: 700px;
     margin: 0 auto;
   }
 
   .rules-list li {
     position: relative;
     padding-left: var(--space-6);
-    font-size: 0.92rem;
+    font-size: 0.95rem;
     line-height: 1.6;
     color: var(--text-light);
+    text-align: left;
   }
 
   .rules-list li::before {
@@ -484,34 +771,152 @@ const jsonLd = [
     background: var(--accent);
   }
 
-  .tutorial-join {
-    margin-top: var(--space-10);
+  /* 10. Final CTA */
+  .final-cta {
+    max-width: 100%;
+    text-align: center;
+    padding: var(--space-20) var(--space-6);
+    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+  }
+
+  .final-cta .eyebrow {
     text-align: center;
   }
 
-  .join-pending {
-    max-width: 480px;
-    margin: 0 auto;
-    text-align: left;
+  .final-cta h2 {
+    font-size: clamp(2rem, 5.5vw, 3.25rem);
+    font-weight: 900;
+    max-width: 20ch;
+    margin: 0 auto var(--space-7);
   }
 
-  @media (max-width: 700px) {
-    .pillar-grid {
-      grid-template-columns: 1fr 1fr;
+  .final-cta .supporting-line {
+    font-size: 1.05rem;
+    color: var(--text-light);
+    margin: var(--space-7) auto 0;
+  }
+
+  .final-cta .brand-line {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--accent-text);
+    margin-top: var(--space-2);
+  }
+
+  /* Sticky mobile CTA */
+  .sticky-cta {
+    display: none;
+  }
+
+  @media (max-width: 860px) {
+    .sticky-cta {
+      display: block;
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 90;
+      padding: var(--space-3) var(--space-4);
+      padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
+      background: rgba(1, 39, 72, 0.92);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--border);
+      transform: translateY(0);
+      transition: transform 250ms ease;
     }
 
-    .four-h-grid {
+    .sticky-cta.is-hidden {
+      transform: translateY(100%);
+    }
+
+    .sticky-cta .cta-primary {
+      display: flex;
+      justify-content: center;
+      width: 100%;
+    }
+
+    body {
+      padding-bottom: 76px;
+    }
+  }
+
+  /* Responsive */
+  @media (max-width: 700px) {
+    .pillar {
+      flex: 1 1 45%;
+      border-left: none;
+      border-top: 1px solid var(--border);
+      padding: var(--space-5) var(--space-3) 0;
+      margin-top: var(--space-5);
+    }
+
+    .pillar:nth-child(1),
+    .pillar:nth-child(2) {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    .article {
+      grid-template-columns: 48px 1fr;
+      gap: var(--space-4);
+    }
+
+    .article-mark {
+      font-size: 1.6rem;
+    }
+
+    .article h3 {
+      font-size: 1.15rem;
+    }
+
+    .rules-list {
       grid-template-columns: 1fr;
     }
   }
 
   @media (max-width: 480px) {
-    .pillar-grid {
-      grid-template-columns: 1fr;
+    .pillar-row {
+      flex-direction: column;
     }
 
-    .module {
-      padding: var(--space-6) var(--space-5);
+    .pillar {
+      flex: 1 1 auto;
+      border-left: none !important;
+      border-top: 1px solid var(--border);
+      padding: var(--space-5) 0 0;
+      margin-top: var(--space-5);
+    }
+
+    .pillar:first-child {
+      border-top: none;
+      margin-top: 0;
+      padding-top: 0;
+    }
+
+    /* The 700px breakpoint's 2-column layout strips the top border from
+       both items in its first row via :nth-child(2), which is more
+       specific than the plain .pillar rule above and would otherwise
+       leak into this single-column layout too. */
+    .pillar:nth-child(2) {
+      border-top: 1px solid var(--border);
+      margin-top: var(--space-5);
+      padding-top: var(--space-5);
+    }
+
+    .trait {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-1);
+    }
+
+    .trait h3 {
+      flex-basis: auto;
+    }
+
+    .receive-item {
+      gap: var(--space-3);
     }
   }
 </style>
