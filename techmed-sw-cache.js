@@ -10,7 +10,7 @@
 // in OneSignalSDKWorker.js so browsers reliably pick up the update.
 // ============================================================
 
-const CACHE_NAME = 'techmed-v9-2026';
+const CACHE_NAME = 'techmed-v10-2026';
 const urlsToCache = [
   '/',
   '/index.html',
@@ -83,7 +83,7 @@ self.addEventListener('fetch', event => {
     (event.request.method === 'GET' &&
       event.request.headers.get('accept')?.includes('text/html'));
 
-  if (isNavigation) {
+  if (isNavigation || event.request.url.includes('/images/foundation-protocol/')) {
     event.respondWith(
       fetch(event.request)
         .then(response => {
