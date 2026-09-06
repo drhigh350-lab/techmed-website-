@@ -1,0 +1,12 @@
+{
+  "name": "techmed-monorepo",
+  "private": true,
+  "workspaces": [
+    "web",
+    "studio"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspace=web",
+    "build": "npm run build --workspace=web"
+  }
+}

@@ -1,0 +1,6 @@
+{
+  "name": "TECHMED",
+  "description": "Student-success ecosystem for Nigerian students preparing for UTME and Post-UTME",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
