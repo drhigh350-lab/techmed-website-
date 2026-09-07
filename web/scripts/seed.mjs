@@ -40,6 +40,9 @@ import 'dotenv/config';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+if (!process.env.SANITY_PROJECT_ID) process.env.SANITY_PROJECT_ID = 'kxoz58eb';
+if (!process.env.SANITY_DATASET) process.env.SANITY_DATASET = 'production';
+
 const requiredEnv = ['SANITY_PROJECT_ID', 'SANITY_DATASET', 'SANITY_API_TOKEN'];
 for (const key of requiredEnv) {
   if (!process.env[key]) {

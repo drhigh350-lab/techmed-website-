@@ -10,7 +10,7 @@
 // in OneSignalSDKWorker.js so browsers reliably pick up the update.
 // ============================================================
 
-const CACHE_NAME = 'techmed-v10-2026';
+const CACHE_NAME = 'techmed-v11-2026';
 const urlsToCache = [
   '/',
   '/index.html',

@@ -15,8 +15,10 @@ let client: SanityClient | null | undefined;
 function getClient(): SanityClient | null {
   if (client !== undefined) return client;
   try {
+    const envProj = import.meta.env.SANITY_PROJECT_ID;
+    const projectId = (!envProj || envProj.toLowerCase() === 'o3yqdwylc') ? 'kxoz58eb' : envProj;
     client = createClient({
-      projectId: import.meta.env.SANITY_PROJECT_ID,
+      projectId,
       dataset: import.meta.env.SANITY_DATASET ?? 'production',
       apiVersion: '2024-01-01',
       useCdn: true,
