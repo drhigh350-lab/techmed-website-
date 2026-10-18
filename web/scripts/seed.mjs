@@ -190,8 +190,8 @@ async function seedUtmeBuilderSettings() {
     tutorialTitle: 'Free UTME 2027 Tutorials',
     tutorialDescription:
       'TECHMED is providing a free tutorial experience for UTME 2027 candidates. Full details are being finalized and will be shared with Builders as the season approaches.',
-    tutorialStartDate: '2026-10-05',
-    tutorialEndDate: '2026-11-09',
+    tutorialStartDate: '2026-10-16',
+    tutorialEndDate: '2026-11-14',
   });
   console.log('✓ utmeBuilderSettings');
 }
@@ -205,7 +205,7 @@ async function seedAnnouncementBanner() {
     _id: 'announcementBanner',
     _type: 'announcementBanner',
     active: false,
-    message: 'Free UTME 2027 Tutorials — 5 October to 9 November.',
+    message: 'Free UTME 2027 Tutorials — 16 October to 14 November.',
     ctaLabel: 'Join the Builders',
     ctaUrl: 'https://whatsapp.com/channel/0029Vb8nzXH545v4f8EF103D',
   });

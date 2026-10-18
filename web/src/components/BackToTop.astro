@@ -1,0 +1,269 @@
+---
+// Floating action button that appears when the user scrolls past the hero section
+// and smoothly scrolls back to the top of the page.
+---
+
+<button
+  type="button"
+  id="backToTopBtn"
+  class="back-to-top"
+  aria-label="Back to top"
+  title="Back to top"
+  aria-hidden="true"
+  tabindex="-1"
+>
+  <svg
+    width="20"
+    height="20"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    stroke-width="2.5"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    aria-hidden="true"
+    class="back-to-top-icon"
+  >
+    <line x1="12" y1="19" x2="12" y2="5"></line>
+    <polyline points="5 12 12 5 19 12"></polyline>
+  </svg>
+  <span class="sr-only">Back to top</span>
+</button>
+
+<script>
+  function setupBackToTop() {
+    const btn = document.getElementById('backToTopBtn');
+    if (!btn) return;
+
+    // Detect if page has a sticky bottom CTA on mobile (e.g. foundation-protocol, utme-2027)
+    const hasStickyCta = Boolean(document.querySelector('.sticky-cta, .sticky-mobile-cta'));
+    if (hasStickyCta) {
+      btn.classList.add('has-sticky-cta');
+    }
+
+    const heroSelectors = [
+      '#hero',
+      '.hero',
+      '.fp-hero',
+      '.sp-hero',
+      '.article-hero',
+      '.resource-hero',
+      '.podcast-hero',
+      '.planner-header',
+      '[data-hero]',
+      'main > header:first-of-type',
+      'main > section:first-of-type',
+      'body > header:first-of-type'
+    ];
+
+    const hero = document.querySelector(heroSelectors.join(', '));
+
+    function setVisible(show: boolean) {
+      const scrollY = window.scrollY || document.documentElement.scrollTop;
+      // Guard: always hide when near the very top of the page
+      if (scrollY <= 60) {
+        show = false;
+      }
+      if (show) {
+        btn.classList.add('is-visible');
+        btn.setAttribute('aria-hidden', 'false');
+        btn.tabIndex = 0;
+      } else {
+        btn.classList.remove('is-visible');
+        btn.setAttribute('aria-hidden', 'true');
+        btn.tabIndex = -1;
+      }
+    }
+
+    if (hero && 'IntersectionObserver' in window) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            // When hero is completely above viewport, bottom is <= 0 and isIntersecting is false
+            const pastHero = !entry.isIntersecting && entry.boundingClientRect.bottom <= 0;
+            setVisible(pastHero);
+          }
+        },
+        { threshold: 0 }
+      );
+      observer.observe(hero);
+
+      // Handle rapid scroll-up edge cases (e.g. fast swipe up to top)
+      let ticking = false;
+      window.addEventListener(
+        'scroll',
+        () => {
+          if (!ticking) {
+            window.requestAnimationFrame(() => {
+              const scrollY = window.scrollY || document.documentElement.scrollTop;
+              if (scrollY <= 60 && btn.classList.contains('is-visible')) {
+                setVisible(false);
+              }
+              ticking = false;
+            });
+            ticking = true;
+          }
+        },
+        { passive: true }
+      );
+    } else {
+      // Fallback for pages without an identified hero element:
+      // Show when scrolled past 400px
+      let ticking = false;
+      const handleScroll = () => {
+        if (!ticking) {
+          window.requestAnimationFrame(() => {
+            const scrollY = window.scrollY || document.documentElement.scrollTop;
+            setVisible(scrollY > 400);
+            ticking = false;
+          });
+          ticking = true;
+        }
+      };
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      handleScroll();
+    }
+
+    btn.addEventListener('click', () => {
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      window.scrollTo({
+        top: 0,
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+      });
+
+      // Shift focus to main landmark or body for keyboard and screen reader accessibility
+      const target = document.querySelector('main') || document.body;
+      if (target) {
+        target.setAttribute('tabindex', '-1');
+        target.focus({ preventScroll: true });
+      }
+    });
+  }
+
+  // Initialize once DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupBackToTop);
+  } else {
+    setupBackToTop();
+  }
+</script>
+
+<style>
+  .back-to-top {
+    position: fixed;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    z-index: 95;
+    width: 46px;
+    height: 46px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: var(--radius-full);
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 14px rgba(1, 39, 72, 0.12), 0 1px 3px rgba(1, 39, 72, 0.08);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(12px) scale(0.92);
+    transition:
+      opacity 220ms ease,
+      transform 220ms ease,
+      visibility 220ms ease,
+      background 160ms ease,
+      color 160ms ease,
+      border-color 160ms ease,
+      box-shadow 160ms ease;
+  }
+
+  /* Dark theme contrast */
+  :root[data-theme='dark'] .back-to-top,
+  :root:not([data-theme='light']) .back-to-top {
+    background: var(--surface-raised);
+    color: var(--color-white);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  }
+
+  .back-to-top.is-visible {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transform: translateY(0) scale(1);
+  }
+
+  .back-to-top:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+    transform: translateY(-3px) scale(1.04);
+    box-shadow: 0 6px 20px rgba(201, 162, 39, 0.22);
+  }
+
+  .back-to-top:active {
+    transform: translateY(0) scale(0.96);
+  }
+
+  .back-to-top:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+  }
+
+  .back-to-top-icon {
+    transition: transform 160ms ease;
+  }
+
+  .back-to-top:hover .back-to-top-icon {
+    transform: translateY(-2px);
+  }
+
+  /* Screen reader utility */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Responsive styling */
+  @media (max-width: 768px) {
+    .back-to-top {
+      bottom: var(--space-5);
+      right: var(--space-5);
+      width: 44px;
+      height: 44px;
+    }
+
+    /* Keep clear of sticky bottom CTAs on mobile */
+    .back-to-top.has-sticky-cta {
+      bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .back-to-top,
+    .back-to-top-icon {
+      transition: none;
+    }
+    .back-to-top:hover {
+      transform: none;
+    }
+    .back-to-top:hover .back-to-top-icon {
+      transform: none;
+    }
+  }
+
+  @media print {
+    .back-to-top {
+      display: none !important;
+    }
+  }
+</style>

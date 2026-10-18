@@ -31,8 +31,8 @@ const FALLBACK_BUILDER_SETTINGS: BuilderSettings = {
   tutorialTitle: 'Free UTME 2027 Tutorials',
   tutorialDescription:
     'TECHMED is providing a free tutorial experience for UTME 2027 candidates. Full details are being finalized and will be shared with Builders as the season approaches.',
-  tutorialStartDate: '2026-10-05',
-  tutorialEndDate: '2026-11-09',
+  tutorialStartDate: '2026-10-16',
+  tutorialEndDate: '2026-11-14',
 };
 
 const BUILDER_SETTINGS_QUERY = `*[_id == "utmeBuilderSettings"][0]{
@@ -62,7 +62,7 @@ export async function getBuilderSettings(): Promise<BuilderSettings> {
   };
 }
 
-// "5 October" / "9 November 2026" — only includes the year on the end date
+// "16 October" / "14 November 2026" — only includes the year on the end date
 // when the two dates fall in different years, so the common case (a
 // tutorial season inside one year) doesn't repeat itself.
 export function formatDateRange(startISO?: string, endISO?: string): string | undefined {
