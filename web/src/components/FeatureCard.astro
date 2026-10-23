@@ -27,6 +27,7 @@ const { title, description, href, icon, eyebrow } = Astro.props;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
     padding: var(--space-6);
     text-decoration: none;
     color: inherit;
@@ -36,7 +37,7 @@ const { title, description, href, icon, eyebrow } = Astro.props;
   .feature-card:hover {
     transform: translateY(-4px);
     border-color: var(--accent);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .icon {
@@ -47,6 +48,7 @@ const { title, description, href, icon, eyebrow } = Astro.props;
     justify-content: center;
     border-radius: var(--radius);
     background: var(--surface-raised);
+    border: 1px solid var(--border);
     color: var(--accent-text);
     margin-bottom: var(--space-4);
   }

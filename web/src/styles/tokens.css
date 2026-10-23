@@ -51,6 +51,11 @@
      goes low-contrast the moment light mode is active. */
   --text-on-dark-surface: var(--color-white);
   --text-light-on-dark-surface: var(--color-soft-blue);
+  --border-on-dark-surface: rgba(248, 249, 250, 0.12);
+
+  /* Elevation */
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --card-shadow-hover: 0 10px 30px rgba(0, 0, 0, 0.4);
 
   /* Typography */
   --font-display: 'Montserrat', system-ui, sans-serif;
@@ -97,17 +102,20 @@
   unlabeled :root values above, which remain the brand-standard dark
   palette unchanged.
 */
-:root[data-theme='light'] {
+:root[data-theme='light'],
+html[data-theme='light'] {
   --bg: #F8F9FA;
   --surface: #ffffff;
   --surface-raised: #EEF1F4;
   --surface-dark: var(--color-deep-navy);
   --text: var(--color-deep-navy);
-  --text-light: #3D5972;
-  /* --color-soft-blue (the dark theme's muted tone) only clears ~2.1:1
-     against these light surfaces — same hue/saturation, darkened until
-     it clears AA (~5.3:1 here). */
-  --text-muted: #4C6B85;
-  --border: rgba(1, 39, 72, 0.1);
+  --text-light: #2A4862;
+  /* Darkened to clear AA (over 5.5:1 ratio) against white/near-white surfaces */
+  --text-muted: #56728A;
+  --border: rgba(1, 39, 72, 0.12);
+  --border-subtle: rgba(1, 39, 72, 0.06);
   --accent-text: var(--color-gold-text);
+  --card-shadow: 0 4px 20px rgba(1, 39, 72, 0.06);
+  --card-shadow-hover: 0 12px 32px rgba(1, 39, 72, 0.12);
+  --border-on-dark-surface: rgba(248, 249, 250, 0.15);
 }

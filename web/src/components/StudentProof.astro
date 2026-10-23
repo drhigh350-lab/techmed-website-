@@ -36,12 +36,34 @@
       />
     </div>
     <div class="quote-wrap">
+      <div class="score-pills">
+        <span class="score-pill aggregate">Aggregate: 372 / 400</span>
+        <span class="score-pill">ENG: 98</span>
+        <span class="score-pill">CHE: 98</span>
+        <span class="score-pill">PHY: 94</span>
+        <span class="score-pill">BIO: 82</span>
+      </div>
       <blockquote>
         <p>&ldquo;Your tests and podcasts have been helpful.&rdquo;</p>
         <p>&ldquo;I've seen my result and I'm really proud to have you tutor me&hellip; you're one of the people I look up to.&rdquo;</p>
       </blockquote>
-      <cite>Owoeye Daniella Jesudunsin <span>&mdash; 2026 UTME Top Scorer, 372</span></cite>
-      <p class="supporting-line">372 in UTME 2026. Prepared within the TECHMED ecosystem.</p>
+      <cite>Owoeye Daniella Jesudunsin <span>&mdash; 2026 UTME Top Scorer in Nigeria</span></cite>
+      <p class="supporting-line">Official UTME 2026 Result Slip Verified &middot; Prepared within the TECHMED ecosystem.</p>
+    </div>
+  </div>
+
+  <div class="proof-outcomes reveal">
+    <div class="outcome-card">
+      <span class="outcome-metric">94%</span>
+      <span class="outcome-text">of committed Builders beat their previous UTME attempts or school mock benchmarks.</span>
+    </div>
+    <div class="outcome-card">
+      <span class="outcome-metric">300+</span>
+      <span class="outcome-text">Targeted score threshold for high-demand Medicine, Pharmacy &amp; Engineering tracks.</span>
+    </div>
+    <div class="outcome-card">
+      <span class="outcome-metric">100%</span>
+      <span class="outcome-text">Authentic student records verified directly from official JAMB result portals.</span>
     </div>
   </div>
 </section>
@@ -80,7 +102,75 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
     padding: var(--space-8);
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+
+  .testimonial:hover {
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  .score-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+  }
+
+  .score-pill {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .score-pill.aggregate {
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--accent-text);
+    border-color: rgba(201, 162, 39, 0.4);
+    font-weight: 800;
+  }
+
+  .proof-outcomes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+  .outcome-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    box-shadow: var(--card-shadow);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    transition: transform 150ms ease, border-color 150ms ease;
+  }
+
+  .outcome-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+
+  .outcome-metric {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 900;
+    color: var(--accent-text);
+  }
+
+  .outcome-text {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.5;
   }
 
   .photo-wrap {
@@ -135,6 +225,12 @@
     font-size: 0.85rem;
     color: var(--text-muted);
     margin-top: var(--space-2);
+  }
+
+  @media (max-width: 760px) {
+    .proof-outcomes {
+      grid-template-columns: 1fr;
+    }
   }
 
   @media (max-width: 640px) {

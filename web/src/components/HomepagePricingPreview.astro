@@ -1,0 +1,378 @@
+---
+// Homepage Pricing Pathway Preview
+// Connects homepage visitors directly with the 3 UTME 2027 tracks (Core, Mastery, Ultimate)
+// Highlights the ₦40,000 Ultimate package with ₦36,000 in standalone bonuses.
+import { PRICING_PLANS, PROGRAMME_DETAILS, WHY_ULTIMATE_DATA } from '../lib/pricing';
+import { getContactChannels, whatsappLink } from '../lib/contact';
+
+const channels = await getContactChannels();
+const waNumber = channels.whatsappNumber || PROGRAMME_DETAILS.supportPhone;
+const ultimateWaUrl = whatsappLink(waNumber, WHY_ULTIMATE_DATA.whatsappMessage);
+---
+
+<section class="pricing-preview" id="pricing-preview">
+  <div class="container">
+    <div class="header reveal">
+      <p class="eyebrow">UTME 2027 PREPARATION PATHWAYS</p>
+      <h2>Choose Your Track. Built For Results.</h2>
+      <p class="subtitle">
+        One structured programme. Three clear ways to prepare for UTME 2027 — from daily live classes in Core to the complete ₦40,000 Ultimate package.
+      </p>
+    </div>
+
+    <div class="plans-grid">
+      {PRICING_PLANS.map((plan) => (
+        <div class:list={['plan-card', 'reveal', { featured: plan.isBestValue }]}>
+          {plan.isBestValue && (
+            <div class="best-value-badge">BEST VALUE &middot; COMPLETE PACKAGE</div>
+          )}
+          <div class="card-header">
+            <h3>{plan.name}</h3>
+            <p class="positioning">{plan.positioning}</p>
+          </div>
+
+          <div class="price-box">
+            <span class="currency">₦</span>
+            <span class="amount">
+              {plan.id === 'core' ? '18,000' : plan.id === 'mastery' ? '25,000' : '40,000'}
+            </span>
+            <span class="period">
+              {plan.id === 'ultimate' ? 'once through UTME 2027' : 'for 3 months upfront'}
+            </span>
+          </div>
+
+          {plan.id === 'ultimate' && (
+            <div class="bonus-tag">
+              Includes <strong>₦36,000</strong> in standalone bonus bootcamps &amp; revision packages
+            </div>
+          )}
+
+          <ul class="features-list">
+            {plan.features.slice(0, plan.id === 'ultimate' ? 6 : 5).map((f) => (
+              <li>
+                <svg class="check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                <span>{f}</span>
+              </li>
+            ))}
+          </ul>
+
+          <div class="card-action">
+            <a
+              href={plan.id === 'ultimate' ? ultimateWaUrl : '/pricing'}
+              target={plan.id === 'ultimate' ? '_blank' : undefined}
+              rel={plan.id === 'ultimate' ? 'noopener' : undefined}
+              class:list={['cta-btn', { 'cta-btn-gold': plan.isBestValue }]}
+            >
+              {plan.id === 'ultimate' ? 'Choose Ultimate on WhatsApp' : `View ${plan.name}`}
+              <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+        </div>
+      ))}
+    </div>
+
+    <!-- Value Callout Strip -->
+    <div class="value-callout reveal">
+      <div class="callout-content">
+        <span class="callout-pill">THE ULTIMATE ADVANTAGE</span>
+        <h4>₦40,000 once. Everything in one package through UTME 2027.</h4>
+        <p>
+          Pay just ₦15,000 more than standard-price Mastery and unlock ₦36,000 in standalone bootcamps (Organic Chem 1.0, Mole Concept 2.0, Operation 100 CBT), four subject revision packages, final revision classes, and founder mentorship eligibility.
+        </p>
+      </div>
+      <div class="callout-action">
+        <a href="/pricing#why-ultimate" class="callout-btn">
+          See Full Bonus Breakdown <span aria-hidden="true">&rarr;</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .pricing-preview {
+    padding: var(--space-20) var(--space-6);
+    background: var(--bg);
+  }
+
+  .container {
+    max-width: 1140px;
+    margin: 0 auto;
+  }
+
+  .header {
+    text-align: center;
+    max-width: 720px;
+    margin: 0 auto var(--space-12);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  h2 {
+    font-size: clamp(1.85rem, 4vw, 2.65rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: var(--space-4);
+    color: var(--text);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--text-light);
+  }
+
+  .plans-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    align-items: stretch;
+    margin-bottom: var(--space-10);
+  }
+
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
+  }
+
+  .plan-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--card-shadow-hover);
+    border-color: var(--accent);
+  }
+
+  .plan-card.featured {
+    border: 2px solid var(--accent);
+    box-shadow: 0 8px 32px rgba(201, 162, 39, 0.18);
+  }
+
+  .best-value-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 4px 14px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(201, 162, 39, 0.35);
+  }
+
+  .card-header h3 {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: var(--space-1);
+  }
+
+  .positioning {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    min-height: 2.4em;
+    line-height: 1.4;
+  }
+
+  .price-box {
+    margin: var(--space-4) 0 var(--space-4);
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+  }
+
+  .currency {
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--accent-text);
+  }
+
+  .amount {
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    color: var(--text);
+  }
+
+  .period {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .bonus-tag {
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    font-size: 0.8rem;
+    color: var(--accent-text);
+    line-height: 1.4;
+    margin-bottom: var(--space-4);
+  }
+
+  .features-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-8);
+    flex: 1;
+  }
+
+  .features-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--text-light);
+  }
+
+  .check-icon {
+    flex-shrink: 0;
+    color: var(--accent-text);
+    margin-top: 3px;
+  }
+
+  .card-action {
+    margin-top: auto;
+  }
+
+  .cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: 13px 20px;
+    border-radius: var(--radius);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.88rem;
+    text-decoration: none;
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+    transition: transform 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: var(--card-shadow);
+  }
+
+  .cta-btn-gold {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    border: none;
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.3);
+  }
+
+  .cta-btn-gold:hover {
+    box-shadow: 0 8px 24px rgba(201, 162, 39, 0.45);
+  }
+
+  /* Value Callout Strip */
+  .value-callout {
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    padding: var(--space-8) var(--space-8);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--space-6);
+    align-items: center;
+  }
+
+  .callout-pill {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .callout-content h4 {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+    margin-bottom: var(--space-2);
+  }
+
+  .callout-content p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    max-width: 65ch;
+  }
+
+  .callout-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    padding: 14px 26px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.25);
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .callout-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(201, 162, 39, 0.4);
+  }
+
+  @media (max-width: 900px) {
+    .plans-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-6);
+    }
+    .value-callout {
+      grid-template-columns: 1fr;
+      text-align: center;
+    }
+    .callout-content p {
+      margin: 0 auto;
+    }
+    .callout-action {
+      display: flex;
+      justify-content: center;
+    }
+  }
+</style>

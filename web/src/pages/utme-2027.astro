@@ -1,154 +1,110 @@
 ---
-// The UTME 2027 landing page — the acquisition/conversion page for
-// UTME 2027 candidates. Not the general homepage and not a catalogue of
-// everything TECHMED has built: this page argues one thing (random
-// preparation → the TECHMED system → proof it works → BECOME A BUILDER)
-// and every section exists to carry that argument forward. See the
-// handoff this was built from for the locked copy and section order —
-// none of the section copy below is paraphrased from it.
-//
-// Previously this page was the "UTME 2027 Hub," a link-out directory to
-// the Blueprints/Resources/Tools/Blog ecosystem. That hub role has been
-// intentionally dropped here in favor of a focused narrative; the other
-// systems are still reachable from Navbar/Footer and from the Kairo and
-// "What You Get" sections' own links.
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { getBuilderSettings, formatDateRange } from '../lib/builders';
 
-const BUILDERS_URL = '/utme-2027/builders';
+const builderSettings = await getBuilderSettings();
+const {
+  channelUrl,
+  joinUrl,
+  foundationOngoing = true,
+  foundationStatusNotice,
+  tutorialStartDate = '2026-10-16',
+  tutorialEndDate = '2026-11-14',
+} = builderSettings;
+
+const activeJoinDestination = joinUrl || channelUrl;
+const dateRangeFormatted = formatDateRange(tutorialStartDate, tutorialEndDate) || '16 October — 14 November 2026';
 
 const SYSTEM_STEPS = [
-  { name: 'Understand', copy: 'Know what JAMB 2027 actually expects, subject by subject.' },
-  { name: 'Plan', copy: 'Turn the syllabus into a study order you can actually follow.' },
-  { name: 'Learn', copy: 'Work through each topic with real material, not guesswork.' },
-  { name: 'Practice', copy: "Apply what you've learned under real conditions." },
-  { name: 'Diagnose', copy: "Find out exactly where you're strong and where you're not." },
-  { name: 'Revise', copy: 'Close the gaps the diagnosis reveals.' },
-  { name: 'Prepare', copy: 'Walk into the exam ready, not hopeful.' },
-];
-
-const WITHOUT_SYSTEM = ['Random topics', 'Random resources', 'Random practice', 'Confusion'];
-const WITH_SYSTEM = SYSTEM_STEPS.map((s) => s.name);
-
-// Verbatim excerpts from real TECHMED student messages (screenshots on
-// file) — trimmed with "…" where a message continued, never paraphrased
-// or invented. No video testimonials exist in the repo yet, so this
-// mosaic uses authentic text testimonials in their place rather than a
-// fabricated video placeholder.
-const TESTIMONIALS = [
-  {
-    quote:
-      "Starting from the mole concept cure to the very last day before UTME, you've been there. There were many times I wanted to give up but you kept sending voice notes… I'm grateful to have met you.",
-    name: 'Blessing',
-    context: 'TECHMED Student, UTME 2026',
-  },
-  {
-    quote:
-      "The mocks were exactly like JAMB CBT. By the time I got to the real UTME, my heart wasn't racing because I'd already ‘written JAMB’ like 5 times with TechMed… My confidence went from 50% to 90%.",
-    name: 'Praise',
-    context: 'FUTA, Ekiti',
-  },
-  {
-    quote:
-      "Before, I was struggling and didn't even fully understand the basics, but your teachings gave me confidence and direction. Walking into that exam, I felt prepared in a way I never have before.",
-    name: 'Favour',
-    context: 'TECHMED Student, UTME 2026',
-  },
-  {
-    quote:
-      "All the sacrifices to make cheat sheets, the organization of Operation 100, the encouragements and everything. You held my hands all the way.",
-    name: 'Naomi',
-    context: 'TECHMED Student, UTME 2026',
-  },
-];
-
-const KAIRO_FLOW = [
-  {
-    src: '/images/kairo/kairo-home.jpg',
-    alt: "Kairo home screen with a personalized “Start Practising” recommendation and a 7-day streak.",
-    caption: 'You practise.',
-  },
-  {
-    src: '/images/kairo/kairo-practice-complete.jpg',
-    alt: 'Kairo practice results showing 53% accuracy and a topic needing attention.',
-    caption: 'Kairo reads the performance.',
-  },
-  {
-    src: '/images/kairo/kairo-profile-insight.jpg',
-    alt: "Kairo insight reading “88% Theory | 62% Math” with an explanation of the gap.",
-    caption: 'Kairo finds the pattern.',
-  },
-  {
-    src: '/images/kairo/kairo-weak-topics.jpg',
-    alt: 'Kairo weak topics list with Launch Drill buttons for each one.',
-    caption: 'Kairo tells you what to fix next.',
-  },
-];
-
-const WHAT_YOU_GET = [
   {
     stage: '01',
-    label: 'Understand',
-    title: 'JAMB Blueprints',
-    copy: "Know what matters before you spend hours studying everything equally.",
+    name: 'Understand',
+    summary: 'Decode the Syllabus',
+    copy: 'Know exactly what JAMB tests across every topic before spending hours on low-yield material.',
   },
   {
     stage: '02',
-    label: 'Plan',
-    title: 'Structured Study Roadmaps',
-    copy: 'Turn the syllabus into an order you can actually follow.',
+    name: 'Plan',
+    summary: 'Structured Roadmap',
+    copy: 'Convert the vast 5-subject syllabus into an achievable weekly timetable you can actually stick to.',
   },
   {
     stage: '03',
-    label: 'Learn',
-    title: 'Builder Sessions & Learning Resources',
-    copy: 'Build genuine understanding instead of relying on blind memorisation.',
+    name: 'Learn',
+    summary: 'Concept Mastery',
+    copy: 'Build genuine scientific comprehension through first-principles explanations, not blind memorisation.',
   },
   {
     stage: '04',
-    label: 'Practice',
-    title: 'CBT Practice & Challenges',
-    copy: 'Turn knowledge into speed, accuracy and exam readiness.',
+    name: 'Practise',
+    summary: 'Deliberate Drills',
+    copy: 'Apply your understanding under real CBT constraints to build speed, accuracy, and calm execution.',
   },
   {
     stage: '05',
-    label: 'Diagnose',
-    title: 'Performance Analysis + Kairo',
-    copy: "Understand where you're strong, where you're weak, and what deserves attention.",
+    name: 'Diagnose',
+    summary: 'Pinpoint Blind Spots',
+    copy: 'Analyze performance data to identify specific subtopic weaknesses and recurring question errors.',
   },
   {
     stage: '06',
-    label: 'Revise',
-    title: 'Targeted Reinforcement',
-    copy: 'Close the gaps your practice reveals.',
+    name: 'Revise',
+    summary: 'Targeted Reinforcement',
+    copy: 'Close identified knowledge gaps systematically using high-yield summary boosters and formula sheets.',
   },
   {
     stage: '07',
-    label: 'Prepare',
-    title: 'Builder Community & Support',
-    copy: 'Stay consistent in an environment built around serious preparation.',
+    name: 'Prepare',
+    summary: 'Exam Conditioning',
+    copy: 'Simulate full mock conditions with peer ranking so you enter the exam hall confident and ready.',
   },
 ];
 
-const OBJECTIONS = [
+const ECOSYSTEM_CARDS = [
   {
-    q: "“I'm just starting. Isn't this too early?”",
-    a: "That's exactly why we're starting now. The goal isn't to create pressure early. It's to build a strong foundation before pressure arrives.",
+    tag: 'Syllabus Intelligence',
+    title: 'JAMB 2027 Blueprints',
+    description: 'Deconstructed syllabi for Biology, Chemistry, Physics, Mathematics, and English detailing question weight and critical focus areas.',
+    href: '/jamb-syllabus-2027',
+    cta: 'View 2027 Blueprints',
+    external: false,
+    highlight: false,
   },
   {
-    q: '“I already have textbooks and past questions.”',
-    a: "Good. TECHMED isn't trying to replace every resource you own. We're helping you use your resources more strategically.",
+    tag: 'Diagnostic CBT Tool',
+    title: 'Kairo Practice System',
+    description: 'Practice real UTME past questions and timed drills. Kairo tracks your accuracy, identifies weak topics, and recommends your next drill.',
+    href: 'https://kairo.techmedng.com/',
+    cta: 'Launch Kairo Practice',
+    external: true,
+    highlight: false,
   },
   {
-    q: '“I’m already in another tutorial.”',
-    a: "You don't have to abandon what works. TECHMED is designed to complement serious preparation with structure, diagnosis, practice and accountability.",
+    tag: 'Revision & Strategy',
+    title: 'Learning Resources',
+    description: 'Topic summaries, high-yield formula sheets, study schedules, and the “5 Minutes Forward” daily discipline podcast.',
+    href: '/resources',
+    cta: 'Explore Resources',
+    external: false,
+    highlight: false,
   },
   {
-    q: '“I’m not naturally brilliant.”',
-    a: "You don't need to be. You need a willingness to learn, practise, correct your mistakes and keep building.",
+    tag: 'Free 30-Day Cohort · Ongoing',
+    title: 'Foundation Protocol',
+    description: 'Structured 30-day preparation experience with 40 live classes across 5 subjects, weekly Builder challenges, and CBT diagnosis.',
+    href: '/foundation-protocol',
+    cta: 'Inspect Foundation Protocol',
+    external: false,
+    highlight: true,
   },
   {
-    q: '“Will Kairo do everything for me?”',
-    a: 'No. Kairo is a guide, not a substitute for effort. It helps you make better decisions about your effort.',
+    tag: 'Comprehensive Programme',
+    title: 'UTME 2027 Masterclass',
+    description: 'Full 3-month syllabus coverage starting November 30, 2026. Live interactive lectures, mentor check-ins, mock exams, and community.',
+    href: '/pricing',
+    cta: 'Compare Plans & Pricing',
+    external: false,
+    highlight: false,
   },
 ];
 
@@ -157,10 +113,10 @@ const jsonLd = [
   {
     '@context': 'https://schema.org',
     '@type': 'WebPage',
-    name: 'UTME 2027 Preparation System | TECHMED',
+    name: 'UTME 2027 Preparation Ecosystem | TECHMED',
     url: pageUrl,
     description:
-      "Prepare for UTME 2027 with TECHMED's structured student-success system—from understanding the JAMB syllabus to practice, diagnosis, revision and exam readiness.",
+      'The comprehensive TECHMED UTME 2027 gateway: verified syllabus blueprints, Kairo CBT practice, free 30-day Foundation Protocol, and structured masterclass packages.',
   },
   {
     '@context': 'https://schema.org',
@@ -174,258 +130,332 @@ const jsonLd = [
 ---
 
 <BaseLayout
-  title="UTME 2027 Preparation System | TECHMED"
-  description="Prepare for UTME 2027 with TECHMED's structured student-success system—from understanding the JAMB syllabus to practice, diagnosis, revision and exam readiness."
+  title="UTME 2027 Preparation Ecosystem | TECHMED"
+  description="Prepare for UTME 2027 with TECHMED's structured preparation ecosystem: JAMB Blueprints, Kairo CBT, free Foundation Protocol, and comprehensive 2027 masterclasses."
   jsonLd={jsonLd}
   smoothScroll
   ogImage="/images/proof/daniella-372.jpg"
 >
-  <!-- 01. HERO -->
-  <section class="hero">
+  <!-- 01. HERO SECTION -->
+  <section class="hero-section">
     <div class="hero-bg" aria-hidden="true"></div>
-    <div class="hero-content">
-      <p class="eyebrow">UTME 2027 &bull; BUILT TO LAST</p>
-      <h1>Don't guess your way through UTME 2027.</h1>
-      <p class="lede">
-        TECHMED gives you a structured system for knowing what to study, how to practise, what to
-        fix and what to do next&mdash;so you can prepare strategically instead of studying randomly.
+    <div class="container hero-container">
+      {foundationOngoing && (
+        <aside class="hero-status-pill" aria-label="Ongoing Programme Notice">
+          <span class="status-indicator" aria-hidden="true"></span>
+          <span class="status-text">
+            <strong>Active Now:</strong> Free 30-Day Foundation Protocol Ongoing ({dateRangeFormatted})
+          </span>
+          <a href="/foundation-protocol" class="status-link">
+            Details <span aria-hidden="true">&rarr;</span>
+          </a>
+        </aside>
+      )}
+
+      <p class="hero-eyebrow">TECHMED UTME 2027 PREPARATION ECOSYSTEM</p>
+      <h1 class="hero-title">Build your UTME foundation before the pressure builds.</h1>
+      <p class="hero-lede">
+        TECHMED provides a structured system across syllabus blueprints, diagnostic CBT practice,
+        curated revision resources, and community accountability—so you can stop guessing and prepare
+        with calm certainty.
       </p>
-      <a class="cta-primary" href={BUILDERS_URL}>BECOME A BUILDER <span aria-hidden="true">&rarr;</span></a>
-      <p class="microcopy">Start building your preparation before the pressure starts.</p>
 
-      <ol class="hero-path" aria-label="The TECHMED preparation system">
-        {SYSTEM_STEPS.map((step, i) => (
-          <>
-            <li>{step.name}</li>
-            {i < SYSTEM_STEPS.length - 1 && <span aria-hidden="true">&rarr;</span>}
-          </>
-        ))}
-      </ol>
+      <div class="hero-cta-group">
+        <a class="btn-primary" href="/foundation-protocol">
+          Join Free Foundation Protocol <span aria-hidden="true">&rarr;</span>
+        </a>
+        <a class="btn-outline" href="#ecosystem">
+          Explore the Ecosystem
+        </a>
+      </div>
+
+      <!-- Quick Metrics Strip -->
+      <div class="hero-metrics-strip">
+        <div class="metric-item">
+          <span class="metric-val">5</span>
+          <span class="metric-label">UTME Subjects</span>
+        </div>
+        <div class="metric-divider" aria-hidden="true"></div>
+        <div class="metric-item">
+          <span class="metric-val">7-Stage</span>
+          <span class="metric-label">Preparation System</span>
+        </div>
+        <div class="metric-divider" aria-hidden="true"></div>
+        <div class="metric-item">
+          <span class="metric-val">372/400</span>
+          <span class="metric-label">Proven Top Score</span>
+        </div>
+        <div class="metric-divider" aria-hidden="true"></div>
+        <div class="metric-item">
+          <span class="metric-val">100% Free</span>
+          <span class="metric-label">Protocol Access</span>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- 02. THE PROBLEM -->
-  <section class="problem">
-    <h2>The problem isn't a lack of materials.</h2>
-    <p class="body-copy">
-      You already have textbooks, past questions, videos, tutorials and study apps.
-    </p>
-    <p class="body-copy">
-      The hard part is knowing what matters, what to do with it, and what to do next.
-    </p>
+  <!-- 02. STUDENT PROOF SECTION -->
+  <section class="proof-section" id="proof">
+    <div class="container">
+      <div class="proof-card">
+        <div class="proof-visual">
+          <img
+            src="/images/proof/daniella-372.jpg"
+            alt="Official result graphic for Owoeye Daniella, TECHMED student — UTME 2026 score: English 98, Chemistry 98, Physics 94, Biology 82, aggregate 372/400."
+            width="640"
+            height="850"
+            loading="lazy"
+            decoding="async"
+            class="proof-img"
+          />
+        </div>
 
-    <div class="compare reveal">
-      <div class="compare-col without">
-        <p class="compare-label">Without a system</p>
-        <ol class="chain">
-          {WITHOUT_SYSTEM.map((item, i) => (
-            <li>
-              <span class="chain-item">{item}</span>
-              {i < WITHOUT_SYSTEM.length - 1 && <span class="chain-arrow" aria-hidden="true">&darr;</span>}
-            </li>
-          ))}
-        </ol>
-      </div>
-      <div class="compare-col with">
-        <p class="compare-label">With a system</p>
-        <ol class="chain">
-          {WITH_SYSTEM.map((item, i) => (
-            <li>
-              <span class="chain-item">{item}</span>
-              {i < WITH_SYSTEM.length - 1 && <span class="chain-arrow" aria-hidden="true">&darr;</span>}
-            </li>
-          ))}
-        </ol>
-      </div>
-    </div>
-
-    <p class="closing">
-      Having more resources doesn't automatically create better preparation.<br />
-      A system does.
-    </p>
-  </section>
-
-  <!-- 03. THE TECHMED SYSTEM -->
-  <section class="system">
-    <p class="eyebrow center">The TECHMED System</p>
-    <h2 class="center">Your preparation has a system.</h2>
-    <p class="intro">TECHMED is built around a simple seven-stage preparation process.</p>
-
-    <ol class="system-flow">
-      {SYSTEM_STEPS.map((step, i) => (
-        <li class:list={['system-step', 'reveal', { destination: i === SYSTEM_STEPS.length - 1 }]}>
-          <span class="node"><span class="number">{String(i + 1).padStart(2, '0')}</span></span>
-          <div class="step-text">
-            <h3>{step.name}</h3>
-            <p>{step.copy}</p>
+        <div class="proof-content">
+          <p class="section-eyebrow">VERIFIED STUDENT EVIDENCE</p>
+          <div class="proof-score-badge">
+            <span class="score-number">372</span>
+            <span class="score-scale">/ 400</span>
           </div>
-        </li>
-      ))}
-    </ol>
+          <p class="score-breakdown">
+            English 98 &bull; Chemistry 98 &bull; Physics 94 &bull; Biology 82
+          </p>
+          <h2 class="proof-title">She prepared within the TECHMED ecosystem.</h2>
 
-    <div class="section-cta">
-      <a class="cta-primary" href={BUILDERS_URL}>BECOME A BUILDER <span aria-hidden="true">&rarr;</span></a>
+          <blockquote class="proof-quote">
+            &ldquo;I've seen my result and I'm really proud to have you tutor me&hellip; Your tests and
+            podcasts have been helpful and I'm so grateful to God for channeling me to you.&rdquo;
+          </blockquote>
+
+          <div class="proof-author">
+            <p class="author-name">Owoeye Daniella Jesudunsin</p>
+            <p class="author-meta">TECHMED Student &bull; UTME 2026 Score: 372/400</p>
+          </div>
+
+          <p class="proof-subtext">
+            One student's exceptional score does not promise an effortless outcome—it demonstrates what
+            is realistically achievable when serious daily discipline meets the right preparation environment.
+          </p>
+        </div>
+      </div>
     </div>
   </section>
 
-  <!-- 04. 372 PROOF -->
-  <section class="proof">
-    <div class="proof-grid">
-      <div class="proof-image reveal">
-        <img
-          src="/images/proof/daniella-372.jpg"
-          alt="Congratulations graphic for Owoeye Daniella, TECHMED student — 2026 UTME result: English 98, Chemistry 98, Physics 94, Biology 82, aggregate score 372."
-          width="900"
-          height="1350"
-          loading="lazy"
-          decoding="async"
-        />
+  <!-- 03. THE TECHMED SYSTEM (DISPLAYED ONCE) -->
+  <section class="system-section" id="system">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">THE METHODOLOGY</p>
+        <h2 class="section-title">Your preparation has a system.</h2>
+        <p class="section-lede">
+          Random topics, scattered past questions, and chaotic study routines produce panic.
+          TECHMED structures your entire 2027 preparation into one repeatable, seven-stage framework.
+        </p>
       </div>
-      <div class="proof-content reveal">
-        <p class="eyebrow">Real Student. Real Result.</p>
-        <p class="proof-number">372</p>
-        <p class="proof-label">UTME 2026</p>
-        <h2>She prepared within the TECHMED ecosystem.</h2>
-        <blockquote>
-          &ldquo;I've seen my result and I'm really proud to have you tutor me&hellip; Your tests and
-          podcasts have been helpful and I'm so grateful to God for channeling me to you.&rdquo;
-        </blockquote>
-        <p class="attribution">&mdash; Owoeye Daniella, 2026 UTME Highest Scorer</p>
-        <p class="supporting">
-          One result doesn't tell the whole TECHMED story. But it tells you what is possible when
-          serious preparation meets the right environment.
+
+      <div class="system-grid">
+        {SYSTEM_STEPS.map((step) => (
+          <div class="system-card">
+            <div class="system-card-top">
+              <span class="step-badge">{step.stage}</span>
+              <span class="step-summary">{step.summary}</span>
+            </div>
+            <h3 class="step-name">{step.name}</h3>
+            <p class="step-copy">{step.copy}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 04. EXPLORE THE ECOSYSTEM -->
+  <section class="ecosystem-section" id="ecosystem">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">TECHMED 2027 PLATFORM</p>
+        <h2 class="section-title">Explore the UTME 2027 Ecosystem</h2>
+        <p class="section-lede">
+          Five focused components designed to take you from foundational understanding to full exam readiness.
+        </p>
+      </div>
+
+      <div class="ecosystem-grid">
+        {ECOSYSTEM_CARDS.map((item) => (
+          <article class:list={['ecosystem-card', { featured: item.highlight }]}>
+            <div class="card-head">
+              <span class="card-tag">{item.tag}</span>
+              {item.highlight && <span class="active-badge">Active</span>}
+            </div>
+            <h3 class="card-title">{item.title}</h3>
+            <p class="card-desc">{item.description}</p>
+            <div class="card-footer">
+              <a
+                href={item.href}
+                class:list={['card-btn', item.highlight ? 'card-btn-primary' : 'card-btn-outline']}
+                target={item.external ? '_blank' : undefined}
+                rel={item.external ? 'noopener noreferrer' : undefined}
+              >
+                {item.cta} <span aria-hidden="true">&rarr;</span>
+              </a>
+            </div>
+          </article>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- 05. CURRENT OPPORTUNITIES -->
+  <section class="opportunities-section" id="opportunities">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">HOW TO GET INVOLVED RIGHT NOW</p>
+        <h2 class="section-title">Current Opportunities for UTME 2027</h2>
+        <p class="section-lede">
+          Clear, honest transparency: join what is live today, or inspect upcoming programmes for the months ahead.
+        </p>
+      </div>
+
+      <div class="opportunities-grid">
+        <!-- Opportunity 1: Foundation Protocol (Ongoing) -->
+        <div class="opp-card opp-highlight">
+          <div class="opp-badge-row">
+            <span class="opp-tag">Primary Active Opportunity</span>
+            <span class="opp-status live">Ongoing</span>
+          </div>
+          <h3 class="opp-title">Free 30-Day Foundation Protocol</h3>
+          <p class="opp-date">Dates: {dateRangeFormatted}</p>
+          <p class="opp-desc">
+            40 live classes across English, Biology, Chemistry, Physics, and Mathematics. Daily structure,
+            interactive problem solving, weekly Builder's Challenges, and diagnostic CBT assessments.
+          </p>
+          <ul class="opp-list">
+            <li>Zero registration fees or hidden costs</li>
+            <li>Direct access to live sessions & syllabus guides</li>
+            <li>Weekly retrieval drills and CBT diagnosis</li>
+          </ul>
+          <div class="opp-cta-wrap">
+            <a class="btn-primary" href="/foundation-protocol">
+              Join Free Foundation Protocol <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Opportunity 2: Builders Channel (Active Community) -->
+        <div class="opp-card">
+          <div class="opp-badge-row">
+            <span class="opp-tag">Daily Culture & Strategy</span>
+            <span class="opp-status community">Active Community</span>
+          </div>
+          <h3 class="opp-title">UTME 2027 Builders Channel</h3>
+          <p class="opp-date">Permanent WhatsApp Channel</p>
+          <p class="opp-desc">
+            The central communication channel for serious UTME 2027 candidates. Receive daily strategy insights,
+            study schedules, class links, and announcements directly on WhatsApp.
+          </p>
+          <ul class="opp-list">
+            <li>Daily strategy notes & formula reminders</li>
+            <li>Broadcast updates for all TECHMED events</li>
+            <li>Strictly focused on academic preparation</li>
+          </ul>
+          <div class="opp-cta-wrap">
+            <a class="btn-outline" href={channelUrl} target="_blank" rel="noopener noreferrer">
+              Join Builders Channel <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Opportunity 3: Paid Masterclasses (Coming Nov 30) -->
+        <div class="opp-card">
+          <div class="opp-badge-row">
+            <span class="opp-tag">Comprehensive 3-Month Course</span>
+            <span class="opp-status upcoming">Starts Nov 30, 2026</span>
+          </div>
+          <h3 class="opp-title">Paid UTME 2027 Masterclass</h3>
+          <p class="opp-date">Launch Date: November 30, 2026</p>
+          <p class="opp-desc">
+            Our comprehensive 3-month syllabus mastery programme. Complete topic-by-topic teaching,
+            weekly CBT mocks, assigned tutors, personalized weak-area diagnosis, and intensive revision.
+          </p>
+          <ul class="opp-list">
+            <li>Complete JAMB syllabus coverage until exam day</li>
+            <li>Unlimited Kairo CBT practice & full-length mocks</li>
+            <li>Three transparent tier packages (Core, Mastery, Ultimate)</li>
+          </ul>
+          <div class="opp-cta-wrap">
+            <a class="btn-outline" href="/pricing">
+              Compare Plans & Pricing <span aria-hidden="true">&rarr;</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06. BUILDER IDENTITY (SHORT SUMMARY) -->
+  <section class="identity-section" id="builder-identity">
+    <div class="container text-center">
+      <div class="identity-box">
+        <p class="section-eyebrow">THE BUILDER IDENTITY</p>
+        <h2 class="identity-title">You don't have to be a genius. You have to be a Builder.</h2>
+        <p class="identity-body">
+          A Builder is a student who has decided to prepare deliberately. You don't need to know every
+          formula on Day 1. You only need a willingness to learn concepts deeply, practise under real conditions,
+          confront your mistakes honestly, and keep building every single day.
+        </p>
+        <p class="identity-motto">Brick by brick. Day by day. Because things built well last.</p>
+        <div class="identity-actions">
+          <a class="btn-outline" href="/utme-2027/builders">
+            Read the Builder Culture & Manifesto <span aria-hidden="true">&rarr;</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 07. FINAL CTA -->
+  <section class="final-cta-section" id="final-cta">
+    <div class="container text-center">
+      <div class="final-card">
+        <p class="section-eyebrow">UTME 2027 STARTS NOW</p>
+        <h2 class="final-title">Don't wait until the pressure starts.</h2>
+        <p class="final-lede">
+          Join prospective UTME 2027 candidates who have chosen structure over guesswork.
+          Start with the free Foundation Protocol today.
+        </p>
+
+        <div class="final-actions">
+          <a class="btn-primary" href="/foundation-protocol">
+            Join the Free Foundation Protocol <span aria-hidden="true">&rarr;</span>
+          </a>
+          <a class="btn-secondary" href={channelUrl} target="_blank" rel="noopener noreferrer">
+            Join the Builders Channel
+          </a>
+        </div>
+
+        <p class="final-sublink">
+          Targeting the complete 3-month programme?
+          <a href="/pricing" class="link-gold">Explore the UTME 2027 Masterclass packages &rarr;</a>
         </p>
       </div>
     </div>
   </section>
 
-  <!-- 05. TESTIMONIAL MOSAIC -->
-  <section class="mosaic">
-    <h2 class="center">But TECHMED is more than a score.</h2>
-    <p class="intro center">Ask the students who have experienced it.</p>
-    <div class="mosaic-grid">
-      {TESTIMONIALS.map((t) => (
-        <figure class="quote-card reveal">
-          <blockquote>&ldquo;{t.quote}&rdquo;</blockquote>
-          <figcaption>
-            <span class="name">{t.name}</span>
-            <span class="context">{t.context}</span>
-          </figcaption>
-        </figure>
-      ))}
-    </div>
-  </section>
-
-  <!-- 06. KAIRO -->
-  <section class="kairo">
-    <div class="kairo-inner">
-      <p class="eyebrow">The Intelligence Layer</p>
-      <h2>When you don't know what to do next, Kairo helps.</h2>
-      <p class="body-copy">
-        Kairo uses your performance to help identify what you should study, practise, fix and
-        revisit next.
-      </p>
-      <p class="supporting-line">
-        Instead of giving you more things to study, Kairo helps you make better decisions about
-        what to do next.
-      </p>
-
-      <div class="kairo-flow">
-        {KAIRO_FLOW.map((shot, i) => (
-          <div class="kairo-shot reveal">
-            <div class="kairo-frame">
-              <img
-                src={shot.src}
-                alt={shot.alt}
-                width="720"
-                height="1386"
-                loading="lazy"
-                decoding="async"
-              />
-            </div>
-            <p class="kairo-caption">
-              <span aria-hidden="true">{i + 1}.</span> {shot.caption}
-            </p>
-          </div>
-        ))}
+  <!-- Sticky Mobile CTA -->
+  <aside class="sticky-mobile-cta" id="stickyCta" aria-label="Mobile Registration Action">
+    <div class="sticky-inner">
+      <div class="sticky-info">
+        <span class="sticky-badge">Free Protocol</span>
+        <span class="sticky-text">30-day UTME 2027 foundation</span>
       </div>
-
-      <div class="section-cta">
-        <a class="cta-primary" href="/tools">EXPLORE KAIRO <span aria-hidden="true">&rarr;</span></a>
-      </div>
+      <a class="sticky-btn" href="/foundation-protocol">
+        Join Free <span aria-hidden="true">&rarr;</span>
+      </a>
     </div>
-  </section>
-
-  <!-- 07. WHAT YOU GET -->
-  <section class="what-you-get">
-    <h2 class="center">One system. Everything works together.</h2>
-    <p class="intro center">
-      TECHMED brings the tools, resources, teaching, practice and community together around one
-      preparation journey.
-    </p>
-    <div class="wyg-grid">
-      {WHAT_YOU_GET.map((item) => (
-        <div class="wyg-card reveal">
-          <div class="wyg-head">
-            <span class="wyg-stage">{item.stage}</span>
-            <span class="wyg-label">{item.label}</span>
-          </div>
-          <h3>{item.title}</h3>
-          <p>{item.copy}</p>
-        </div>
-      ))}
-    </div>
-  </section>
-
-  <!-- 08. BUILDER IDENTITY -->
-  <section class="builder-identity">
-    <p class="eyebrow center">The Builder</p>
-    <h2 class="center">You don't have to have it all figured out.</h2>
-    <p class="body-copy center">A Builder is a student who has decided to prepare deliberately.</p>
-    <p class="body-copy center">You don't need to be the smartest person in the room.</p>
-    <p class="body-copy center">
-      You need to be willing to understand, practise, correct your mistakes, and keep building.
-    </p>
-    <p class="identity-close">Brick by brick. Day by day.</p>
-  </section>
-
-  <!-- 09. OBJECTIONS -->
-  <section class="objections">
-    <h2 class="center">You might be wondering&hellip;</h2>
-    <div class="accordion">
-      {OBJECTIONS.map((item) => (
-        <details class="reveal">
-          <summary>
-            <span>{item.q}</span>
-            <span class="chevron" aria-hidden="true"></span>
-          </summary>
-          <p>{item.a}</p>
-        </details>
-      ))}
-    </div>
-  </section>
-
-  <!-- 10. FINAL CTA -->
-  <section class="final-cta reveal">
-    <p class="eyebrow">UTME 2027 Starts Now</p>
-    <h2>Don't wait until the pressure starts.</h2>
-    <p class="body-copy">Start building your preparation now.</p>
-    <a class="cta-primary" href={BUILDERS_URL}>BECOME A BUILDER <span aria-hidden="true">&rarr;</span></a>
-    <p class="supporting-line">Brick by brick. Day by day.</p>
-    <p class="brand-line">Because things built well last.</p>
-  </section>
-
-  <!-- Mobile sticky CTA — hidden while the Hero or Final CTA (which both
-       already show the same button) or the Footer are in view, so it
-       never doubles up on-screen or sits over the page's last content. -->
-  <div class="sticky-cta" id="stickyCta">
-    <a class="cta-primary" href={BUILDERS_URL}>BECOME A BUILDER <span aria-hidden="true">&rarr;</span></a>
-  </div>
+  </aside>
 </BaseLayout>
 
 <script>
   const stickyCta = document.getElementById('stickyCta');
-  const hideTargets = document.querySelectorAll('.hero, .final-cta, .footer');
+  const hideTargets = document.querySelectorAll('.hero-section, .final-cta-section, footer');
 
   if (stickyCta && hideTargets.length) {
     const observer = new IntersectionObserver(
@@ -440,102 +470,122 @@ const jsonLd = [
 </script>
 
 <style>
-  section {
-    max-width: 1100px;
+  /* Base Containers & Typography */
+  .container {
+    max-width: 1180px;
     margin: 0 auto;
-    padding: var(--space-16) var(--space-6);
+    padding: 0 var(--space-6);
   }
 
-  .center {
+  .text-center {
     text-align: center;
   }
 
-  .eyebrow {
+  .section-header {
+    max-width: 720px;
+    margin: 0 auto var(--space-12);
+  }
+
+  .section-eyebrow {
     font-family: var(--font-display);
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     color: var(--accent-text);
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-2);
   }
 
-  h2 {
-    font-size: clamp(1.6rem, 4.2vw, 2.3rem);
+  .section-title {
+    font-size: clamp(1.75rem, 4vw, 2.35rem);
     font-weight: 800;
     letter-spacing: -0.03em;
-    margin-bottom: var(--space-4);
-  }
-
-  .body-copy {
-    font-size: 1.02rem;
-    line-height: 1.8;
-    color: var(--text-light);
-    max-width: 62ch;
+    line-height: 1.2;
     margin-bottom: var(--space-3);
   }
 
-  .body-copy.center {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .intro {
-    font-size: 1.05rem;
+  .section-lede {
+    font-size: 1.02rem;
+    line-height: 1.75;
     color: var(--text-light);
-    max-width: 56ch;
-    margin-bottom: var(--space-10);
   }
 
-  .intro.center {
-    margin-left: auto;
-    margin-right: auto;
-  }
-
-  .cta-primary {
+  /* Buttons */
+  .btn-primary {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.92rem;
+    font-size: 0.94rem;
     letter-spacing: 0.02em;
     color: #1a0a00;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    padding: 15px 30px;
+    padding: 14px 28px;
     border-radius: var(--radius);
     text-decoration: none;
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.25);
     transition: transform 150ms ease, box-shadow 150ms ease;
   }
 
-  .cta-primary span {
-    transition: transform 200ms ease;
-  }
-
-  .cta-primary:hover {
+  .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+    box-shadow: 0 8px 24px rgba(201, 162, 39, 0.38);
   }
 
-  .cta-primary:hover span {
-    transform: translateX(3px);
+  .btn-outline {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.94rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 13px 26px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 150ms ease, border-color 150ms ease, transform 150ms ease;
   }
 
-  .section-cta {
-    text-align: center;
-    margin-top: var(--space-10);
+  .btn-outline:hover {
+    background: var(--surface-raised);
+    border-color: var(--accent);
+    transform: translateY(-2px);
   }
 
-  /* 01. Hero — kept short: eyebrow, headline, subhead and CTA all land in
-     the first viewport on mobile; the path visual sits below the fold
-     trigger, reinforcing "there is a system" right as the visitor keeps
-     scrolling, without delaying the CTA. */
-  .hero {
+  .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.94rem;
+    letter-spacing: 0.02em;
+    color: var(--text);
+    background: transparent;
+    border: 1px solid var(--border);
+    padding: 13px 26px;
+    border-radius: var(--radius);
+    text-decoration: none;
+    transition: background 150ms ease, border-color 150ms ease;
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface-raised);
+    border-color: var(--accent);
+  }
+
+  /* 01. HERO */
+  .hero-section {
     position: relative;
-    isolation: isolate;
+    padding: var(--space-12) 0 var(--space-16);
     overflow: hidden;
-    max-width: 100%;
-    padding: 0;
   }
 
   .hero-bg {
@@ -545,699 +595,718 @@ const jsonLd = [
       linear-gradient(var(--border) 1px, transparent 1px),
       linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size: 40px 40px;
-    opacity: 0.3;
-    mask-image: radial-gradient(ellipse 70% 55% at 50% 15%, black 30%, transparent 75%);
+    opacity: 0.25;
+    mask-image: radial-gradient(ellipse 70% 60% at 50% 20%, black 20%, transparent 80%);
+    pointer-events: none;
   }
 
-  .hero-content {
+  .hero-container {
     position: relative;
     z-index: 1;
-    max-width: 720px;
-    margin: 0 auto;
-    padding: var(--space-12) var(--space-6) var(--space-10);
+    max-width: 860px;
     text-align: center;
   }
 
-  .hero-content .eyebrow {
-    text-align: center;
+  .hero-status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    border-radius: var(--radius-full);
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    color: var(--text);
+    margin-bottom: var(--space-6);
   }
 
-  h1 {
-    font-size: clamp(2rem, 6.5vw, 3.5rem);
+  .status-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.25);
+    animation: pulse 2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(0.95); opacity: 0.8; }
+  }
+
+  .status-link {
+    font-weight: 700;
+    color: var(--accent-text);
+    text-decoration: underline;
+    margin-left: 4px;
+  }
+
+  .hero-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  .hero-title {
+    font-size: clamp(2.1rem, 5.8vw, 3.4rem);
     font-weight: 900;
-    letter-spacing: -0.03em;
-    line-height: 1.1;
-    margin-bottom: var(--space-4);
+    letter-spacing: -0.035em;
+    line-height: 1.12;
+    margin-bottom: var(--space-5);
   }
 
-  .lede {
-    font-size: 1.08rem;
-    line-height: 1.75;
+  .hero-lede {
+    font-size: 1.12rem;
+    line-height: 1.8;
     color: var(--text-light);
-    max-width: 56ch;
-    margin: 0 auto var(--space-7);
+    max-width: 68ch;
+    margin: 0 auto var(--space-8);
   }
 
-  .microcopy {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    margin-top: var(--space-4);
-  }
-
-  .hero-path {
-    list-style: none;
+  .hero-cta-group {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: center;
-    gap: var(--space-1) 6px;
-    margin-top: var(--space-10);
-    padding-top: var(--space-6);
-    border-top: 1px solid var(--border);
-    font-family: var(--font-display);
-    font-size: 0.68rem;
-    font-weight: 700;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
+    gap: var(--space-4);
+    margin-bottom: var(--space-12);
   }
 
-  .hero-path li {
-    white-space: nowrap;
-  }
-
-  .hero-path span {
-    color: var(--accent-text);
-  }
-
-  /* 02. Problem */
-  .problem {
-    max-width: 800px;
-  }
-
-  .problem h2 {
-    font-size: clamp(1.6rem, 4vw, 2.2rem);
-  }
-
-  .closing {
-    font-size: 1.15rem;
-    font-weight: 700;
-    font-family: var(--font-display);
-    line-height: 1.6;
-    margin-top: var(--space-8);
-  }
-
-  .compare {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-    margin: var(--space-10) 0;
-  }
-
-  .compare-col {
-    background: var(--surface);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6) var(--space-5);
-  }
-
-  .compare-col.without {
-    border: 1px dashed var(--border);
-  }
-
-  .compare-col.with {
-    border: 1px solid var(--accent);
-    box-shadow: inset 0 2px 0 0 var(--accent);
-  }
-
-  .compare-label {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.78rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: var(--space-5);
-    text-align: center;
-  }
-
-  .without .compare-label {
-    color: var(--text-muted);
-  }
-
-  .with .compare-label {
-    color: var(--accent-text);
-  }
-
-  .chain {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .chain-item {
-    display: block;
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-align: center;
-    padding: 8px 14px;
-    border-radius: var(--radius-full);
-  }
-
-  .without .chain-item {
-    color: var(--text-muted);
-    background: var(--surface-raised);
-    opacity: 0.85;
-  }
-
-  .with .chain-item {
-    color: var(--text);
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-  }
-
-  .chain-arrow {
-    display: block;
-    text-align: center;
-    line-height: 1.6;
-    color: var(--text-muted);
-    opacity: 0.6;
-  }
-
-  .with .chain-arrow {
-    color: var(--accent-text);
-    opacity: 1;
-  }
-
-  /* 03. The TECHMED System */
-  .system {
-    max-width: 1150px;
-  }
-
-  .system-flow {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 0;
-    position: relative;
-    max-width: 620px;
-    margin: 0 auto;
-  }
-
-  .system-step {
-    display: flex;
-    gap: var(--space-5);
-    padding-bottom: var(--space-8);
-    position: relative;
-  }
-
-  .system-step:not(:last-child)::before {
-    content: '';
-    position: absolute;
-    left: 23px;
-    top: 48px;
-    width: 2px;
-    height: calc(100% - 40px);
-    background: var(--border);
-  }
-
-  .node {
-    flex-shrink: 0;
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
+  .hero-metrics-strip {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--surface-raised);
-    border: 2px solid var(--accent);
-    z-index: 1;
-  }
-
-  .number {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 0.95rem;
-    color: var(--accent-text);
-  }
-
-  .step-text h3 {
-    font-size: 1.05rem;
-    font-weight: 700;
-    margin-bottom: 4px;
-    padding-top: 10px;
-  }
-
-  .step-text p {
-    font-size: 0.92rem;
-    line-height: 1.65;
-    color: var(--text-light);
-  }
-
-  .system-step.destination .node {
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    border-color: var(--accent);
-  }
-
-  .system-step.destination .number {
-    color: #1a0a00;
-  }
-
-  .system-step.destination .step-text h3 {
-    color: var(--accent-text);
-  }
-
-  /* 04. 372 Proof */
-  .proof {
-    max-width: 1100px;
-  }
-
-  .proof-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 340px) 1fr;
-    gap: var(--space-10);
-    align-items: center;
-  }
-
-  .proof-image img {
-    width: 100%;
+    flex-wrap: wrap;
+    gap: var(--space-6);
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--card-shadow);
   }
 
-  .proof-content .eyebrow {
-    margin-bottom: var(--space-2);
+  .metric-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
   }
 
-  .proof-number {
+  .metric-val {
     font-family: var(--font-display);
     font-weight: 900;
-    font-size: clamp(3.5rem, 9vw, 5.5rem);
+    font-size: 1.25rem;
+    color: var(--accent-text);
+  }
+
+  .metric-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .metric-divider {
+    width: 1px;
+    height: 32px;
+    background: var(--border);
+  }
+
+  /* 02. STUDENT PROOF */
+  .proof-section {
+    padding: var(--space-14) 0;
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .proof-card {
+    display: grid;
+    grid-template-columns: minmax(0, 360px) 1fr;
+    gap: var(--space-10);
+    align-items: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
+    padding: var(--space-8);
+  }
+
+  .proof-visual {
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+  }
+
+  .proof-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: cover;
+  }
+
+  .proof-score-badge {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-1);
+    margin-bottom: var(--space-1);
+  }
+
+  .score-number {
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: clamp(3rem, 7vw, 4.2rem);
     line-height: 1;
-    letter-spacing: -0.03em;
     color: var(--text);
   }
 
-  .proof-label {
+  .score-scale {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.85rem;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
+    font-weight: 800;
+    font-size: 1.5rem;
     color: var(--accent-text);
-    margin-bottom: var(--space-5);
   }
 
-  .proof-content h2 {
-    font-size: clamp(1.4rem, 3.4vw, 1.9rem);
-  }
-
-  .proof-content blockquote {
-    font-family: var(--font-display);
+  .score-breakdown {
+    font-size: 0.88rem;
     font-weight: 600;
+    color: var(--accent-text);
+    margin-bottom: var(--space-4);
+  }
+
+  .proof-title {
+    font-size: clamp(1.4rem, 3.2vw, 1.85rem);
+    font-weight: 800;
+    margin-bottom: var(--space-4);
+    letter-spacing: -0.02em;
+  }
+
+  .proof-quote {
+    font-family: var(--font-display);
     font-style: italic;
     font-size: 1.02rem;
     line-height: 1.65;
     color: var(--text);
     border-left: 3px solid var(--accent);
-    padding-left: var(--space-5);
-    margin-bottom: var(--space-3);
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-4);
   }
 
-  .attribution {
+  .proof-author {
+    margin-bottom: var(--space-4);
+  }
+
+  .author-name {
     font-family: var(--font-display);
     font-weight: 700;
-    font-size: 0.85rem;
-    color: var(--accent-text);
-    margin-bottom: var(--space-6);
+    font-size: 0.95rem;
+    color: var(--text);
   }
 
-  .supporting {
-    font-size: 0.92rem;
-    line-height: 1.75;
+  .author-meta {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .proof-subtext {
+    font-size: 0.88rem;
+    line-height: 1.7;
     color: var(--text-light);
   }
 
-  /* 05. Testimonial mosaic */
-  .mosaic-grid {
+  /* 03. THE TECHMED SYSTEM */
+  .system-section {
+    padding: var(--space-20) 0;
+  }
+
+  .system-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
     gap: var(--space-5);
   }
 
-  .quote-card {
+  .system-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: transform 180ms ease, border-top-color 180ms ease, box-shadow 180ms ease;
+  }
+
+  .system-card:hover {
+    transform: translateY(-3px);
+    border-top-color: var(--accent);
+    box-shadow: var(--card-shadow);
+  }
+
+  .system-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+
+  .step-badge {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 0.8rem;
+    color: var(--accent-text);
+    background: var(--surface-raised);
+    padding: 3px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  .step-summary {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  .step-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: var(--space-2);
+  }
+
+  .step-copy {
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: var(--text-light);
+  }
+
+  /* 04. EXPLORE THE ECOSYSTEM */
+  .ecosystem-section {
+    padding: var(--space-16) 0 var(--space-20);
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ecosystem-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .ecosystem-card {
+    display: flex;
+    flex-direction: column;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
-    transition: border-color 200ms ease, transform 200ms ease;
+    box-shadow: var(--card-shadow);
+    transition: transform 180ms ease, border-color 180ms ease;
   }
 
-  .quote-card:hover {
-    border-color: var(--accent);
+  .ecosystem-card:hover {
     transform: translateY(-3px);
+    border-color: var(--accent);
   }
 
-  .quote-card blockquote {
-    font-size: 0.95rem;
-    line-height: 1.75;
-    color: var(--text);
-    margin-bottom: var(--space-4);
+  .ecosystem-card.featured {
+    border: 1.5px solid var(--accent);
+    background: linear-gradient(180deg, rgba(201, 162, 39, 0.05) 0%, var(--surface) 100%);
   }
 
-  .quote-card figcaption {
+  .card-head {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
   }
 
-  .quote-card .name {
+  .card-tag {
     font-family: var(--font-display);
+    font-size: 0.72rem;
     font-weight: 700;
-    font-size: 0.88rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
     color: var(--accent-text);
   }
 
-  .quote-card .context {
-    font-size: 0.78rem;
-    color: var(--text-muted);
+  .active-badge {
+    background: var(--accent);
+    color: #1a0a00;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
   }
 
-  /* 06. Kairo */
-  .kairo {
-    max-width: 100%;
-    background: var(--surface-dark);
+  .card-title {
+    font-size: 1.25rem;
+    font-weight: 800;
+    margin-bottom: var(--space-2);
   }
 
-  .kairo-inner {
-    max-width: 1100px;
-    margin: 0 auto;
-    text-align: center;
+  .card-desc {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--text-light);
+    flex-grow: 1;
+    margin-bottom: var(--space-6);
   }
 
-  .kairo :global(.eyebrow) {
-    text-align: center;
+  .card-footer {
+    margin-top: auto;
   }
 
-  .kairo h2 {
-    font-size: clamp(1.6rem, 4vw, 2.2rem);
-    color: var(--text-on-dark-surface);
-    max-width: 46ch;
-    margin-left: auto;
-    margin-right: auto;
+  .card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius);
+    padding: 9px 16px;
+    transition: all 150ms ease;
   }
 
-  .kairo .body-copy {
-    color: var(--text-light-on-dark-surface);
-    max-width: 58ch;
-    margin-left: auto;
-    margin-right: auto;
+  .card-btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
   }
 
-  .supporting-line {
-    font-size: 0.95rem;
-    color: var(--text-muted);
-    max-width: 58ch;
-    margin: 0 auto var(--space-10);
-    line-height: 1.7;
+  .card-btn-primary:hover {
+    box-shadow: 0 4px 12px rgba(201, 162, 39, 0.35);
   }
 
-  .kairo .supporting-line {
-    color: var(--text-light-on-dark-surface);
-    opacity: 0.85;
+  .card-btn-outline {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
   }
 
-  .kairo-flow {
+  .card-btn-outline:hover {
+    border-color: var(--accent);
+    color: var(--accent-text);
+  }
+
+  /* 05. CURRENT OPPORTUNITIES */
+  .opportunities-section {
+    padding: var(--space-20) 0;
+  }
+
+  .opportunities-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: var(--space-6);
+  }
+
+  .opp-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8) var(--space-6);
+    box-shadow: var(--card-shadow);
+  }
+
+  .opp-card.opp-highlight {
+    border: 2px solid var(--accent);
+    box-shadow: 0 10px 30px rgba(201, 162, 39, 0.15);
+  }
+
+  .opp-badge-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+
+  .opp-tag {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-text);
+  }
+
+  .opp-status {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .opp-status.live {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .opp-status.community {
+    background: rgba(14, 165, 233, 0.15);
+    color: #0ea5e9;
+    border: 1px solid rgba(14, 165, 233, 0.3);
+  }
+
+  .opp-status.upcoming {
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--accent-text);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  .opp-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin-bottom: var(--space-1);
+  }
+
+  .opp-date {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .opp-desc {
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: var(--text-light);
+    margin-bottom: var(--space-5);
+  }
+
+  .opp-list {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .opp-list li {
+    font-size: 0.85rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .opp-list li::before {
+    content: '✓';
+    color: var(--accent-text);
+    font-weight: bold;
+  }
+
+  .opp-cta-wrap {
+    margin-top: auto;
+  }
+
+  .opp-cta-wrap .btn-primary,
+  .opp-cta-wrap .btn-outline {
+    width: 100%;
+  }
+
+  /* 06. BUILDER IDENTITY */
+  .identity-section {
+    padding: var(--space-16) 0;
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .identity-box {
     max-width: 760px;
     margin: 0 auto;
   }
 
-  .kairo-frame {
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 1px solid rgba(248, 249, 250, 0.12);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
-  }
-
-  .kairo-frame img {
-    width: 100%;
-    display: block;
-    transition: transform 300ms ease;
-  }
-
-  .kairo-shot:hover .kairo-frame img {
-    transform: scale(1.03);
-  }
-
-  .kairo-caption {
-    margin-top: var(--space-3);
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-light-on-dark-surface);
-  }
-
-  .kairo-caption span {
-    color: var(--accent);
-    font-family: var(--font-display);
+  .identity-title {
+    font-size: clamp(1.6rem, 3.8vw, 2.2rem);
     font-weight: 800;
-  }
-
-  /* 07. What You Get */
-  .wyg-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: var(--space-5);
-  }
-
-  .wyg-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-top: 2px solid var(--accent);
-    border-radius: var(--radius-lg);
-    padding: var(--space-6);
-    transition: transform 200ms ease, box-shadow 200ms ease;
-  }
-
-  .wyg-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  }
-
-  .wyg-head {
-    display: flex;
-    align-items: center;
-    gap: var(--space-3);
+    letter-spacing: -0.025em;
     margin-bottom: var(--space-4);
   }
 
-  .wyg-stage {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 0.75rem;
-    color: var(--accent-text);
-    background: var(--surface-raised);
-    border-radius: var(--radius-full);
-    padding: 3px 9px;
+  .identity-body {
+    font-size: 1.05rem;
+    line-height: 1.8;
+    color: var(--text-light);
+    margin-bottom: var(--space-4);
   }
 
-  .wyg-label {
+  .identity-motto {
     font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.68rem;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-weight: 800;
+    font-size: 1.15rem;
+    color: var(--accent-text);
+    letter-spacing: 0.02em;
+    margin-bottom: var(--space-6);
+  }
+
+  /* 07. FINAL CTA */
+  .final-cta-section {
+    padding: var(--space-20) 0 var(--space-24);
+  }
+
+  .final-card {
+    max-width: 800px;
+    margin: 0 auto;
+    background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow), inset 0 2px 0 0 var(--accent);
+    padding: var(--space-12) var(--space-8);
+  }
+
+  .final-title {
+    font-size: clamp(1.8rem, 4.5vw, 2.6rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: var(--space-4);
+  }
+
+  .final-lede {
+    font-size: 1.08rem;
+    line-height: 1.75;
+    color: var(--text-light);
+    max-width: 58ch;
+    margin: 0 auto var(--space-8);
+  }
+
+  .final-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .final-sublink {
+    font-size: 0.88rem;
     color: var(--text-muted);
   }
 
-  .wyg-card h3 {
-    font-size: 1.02rem;
-    margin-bottom: var(--space-2);
-  }
-
-  .wyg-card p {
-    font-size: 0.9rem;
-    line-height: 1.7;
-    color: var(--text-light);
-  }
-
-  /* 08. Builder Identity */
-  .builder-identity {
-    max-width: 680px;
-  }
-
-  .builder-identity .body-copy {
-    font-size: 1.08rem;
-  }
-
-  .identity-close {
-    font-family: var(--font-display);
-    font-weight: 800;
-    font-size: 1.2rem;
-    letter-spacing: 0.02em;
-    text-align: center;
-    margin-top: var(--space-6);
-  }
-
-  /* 09. Objections */
-  .objections {
-    max-width: 700px;
-  }
-
-  .accordion {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-  }
-
-  .accordion details {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: var(--space-5) var(--space-6);
-    transition: border-color 200ms ease;
-  }
-
-  .accordion details:hover {
-    border-color: var(--accent);
-  }
-
-  .accordion summary {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.5;
-    cursor: pointer;
-    list-style: none;
-  }
-
-  .accordion summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .chevron {
-    flex-shrink: 0;
-    width: 10px;
-    height: 10px;
-    border-right: 2px solid var(--accent-text);
-    border-bottom: 2px solid var(--accent-text);
-    transform: rotate(45deg);
-    transition: transform 200ms ease;
-    margin-top: -4px;
-  }
-
-  .accordion details[open] .chevron {
-    transform: rotate(-135deg);
-    margin-top: 4px;
-  }
-
-  .accordion details[open] summary {
-    margin-bottom: var(--space-4);
-  }
-
-  .accordion p {
-    font-size: 0.95rem;
-    line-height: 1.8;
-    color: var(--text-light);
-  }
-
-  /* 10. Final CTA */
-  .final-cta {
-    max-width: 100%;
-    text-align: center;
-    padding: var(--space-20) var(--space-6);
-    background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
-  }
-
-  .final-cta .eyebrow {
-    text-align: center;
-  }
-
-  .final-cta h2 {
-    font-size: clamp(1.75rem, 4.5vw, 2.5rem);
-    max-width: 20ch;
-    margin: 0 auto var(--space-4);
-  }
-
-  .final-cta .body-copy {
-    margin: 0 auto var(--space-7);
-    text-align: center;
-  }
-
-  .final-cta .supporting-line {
-    color: var(--text-light);
-    margin: var(--space-6) auto 0;
-  }
-
-  .final-cta .brand-line {
-    font-family: var(--font-display);
-    font-weight: 700;
-    font-size: 0.95rem;
+  .link-gold {
     color: var(--accent-text);
-    margin-top: var(--space-2);
+    font-weight: 700;
+    text-decoration: underline;
   }
 
-  /* Sticky mobile CTA */
-  .sticky-cta {
+  /* Sticky Mobile Bar */
+  .sticky-mobile-cta {
     display: none;
   }
 
   @media (max-width: 860px) {
-    .sticky-cta {
+    .sticky-mobile-cta {
       display: block;
       position: fixed;
       left: 0;
       right: 0;
       bottom: 0;
       z-index: 90;
-      padding: var(--space-3) var(--space-4);
-      padding-bottom: max(var(--space-3), env(safe-area-inset-bottom));
-      background: rgba(1, 39, 72, 0.92);
+      padding: 10px 16px;
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      background: rgba(1, 39, 72, 0.94);
       backdrop-filter: blur(12px);
       border-top: 1px solid var(--border);
       transform: translateY(0);
       transition: transform 250ms ease;
     }
 
-    .sticky-cta.is-hidden {
+    .sticky-mobile-cta.is-hidden {
       transform: translateY(100%);
     }
 
-    .sticky-cta .cta-primary {
+    .sticky-inner {
       display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-
-    /* Keeps the fixed bar from covering the last bit of page content. */
-    body {
-      padding-bottom: 76px;
-    }
-  }
-
-  /* Responsive */
-  @media (max-width: 900px) {
-    .proof-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .proof-image {
-      max-width: 320px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 500px;
       margin: 0 auto;
     }
 
-    .proof-content {
+    .sticky-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .sticky-badge {
+      font-family: var(--font-display);
+      font-size: 0.65rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .sticky-text {
+      font-size: 0.78rem;
+      color: #F8F9FA;
+      font-weight: 500;
+    }
+
+    .sticky-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: #1a0a00;
+      background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+  }
+
+  /* Responsive Rules */
+  @media (max-width: 900px) {
+    .proof-card {
+      grid-template-columns: 1fr;
       text-align: center;
     }
 
-    .proof-content blockquote {
+    .proof-visual {
+      max-width: 300px;
+      margin: 0 auto;
+    }
+
+    .proof-score-badge {
+      justify-content: center;
+    }
+
+    .proof-quote {
       text-align: left;
     }
   }
 
-  @media (max-width: 700px) {
-    .compare {
-      grid-template-columns: 1fr;
+  @media (max-width: 640px) {
+    .hero-metrics-strip {
+      flex-direction: column;
+      gap: var(--space-4);
     }
 
-    .mosaic-grid {
-      grid-template-columns: 1fr;
+    .metric-divider {
+      width: 100%;
+      height: 1px;
     }
 
-    .kairo-flow {
-      grid-template-columns: 1fr;
-      max-width: 340px;
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .kairo-shot:hover .kairo-frame img {
-      transform: none;
+    .final-card {
+      padding: var(--space-8) var(--space-5);
     }
   }
 </style>

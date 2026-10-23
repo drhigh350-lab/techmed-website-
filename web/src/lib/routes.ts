@@ -14,6 +14,7 @@ export interface SiteRoute {
 export const NAV_ROUTES: SiteRoute[] = [
   { label: 'About', path: '/about', description: 'The story behind TECHMED and the Builder philosophy.' },
   { label: 'UTME 2027', path: '/utme-2027', description: 'The TECHMED UTME 2027 Hub — Blueprints, Resources, Tools and the Builder Cohort in one place.' },
+  { label: 'Pricing', path: '/pricing', description: 'UTME 2027 Masterclass packages, schedule, and pricing comparison.' },
   { label: 'Builder Cohort', path: '/utme-2027/builders', description: 'The UTME 2027 Builder identity, the Builders Channel, and the current free tutorial experience.' },
   { label: 'Resources', path: '/resources', description: 'Boosters, revision materials and structured resources.' },
   { label: 'Tools', path: '/tools', description: 'KAIRO, the Study Planner, CBT Practice and other tools.' },

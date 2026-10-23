@@ -21,6 +21,8 @@ export interface BuilderSettings {
   tutorialDescription: string;
   tutorialStartDate?: string;
   tutorialEndDate?: string;
+  foundationOngoing?: boolean;
+  foundationStatusNotice?: string;
 }
 
 const FALLBACK_BUILDER_SETTINGS: BuilderSettings = {
@@ -33,6 +35,8 @@ const FALLBACK_BUILDER_SETTINGS: BuilderSettings = {
     'TECHMED is providing a free tutorial experience for UTME 2027 candidates. Full details are being finalized and will be shared with Builders as the season approaches.',
   tutorialStartDate: '2026-10-16',
   tutorialEndDate: '2026-11-14',
+  foundationOngoing: true,
+  foundationStatusNotice: 'Free 30-Day Programme Currently Ongoing — Started October 16 through November 14, 2026',
 };
 
 const BUILDER_SETTINGS_QUERY = `*[_id == "utmeBuilderSettings"][0]{
@@ -44,7 +48,9 @@ const BUILDER_SETTINGS_QUERY = `*[_id == "utmeBuilderSettings"][0]{
   tutorialTitle,
   tutorialDescription,
   tutorialStartDate,
-  tutorialEndDate
+  tutorialEndDate,
+  foundationOngoing,
+  foundationStatusNotice
 }`;
 
 export async function getBuilderSettings(): Promise<BuilderSettings> {
@@ -59,6 +65,8 @@ export async function getBuilderSettings(): Promise<BuilderSettings> {
     tutorialDescription: settings.tutorialDescription || FALLBACK_BUILDER_SETTINGS.tutorialDescription,
     tutorialStartDate: settings.tutorialStartDate || FALLBACK_BUILDER_SETTINGS.tutorialStartDate,
     tutorialEndDate: settings.tutorialEndDate || FALLBACK_BUILDER_SETTINGS.tutorialEndDate,
+    foundationOngoing: settings.foundationOngoing ?? FALLBACK_BUILDER_SETTINGS.foundationOngoing,
+    foundationStatusNotice: settings.foundationStatusNotice || FALLBACK_BUILDER_SETTINGS.foundationStatusNotice,
   };
 }
 

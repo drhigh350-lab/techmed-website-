@@ -74,14 +74,16 @@ const items = [
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
     padding: var(--space-6);
     border-top: 2px solid var(--accent);
-    transition: transform 200ms ease, box-shadow 200ms ease;
+    transition: transform 200ms ease, box-shadow 200ms ease, border-color 200ms ease;
   }
 
   .item:hover {
     transform: translateY(-3px);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+    border-color: var(--accent);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .item h3 {

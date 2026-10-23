@@ -20,11 +20,17 @@ export default defineType({
       initialValue: false,
     }),
     defineField({
-      name: 'message',
-      title: 'Message',
+      name: 'headline',
+      title: 'Headline (optional)',
       type: 'string',
-      description: 'Keep this to one short sentence — it renders on a single line on all screen sizes.',
-      validation: (Rule) => Rule.max(140),
+      description: 'Short prefix or title, e.g. "Ongoing: Free Foundation Protocol".',
+    }),
+    defineField({
+      name: 'message',
+      title: 'Message / Short Description',
+      type: 'string',
+      description: 'Keep this concise — it renders clearly on mobile and desktop.',
+      validation: (Rule) => Rule.max(160),
     }),
     defineField({
       name: 'icon',
@@ -32,26 +38,46 @@ export default defineType({
       type: 'image',
       options: { hotspot: true },
       description:
-        'Optional small icon shown to the left of the message (e.g. a logo mark or a small graphic). Keep it simple — this renders at about 24px tall, not as a banner image. Leave empty for a text-only banner.',
+        'Optional small icon shown to the left of the message. Leave empty for a text-only banner.',
     }),
     defineField({
       name: 'ctaLabel',
       title: 'CTA Label',
       type: 'string',
-      description: 'e.g. "Join the Builders Channel". Keep it short.',
+      description: 'e.g. "Join Now", "Learn More". Keep it short.',
     }),
     defineField({
       name: 'ctaUrl',
       title: 'CTA Link',
       type: 'string',
-      description: 'A full URL (e.g. a WhatsApp link) or a path on this site (e.g. "/utme-2027/builders").',
+      description: 'A full URL (e.g. a WhatsApp link) or a path on this site (e.g. "/foundation-protocol").',
+    }),
+    defineField({
+      name: 'startDate',
+      title: 'Start Date (optional)',
+      type: 'datetime',
+      description: 'If set, the announcement will not display before this date and time.',
+    }),
+    defineField({
+      name: 'endDate',
+      title: 'End Date (optional)',
+      type: 'datetime',
+      description: 'If set, the announcement will automatically expire after this date and time.',
+    }),
+    defineField({
+      name: 'priority',
+      title: 'Priority / Display Order',
+      type: 'number',
+      description: 'Higher numbers indicate higher priority.',
+      initialValue: 0,
     }),
   ],
   preview: {
-    select: { active: 'active', message: 'message' },
-    prepare({ active, message }) {
+    select: { active: 'active', headline: 'headline', message: 'message' },
+    prepare({ active, headline, message }) {
+      const title = headline || message || 'Announcement Banner';
       return {
-        title: 'Announcement Banner',
+        title,
         subtitle: active ? (message || '(no message set)') : 'Inactive',
       };
     },

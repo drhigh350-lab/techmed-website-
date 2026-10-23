@@ -1,58 +1,153 @@
 ---
 import { getBuilderSettings } from '../lib/builders';
+import { getContactChannels, whatsappLink } from '../lib/contact';
+
 const { channelUrl } = await getBuilderSettings();
+const channels = await getContactChannels();
+const waNumber = channels.whatsappNumber || '2347044255045';
+const waHelpUrl = whatsappLink(waNumber, "Hello TECHMED, I'd like to ask a question about UTME 2027 preparation and enrolling in a plan.");
 ---
 
 <section class="cta-section reveal">
-  <h2>You Don't Have To Prepare Alone.</h2>
-  <p>Brick by brick. Day by day.</p>
-  <a class="cta" href={channelUrl} target="_blank" rel="noopener">Become a Builder <span aria-hidden="true">&rarr;</span></a>
-  <p class="cta-note">Because things built well last.</p>
+  <div class="cta-inner">
+    <h2>You Don't Have To Prepare Alone.</h2>
+    <p class="cta-lede">
+      Whether you start in our free Builder community or enrol directly into Core, Mastery, or the ₦40,000 Ultimate package — TECHMED gives you the system to succeed.
+    </p>
+
+    <div class="actions">
+      <a class="btn btn-primary" href="/pricing">
+        Explore 2027 Preparation Plans <span aria-hidden="true">&rarr;</span>
+      </a>
+      <a class="btn btn-secondary" href={channelUrl} target="_blank" rel="noopener">
+        Join Builders Channel (Free)
+      </a>
+    </div>
+
+    <div class="wa-help">
+      <span>Have questions before enrolling?</span>
+      <a href={waHelpUrl} target="_blank" rel="noopener" class="wa-link">
+        Chat with Admissions on WhatsApp (07044255045) &rarr;
+      </a>
+    </div>
+
+    <p class="cta-note">Brick by brick. Day by day. Because things built well last.</p>
+  </div>
 </section>
 
 <style>
   .cta-section {
     text-align: center;
-    padding: var(--space-24) var(--space-6);
+    padding: var(--space-20) var(--space-6);
     background: linear-gradient(135deg, var(--surface-raised) 0%, var(--surface) 100%);
+    border-top: 1px solid var(--border);
+  }
+
+  .cta-inner {
+    max-width: 720px;
+    margin: 0 auto;
   }
 
   h2 {
-    font-size: clamp(1.75rem, 4vw, 2.5rem);
+    font-size: clamp(1.85rem, 4.5vw, 2.75rem);
     font-weight: 900;
     letter-spacing: -0.03em;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--space-4);
+    color: var(--text);
   }
 
-  p {
+  .cta-lede {
     font-size: 1.1rem;
+    line-height: 1.7;
     color: var(--text-light);
     margin-bottom: var(--space-8);
   }
 
-  .cta {
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-6);
+  }
+
+  .btn {
     display: inline-flex;
     align-items: center;
     gap: var(--space-2);
     font-family: var(--font-display);
     font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    color: #1a0a00;
-    padding: 16px 36px;
+    font-size: 0.95rem;
+    padding: 15px 30px;
     border-radius: var(--radius);
     text-decoration: none;
-    transition: transform 200ms ease, box-shadow 300ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
   }
 
-  .cta:hover {
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
+  }
+
+  .btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.35);
+    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.45);
+  }
+
+  .btn-secondary {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: var(--card-shadow-hover);
+  }
+
+  .wa-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-6);
+  }
+
+  .wa-link {
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .wa-link:hover {
+    text-decoration: underline;
   }
 
   .cta-note {
-    font-size: 0.85rem;
+    font-size: 0.82rem;
     color: var(--text-muted);
-    margin-top: var(--space-5);
-    margin-bottom: 0;
+    font-family: var(--font-display);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  @media (max-width: 540px) {
+    .actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    .btn {
+      width: 100%;
+      justify-content: center;
+    }
   }
 </style>

@@ -1,0 +1,1275 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import {
+  PRICING_PLANS,
+  COMPACT_QUESTIONS,
+  PROGRAMME_DETAILS,
+  WHY_ULTIMATE_DATA,
+} from '../lib/pricing';
+import { getContactChannels, whatsappLink } from '../lib/contact';
+
+const channels = await getContactChannels();
+const waNumber = channels.whatsappNumber || PROGRAMME_DETAILS.supportPhone;
+
+const pageUrl = new URL('/pricing', Astro.site).toString();
+const ultimateWaUrl = whatsappLink(waNumber, WHY_ULTIMATE_DATA.whatsappMessage);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Course',
+    name: 'TECHMED UTME 2027 Preparation Plans',
+    description: 'Structured, practice-led preparation for UTME 2027 science candidates across Core, Mastery, and Ultimate tracks.',
+    provider: {
+      '@type': 'Organization',
+      name: 'TECHMED',
+      sameAs: Astro.site?.toString(),
+    },
+    offers: [
+      {
+        '@type': 'Offer',
+        name: 'TECHMED Core',
+        price: '18000',
+        priceCurrency: 'NGN',
+        availability: 'https://schema.org/InStock',
+        url: pageUrl,
+      },
+      {
+        '@type': 'Offer',
+        name: 'TECHMED Mastery',
+        price: '25000',
+        priceCurrency: 'NGN',
+        availability: 'https://schema.org/InStock',
+        url: pageUrl,
+      },
+      {
+        '@type': 'Offer',
+        name: 'TECHMED Ultimate',
+        price: '40000',
+        priceCurrency: 'NGN',
+        availability: 'https://schema.org/InStock',
+        url: pageUrl,
+      },
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Pricing & Plans', item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout
+  title="Choose your preparation plan — TECHMED UTME 2027"
+  description="Compare TECHMED Core, Mastery, and Ultimate preparation plans for UTME 2027. Structured live Telegram teaching, Kairo CBT drills, and study manuals."
+  jsonLd={jsonLd}
+>
+  <main class="pricing-page">
+    <!-- Header Section -->
+    <header class="pricing-header">
+      <div class="pricing-header-inner">
+        <h1 class="page-title">{PROGRAMME_DETAILS.heading}</h1>
+        <p class="page-subtitle">{PROGRAMME_DETAILS.supportingText}</p>
+        <div class="programme-date-pill">
+          <span class="date-label">Start date:</span>
+          <span class="date-value">{PROGRAMME_DETAILS.startDate}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Pricing Cards Section -->
+    <section class="pricing-grid-section" aria-label="UTME 2027 Preparation Packages">
+      <div class="pricing-grid-container">
+        {PRICING_PLANS.map((plan) => {
+          const waUrl = whatsappLink(waNumber, plan.whatsappMessage);
+          return (
+            <article
+              class:list={[
+                'plan-card',
+                { 'plan-card-popular': plan.isPopular },
+                { 'plan-card-ultimate': plan.isBestValue },
+              ]}
+              id={`plan-${plan.id}`}
+            >
+              <!-- Card Top Header & Badge -->
+              <div class="card-meta-bar">
+                {plan.badge ? (
+                  <span class:list={['plan-badge', { 'badge-popular': plan.isPopular, 'badge-value': plan.isBestValue }]}>
+                    {plan.badge}
+                  </span>
+                ) : (
+                  <span class="badge-placeholder" aria-hidden="true"></span>
+                )}
+              </div>
+
+              <!-- Plan Name & Positioning -->
+              <div class="card-title-group">
+                <h2 class="plan-name">{plan.name}</h2>
+                <p class="plan-positioning">{plan.positioning}</p>
+              </div>
+
+              <!-- Price Box -->
+              <div class="card-price-box">
+                <div class="price-primary-row">
+                  <span class="price-figure">{plan.prices.mainAmount}</span>
+                  <span class="price-period">{plan.prices.mainPeriod}</span>
+                </div>
+
+                {plan.prices.secondaryOption && (
+                  <div class="price-secondary-option">
+                    <span>or {plan.prices.secondaryOption}</span>
+                  </div>
+                )}
+
+                {plan.prices.coverageNote && (
+                  <div class="price-coverage-note">
+                    <span>{plan.prices.coverageNote}</span>
+                  </div>
+                )}
+
+                {plan.prices.earlyBird && (
+                  <div class="early-bird-callout">
+                    <span class="early-bird-tag">Early-bird:</span>
+                    <span class="early-bird-text">
+                      <strong>{plan.prices.earlyBird.amount}</strong> {plan.prices.earlyBird.condition}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <!-- CTA Button -->
+              <div class="card-cta-container">
+                <a
+                  href={waUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class:list={[
+                    'cta-button',
+                    { 'cta-button-popular': plan.isPopular },
+                    { 'cta-button-ultimate': plan.isBestValue },
+                    { 'cta-button-core': !plan.isPopular && !plan.isBestValue },
+                  ]}
+                  aria-label={`${plan.ctaLabel} via WhatsApp`}
+                >
+                  <span>{plan.ctaLabel}</span>
+                  <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </a>
+                <span class="cta-note">Instant WhatsApp enrolment with admissions</span>
+              </div>
+
+              <!-- Feature Bullet Points -->
+              <div class="card-features-container">
+                <p class="features-heading">Included in this plan:</p>
+                <ul class="features-list">
+                  {plan.features.map((feature) => (
+                    <li class="feature-item">
+                      <svg class="feature-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                      <span class="feature-text">{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <!-- Optional Plan Note -->
+              {plan.note && (
+                <div class="card-footnote">
+                  <p>{plan.note}</p>
+                </div>
+              )}
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    <!-- Why Ultimate Section (Conversion-Focused Best Value Closer) -->
+    <section class="why-ultimate-section" id="why-ultimate" aria-labelledby="why-ultimate-heading">
+      <div class="why-ultimate-container">
+        <!-- Eyebrow & Headlines -->
+        <div class="why-ultimate-header">
+          <p class="section-eyebrow">{WHY_ULTIMATE_DATA.eyebrow}</p>
+          <h2 id="why-ultimate-heading" class="section-title">{WHY_ULTIMATE_DATA.headline}</h2>
+          <p class="section-lead">{WHY_ULTIMATE_DATA.supportingCopy}</p>
+        </div>
+
+        <!-- Bonus Value Comparison Table Card -->
+        <div class="bonus-card">
+          <div class="bonus-card-header">
+            <h3 class="bonus-intro-title">{WHY_ULTIMATE_DATA.tableIntro}</h3>
+          </div>
+
+          <div class="table-responsive-wrapper">
+            <table class="bonus-table">
+              <thead>
+                <tr>
+                  <th scope="col" class="th-benefit">EXTRA BENEFIT</th>
+                  <th scope="col" class="th-value">STANDALONE VALUE</th>
+                </tr>
+              </thead>
+              <tbody>
+                {WHY_ULTIMATE_DATA.bonusItems.map((item) => (
+                  <tr class="bonus-row">
+                    <td class="td-benefit">
+                      <span class="bonus-name">{item.benefit}</span>
+                    </td>
+                    <td class="td-value">
+                      <span class="bonus-price tabular-nums">{item.standaloneValue}</span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+              <tfoot>
+                <tr class="bonus-total-row">
+                  <td class="td-benefit-total">
+                    <span class="total-label">TOTAL VALUE OF THESE EXTRAS</span>
+                  </td>
+                  <td class="td-value-total">
+                    <span class="total-amount tabular-nums">{WHY_ULTIMATE_DATA.totalValue}</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="bonus-card-footer">
+            <p class="value-qualification">{WHY_ULTIMATE_DATA.valueQualification}</p>
+          </div>
+        </div>
+
+        <!-- Preparation Benefits Block -->
+        <div class="benefits-block">
+          <h3 class="benefits-headline">{WHY_ULTIMATE_DATA.benefitsHeadline}</h3>
+          <ul class="benefits-list">
+            {WHY_ULTIMATE_DATA.preparationBenefits.map((benefit) => (
+              <li class="benefit-item">
+                <span class="benefit-icon-wrapper" aria-hidden="true">
+                  <svg class="benefit-check" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </span>
+                <span class="benefit-text">{benefit}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <!-- Final Offer Block -->
+        <div class="final-offer-card">
+          <div class="final-offer-content">
+            <h3 class="offer-headline">{WHY_ULTIMATE_DATA.offerHeadline}</h3>
+            <p class="offer-supporting">{WHY_ULTIMATE_DATA.offerSupporting}</p>
+            <p class="offer-closing">{WHY_ULTIMATE_DATA.offerClosing}</p>
+          </div>
+          <div class="final-offer-action">
+            <a
+              href={ultimateWaUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="cta-button-ultimate-large"
+              aria-label="Choose Ultimate via WhatsApp"
+            >
+              <span>{WHY_ULTIMATE_DATA.ctaLabel}</span>
+              <svg class="cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </a>
+            <span class="offer-action-note">Direct enrolment & mentorship verification on WhatsApp (07044255045)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Compact Questions Section -->
+    <section class="compact-faq-section" aria-labelledby="faq-section-heading">
+      <div class="compact-faq-container">
+        <div class="faq-header">
+          <h2 id="faq-section-heading">Important Details & Questions</h2>
+          <p class="faq-subheading">Key facts about class scheduling, delivery format, resources, and enrolment.</p>
+        </div>
+
+        <div class="faq-list">
+          {COMPACT_QUESTIONS.map((item, index) => (
+            <details class="faq-item" open={index === 0}>
+              <summary class="faq-question">
+                <span>{item.question}</span>
+                <svg class="faq-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </summary>
+              <div class="faq-answer">
+                <p>{item.answer}</p>
+              </div>
+            </details>
+          ))}
+        </div>
+
+        <!-- Direct Contact Footer -->
+        <div class="enquiry-bar">
+          <div class="enquiry-text">
+            <strong>Have an admissions question?</strong>
+            <span>Speak directly with our team on WhatsApp ({PROGRAMME_DETAILS.supportDisplayPhone}).</span>
+          </div>
+          <a
+            href={whatsappLink(waNumber, "Hello TECHMED, I have a question regarding the UTME 2027 preparation plans.")}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="enquiry-button"
+          >
+            Chat with Admissions
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+</BaseLayout>
+
+<style>
+  /* Page Container */
+  .pricing-page {
+    background-color: var(--bg);
+    color: var(--text);
+    padding-bottom: var(--space-20);
+  }
+
+  /* Header Section */
+  .pricing-header {
+    padding: var(--space-16) var(--space-6) var(--space-8);
+    text-align: center;
+    background: linear-gradient(180deg, var(--surface-raised) 0%, var(--bg) 100%);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .pricing-header-inner {
+    max-width: 48rem;
+    margin: 0 auto;
+  }
+
+  .page-title {
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 800;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin: 0 0 var(--space-3);
+  }
+
+  .page-subtitle {
+    font-size: clamp(1.05rem, 2vw, 1.25rem);
+    line-height: 1.5;
+    color: var(--text-light);
+    margin: 0 0 var(--space-6);
+  }
+
+  .programme-date-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-5);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  }
+
+  .date-label {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .date-value {
+    color: var(--accent-text);
+    font-weight: 700;
+  }
+
+  /* Grid Layout: Desktop 3 cards horizontal, Mobile 1 column vertical */
+  .pricing-grid-section {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-16);
+  }
+
+  .pricing-grid-container {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+    align-items: stretch;
+  }
+
+  /* Single Card Styling */
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    box-shadow: 0 4px 16px rgba(1, 39, 72, 0.06);
+    transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+  }
+
+  :root:not([data-theme='light']) .plan-card {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  }
+
+  .plan-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(1, 39, 72, 0.12);
+  }
+
+  /* Card Variations */
+  .plan-card-popular {
+    border: 2px solid var(--accent);
+    box-shadow: 0 8px 30px rgba(201, 162, 39, 0.15);
+  }
+
+  :root:not([data-theme='light']) .plan-card-popular {
+    background: linear-gradient(180deg, var(--surface-raised) 0%, var(--surface) 100%);
+  }
+
+  :root[data-theme='light'] .plan-card-popular,
+  html[data-theme='light'] .plan-card-popular {
+    background: var(--surface);
+    box-shadow: 0 8px 28px rgba(201, 162, 39, 0.18), 0 1px 3px rgba(1, 39, 72, 0.06);
+  }
+
+  .plan-card-ultimate {
+    border: 1.5px solid rgba(9, 71, 110, 0.25);
+  }
+
+  :root:not([data-theme='light']) .plan-card-ultimate {
+    border-color: rgba(152, 176, 196, 0.35);
+    background: linear-gradient(180deg, #0B3A5C 0%, var(--surface) 100%);
+  }
+
+  :root[data-theme='light'] .plan-card-ultimate,
+  html[data-theme='light'] .plan-card-ultimate {
+    background: var(--surface);
+    border-color: rgba(9, 71, 110, 0.25);
+    box-shadow: 0 8px 24px rgba(9, 71, 110, 0.08);
+  }
+
+  /* Card Meta Bar (Badge) */
+  .card-meta-bar {
+    min-height: 28px;
+    display: flex;
+    align-items: center;
+    margin-bottom: var(--space-3);
+  }
+
+  .badge-placeholder {
+    display: inline-block;
+    height: 1px;
+  }
+
+  .plan-badge {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .badge-popular {
+    background: var(--accent);
+    color: #1a1200;
+  }
+
+  .badge-value {
+    background: var(--color-professional-blue);
+    color: #ffffff;
+  }
+
+  :root:not([data-theme='light']) .badge-value {
+    background: var(--color-soft-blue);
+    color: var(--color-deep-navy);
+  }
+
+  /* Title Group */
+  .card-title-group {
+    margin-bottom: var(--space-5);
+  }
+
+  .plan-name {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 var(--space-2);
+    letter-spacing: -0.01em;
+  }
+
+  .plan-positioning {
+    font-size: 0.9rem;
+    line-height: 1.45;
+    color: var(--text-light);
+    margin: 0;
+    min-height: 2.6rem;
+  }
+
+  /* Price Box */
+  .card-price-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-height: 125px;
+  }
+
+  .price-primary-row {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .price-figure {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  .price-period {
+    font-size: 0.88rem;
+    color: var(--text-light);
+  }
+
+  .price-secondary-option,
+  .price-coverage-note {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .early-bird-callout {
+    margin-top: 2px;
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--border);
+    font-size: 0.82rem;
+    line-height: 1.35;
+    color: var(--text-light);
+  }
+
+  .early-bird-tag {
+    font-weight: 700;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    margin-right: 4px;
+  }
+
+  .early-bird-callout strong {
+    color: var(--text);
+  }
+
+  /* CTA Container */
+  .card-cta-container {
+    margin-bottom: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    text-align: center;
+  }
+
+  .cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: 13px var(--space-5);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius);
+    transition: transform 150ms ease, box-shadow 150ms ease, filter 150ms ease;
+    cursor: pointer;
+    min-height: 48px;
+  }
+
+  .cta-button:hover {
+    transform: translateY(-1px);
+    filter: brightness(1.05);
+  }
+
+  .cta-button-popular {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+  }
+
+  .cta-button-ultimate {
+    background: var(--color-professional-blue);
+    color: #ffffff;
+    box-shadow: 0 4px 14px rgba(9, 71, 110, 0.25);
+  }
+
+  :root:not([data-theme='light']) .cta-button-ultimate {
+    background: #ffffff;
+    color: var(--color-deep-navy);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+  }
+
+  .cta-button-core {
+    background: transparent;
+    color: var(--text);
+    border: 1.5px solid var(--border);
+  }
+
+  :root[data-theme='light'] .cta-button-core,
+  html[data-theme='light'] .cta-button-core {
+    border-color: rgba(1, 39, 72, 0.25);
+  }
+
+  .cta-button-core:hover {
+    background: var(--surface-raised);
+    border-color: var(--text);
+  }
+
+  .cta-arrow {
+    transition: transform 150ms ease;
+  }
+
+  .cta-button:hover .cta-arrow {
+    transform: translateX(3px);
+  }
+
+  .cta-note {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Features List */
+  .card-features-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--space-6);
+  }
+
+  .features-heading {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  .features-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+  }
+
+  .feature-check {
+    flex-shrink: 0;
+    color: var(--accent-text);
+    margin-top: 2px;
+  }
+
+  .feature-text {
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text);
+  }
+
+  /* Card Footnote */
+  .card-footnote {
+    margin-top: auto;
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .card-footnote p {
+    font-size: 0.8rem;
+    line-height: 1.45;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  /* Compact FAQ Section */
+  .compact-faq-section {
+    border-top: 1px solid var(--border);
+    padding: var(--space-16) var(--space-6);
+    background: var(--surface-raised);
+  }
+
+  .compact-faq-container {
+    max-width: 48rem;
+    margin: 0 auto;
+  }
+
+  .faq-header {
+    text-align: center;
+    margin-bottom: var(--space-10);
+  }
+
+  .faq-header h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 var(--space-2);
+  }
+
+  .faq-subheading {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  .faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-10);
+  }
+
+  .faq-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  }
+
+  .faq-item[open] {
+    border-color: var(--accent);
+  }
+
+  .faq-question {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-4) var(--space-5);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+  }
+
+  .faq-question::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-chevron {
+    flex-shrink: 0;
+    color: var(--text-muted);
+    transition: transform 180ms ease;
+  }
+
+  .faq-item[open] .faq-chevron {
+    transform: rotate(180deg);
+  }
+
+  .faq-answer {
+    padding: 0 var(--space-5) var(--space-5);
+  }
+
+  .faq-answer p {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  /* Enquiry Bar */
+  .enquiry-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: var(--space-5) var(--space-6);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
+  }
+
+  .enquiry-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .enquiry-text strong {
+    color: var(--text);
+    font-size: 0.95rem;
+  }
+
+  .enquiry-text span {
+    color: var(--text-light);
+    font-size: 0.85rem;
+  }
+
+  .enquiry-button {
+    display: inline-block;
+    padding: 10px 18px;
+    background: var(--color-deep-navy);
+    color: #ffffff;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 150ms ease, opacity 150ms ease;
+  }
+
+  :root:not([data-theme='light']) .enquiry-button {
+    background: var(--surface-raised);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .enquiry-button:hover {
+    transform: translateY(-1px);
+    opacity: 0.92;
+  }
+
+  /* ==========================================================
+     Why Ultimate? Section (Conversion-Focused Best Value Closer)
+     ========================================================== */
+  .why-ultimate-section {
+    padding: var(--space-20) var(--space-6);
+    background-color: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+
+  .why-ultimate-container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  .why-ultimate-header {
+    text-align: center;
+    margin-bottom: var(--space-10);
+  }
+
+  .section-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent-text);
+    margin: 0 0 var(--space-3);
+  }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(1.85rem, 3.8vw, 2.75rem);
+    font-weight: 900;
+    line-height: 1.18;
+    letter-spacing: -0.025em;
+    color: var(--text);
+    margin: 0 0 var(--space-4);
+    text-wrap: balance;
+  }
+
+  .section-lead {
+    font-size: clamp(1.05rem, 2vw, 1.2rem);
+    line-height: 1.6;
+    color: var(--text-light);
+    max-width: 38rem;
+    margin: 0 auto;
+  }
+
+  /* Bonus Value Comparison Table Card */
+  .bonus-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: 0 8px 30px rgba(1, 39, 72, 0.08);
+    overflow: hidden;
+    margin-bottom: var(--space-12);
+  }
+
+  :root:not([data-theme='light']) .bonus-card {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  }
+
+  .bonus-card-header {
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .bonus-intro-title {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .table-responsive-wrapper {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .bonus-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.95rem;
+  }
+
+  .bonus-table thead th {
+    padding: var(--space-3) var(--space-6);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+
+  .th-benefit {
+    text-align: left;
+    width: 68%;
+  }
+
+  .th-value {
+    text-align: right;
+    width: 32%;
+  }
+
+  .bonus-row {
+    border-bottom: 1px solid var(--border);
+    transition: background 150ms ease;
+  }
+
+  .bonus-row:hover {
+    background: var(--surface-raised);
+  }
+
+  .td-benefit {
+    padding: var(--space-4) var(--space-6);
+    text-align: left;
+  }
+
+  .bonus-name {
+    color: var(--text);
+    font-weight: 600;
+    line-height: 1.45;
+  }
+
+  .td-value {
+    padding: var(--space-4) var(--space-6);
+    text-align: right;
+  }
+
+  .bonus-price {
+    color: var(--text);
+    font-weight: 700;
+    font-family: var(--font-display);
+  }
+
+  /* Total Row: Visually Prominent */
+  .bonus-total-row {
+    background: rgba(201, 162, 39, 0.1);
+    border-top: 2px solid var(--accent);
+  }
+
+  :root:not([data-theme='light']) .bonus-total-row {
+    background: rgba(201, 162, 39, 0.15);
+  }
+
+  .td-benefit-total {
+    padding: var(--space-5) var(--space-6);
+    text-align: left;
+  }
+
+  .total-label {
+    color: var(--text);
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 0.95rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .td-value-total {
+    padding: var(--space-5) var(--space-6);
+    text-align: right;
+  }
+
+  .total-amount {
+    color: var(--accent-text);
+    font-family: var(--font-display);
+    font-size: 1.45rem;
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    display: inline-block;
+  }
+
+  .bonus-card-footer {
+    padding: var(--space-5) var(--space-6);
+    background: var(--surface-raised);
+    border-top: 1px solid var(--border);
+  }
+
+  .value-qualification {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  /* Preparation Benefits Block */
+  .benefits-block {
+    margin-bottom: var(--space-12);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    box-shadow: 0 4px 20px rgba(1, 39, 72, 0.05);
+  }
+
+  :root:not([data-theme='light']) .benefits-block {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  }
+
+  .benefits-headline {
+    font-family: var(--font-display);
+    font-size: clamp(1.2rem, 2.5vw, 1.45rem);
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 var(--space-6);
+    letter-spacing: -0.015em;
+    line-height: 1.35;
+  }
+
+  .benefits-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .benefit-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+
+  .benefit-icon-wrapper {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(201, 162, 39, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 2px;
+  }
+
+  .benefit-check {
+    color: var(--accent-text);
+  }
+
+  .benefit-text {
+    font-size: 0.95rem;
+    line-height: 1.55;
+    color: var(--text);
+  }
+
+  /* Final Offer Block (Deep Navy Anchor with Gold Accents) */
+  .final-offer-card {
+    background: var(--color-deep-navy);
+    border: 2px solid var(--accent);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+    box-shadow: 0 12px 40px rgba(1, 39, 72, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .final-offer-content {
+    max-width: 36rem;
+    margin: 0 auto var(--space-6);
+  }
+
+  .offer-headline {
+    font-family: var(--font-display);
+    font-size: clamp(1.45rem, 3vw, 1.95rem);
+    font-weight: 900;
+    color: var(--color-white);
+    margin: 0 0 var(--space-2);
+    letter-spacing: -0.02em;
+  }
+
+  .offer-supporting {
+    font-size: 1.05rem;
+    line-height: 1.5;
+    color: var(--color-soft-blue);
+    margin: 0 0 var(--space-4);
+  }
+
+  .offer-closing {
+    font-size: 0.98rem;
+    font-weight: 600;
+    line-height: 1.55;
+    color: var(--color-white);
+    margin: 0;
+  }
+
+  .final-offer-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+  }
+
+  .cta-button-ultimate-large {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    padding: 16px var(--space-10);
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: var(--radius);
+    box-shadow: 0 6px 22px rgba(201, 162, 39, 0.4);
+    transition: transform 180ms ease, box-shadow 180ms ease, filter 180ms ease;
+    min-height: 52px;
+    cursor: pointer;
+  }
+
+  .cta-button-ultimate-large:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(201, 162, 39, 0.55);
+    filter: brightness(1.05);
+  }
+
+  .cta-button-ultimate-large:hover .cta-arrow {
+    transform: translateX(4px);
+  }
+
+  .offer-action-note {
+    font-size: 0.8rem;
+    color: var(--color-soft-blue);
+    margin-top: 4px;
+  }
+
+  /* Responsive Breakpoints */
+  @media (max-width: 1024px) {
+    .pricing-grid-container {
+      grid-template-columns: 1fr;
+      max-width: 580px;
+      margin: 0 auto;
+    }
+
+    .plan-positioning {
+      min-height: auto;
+    }
+
+    .card-price-box {
+      min-height: auto;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .pricing-header {
+      padding: var(--space-12) var(--space-4) var(--space-6);
+    }
+
+    .pricing-grid-section {
+      padding: var(--space-8) var(--space-4) var(--space-12);
+    }
+
+    .plan-card {
+      padding: var(--space-6);
+    }
+
+    .enquiry-bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .enquiry-button {
+      width: 100%;
+      text-align: center;
+    }
+
+    .why-ultimate-section {
+      padding: var(--space-14) var(--space-4);
+    }
+
+    .bonus-card-header,
+    .td-benefit,
+    .td-value,
+    .td-benefit-total,
+    .td-value-total,
+    .bonus-card-footer {
+      padding-left: var(--space-4);
+      padding-right: var(--space-4);
+    }
+
+    .total-amount {
+      font-size: 1.25rem;
+    }
+
+    .benefits-block {
+      padding: var(--space-6) var(--space-4);
+    }
+
+    .final-offer-card {
+      padding: var(--space-8) var(--space-4);
+    }
+
+    .cta-button-ultimate-large {
+      width: 100%;
+      padding-left: var(--space-4);
+      padding-right: var(--space-4);
+    }
+  }
+</style>

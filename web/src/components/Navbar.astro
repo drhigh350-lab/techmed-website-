@@ -128,9 +128,9 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     position: sticky;
     top: 0;
     z-index: 100;
-    background: rgba(1, 39, 72, 0.85);
+    background: rgba(1, 39, 72, 0.88);
     backdrop-filter: blur(16px);
-    border-bottom: 1px solid var(--border);
+    border-bottom: 1px solid var(--border-on-dark-surface);
   }
 
   .navbar-inner {
@@ -223,7 +223,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     height: 36px;
     flex-shrink: 0;
     background: none;
-    border: 1px solid var(--border);
+    border: 1px solid var(--border-on-dark-surface);
     border-radius: 50%;
     color: var(--text-light-on-dark-surface);
     cursor: pointer;
@@ -316,7 +316,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       max-height: 0;
       overflow: hidden;
       background: var(--surface-dark);
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--border-on-dark-surface);
       transition: max-height 300ms ease;
     }
 
@@ -338,7 +338,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       color: var(--text-light-on-dark-surface);
       text-decoration: none;
       padding: var(--space-4) 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-on-dark-surface);
     }
 
     .mobile-link.active {
@@ -351,12 +351,14 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       gap: var(--space-3);
       width: calc(100% - var(--space-6) * 2);
       height: auto;
+      background: none;
       border: none;
       border-radius: 0;
-      border-bottom: 1px solid var(--border);
+      border-bottom: 1px solid var(--border-on-dark-surface);
       padding: var(--space-4) 0;
       margin: 0 var(--space-6);
       color: var(--text-light-on-dark-surface);
+      cursor: pointer;
     }
 
     .mobile-theme-label {

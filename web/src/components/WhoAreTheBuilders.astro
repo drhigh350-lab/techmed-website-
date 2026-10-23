@@ -104,13 +104,15 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
+    box-shadow: var(--card-shadow);
     padding: var(--space-6);
-    transition: border-color 200ms ease, transform 200ms ease;
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
   }
 
   .item:hover {
     border-color: var(--accent);
     transform: translateY(-3px);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .item h3 {

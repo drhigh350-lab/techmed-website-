@@ -71,6 +71,19 @@ export default defineType({
       title: 'Tutorial End Date',
       type: 'date',
     }),
+    defineField({
+      name: 'foundationOngoing',
+      title: 'Foundation Protocol Ongoing',
+      type: 'boolean',
+      description: 'Mark whether the 30-day Foundation Protocol is actively in session.',
+      initialValue: true,
+    }),
+    defineField({
+      name: 'foundationStatusNotice',
+      title: 'Foundation Protocol Status Notice',
+      type: 'string',
+      description: 'Short status banner text, e.g. "Free 30-Day Programme Currently Ongoing — Started October 16 through November 14, 2026".',
+    }),
   ],
   preview: {
     select: { active: 'active', joinLabel: 'joinLabel' },

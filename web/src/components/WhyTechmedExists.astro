@@ -91,12 +91,14 @@ const shifts = [
     padding: var(--space-4) var(--space-6);
     font-family: var(--font-display);
     font-weight: 700;
-    transition: border-color 200ms ease, transform 200ms ease;
+    box-shadow: var(--card-shadow);
+    transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
   }
 
   .shift:hover {
     border-color: var(--accent);
     transform: translateY(-2px);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .from {

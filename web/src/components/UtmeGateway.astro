@@ -19,7 +19,10 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
       organized so you always know what to do next.
     </p>
     <p class="subjects">{subjectNames}</p>
-    <a class="cta" href="/utme-2027">Explore UTME 2027 <span aria-hidden="true">&rarr;</span></a>
+    <div class="actions">
+      <a class="cta cta-primary" href="/utme-2027">Explore UTME 2027 Hub <span aria-hidden="true">&rarr;</span></a>
+      <a class="cta cta-outline" href="/jamb-syllabus-2027">View 2027 Syllabus Blueprints</a>
+    </div>
   </div>
 </section>
 
@@ -27,19 +30,14 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
   .gateway {
     max-width: 900px;
     margin: 0 auto;
-    padding: var(--space-16) var(--space-6);
+    padding: var(--space-12) var(--space-6) var(--space-20);
   }
 
-  /* An inset box-shadow for the top accent bar instead of border-top:
-     mixing a 1px border with a thicker, differently-colored border-top
-     miters into a visible seam at the rounded corner. box-shadow respects
-     the box's own border-radius natively, so there's no separate border
-     segment to miter against — same technique as NoteBox.astro. */
   .gateway-inner {
     background: linear-gradient(135deg, var(--surface) 0%, var(--surface-raised) 100%);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    box-shadow: inset 0 2px 0 0 var(--accent);
+    box-shadow: var(--card-shadow), inset 0 2px 0 0 var(--accent);
     padding: var(--space-10) var(--space-8);
     text-align: center;
   }
@@ -80,6 +78,14 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
     margin-bottom: var(--space-7);
   }
 
+  .actions {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
   .cta {
     display: inline-flex;
     align-items: center;
@@ -87,21 +93,38 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
     font-family: var(--font-display);
     font-weight: 700;
     font-size: 0.9rem;
-    color: #1a0a00;
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    padding: 14px 28px;
+    padding: 13px 26px;
     border-radius: var(--radius);
     text-decoration: none;
-    transition: transform 150ms ease, box-shadow 150ms ease;
+    transition: transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
+  }
+
+  .cta-primary {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.25);
+  }
+
+  .cta-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(201, 162, 39, 0.35);
+  }
+
+  .cta-outline {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    box-shadow: var(--card-shadow);
+  }
+
+  .cta-outline:hover {
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: var(--card-shadow-hover);
   }
 
   .cta span {
     transition: transform 200ms ease;
-  }
-
-  .cta:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.3);
   }
 
   .cta:hover span {
@@ -111,6 +134,14 @@ const subjectNames = subjects.map((subject) => subject.name).join(' · ');
   @media (max-width: 600px) {
     .gateway-inner {
       padding: var(--space-8) var(--space-5);
+    }
+    .actions {
+      flex-direction: column;
+      width: 100%;
+    }
+    .cta {
+      width: 100%;
+      justify-content: center;
     }
   }
 </style>
