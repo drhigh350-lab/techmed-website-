@@ -99,7 +99,9 @@ const structuredData = [organizationSchema, ...jsonLd];
          article body. -->
     <meta name="color-scheme" content="light dark" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#012748" />
     <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="manifest" href="/manifest.json" />
     <title>{title}</title>
     <meta name="description" content={description} />
     <link rel="canonical" href={canonicalURL} />
@@ -138,6 +140,17 @@ const structuredData = [organizationSchema, ...jsonLd];
       gtag('js', new Date());
 
       gtag('config', 'G-CFBPGKM4CK');
+    </script>
+
+    <!-- PWA Offline Service Worker Registration -->
+    <script is:inline>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function () {
+          navigator.serviceWorker.register('/sw.js').catch(function (err) {
+            console.warn('[PWA] SW register skipped:', err);
+          });
+        });
+      }
     </script>
   </head>
   <body>

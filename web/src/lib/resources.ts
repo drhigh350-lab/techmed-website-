@@ -44,12 +44,20 @@ export type ResourceType =
 
 export type ResourceStatus = 'free' | 'paid';
 
+export interface ResourceInclusions {
+  core?: string; // e.g. "20% discount (₦4,000)"
+  mastery?: boolean; // included in Mastery
+  ultimate?: boolean; // included in Ultimate
+  note?: string;
+}
+
 export interface Resource {
   id: string;
   slug: string;
   title: string;
   description: string;
   category: ResourceCategory;
+  subject?: 'Chemistry' | 'Biology' | 'Physics' | 'Admission' | 'General';
   type: ResourceType;
   status: ResourceStatus;
   /** Naira amount. Omitted entirely (not zero) when pricing isn't public yet. */
@@ -79,6 +87,11 @@ export interface Resource {
   whatsIncluded?: string[];
   /** Detail-page-only copy: who this resource is built for. */
   whoItsFor?: string;
+  /** Inclusions across UTME 2027 preparation tiers (Core, Mastery, Ultimate) */
+  inclusions?: ResourceInclusions;
+  deliveryFormat?: 'PDF eBook' | 'Interactive Web' | 'Quiz Platform' | 'Platform Tool';
+  sampleExcerpt?: string;
+  isAvailableStandalone?: boolean;
 }
 
 const WHATSAPP_NUMBER = '2347044255045';
@@ -124,6 +137,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'The complete Nigerian university admission roadmap — how to secure admission or move forward strategically without wasting years.',
     category: 'Admission',
+    subject: 'Admission',
     type: 'Guide',
     status: 'free',
     order: 1,
@@ -133,6 +147,8 @@ export const FALLBACK_RESOURCES: Resource[] = [
     tags: ['Admission', 'Strategy', 'Free'],
     actionLabel: 'View Guide',
     accessUrl: '/techmed-admission-intelligence-guide-2026.pdf',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
     whatsIncluded: [
       'A full breakdown of how Nigerian university admission actually works',
       'Strategic planning guidance for choosing courses and universities',
@@ -148,6 +164,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'Thousands of UTME and Post-UTME questions with detailed solutions — no sign-up required.',
     category: 'Quizzes',
+    subject: 'General',
     type: 'Quiz',
     status: 'free',
     order: 2,
@@ -156,6 +173,8 @@ export const FALLBACK_RESOURCES: Resource[] = [
     tags: ['Quiz', 'Practice', 'Free'],
     actionLabel: 'Start Quiz',
     externalUrl: 'https://quizboot.com/page/techmedofficial',
+    deliveryFormat: 'Quiz Platform',
+    isAvailableStandalone: true,
     whatsIncluded: [
       'Unlimited UTME and Post-UTME practice questions',
       'Detailed solutions for every question',
@@ -170,6 +189,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'High-yield revision for maximum Chemistry score — the Mole Concept Cure plus the Ultimate Formula Bank, covering stoichiometry, acids and bases, equilibrium, electrolysis, organic chemistry and more.',
     category: 'Academic',
+    subject: 'Chemistry',
     type: 'Booster System',
     status: 'paid',
     order: 3,
@@ -177,9 +197,18 @@ export const FALLBACK_RESOURCES: Resource[] = [
     currency: 'NGN',
     thumbnail: ICONS.flask,
     primaryImage: '/images/resources/chemistry-booster-system.jpg',
-    tags: ['Chemistry', 'Revision'],
-    actionLabel: 'Get via WhatsApp',
+    featured: true,
+    tags: ['Chemistry', 'Revision', 'Mastery Included'],
+    actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Chemistry Booster System. Price: ₦5,000. My name is ______.'),
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
+    inclusions: {
+      core: '20% discount (₦4,000 for Core students)',
+      mastery: true,
+      ultimate: true,
+      note: 'Included in Mastery and Ultimate cohort plans. Available standalone to all students.',
+    },
     whatsIncluded: [
       'The Mole Concept Cure',
       'The Ultimate Chemistry Formula Bank',
@@ -194,6 +223,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'Memory aids, recall shortcuts and frequently tested patterns — rapid revision tables, common misconceptions and exam-oriented content for maximum Biology score.',
     category: 'Academic',
+    subject: 'Biology',
     type: 'Booster System',
     status: 'paid',
     order: 4,
@@ -201,9 +231,17 @@ export const FALLBACK_RESOURCES: Resource[] = [
     currency: 'NGN',
     thumbnail: ICONS.leaf,
     primaryImage: '/images/resources/biology-booster-system.jpg',
-    tags: ['Biology', 'Revision'],
-    actionLabel: 'Get via WhatsApp',
+    tags: ['Biology', 'Revision', 'Mastery Included'],
+    actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Biology Booster System. Price: ₦3,000. My name is ______.'),
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
+    inclusions: {
+      core: '20% discount (₦2,400 for Core students)',
+      mastery: true,
+      ultimate: true,
+      note: 'Included in Mastery and Ultimate cohort plans. Available standalone to all students.',
+    },
     whatsIncluded: [
       'Rapid revision tables built for recall under exam pressure',
       'Common misconceptions and how examiners test them',
@@ -218,6 +256,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'Master calculations, solve smart, score high — the Ultimate Formula Bank, the Examiner Traps Playbook, and a strategy cheatsheet for step-by-step problem-solving speed.',
     category: 'Academic',
+    subject: 'Physics',
     type: 'Booster System',
     status: 'paid',
     order: 5,
@@ -225,9 +264,17 @@ export const FALLBACK_RESOURCES: Resource[] = [
     currency: 'NGN',
     thumbnail: ICONS.bolt,
     primaryImage: '/images/resources/physics-booster-system.jpg',
-    tags: ['Physics', 'Revision'],
-    actionLabel: 'Get via WhatsApp',
+    tags: ['Physics', 'Revision', 'Mastery Included'],
+    actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Physics Booster System. Price: ₦3,000. My name is ______.'),
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
+    inclusions: {
+      core: '20% discount (₦2,400 for Core students)',
+      mastery: true,
+      ultimate: true,
+      note: 'Included in Mastery and Ultimate cohort plans. Available standalone to all students.',
+    },
     whatsIncluded: [
       'The Ultimate Physics Formula Bank',
       'The Examiner Traps Playbook',
@@ -242,6 +289,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'A structured system for Post-UTME preparation across universities that require it — daily drills, timed practice exams, performance tracking and focused review.',
     category: 'Admission',
+    subject: 'Admission',
     type: 'Course',
     status: 'paid',
     order: 6,
@@ -249,9 +297,15 @@ export const FALLBACK_RESOURCES: Resource[] = [
     currency: 'NGN',
     thumbnail: ICONS.target,
     primaryImage: '/images/resources/post-utme-brainstorming-hub.jpg',
-    tags: ['Post-UTME', 'Admission'],
-    actionLabel: 'Get via WhatsApp',
+    tags: ['Post-UTME', 'Admission', 'Ultimate Included'],
+    actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Post Brainstorming Hub — All Universities. Price: ₦3,000. My name is ______.'),
+    deliveryFormat: 'Interactive Web',
+    isAvailableStandalone: true,
+    inclusions: {
+      ultimate: true,
+      note: 'Included in Ultimate plan. Available standalone for any target university.',
+    },
     whatsIncluded: [
       'Daily Post-UTME practice drills',
       'Weekly timed practice exams',
@@ -266,6 +320,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'Everything you need to gain admission at a specific university — 5-year Post-UTME trends, detailed solutions, departmental cut-offs, merit list info, admission guidance and scholarship tips, all in one file.',
     category: 'Admission',
+    subject: 'Admission',
     type: 'Guide',
     status: 'paid',
     order: 7,
@@ -274,8 +329,10 @@ export const FALLBACK_RESOURCES: Resource[] = [
     thumbnail: ICONS.folder,
     primaryImage: '/images/resources/university-research-file.jpg',
     tags: ['Admission', 'Research'],
-    actionLabel: 'Get via WhatsApp',
+    actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Detailed University Research File. Price: ₦1,000. My name is ______.'),
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
     whatsIncluded: [
       '5-year Post-UTME question trends for your chosen university',
       'Departmental cut-off marks and merit list information',
@@ -290,15 +347,22 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'A focused daily challenge for serious JAMB candidates — 100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics and English, built to sharpen speed, accuracy and exam confidence.',
     category: 'Opportunities',
+    subject: 'General',
     type: 'Opportunity',
     status: 'paid',
     order: 8,
     currency: 'NGN',
     thumbnail: ICONS.flag,
     primaryImage: '/images/resources/operation-100.jpg',
-    tags: ['JAMB', 'Challenge', 'Waitlist'],
+    tags: ['JAMB', 'Challenge', 'Waitlist', 'Ultimate Included'],
     actionLabel: 'Join the Waitlist',
     whatsappUrl: whatsapp('Hi TECHMED, I want to join the Operation 100 2027 waitlist. My name is ______ and I am preparing for JAMB. Please notify me when registration opens.'),
+    deliveryFormat: 'Platform Tool',
+    isAvailableStandalone: false,
+    inclusions: {
+      ultimate: true,
+      note: 'Included in Ultimate plan. Standalone registration opens closer to cohort launch.',
+    },
     whatsIncluded: [
       '100 daily past questions across Physics, Chemistry, Biology, Mathematics and English',
       'A consistent, structured daily practice rhythm',
@@ -313,18 +377,137 @@ export const FALLBACK_RESOURCES: Resource[] = [
     description:
       'Kairo is a student intelligence and learning platform designed to understand the learner’s journey and help them make meaningful progress.',
     category: 'Digital Tools',
+    subject: 'General',
     type: 'Tool',
     status: 'free',
     order: 9,
     thumbnail: ICONS.guide,
     tags: ['Learning', 'Intelligence'],
-    actionLabel: 'Open Tool',
+    actionLabel: 'Open Kairo',
     accessUrl: '/tools',
+    deliveryFormat: 'Platform Tool',
+    isAvailableStandalone: true,
     whatsIncluded: [
       "A view into where you are in your own learning journey",
       'Guidance built around your actual progress, not a generic study plan',
     ],
     whoItsFor: 'Students who want a clearer picture of their own progress and what to focus on next.',
+  },
+  {
+    id: 'organic-chemistry-mastery',
+    slug: 'organic-chemistry-mastery-manual',
+    title: 'Organic Chemistry Mastery Manual',
+    description:
+      'Systematic reaction pathways, IUPAC naming, isomerism, and functional group transformations essential for scoring 85+ in JAMB Chemistry.',
+    category: 'Academic',
+    subject: 'Chemistry',
+    type: 'Guide',
+    status: 'paid',
+    order: 10,
+    currency: 'NGN',
+    thumbnail: ICONS.flask,
+    tags: ['Chemistry', 'Mastery Included', 'Manual'],
+    actionLabel: 'Included in Mastery',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: false,
+    inclusions: {
+      mastery: true,
+      ultimate: true,
+      note: 'Delivered directly to enrolled Mastery & Ultimate students on or before 30 November 2026.',
+    },
+    whatsIncluded: [
+      'Step-by-step IUPAC nomenclature framework',
+      'Reactions matrix for alkanes, alkenes, alkynes, benzene, alcohols, alkanoic acids and esters',
+      'Past JAMB trick questions on isomerism',
+    ],
+    whoItsFor: 'Mastery and Ultimate candidates targeting distinction in Chemistry calculations and theory.',
+  },
+  {
+    id: 'physics-mechanics-electricity',
+    slug: 'physics-mechanics-electricity-manual',
+    title: 'Physics Mechanics & Electricity Manual',
+    description:
+      'High-yield derivations, circuit analysis, kinematics problem solving, and work-energy-power frameworks mapped to the UTME syllabus.',
+    category: 'Academic',
+    subject: 'Physics',
+    type: 'Guide',
+    status: 'paid',
+    order: 11,
+    currency: 'NGN',
+    thumbnail: ICONS.bolt,
+    tags: ['Physics', 'Mastery Included', 'Manual'],
+    actionLabel: 'Included in Mastery',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: false,
+    inclusions: {
+      mastery: true,
+      ultimate: true,
+      note: 'Delivered directly to enrolled Mastery & Ultimate students on or before 30 November 2026.',
+    },
+    whatsIncluded: [
+      'Comprehensive mechanics breakdown: motion, friction, circular motion & simple machines',
+      'Current electricity and capacitor network simplification cheatsheet',
+      'Step-by-step dimensional analysis shortcuts',
+    ],
+    whoItsFor: 'Mastery and Ultimate students who want to turn physics calculations into dependable marks.',
+  },
+  {
+    id: 'genetics-ecology-manual',
+    slug: 'genetics-ecology-manual',
+    title: 'Genetics & Ecology Mastery Manual',
+    description:
+      'High-yield breakdowns of genetic crosses, pedigrees, sex linkage, ecosystem dynamics, and nutrient cycles designed for rapid recall.',
+    category: 'Academic',
+    subject: 'Biology',
+    type: 'Guide',
+    status: 'paid',
+    order: 12,
+    currency: 'NGN',
+    thumbnail: ICONS.leaf,
+    tags: ['Biology', 'Mastery Included', 'Manual'],
+    actionLabel: 'Included in Mastery',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: false,
+    inclusions: {
+      mastery: true,
+      ultimate: true,
+      note: 'Delivered directly to enrolled Mastery & Ultimate students on or before 30 November 2026.',
+    },
+    whatsIncluded: [
+      'Monohybrid and dihybrid cross patterns without manual Punnett square lag',
+      'Pedigree chart interpretation rules',
+      'Ecology terms, biomes, and examiner traps frequently repeated in UTME',
+    ],
+    whoItsFor: 'Mastery and Ultimate students aiming to maximize accuracy on heavy-weight biology topics.',
+  },
+  {
+    id: 'secrets-to-mental-math',
+    slug: 'secrets-to-mental-math',
+    title: 'Secrets to Mental Math',
+    description:
+      'Speed calculation techniques, estimation tactics, and mental math shortcuts to solve calculation questions in 30 seconds or less without a calculator.',
+    category: 'Academic',
+    subject: 'General',
+    type: 'Guide',
+    status: 'paid',
+    order: 13,
+    currency: 'NGN',
+    thumbnail: ICONS.guide,
+    tags: ['Speed', 'Math', 'Mastery Included'],
+    actionLabel: 'Included in Mastery',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: false,
+    inclusions: {
+      mastery: true,
+      ultimate: true,
+      note: 'Delivered directly to enrolled Mastery & Ultimate students on or before 30 November 2026.',
+    },
+    whatsIncluded: [
+      'Rapid percentage, ratio, and fraction conversions',
+      'Square roots and powers estimation for physics and chemistry calculations',
+      'Exam-room time compression strategies',
+    ],
+    whoItsFor: 'All candidates who feel standard UTME time limits (40 seconds per question) hold them back.',
   },
 ];
 
@@ -345,6 +528,7 @@ const RESOURCE_QUERY = `*[_type == "resource" && !(_id in path("drafts.**"))] {
   title,
   description,
   category,
+  subject,
   type,
   status,
   price,
@@ -359,6 +543,10 @@ const RESOURCE_QUERY = `*[_type == "resource" && !(_id in path("drafts.**"))] {
   externalUrl,
   whatsIncluded,
   whoItsFor,
+  inclusions,
+  deliveryFormat,
+  sampleExcerpt,
+  isAvailableStandalone,
   "primaryImage": primaryImage.asset->url,
   "previewImages": previewImages[].asset->url
 }`;

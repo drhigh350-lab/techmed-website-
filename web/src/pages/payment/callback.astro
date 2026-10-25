@@ -1,0 +1,454 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { FALLBACK_RESOURCES } from '../../lib/resources';
+
+const pageUrl = new URL('/payment/callback', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Payment Verification — TECHMED',
+    url: pageUrl,
+    description: 'Instant verification of your TECHMED resource purchase or cohort enrolment.',
+  },
+];
+
+const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
+  id: r.id,
+  slug: r.slug,
+  title: r.title,
+  price: r.price,
+})));
+---
+
+<BaseLayout
+  title="Payment Verification | TECHMED"
+  description="Confirming your payment and unlocking your study materials."
+  jsonLd={jsonLd}
+>
+  <div class="callback-container">
+    <div class="callback-card" id="callbackCard">
+      <!-- State 1: Verifying Spinner -->
+      <div id="loadingState" class="state-block">
+        <div class="spinner-wrap">
+          <div class="spinner"></div>
+        </div>
+        <p class="state-eyebrow">PAYSTACK SECURE VERIFICATION</p>
+        <h1 class="state-title">Confirming your payment...</h1>
+        <p class="state-desc">
+          We are verifying your transaction reference with Paystack and activating your bookshelf license. This usually takes just a few seconds.
+        </p>
+        <div class="ref-pill-box">
+          <span class="ref-label">Reference:</span>
+          <span id="displayRef" class="ref-code">Detecting...</span>
+        </div>
+      </div>
+
+      <!-- State 2: Success Confirmation -->
+      <div id="successState" class="state-block" style="display: none;">
+        <div class="status-icon success-icon" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+        </div>
+        <p class="state-eyebrow success">TRANSACTION CONFIRMED</p>
+        <h1 class="state-title">Payment successful!</h1>
+        <p class="state-desc" id="successDesc">
+          Your payment has been verified. Your study manual is now permanently active on your bookshelf.
+        </p>
+
+        <div class="receipt-box">
+          <div class="receipt-row">
+            <span class="receipt-label">Resource:</span>
+            <span id="confirmedProductName" class="receipt-val highlight">—</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Access License:</span>
+            <span class="receipt-val">Permanent Lifetime Bookshelf</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Transaction Reference:</span>
+            <span id="confirmedRef" class="receipt-val mono">—</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Verified At:</span>
+            <span id="confirmedTime" class="receipt-val">—</span>
+          </div>
+        </div>
+
+        <div class="action-buttons-group">
+          <a id="openReaderBtn" href="/library" class="btn-primary action-btn">
+            Open in Study Reader Now &rarr;
+          </a>
+          <a href="/library" class="btn-secondary action-btn">
+            Go to My Bookshelf
+          </a>
+        </div>
+      </div>
+
+      <!-- State 3: Pending / Delayed Bank Processing -->
+      <div id="pendingState" class="state-block" style="display: none;">
+        <div class="status-icon pending-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <p class="state-eyebrow warning">TRANSACTION PROCESSING</p>
+        <h1 class="state-title">Confirmation still in progress</h1>
+        <p class="state-desc">
+          Your bank or Paystack is processing the transfer. If you were debited, your reference is recorded and your manual will unlock as soon as settlement completes.
+        </p>
+
+        <div class="pending-actions">
+          <button type="button" id="recheckBtn" class="btn-primary action-btn">
+            Check Status Again
+          </button>
+          <a id="pendingWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
+            Notify Admissions Desk on WhatsApp
+          </a>
+          <a href="/library" class="text-link">Return to Bookshelf</a>
+        </div>
+      </div>
+
+      <!-- State 4: Error / Reference Not Found -->
+      <div id="errorState" class="state-block" style="display: none;">
+        <div class="status-icon error-icon" aria-hidden="true">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+        </div>
+        <p class="state-eyebrow danger">ATTENTION REQUIRED</p>
+        <h1 class="state-title">We couldn't verify that reference yet</h1>
+        <p class="state-desc" id="errorMessage">
+          No matching completed transaction was found for this link. If you were charged, don't worry: send us your reference on WhatsApp and our team will grant your access manually.
+        </p>
+
+        <div class="error-actions">
+          <a id="errorWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-primary action-btn">
+            Message Support on WhatsApp
+          </a>
+          <a href="/library" class="btn-secondary action-btn">
+            Open Student Library
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script define:vars={{ catalogRaw: catalogMapJson }}>
+  const CATALOG = JSON.parse(catalogRaw);
+
+  import { getCurrentUser, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+
+  const loadingState = document.getElementById('loadingState');
+  const successState = document.getElementById('successState');
+  const pendingState = document.getElementById('pendingState');
+  const errorState = document.getElementById('errorState');
+
+  const displayRef = document.getElementById('displayRef');
+  const confirmedProductName = document.getElementById('confirmedProductName');
+  const confirmedRef = document.getElementById('confirmedRef');
+  const confirmedTime = document.getElementById('confirmedTime');
+  const successDesc = document.getElementById('successDesc');
+  const openReaderBtn = document.getElementById('openReaderBtn');
+
+  const recheckBtn = document.getElementById('recheckBtn');
+  const pendingWhatsAppBtn = document.getElementById('pendingWhatsAppBtn');
+  const errorWhatsAppBtn = document.getElementById('errorWhatsAppBtn');
+  const errorMessage = document.getElementById('errorMessage');
+
+  let pollAttempts = 0;
+  const MAX_POLL_ATTEMPTS = 5;
+
+  function setView(state) {
+    loadingState.style.display = state === 'loading' ? 'block' : 'none';
+    successState.style.display = state === 'success' ? 'block' : 'none';
+    pendingState.style.display = state === 'pending' ? 'block' : 'none';
+    errorState.style.display = state === 'error' ? 'block' : 'none';
+  }
+
+  function getReference() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('reference') || params.get('trxref') || params.get('ref');
+  }
+
+  async function verifyTransaction() {
+    const reference = getReference();
+
+    if (!reference) {
+      setView('error');
+      errorMessage.textContent = 'No payment reference was detected in the URL. If you just finished payment, please check your email receipt or contact TECHMED on WhatsApp.';
+      return;
+    }
+
+    displayRef.textContent = reference;
+    const user = await getCurrentUser();
+
+    // Prepare WhatsApp fallback link with reference
+    const waUrl = `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I just paid via Paystack. My reference is ${reference}. Please verify my access.`)}`;
+    pendingWhatsAppBtn.href = waUrl;
+    errorWhatsAppBtn.href = waUrl;
+
+    const res = await verifyAndClaimOrderReference(reference, user);
+
+    if (res.success && res.order) {
+      // Success!
+      setView('success');
+      const order = res.order;
+      const matchedCatalog = CATALOG.find(c => c.id === order.product_id || c.slug === order.product_id);
+      const title = order.product_name || matchedCatalog?.title || 'TECHMED Study Booster';
+
+      confirmedProductName.textContent = title;
+      confirmedRef.textContent = reference;
+      confirmedTime.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-GB');
+
+      // Set link to reader
+      const readerId = matchedCatalog?.id || order.product_id;
+      if (readerId) {
+        openReaderBtn.href = `/library/read/${readerId}`;
+      } else {
+        openReaderBtn.href = '/library';
+      }
+
+      // Also ensure it is registered in local storage cache
+      saveLocalEntitlement({
+        resourceId: readerId,
+        customerEmail: user?.email || '',
+        grantSource: 'purchase',
+        resourceTitle: title,
+      });
+
+      return;
+    }
+
+    if (res.order?.status === 'pending') {
+      pollAttempts++;
+      if (pollAttempts < MAX_POLL_ATTEMPTS) {
+        setTimeout(verifyTransaction, 3000);
+      } else {
+        setView('pending');
+      }
+      return;
+    }
+
+    // Failed or not found
+    setView('error');
+    if (res.message) {
+      errorMessage.textContent = res.message;
+    }
+  }
+
+  recheckBtn?.addEventListener('click', () => {
+    pollAttempts = 0;
+    setView('loading');
+    verifyTransaction();
+  });
+
+  // Run on mount
+  verifyTransaction();
+</script>
+
+<style>
+  .callback-container {
+    min-height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12) var(--space-4);
+  }
+
+  .callback-card {
+    max-width: 520px;
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-10) var(--space-8);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+
+  .state-block {
+    animation: fadeIn 200ms ease;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Spinner */
+  .spinner-wrap {
+    margin-bottom: var(--space-6);
+  }
+
+  .spinner {
+    width: 44px;
+    height: 44px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto;
+    animation: spin 800ms linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .state-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin: 0 0 var(--space-2);
+  }
+
+  .state-eyebrow.success {
+    color: #22c55e;
+  }
+
+  .state-eyebrow.warning {
+    color: #eab308;
+  }
+
+  .state-eyebrow.danger {
+    color: #ef4444;
+  }
+
+  .state-title {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0 0 var(--space-3);
+    line-height: 1.25;
+  }
+
+  .state-desc {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin: 0 0 var(--space-6);
+  }
+
+  .ref-pill-box {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .ref-code {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  /* Status Icons */
+  .status-icon {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+  }
+
+  .success-icon {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .pending-icon {
+    background: rgba(234, 179, 8, 0.12);
+    color: #eab308;
+    border: 1px solid rgba(234, 179, 8, 0.3);
+  }
+
+  .error-icon {
+    background: rgba(239, 68, 68, 0.12);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  /* Receipt Box */
+  .receipt-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-5);
+    margin-bottom: var(--space-8);
+    text-align: left;
+  }
+
+  .receipt-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .receipt-row:last-child {
+    border-bottom: none;
+  }
+
+  .receipt-label {
+    color: var(--text-muted);
+  }
+
+  .receipt-val {
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .receipt-val.highlight {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .receipt-val.mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  /* Action Buttons */
+  .action-buttons-group,
+  .pending-actions,
+  .error-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .action-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+  }
+
+  .text-link {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: underline;
+    margin-top: var(--space-2);
+  }
+</style>

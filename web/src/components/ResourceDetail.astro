@@ -44,25 +44,55 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     <div class="cta-row">
       <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
 
-      {resource.status === 'free' && primaryHref && (
-        <a
-          class="btn-primary"
-          href={primaryHref}
-          target={primaryIsExternal ? '_blank' : undefined}
-          rel={primaryIsExternal ? 'noopener' : undefined}
-        >
-          {resource.actionLabel}
-        </a>
+      {resource.status === 'free' && (
+        <>
+          <a class="btn-primary" href={`/library/read/${resource.id}`}>
+            Read Online Now &rarr;
+          </a>
+          {primaryHref && (
+            <a
+              class="btn-secondary"
+              href={primaryHref}
+              target={primaryIsExternal ? '_blank' : undefined}
+              rel={primaryIsExternal ? 'noopener' : undefined}
+            >
+              Direct Download / Link
+            </a>
+          )}
+        </>
       )}
 
-      {resource.status === 'paid' && resource.paystackUrl && (
-        <a class="btn-primary" href={resource.paystackUrl}>Buy with Paystack</a>
-      )}
+      {resource.status === 'paid' && (
+        <>
+          <button
+            type="button"
+            class="btn-primary detail-buy-btn"
+            data-resource={JSON.stringify({
+              id: resource.id,
+              slug: resource.slug,
+              title: resource.title,
+              price: resource.price,
+              currency: resource.currency || 'NGN',
+              subject: resource.subject || resource.category,
+              deliveryFormat: resource.deliveryFormat || 'PDF eBook',
+              description: resource.description,
+              whatsappUrl: resource.whatsappUrl,
+            })}
+            onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
+          >
+            Unlock with Paystack / Transfer
+          </button>
 
-      {resource.status === 'paid' && resource.whatsappUrl && (
-        <a class="btn-secondary" href={resource.whatsappUrl} target="_blank" rel="noopener">
-          {resource.paystackUrl ? 'Get via WhatsApp' : resource.actionLabel}
-        </a>
+          <a class="btn-secondary" href={`/library/read/${resource.id}`}>
+            Read Free Preview &rarr;
+          </a>
+
+          {resource.whatsappUrl && (
+            <a class="whatsapp-alt-link" href={resource.whatsappUrl} target="_blank" rel="noopener">
+              Or order on WhatsApp &rarr;
+            </a>
+          )}
+        </>
       )}
     </div>
   </header>
@@ -73,6 +103,24 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
         {resource.previewImages.map((src) => (
           <img src={src} alt="" loading="lazy" decoding="async" />
         ))}
+      </section>
+    )}
+
+    {resource.inclusions && (
+      <section class="inclusions-detail reveal">
+        <h2>Preparation Plan Inclusions</h2>
+        <div class="inclusions-box">
+          {resource.inclusions.mastery && (
+            <p><strong>TECHMED Mastery &amp; Ultimate:</strong> Included with full enrolment on or before 30 November 2026. No separate purchase required.</p>
+          )}
+          {resource.inclusions.core && (
+            <p><strong>TECHMED Core:</strong> {resource.inclusions.core}.</p>
+          )}
+          {resource.isAvailableStandalone && (
+            <p><strong>Standalone Purchase:</strong> Available to any candidate nationwide regardless of whether you are enrolled in a TECHMED class.</p>
+          )}
+          {resource.inclusions.note && <p class="inc-note">{resource.inclusions.note}</p>}
+        </div>
       </section>
     )}
 
@@ -252,6 +300,22 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     border-color: var(--accent);
   }
 
+  .detail-buy-btn {
+    border: none;
+    cursor: pointer;
+  }
+
+  .whatsapp-alt-link {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .whatsapp-alt-link:hover {
+    color: var(--accent-text);
+  }
+
   .body section {
     margin-bottom: var(--space-10);
   }
@@ -292,6 +356,33 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     font-size: 1rem;
     line-height: 1.7;
     color: var(--text-light);
+  }
+
+  .inclusions-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4) var(--space-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .inclusions-box p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  .inclusions-box strong {
+    color: var(--text);
+  }
+
+  .inclusions-box .inc-note {
+    font-size: 0.82rem;
+    color: var(--text-muted);
   }
 
   .related {

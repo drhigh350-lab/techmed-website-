@@ -40,26 +40,59 @@ const icon = resource ? resourceIcon(resource) : undefined;
 ---
 
 {resource ? (
-  <div class:list={['resource-card', 'reveal', { featured: resource.featured }]}>
+  <div class:list={['resource-card', 'reveal', { featured: resource.featured }]} data-subject={resource.subject || 'General'} data-status={resource.status}>
     <a href={`/resources/${resource.slug}`} class="card-top">
       {resource.primaryImage ? (
         <div class="thumb">
-          <img src={resource.primaryImage} alt="" loading="lazy" decoding="async" />
-          {resource.featured && <span class="featured-badge overlay">Featured</span>}
+          <img src={resource.primaryImage} alt={resource.title} loading="lazy" decoding="async" />
+          {resource.featured && <span class="featured-indicator">Featured</span>}
         </div>
       ) : (
         <div class="top-row">
           {icon && <div class="icon" set:html={icon} />}
-          {resource.featured && <span class="featured-badge">Featured</span>}
+          {resource.featured && <span class="featured-indicator">Featured</span>}
         </div>
       )}
-      <p class="meta">{resource.category} · {resource.type}</p>
+      <p class="meta">
+        <span>{resource.subject || resource.category}</span>
+        <span class="sep">·</span>
+        <span>{resource.type}</span>
+        {resource.deliveryFormat && (
+          <>
+            <span class="sep">·</span>
+            <span>{resource.deliveryFormat}</span>
+          </>
+        )}
+      </p>
       <h3>{resource.title}</h3>
       <p class="description">{resource.description}</p>
-      <span class="preview-affordance">View Details <span aria-hidden="true">&rarr;</span></span>
+
+      {resource.inclusions && (
+        <div class="inclusion-note">
+          {resource.inclusions.mastery && (
+            <p class="inc-line">
+              <span class="inc-check" aria-hidden="true">✓</span>
+              <span>Included in <strong>Mastery &amp; Ultimate</strong></span>
+            </p>
+          )}
+          {resource.inclusions.core && (
+            <p class="inc-line discount">
+              <span class="inc-check" aria-hidden="true">%</span>
+              <span>{resource.inclusions.core}</span>
+            </p>
+          )}
+        </div>
+      )}
+
+      <span class="preview-affordance">Resource Details &amp; Preview <span aria-hidden="true">&rarr;</span></span>
     </a>
     <div class="card-footer">
-      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+      <div class="price-wrap">
+        <span class="price-val">{priceLabel}</span>
+        {resource.status === 'paid' && resource.isAvailableStandalone && (
+          <span class="standalone-note">Open to all students</span>
+        )}
+      </div>
       <div class="actions">
         {resource.status === 'free' && primaryHref && (
           <a
@@ -72,15 +105,32 @@ const icon = resource ? resourceIcon(resource) : undefined;
           </a>
         )}
         {resource.status === 'free' && !primaryHref && (
-          <a class="btn-primary" href={`/resources/${resource.slug}`}>{resource.actionLabel}</a>
+          <a class="btn-primary" href={`/library/read/${resource.id}`}>{resource.actionLabel}</a>
         )}
-        {resource.status === 'paid' && resource.paystackUrl && (
-          <a class="btn-primary" href={resource.paystackUrl}>Buy with Paystack</a>
-        )}
-        {resource.status === 'paid' && resource.whatsappUrl && (
-          <a class="btn-secondary" href={resource.whatsappUrl} target="_blank" rel="noopener">
-            {resource.paystackUrl ? 'Get via WhatsApp' : resource.actionLabel}
-          </a>
+        {resource.status === 'paid' && (
+          <div class="paid-action-stack">
+            <button
+              type="button"
+              class="btn-primary buy-trigger-btn"
+              data-resource={JSON.stringify({
+                id: resource.id,
+                slug: resource.slug,
+                title: resource.title,
+                price: resource.price,
+                currency: resource.currency || 'NGN',
+                subject: resource.subject || resource.category,
+                deliveryFormat: resource.deliveryFormat || 'PDF eBook',
+                description: resource.description,
+                whatsappUrl: resource.whatsappUrl,
+              })}
+              onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
+            >
+              Unlock · {priceLabel}
+            </button>
+            <a class="reader-preview-link" href={`/library/read/${resource.id}`}>
+              Read Free Preview &rarr;
+            </a>
+          </div>
         )}
       </div>
     </div>
@@ -191,39 +241,76 @@ const icon = resource ? resourceIcon(resource) : undefined;
     color: var(--text-muted);
   }
 
-  .badge,
-  .featured-badge {
+  .featured-indicator {
     font-family: var(--font-display);
     font-size: 0.65rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.05em;
+    letter-spacing: 0.08em;
     color: var(--accent-text);
-    background: rgba(201, 162, 39, 0.12);
-    border: 1px solid rgba(201, 162, 39, 0.3);
-    border-radius: var(--radius-full);
-    padding: 3px 10px;
+    padding: 3px 0;
   }
 
   .meta {
     font-family: var(--font-display);
-    font-size: 0.7rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--text-muted);
     margin-bottom: var(--space-2);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta .sep {
+    color: var(--border);
   }
 
   h3 {
-    font-size: 1rem;
+    font-size: 1.05rem;
     margin-bottom: var(--space-2);
+    line-height: 1.4;
   }
 
   .description {
     font-size: 0.875rem;
     line-height: 1.7;
     color: var(--text-light);
+  }
+
+  .inclusion-note {
+    margin-top: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    background: var(--surface-raised);
+    border-left: 2px solid var(--accent);
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .inc-line {
+    font-size: 0.76rem;
+    line-height: 1.4;
+    color: var(--text);
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 0;
+  }
+
+  .inc-line.discount {
+    color: var(--text-light);
+  }
+
+  .inc-check {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: var(--accent-text);
   }
 
   .preview-affordance {
@@ -234,7 +321,7 @@ const icon = resource ? resourceIcon(resource) : undefined;
     font-size: 0.78rem;
     font-weight: 700;
     color: var(--accent-text);
-    margin-top: var(--space-3);
+    margin-top: var(--space-4);
   }
 
   .preview-affordance span {
@@ -252,31 +339,28 @@ const icon = resource ? resourceIcon(resource) : undefined;
     gap: var(--space-3);
     flex-wrap: wrap;
     margin-top: var(--space-5);
-    padding-top: var(--space-5);
+    padding-top: var(--space-4);
     border-top: 1px solid var(--border);
   }
 
-  .price-badge {
-    display: inline-flex;
-    align-items: center;
+  .price-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .price-val {
     font-family: var(--font-display);
-    font-size: 0.78rem;
-    font-weight: 700;
-    white-space: nowrap;
-    padding: 6px 14px;
-    border-radius: var(--radius-full);
-  }
-
-  .price-badge.free {
-    color: var(--accent-text);
-    background: rgba(201, 162, 39, 0.12);
-    border: 1px solid rgba(201, 162, 39, 0.3);
-  }
-
-  .price-badge.paid {
+    font-size: 0.95rem;
+    font-weight: 800;
     color: var(--text);
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
+    letter-spacing: -0.02em;
+  }
+
+  .standalone-note {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    font-weight: 500;
   }
 
   .actions {
@@ -317,5 +401,30 @@ const icon = resource ? resourceIcon(resource) : undefined;
 
   .btn-secondary:hover {
     border-color: var(--accent);
+  }
+
+  .paid-action-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+  }
+
+  .buy-trigger-btn {
+    border: none;
+    cursor: pointer;
+  }
+
+  .reader-preview-link {
+    font-size: 0.72rem;
+    color: var(--accent-text);
+    text-decoration: none;
+    font-weight: 600;
+    transition: opacity 150ms ease;
+  }
+
+  .reader-preview-link:hover {
+    text-decoration: underline;
+    opacity: 0.85;
   }
 </style>

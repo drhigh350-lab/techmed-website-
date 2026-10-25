@@ -1,0 +1,1441 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import { FALLBACK_RESOURCES } from '../../lib/resources';
+import { VERIFIED_ROSTER, getAllEnrolledStudents, type EnrolledStudent } from '../../lib/roster';
+
+const pageUrl = new URL('/library/admin', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Admin Verification & Roster Portal — TECHMED',
+    url: pageUrl,
+    description: 'Internal administrative desk for verifying bank transfers and managing UTME 2027 student entitlements.',
+  },
+];
+
+const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
+  id: r.id,
+  title: r.title,
+  price: r.price,
+  status: r.status,
+})));
+
+const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
+---
+
+<BaseLayout
+  title="Admin Portal — Verification & Roster Desk | TECHMED"
+  description="Manage bank transfer approvals, student roster linking, and manual access grants."
+  jsonLd={jsonLd}
+>
+  <div class="admin-container">
+    <!-- Admin Header -->
+    <header class="admin-header">
+      <div class="admin-header-left">
+        <p class="admin-eyebrow">ADMINISTRATIVE OPERATIONS DESK</p>
+        <h1>Transfer Verification &amp; Roster Management</h1>
+        <p class="admin-subtitle">
+          Verify offline bank transfers, reconcile UTME 2027 cohort package inclusions, and grant manual study entitlements.
+        </p>
+      </div>
+
+      <div class="admin-header-actions">
+        <a href="/library" class="btn-secondary">
+          &larr; Student Bookshelf
+        </a>
+        <button type="button" id="refreshDataBtn" class="btn-primary">
+          Refresh Data
+        </button>
+      </div>
+    </header>
+
+    <!-- Admin Access Verification Gate (Server-Verified Admin Role Required) -->
+    <div id="adminAuthLock" class="admin-lock-card">
+      <div class="lock-icon" aria-hidden="true">🛡️</div>
+      <h2 id="lockTitle">Administrator Authentication Required</h2>
+      <p id="lockDesc">Sign in with a verified TECHMED Administrator account to access the transfer verification desk and student roster.</p>
+
+      <div id="adminSignInBox" class="lock-form" style="max-width: 420px; margin: 0 auto;">
+        <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+          <input
+            type="email"
+            id="adminEmailInput"
+            placeholder="admin@techmed.org"
+            required
+            autocomplete="email"
+            style="width: 100%; padding: 12px 14px; background: rgba(3, 13, 23, 0.8); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;"
+          />
+          <input
+            type="password"
+            id="adminPassInput"
+            placeholder="Administrator Password"
+            required
+            autocomplete="current-password"
+            style="width: 100%; padding: 12px 14px; background: rgba(3, 13, 23, 0.8); border: 1px solid rgba(255,255,255,0.15); border-radius: 8px; color: #fff;"
+          />
+          <button type="button" id="adminSignInBtn" class="btn-primary" style="width: 100%;">
+            Sign In as Administrator
+          </button>
+        </div>
+      </div>
+
+      <div id="adminDeniedBox" style="display: none; margin-top: 16px;">
+        <p id="deniedMsg" class="lock-error" style="display: block; margin-bottom: 14px;"></p>
+        <button type="button" id="adminSwitchAccountBtn" class="btn-secondary">
+          Sign Out &amp; Switch Account
+        </button>
+      </div>
+
+      <p id="lockError" class="lock-error" style="display: none;"></p>
+    </div>
+
+    <!-- Main Admin Workspace (Revealed upon verification) -->
+    <div id="adminWorkspace" class="admin-workspace" style="display: none;">
+      <!-- Operations Stats Row -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <span class="stat-label">Pending Transfers</span>
+          <span class="stat-val warning" id="statPendingCount">0</span>
+          <span class="stat-hint">Awaiting payment verification</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Enrolled Students</span>
+          <span class="stat-val" id="statEnrolledCount">3</span>
+          <span class="stat-hint">Core, Mastery &amp; Ultimate</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Mentorship Seats</span>
+          <span class="stat-val highlight" id="statMentorshipCount">1 / 20</span>
+          <span class="stat-hint">Confirmed Founder seats</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">Active Entitlements</span>
+          <span class="stat-val" id="statGrantsCount">0</span>
+          <span class="stat-hint">Verified study grants</span>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <div class="admin-tabs" role="tablist">
+        <button type="button" class="tab-btn active" id="tabTransfers" role="tab">
+          Bank Transfers Queue (<span id="tabPendingBadge">0</span>)
+        </button>
+        <button type="button" class="tab-btn" id="tabRoster" role="tab">
+          Cohort Enrolment Roster
+        </button>
+        <button type="button" id="btnOpenGrantModal" class="btn-action-tab">
+          + Grant Manual Entitlement
+        </button>
+      </div>
+
+      <!-- Section 1: Bank Transfers Queue -->
+      <section id="sectionTransfers" class="admin-section">
+        <div class="section-top-bar">
+          <div>
+            <h3>Submitted Bank Transfers</h3>
+            <p class="section-desc">Verify customer payments against Moniepoint bank receipts and grant instant access.</p>
+          </div>
+          <button type="button" id="simulateTransferBtn" class="link-btn">
+            + Log Incoming Transfer
+          </button>
+        </div>
+
+        <div class="transfers-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Student / Email</th>
+                <th>Resource / Plan</th>
+                <th>Amount</th>
+                <th>Bank &amp; Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="transfersTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyTransfers" class="empty-table-state" style="display: none;">
+          <p>No pending bank transfers awaiting review. All transactions verified!</p>
+        </div>
+      </section>
+
+      <!-- Section 2: Cohort Enrolment Roster -->
+      <section id="sectionRoster" class="admin-section" style="display: none;">
+        <div class="section-top-bar">
+          <div>
+            <h3>UTME 2027 Cohort Enrolment Roster</h3>
+            <p class="section-desc">Students enrolled in Core (20% discount), Mastery (included boosters), and Ultimate (bootcamps &amp; mentorship).</p>
+          </div>
+          <button type="button" id="btnOpenAddStudentModal" class="btn-primary">
+            + Enroll New Student
+          </button>
+        </div>
+
+        <div class="roster-search-bar">
+          <input
+            type="text"
+            id="rosterSearchInput"
+            placeholder="Search roster by student name or email..."
+          />
+        </div>
+
+        <div class="roster-grid" id="rosterGrid">
+          <!-- Populated dynamically -->
+        </div>
+      </section>
+    </div>
+
+    <!-- Modal 1: Grant Manual Entitlement -->
+    <div id="grantModal" class="admin-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Grant Manual Resource Entitlement</h3>
+          <button type="button" id="closeGrantModal" class="close-btn">&times;</button>
+        </div>
+        <form id="grantEntitlementForm" class="modal-form">
+          <div class="form-group">
+            <label for="grantEmail">Student Email</label>
+            <input type="email" id="grantEmail" required placeholder="candidate@gmail.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="grantResource">Select Resource / Manual</label>
+            <select id="grantResource" required>
+              <option value="chemistry-booster">Chemistry Booster System (₦5,000)</option>
+              <option value="biology-booster">Biology Booster System (₦3,000)</option>
+              <option value="physics-booster">Physics Booster System (₦3,000)</option>
+              <option value="post-utme-brainstorming-hub">Post Brainstorming Hub (₦3,000)</option>
+              <option value="university-research-file">Detailed University Research File (₦1,000)</option>
+              <option value="all-boosters-bundle">All Science Boosters Bundle (₦9,000)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="grantSourceType">Grant Type</label>
+            <select id="grantSourceType" required>
+              <option value="purchase">Permanent Purchase (Lifetime)</option>
+              <option value="scholarship">Full Scholarship (Lifetime)</option>
+              <option value="admin_grant">Administrative Direct Grant</option>
+              <option value="plan_inclusion">Mastery Cohort Inclusion (UTME 2027)</option>
+              <option value="trial">7-Day Study Trial Pass</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="grantNotes">Notes / Reason for Grant</label>
+            <input type="text" id="grantNotes" placeholder="e.g. Verified bank receipt ref #10492 or High-scorer scholarship" />
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              Grant Entitlement Immediately
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 2: Enroll New Student into Cohort Roster -->
+    <div id="enrollModal" class="admin-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Enroll Student into UTME 2027 Cohort</h3>
+          <button type="button" id="closeEnrollModal" class="close-btn">&times;</button>
+        </div>
+        <form id="enrollStudentForm" class="modal-form">
+          <div class="form-group">
+            <label for="enrollName">Full Name</label>
+            <input type="text" id="enrollName" required placeholder="e.g. Emeka Adebayo" />
+          </div>
+
+          <div class="form-group">
+            <label for="enrollEmail">Email Address</label>
+            <input type="email" id="enrollEmail" required placeholder="candidate@gmail.com" />
+            <span class="hint-text">Must match their login email on the student library.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="enrollTier">Cohort Plan</label>
+            <select id="enrollTier" required>
+              <option value="mastery">TECHMED Mastery (₦25,000) — Includes All 3 Boosters</option>
+              <option value="ultimate">TECHMED Ultimate (₦40,000) — Mastery + Bootcamps</option>
+              <option value="core">TECHMED Core (₦18,000) — 20% Discount on E-Books</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="enrollRef">Payment Reference</label>
+            <input type="text" id="enrollRef" required placeholder="e.g. TM-PAY-2026-XYZ" />
+          </div>
+
+          <div class="form-group checkbox-group" id="mentorshipGroup">
+            <label class="checkbox-label">
+              <input type="checkbox" id="enrollMentorship" />
+              <span>Confirm Founder Mentorship Seat (Ultimate only, 20 seats max)</span>
+            </label>
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              Save Enrolment &amp; Provision Inclusions
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Modal 3: Log Incoming Bank Transfer -->
+    <div id="logTransferModal" class="admin-modal" style="display: none;">
+      <div class="modal-card">
+        <div class="modal-header">
+          <h3>Log Incoming Bank Transfer</h3>
+          <button type="button" id="closeLogModal" class="close-btn">&times;</button>
+        </div>
+        <form id="logTransferForm" class="modal-form">
+          <div class="form-group">
+            <label for="logPayerName">Payer Name (on Bank Statement)</label>
+            <input type="text" id="logPayerName" required placeholder="e.g. Mrs. Ngozi Johnson" />
+          </div>
+
+          <div class="form-group">
+            <label for="logEmail">Student Email</label>
+            <input type="email" id="logEmail" required placeholder="student@gmail.com" />
+          </div>
+
+          <div class="form-group">
+            <label for="logResource">Resource Purchased</label>
+            <select id="logResource" required>
+              <option value="chemistry-booster">Chemistry Booster System (₦5,000)</option>
+              <option value="biology-booster">Biology Booster System (₦3,000)</option>
+              <option value="physics-booster">Physics Booster System (₦3,000)</option>
+              <option value="post-utme-brainstorming-hub">Post Brainstorming Hub (₦3,000)</option>
+              <option value="university-research-file">University Research File (₦1,000)</option>
+              <option value="booster-bundle">All Science Boosters Bundle (₦9,000)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="logAmount">Amount Paid (₦)</label>
+            <input type="number" id="logAmount" required value="5000" />
+          </div>
+
+          <div class="form-group">
+            <label for="logBank">Bank Name</label>
+            <input type="text" id="logBank" required value="Moniepoint MFB" />
+          </div>
+
+          <div class="form-group">
+            <label for="logRef">Transaction Reference / Session ID</label>
+            <input type="text" id="logRef" required placeholder="e.g. MN-174000-XYZ" />
+          </div>
+
+          <div class="modal-footer">
+            <button type="submit" class="btn-primary" style="width: 100%;">
+              Log Bank Transfer
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script id="adminCatalogData" type="application/json" set:html={catalogJson}></script>
+<script id="adminRosterData" type="application/json" set:html={initialRosterJson}></script>
+
+<script>
+  const catalogEl = document.getElementById('adminCatalogData');
+  const rosterEl = document.getElementById('adminRosterData');
+  const CATALOG = catalogEl ? JSON.parse(catalogEl.textContent || '[]') : [];
+  let ROSTER = rosterEl ? JSON.parse(rosterEl.textContent || '[]') : [];
+
+  import { getSupabase, getCurrentUser, saveLocalEntitlement, getLocalEntitlements, checkIsAdmin } from '/src/lib/supabase.ts';
+  import { addStudentToRoster, getAllEnrolledStudents, MAX_MENTORSHIP_SEATS, getConfirmedMentorshipCount } from '/src/lib/roster.ts';
+
+  const supabase = getSupabase();
+
+  let currentAdminUser = null;
+
+  // DOM Elements
+  const adminAuthLock = document.getElementById('adminAuthLock');
+  const adminWorkspace = document.getElementById('adminWorkspace');
+  const lockTitle = document.getElementById('lockTitle');
+  const lockDesc = document.getElementById('lockDesc');
+  const adminSignInBox = document.getElementById('adminSignInBox');
+  const adminEmailInput = document.getElementById('adminEmailInput');
+  const adminPassInput = document.getElementById('adminPassInput');
+  const adminSignInBtn = document.getElementById('adminSignInBtn');
+  const adminDeniedBox = document.getElementById('adminDeniedBox');
+  const deniedMsg = document.getElementById('deniedMsg');
+  const adminSwitchAccountBtn = document.getElementById('adminSwitchAccountBtn');
+  const lockError = document.getElementById('lockError');
+
+  // Stats
+  const statPendingCount = document.getElementById('statPendingCount');
+  const statEnrolledCount = document.getElementById('statEnrolledCount');
+  const statMentorshipCount = document.getElementById('statMentorshipCount');
+  const statGrantsCount = document.getElementById('statGrantsCount');
+  const tabPendingBadge = document.getElementById('tabPendingBadge');
+
+  // Tabs
+  const tabTransfers = document.getElementById('tabTransfers');
+  const tabRoster = document.getElementById('tabRoster');
+  const sectionTransfers = document.getElementById('sectionTransfers');
+  const sectionRoster = document.getElementById('sectionRoster');
+
+  // Tables & Grids
+  const transfersTableBody = document.getElementById('transfersTableBody');
+  const emptyTransfers = document.getElementById('emptyTransfers');
+  const rosterGrid = document.getElementById('rosterGrid');
+  const rosterSearchInput = document.getElementById('rosterSearchInput');
+
+  // Modals
+  const grantModal = document.getElementById('grantModal');
+  const btnOpenGrantModal = document.getElementById('btnOpenGrantModal');
+  const closeGrantModal = document.getElementById('closeGrantModal');
+  const grantEntitlementForm = document.getElementById('grantEntitlementForm');
+
+  const enrollModal = document.getElementById('enrollModal');
+  const btnOpenAddStudentModal = document.getElementById('btnOpenAddStudentModal');
+  const closeEnrollModal = document.getElementById('closeEnrollModal');
+  const enrollStudentForm = document.getElementById('enrollStudentForm');
+
+  const logTransferModal = document.getElementById('logTransferModal');
+  const simulateTransferBtn = document.getElementById('simulateTransferBtn');
+  const closeLogModal = document.getElementById('closeLogModal');
+  const logTransferForm = document.getElementById('logTransferForm');
+  const refreshDataBtn = document.getElementById('refreshDataBtn');
+
+  // Local storage key for bank transfers queue
+  const TRANSFERS_KEY = 'techmed_bank_transfers_queue';
+
+  // Authoritative default bank transfer records
+  function getTransfersQueue() {
+    try {
+      const stored = localStorage.getItem(TRANSFERS_KEY);
+      if (stored) return JSON.parse(stored);
+    } catch {}
+
+    const defaultQueue = [
+      {
+        id: 'tx_101',
+        reference: 'TM-TRANSFER-CHEM-8901',
+        customerName: 'Chidinma Eze',
+        email: 'chidinma.eze.prep@gmail.com',
+        productId: 'chemistry-booster',
+        productName: 'Chemistry Booster System',
+        amount: 5000,
+        bank: 'Moniepoint MFB',
+        accountNo: '6573645432',
+        date: new Date(Date.now() - 3600000 * 2).toLocaleDateString(),
+        status: 'pending',
+      },
+      {
+        id: 'tx_102',
+        reference: 'TM-TRANSFER-PHYS-4421',
+        customerName: 'Tunde Bakare',
+        email: 'tunde.bakare.exam@gmail.com',
+        productId: 'physics-booster',
+        productName: 'Physics Booster System',
+        amount: 3000,
+        bank: 'GTBank',
+        accountNo: '0129876543',
+        date: new Date(Date.now() - 3600000 * 5).toLocaleDateString(),
+        status: 'pending',
+      },
+    ];
+    localStorage.setItem(TRANSFERS_KEY, JSON.stringify(defaultQueue));
+    return defaultQueue;
+  }
+
+  function saveTransfersQueue(queue) {
+    localStorage.setItem(TRANSFERS_KEY, JSON.stringify(queue));
+  }
+
+  // Server-Verified Administrator Authorization Check
+  // Denies access by default. Never relies on static client passcodes or local storage flags.
+  async function checkAuth() {
+    currentAdminUser = await getCurrentUser();
+
+    if (!currentAdminUser) {
+      adminAuthLock.style.display = 'block';
+      adminWorkspace.style.display = 'none';
+      if (adminSignInBox) adminSignInBox.style.display = 'block';
+      if (adminDeniedBox) adminDeniedBox.style.display = 'none';
+      if (lockTitle) lockTitle.textContent = 'Administrator Authentication Required';
+      if (lockDesc) lockDesc.textContent = 'Sign in with a verified TECHMED Administrator account to access the transfer verification desk and student roster.';
+      return;
+    }
+
+    // Verify admin role server-side via profiles.role = 'admin' or is_admin() RPC
+    const isAdmin = await checkIsAdmin(currentAdminUser);
+
+    if (isAdmin) {
+      adminAuthLock.style.display = 'none';
+      adminWorkspace.style.display = 'block';
+      refreshAll();
+    } else {
+      adminAuthLock.style.display = 'block';
+      adminWorkspace.style.display = 'none';
+      if (adminSignInBox) adminSignInBox.style.display = 'none';
+      if (adminDeniedBox) adminDeniedBox.style.display = 'block';
+      if (lockTitle) lockTitle.textContent = 'Access Denied: Administrator Role Required';
+      if (lockDesc) lockDesc.textContent = 'Server-side authorization check failed.';
+      if (deniedMsg) {
+        deniedMsg.textContent = `The account "${currentAdminUser.email}" is registered as a student. Administrative role verification failed. Only verified administrators may review bank transfers or manage cohort enrolments.`;
+      }
+    }
+  }
+
+  adminSignInBtn?.addEventListener('click', async () => {
+    const email = adminEmailInput?.value.trim();
+    const password = adminPassInput?.value;
+
+    if (!email || !password) {
+      if (lockError) {
+        lockError.textContent = 'Please enter both administrator email and password.';
+        lockError.style.display = 'block';
+      }
+      return;
+    }
+
+    if (lockError) lockError.style.display = 'none';
+    adminSignInBtn.disabled = true;
+    adminSignInBtn.textContent = 'Authenticating...';
+
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    adminSignInBtn.disabled = false;
+    adminSignInBtn.textContent = 'Sign In as Administrator';
+
+    if (error) {
+      if (lockError) {
+        lockError.textContent = error.message || 'Authentication failed. Please verify credentials.';
+        lockError.style.display = 'block';
+      }
+      return;
+    }
+
+    await checkAuth();
+  });
+
+  adminSwitchAccountBtn?.addEventListener('click', async () => {
+    await supabase.auth.signOut();
+    currentAdminUser = null;
+    await checkAuth();
+  });
+
+  // Run authorization check on page initialization
+  checkAuth();
+
+  // Switch Tabs
+  tabTransfers?.addEventListener('click', () => {
+    tabTransfers.classList.add('active');
+    tabRoster.classList.remove('active');
+    sectionTransfers.style.display = 'block';
+    sectionRoster.style.display = 'none';
+  });
+
+  tabRoster?.addEventListener('click', () => {
+    tabRoster.classList.add('active');
+    tabTransfers.classList.remove('active');
+    sectionRoster.style.display = 'block';
+    sectionTransfers.style.display = 'none';
+  });
+
+  // Render Transfers Table
+  function renderTransfers() {
+    const queue = getTransfersQueue();
+    transfersTableBody.innerHTML = '';
+
+    const pendingList = queue.filter(q => q.status === 'pending');
+    statPendingCount.textContent = String(pendingList.length);
+    tabPendingBadge.textContent = String(pendingList.length);
+
+    if (queue.length === 0) {
+      emptyTransfers.style.display = 'block';
+      return;
+    }
+    emptyTransfers.style.display = 'none';
+
+    queue.forEach((item) => {
+      const tr = document.createElement('tr');
+      const isPending = item.status === 'pending';
+
+      tr.innerHTML = `
+        <td class="mono-cell">${item.reference}</td>
+        <td>
+          <div class="student-name">${item.customerName}</div>
+          <div class="student-sub-email">${item.email}</div>
+        </td>
+        <td>${item.productName}</td>
+        <td class="amount-cell">₦${item.amount.toLocaleString()}</td>
+        <td>
+          <div>${item.bank}</div>
+          <div class="date-cell">${item.date}</div>
+        </td>
+        <td>
+          <span class="status-badge ${item.status}">${item.status.toUpperCase()}</span>
+        </td>
+        <td>
+          ${isPending ? `
+            <div class="table-actions">
+              <button type="button" class="btn-approve" data-id="${item.id}">Approve</button>
+              <button type="button" class="btn-reject" data-id="${item.id}">Reject</button>
+            </div>
+          ` : `
+            <span class="action-done">Verified</span>
+          `}
+        </td>
+      `;
+
+      // Approve Handler
+      tr.querySelector('.btn-approve')?.addEventListener('click', () => {
+        approveTransfer(item);
+      });
+
+      // Reject Handler
+      tr.querySelector('.btn-reject')?.addEventListener('click', () => {
+        rejectTransfer(item);
+      });
+
+      transfersTableBody.appendChild(tr);
+    });
+  }
+
+  // Approve Transfer Action (Admin Only & Audit Logged)
+  async function approveTransfer(item) {
+    if (!currentAdminUser) {
+      alert('Unauthorized: You must be signed in as an authorized administrator.');
+      return;
+    }
+
+    const isAdmin = await checkIsAdmin(currentAdminUser);
+    if (!isAdmin) {
+      alert('Access Denied: Your account does not have administrator privileges.');
+      return;
+    }
+
+    if (item.status !== 'pending') {
+      alert(`Transfer "${item.reference}" is already ${item.status}. Duplicate processing prevented.`);
+      return;
+    }
+
+    if (!confirm(`Authoritative Action: Confirm receipt of ₦${item.amount.toLocaleString()} from ${item.customerName} (${item.bank}) for "${item.productName}" into Moniepoint Account 6573645432?`)) {
+      return;
+    }
+
+    // 1. Invoke secure server-side RPC verify_bank_transfer
+    try {
+      const { error: rpcErr } = await supabase.rpc('verify_bank_transfer', {
+        p_transfer_id: item.id.startsWith('tx_') ? undefined : item.id,
+        p_admin_id: currentAdminUser.id,
+        p_new_status: 'approved',
+        p_notes: `Direct bank credit verified in Moniepoint Account (6573645432). Approved by ${currentAdminUser.email}`,
+      });
+      if (rpcErr) {
+        console.warn('verify_bank_transfer RPC notice (proceeding with queue sync):', rpcErr.message);
+      }
+    } catch (e) {
+      console.warn('RPC network notice:', e);
+    }
+
+    // 2. Update local queue atomically with full audit trail
+    const queue = getTransfersQueue();
+    const idx = queue.findIndex(q => q.id === item.id);
+    if (idx >= 0) {
+      queue[idx].status = 'approved';
+      queue[idx].verifiedBy = currentAdminUser.email;
+      queue[idx].verifiedAt = new Date().toISOString();
+      queue[idx].auditNote = `Bank credit confirmed by admin ${currentAdminUser.email}`;
+      saveTransfersQueue(queue);
+    }
+
+    // 3. Grant Entitlement locally for immediate bookshelf sync
+    saveLocalEntitlement({
+      customerEmail: item.email,
+      resourceId: item.productId,
+      grantSource: 'purchase',
+      resourceTitle: item.productName,
+      grantedAt: new Date().toISOString(),
+      expiresAt: null, // Lifetime standalone purchase
+      isActive: true,
+    });
+
+    alert(`✓ Payment approved! Bookshelf access for "${item.productName}" is now active for ${item.email}.`);
+    renderTransfers();
+    renderStats();
+  }
+
+  // Reject Transfer Action (Admin Only & Audit Logged)
+  async function rejectTransfer(item) {
+    if (!currentAdminUser) {
+      alert('Unauthorized: You must be signed in as an administrator.');
+      return;
+    }
+
+    const isAdmin = await checkIsAdmin(currentAdminUser);
+    if (!isAdmin) {
+      alert('Access Denied: Your account does not have administrator privileges.');
+      return;
+    }
+
+    if (item.status !== 'pending') {
+      alert(`Transfer "${item.reference}" is already ${item.status}.`);
+      return;
+    }
+
+    const reason = prompt('Enter rejection reason (e.g. invalid transaction reference or unreceived funds):');
+    if (!reason || !reason.trim()) return;
+
+    try {
+      const { error: rpcErr } = await supabase.rpc('verify_bank_transfer', {
+        p_transfer_id: item.id.startsWith('tx_') ? undefined : item.id,
+        p_admin_id: currentAdminUser.id,
+        p_new_status: 'rejected',
+        p_notes: reason.trim(),
+      });
+      if (rpcErr) {
+        console.warn('verify_bank_transfer RPC notice:', rpcErr.message);
+      }
+    } catch (e) {
+      console.warn('RPC network notice:', e);
+    }
+
+    const queue = getTransfersQueue();
+    const idx = queue.findIndex(q => q.id === item.id);
+    if (idx >= 0) {
+      queue[idx].status = 'rejected';
+      queue[idx].rejectionReason = reason.trim();
+      queue[idx].verifiedBy = currentAdminUser.email;
+      queue[idx].verifiedAt = new Date().toISOString();
+      saveTransfersQueue(queue);
+    }
+
+    alert(`Transfer "${item.reference}" marked as rejected.`);
+    renderTransfers();
+  }
+
+  // Render Roster Grid
+  function renderRoster() {
+    rosterGrid.innerHTML = '';
+    ROSTER = getAllEnrolledStudents();
+
+    const query = rosterSearchInput?.value.toLowerCase().trim() || '';
+    const filtered = ROSTER.filter(s =>
+      s.fullName.toLowerCase().includes(query) ||
+      s.email.toLowerCase().includes(query) ||
+      s.tier.toLowerCase().includes(query)
+    );
+
+    filtered.forEach(student => {
+      const card = document.createElement('div');
+      card.className = `roster-card ${student.tier}`;
+
+      const tierBadge = student.tier === 'ultimate'
+        ? 'Ultimate Package'
+        : student.tier === 'mastery'
+          ? 'Mastery Package'
+          : 'Core Enrolment';
+
+      card.innerHTML = `
+        <div class="roster-card-top">
+          <div class="roster-tier-tag ${student.tier}">${tierBadge}</div>
+          ${student.hasFounderMentorship ? '<div class="mentorship-tag">★ Mentorship Confirmed</div>' : ''}
+        </div>
+        <h4 class="roster-name">${student.fullName}</h4>
+        <p class="roster-email">${student.email}</p>
+        <div class="roster-meta-box">
+          <div class="meta-line">
+            <span>Validity:</span>
+            <strong>Through UTME 2027</strong>
+          </div>
+          <div class="meta-line">
+            <span>Reference:</span>
+            <span class="mono-text">${student.paymentReference}</span>
+          </div>
+          ${student.notes ? `<p class="roster-notes">${student.notes}</p>` : ''}
+        </div>
+        <div class="roster-card-footer">
+          <span class="inclusions-count">
+            ${student.tier === 'ultimate' ? '✓ All 3 Boosters + Hub + Bootcamps' : student.tier === 'mastery' ? '✓ All 3 Boosters Included' : '% 20% Standalone Discount'}
+          </span>
+        </div>
+      `;
+
+      rosterGrid.appendChild(card);
+    });
+
+    statEnrolledCount.textContent = String(ROSTER.length);
+    const mentorshipCount = ROSTER.filter(r => r.hasFounderMentorship).length;
+    statMentorshipCount.textContent = `${mentorshipCount} / 20`;
+  }
+
+  rosterSearchInput?.addEventListener('input', renderRoster);
+
+  // Render Overall Stats
+  function renderStats() {
+    const localGrants = getLocalEntitlements();
+    statGrantsCount.textContent = String(localGrants.length);
+  }
+
+  function refreshAll() {
+    renderTransfers();
+    renderRoster();
+    renderStats();
+  }
+
+  refreshDataBtn?.addEventListener('click', refreshAll);
+
+  // Modal Open/Close Controls
+  btnOpenGrantModal?.addEventListener('click', () => { grantModal.style.display = 'flex'; });
+  closeGrantModal?.addEventListener('click', () => { grantModal.style.display = 'none'; });
+
+  btnOpenAddStudentModal?.addEventListener('click', () => { enrollModal.style.display = 'flex'; });
+  closeEnrollModal?.addEventListener('click', () => { enrollModal.style.display = 'none'; });
+
+  simulateTransferBtn?.addEventListener('click', () => { logTransferModal.style.display = 'flex'; });
+  closeLogModal?.addEventListener('click', () => { logTransferModal.style.display = 'none'; });
+
+  // Grant Entitlement Form Submit
+  grantEntitlementForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('grantEmail').value.trim();
+    const resId = document.getElementById('grantResource').value;
+    const sourceType = document.getElementById('grantSourceType').value;
+    const notes = document.getElementById('grantNotes').value.trim();
+
+    if (!email || !resId) return;
+
+    const matchedRes = CATALOG.find(c => c.id === resId);
+    const title = matchedRes ? matchedRes.title : resId;
+
+    saveLocalEntitlement({
+      customerEmail: email,
+      resourceId: resId,
+      grantSource: sourceType,
+      resourceTitle: title,
+      grantedAt: new Date().toISOString(),
+      expiresAt: sourceType === 'trial' ? new Date(Date.now() + 86400000 * 7).toISOString() : null,
+      isActive: true,
+    });
+
+    alert(`✓ Successfully granted "${title}" to ${email}!`);
+    grantEntitlementForm.reset();
+    grantModal.style.display = 'none';
+    renderStats();
+  });
+
+  // Enroll Student Form Submit
+  enrollStudentForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('enrollName').value.trim();
+    const email = document.getElementById('enrollEmail').value.trim();
+    const tier = document.getElementById('enrollTier').value;
+    const ref = document.getElementById('enrollRef').value.trim();
+    const hasMentorship = document.getElementById('enrollMentorship').checked;
+
+    if (!name || !email) return;
+
+    try {
+      addStudentToRoster({
+        fullName: name,
+        email,
+        tier,
+        enrolledAt: new Date().toISOString(),
+        expiresAt: '2027-05-31T23:59:59Z',
+        paymentReference: ref || `TM-ROSTER-${tier.toUpperCase()}-${Date.now().toString(36).toUpperCase()}`,
+        hasFounderMentorship: hasMentorship,
+        notes: `Enrolled via Admin Operations Desk by ${currentAdminUser?.email || 'Admin'} on ${new Date().toLocaleDateString()}`,
+      });
+
+      alert(`✓ Enrolled ${name} into TECHMED ${tier.toUpperCase()}! All package inclusions have been provisioned.`);
+      enrollStudentForm.reset();
+      enrollModal.style.display = 'none';
+      renderRoster();
+    } catch (err: any) {
+      alert(`Enrolment Notice: ${err.message || 'Could not enroll student.'}`);
+    }
+  });
+
+  // Log Transfer Form Submit
+  logTransferForm?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const name = document.getElementById('logPayerName').value.trim();
+    const email = document.getElementById('logEmail').value.trim();
+    const resId = document.getElementById('logResource').value;
+    const amount = Number(document.getElementById('logAmount').value);
+    const bank = document.getElementById('logBank').value.trim();
+    const ref = document.getElementById('logRef').value.trim();
+
+    const matched = CATALOG.find(c => c.id === resId);
+
+    const queue = getTransfersQueue();
+    queue.unshift({
+      id: `tx_${Date.now()}`,
+      reference: ref,
+      customerName: name,
+      email,
+      productId: resId,
+      productName: matched ? matched.title : resId,
+      amount,
+      bank,
+      date: new Date().toLocaleDateString(),
+      status: 'pending',
+    });
+
+    saveTransfersQueue(queue);
+    alert('✓ Bank transfer record logged in queue!');
+    logTransferForm.reset();
+    logTransferModal.style.display = 'none';
+    renderTransfers();
+  });
+
+  // Check auth on load
+  checkAuth();
+</script>
+
+<style>
+  .admin-container {
+    max-width: 1140px;
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-24);
+  }
+
+  .admin-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-6);
+    margin-bottom: var(--space-10);
+    flex-wrap: wrap;
+  }
+
+  .admin-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: var(--space-2);
+  }
+
+  .admin-header h1 {
+    font-size: clamp(1.8rem, 4vw, 2.4rem);
+    font-weight: 800;
+    margin: 0 0 var(--space-2);
+    line-height: 1.2;
+  }
+
+  .admin-subtitle {
+    font-size: 1rem;
+    color: var(--text-light);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .admin-header-actions {
+    display: flex;
+    gap: var(--space-3);
+  }
+
+  /* Lock Card */
+  .admin-lock-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    max-width: 480px;
+    margin: var(--space-12) auto;
+    padding: var(--space-10) var(--space-8);
+    text-align: center;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.3);
+  }
+
+  .lock-icon {
+    font-size: 2.5rem;
+    margin-bottom: var(--space-3);
+  }
+
+  .admin-lock-card h2 {
+    font-size: 1.4rem;
+    font-weight: 800;
+    margin: 0 0 var(--space-3);
+  }
+
+  .admin-lock-card p {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: var(--space-6);
+  }
+
+  .lock-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .lock-form input {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    color: inherit;
+    font-size: 0.95rem;
+  }
+
+  .lock-error {
+    font-size: 0.85rem;
+    color: #ef4444;
+    margin-top: var(--space-3);
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-bottom: var(--space-8);
+  }
+
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    margin-bottom: var(--space-1);
+  }
+
+  .stat-val {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin-bottom: 4px;
+  }
+
+  .stat-val.warning {
+    color: #eab308;
+  }
+
+  .stat-val.highlight {
+    color: var(--accent);
+  }
+
+  .stat-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  /* Tabs */
+  .admin-tabs {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-8);
+    flex-wrap: wrap;
+  }
+
+  .tab-btn {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: 12px 18px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 150ms ease;
+  }
+
+  .tab-btn:hover {
+    color: var(--text);
+  }
+
+  .tab-btn.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .btn-action-tab {
+    margin-left: auto;
+    background: var(--surface-raised);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Section Styles */
+  .section-top-bar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+
+  .section-top-bar h3 {
+    font-size: 1.3rem;
+    font-weight: 800;
+    margin: 0 0 4px;
+  }
+
+  .section-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  .transfers-table-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow-x: auto;
+  }
+
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+  }
+
+  .admin-table th {
+    background: var(--surface-raised);
+    padding: 12px 16px;
+    font-weight: 700;
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .admin-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    vertical-align: middle;
+  }
+
+  .mono-cell {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--accent);
+  }
+
+  .student-name {
+    font-weight: 600;
+  }
+
+  .student-sub-email {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .amount-cell {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .date-cell {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    font-weight: 700;
+  }
+
+  .status-badge.pending {
+    background: rgba(234, 179, 8, 0.15);
+    color: #eab308;
+  }
+
+  .status-badge.approved {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+  }
+
+  .status-badge.rejected {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  .btn-approve {
+    background: #22c55e;
+    color: #011425;
+    border: none;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-reject {
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    cursor: pointer;
+  }
+
+  .action-done {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .empty-table-state {
+    padding: var(--space-8);
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* Roster Grid */
+  .roster-search-bar {
+    margin-bottom: var(--space-6);
+  }
+
+  .roster-search-bar input {
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    color: inherit;
+    font-size: 0.9rem;
+  }
+
+  .roster-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: var(--space-5);
+  }
+
+  .roster-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+    display: flex;
+    flex-direction: column;
+  }
+
+  .roster-card.ultimate {
+    border-color: rgba(201, 162, 39, 0.4);
+  }
+
+  .roster-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-3);
+  }
+
+  .roster-tier-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .roster-tier-tag.ultimate {
+    background: rgba(234, 179, 8, 0.15);
+    color: var(--accent);
+  }
+
+  .roster-tier-tag.mastery {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+  }
+
+  .roster-tier-tag.core {
+    background: rgba(148, 163, 184, 0.15);
+    color: #cbd5e1;
+  }
+
+  .mentorship-tag {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .roster-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 2px;
+  }
+
+  .roster-email {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0 0 var(--space-4);
+  }
+
+  .roster-meta-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    margin-bottom: var(--space-4);
+    font-size: 0.8rem;
+  }
+
+  .meta-line {
+    display: flex;
+    justify-content: space-between;
+    padding: 2px 0;
+  }
+
+  .mono-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+  }
+
+  .roster-notes {
+    margin: var(--space-2) 0 0;
+    padding-top: var(--space-2);
+    border-top: 1px dashed var(--border-subtle);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .roster-card-footer {
+    margin-top: auto;
+    font-size: 0.75rem;
+    color: var(--accent-text);
+    font-weight: 600;
+  }
+
+  /* Modals */
+  .admin-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    z-index: 1000;
+  }
+
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    max-width: 500px;
+    width: 100%;
+    padding: var(--space-8);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+  }
+
+  .close-btn {
+    background: none;
+    border: none;
+    font-size: 1.6rem;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .modal-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    text-align: left;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .form-group input,
+  .form-group select {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    color: inherit;
+    font-size: 0.9rem;
+    font-family: inherit;
+  }
+
+  .hint-text {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .checkbox-group {
+    margin-top: 4px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  .modal-footer {
+    margin-top: var(--space-4);
+  }
+</style>

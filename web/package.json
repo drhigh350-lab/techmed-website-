@@ -8,12 +8,14 @@
     "build": "astro build && (cp -r dist ../dist 2>/dev/null || true)",
     "preview": "astro preview --host 0.0.0.0 --port 3000",
     "astro": "astro",
-    "seed": "node scripts/seed.mjs"
+    "seed": "node scripts/seed.mjs",
+    "test": "node scripts/test-phase4-security.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
     "@portabletext/to-html": "^5.0.3",
     "@sanity/client": "^7.26.2",
+    "@supabase/supabase-js": "^2.118.0",
     "astro": "^5.1.0"
   },
   "devDependencies": {

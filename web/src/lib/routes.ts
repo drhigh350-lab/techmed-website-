@@ -17,6 +17,7 @@ export const NAV_ROUTES: SiteRoute[] = [
   { label: 'Pricing', path: '/pricing', description: 'UTME 2027 Masterclass packages, schedule, and pricing comparison.' },
   { label: 'Builder Cohort', path: '/utme-2027/builders', description: 'The UTME 2027 Builder identity, the Builders Channel, and the current free tutorial experience.' },
   { label: 'Resources', path: '/resources', description: 'Boosters, revision materials and structured resources.' },
+  { label: 'Library', path: '/library', description: 'Your active preparation materials, booster systems and study manuals.' },
   { label: 'Tools', path: '/tools', description: 'KAIRO, the Study Planner, CBT Practice and other tools.' },
   { label: 'Podcast', path: '/podcast', description: '5 Minutes Forward — a daily habit of intentional growth.' },
   { label: 'Blog', path: '/blog', description: 'Writing on strategy, preparation and the Builder journey.' },

@@ -1,0 +1,1415 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import SectionHeading from '../../components/SectionHeading.astro';
+import { FALLBACK_RESOURCES } from '../../lib/resources';
+
+const pageUrl = new URL('/library', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebPage',
+    name: 'Student Library — TECHMED',
+    url: pageUrl,
+    description: 'Personal digital learning library and protected bookshelf for TECHMED students and UTME 2027 candidates.',
+  },
+];
+
+// Serialize verified catalog items for quick client-side hydration of book metadata
+const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
+  id: r.id,
+  slug: r.slug,
+  title: r.title,
+  description: r.description,
+  subject: r.subject || r.category,
+  deliveryFormat: r.deliveryFormat || 'PDF eBook',
+  status: r.status,
+  price: r.price,
+  accessUrl: r.accessUrl,
+  externalUrl: r.externalUrl,
+  inclusions: r.inclusions,
+})));
+---
+
+<BaseLayout
+  title="Student Library — Digital Learning Bookshelf | TECHMED"
+  description="Access your purchased booster systems, UTME 2027 Mastery manuals, formula banks, and free admission intelligence guides."
+  jsonLd={jsonLd}
+>
+  <div class="library-container">
+    <!-- Unauthenticated State: Auth & Introduction Card -->
+    <section id="authSection" class="auth-wrapper" style="display: none;">
+      <div class="auth-header">
+        <p class="eyebrow">TECHMED STUDENT LIBRARY</p>
+        <h1>Your personal learning bookshelf.</h1>
+        <p class="subtitle">
+          Sign in to access your booster systems, formula workbooks, and UTME 2027 cohort materials.
+          Purchased once, accessible whenever you study.
+        </p>
+      </div>
+
+      <div class="auth-card">
+        <!-- Auth Navigation Tabs -->
+        <div class="auth-tabs" role="tablist">
+          <button type="button" class="tab-btn active" id="tabSignIn" role="tab" aria-selected="true">
+            Sign In
+          </button>
+          <button type="button" class="tab-btn" id="tabSignUp" role="tab" aria-selected="false">
+            Create Account
+          </button>
+          <button type="button" class="tab-btn" id="tabRecovery" role="tab" aria-selected="false">
+            Recover Access
+          </button>
+        </div>
+
+        <!-- Alert / Feedback Notification -->
+        <div id="authAlert" class="auth-alert" style="display: none;" role="alert"></div>
+
+        <!-- Form 1: Sign In -->
+        <form id="signInForm" class="auth-form">
+          <div class="form-group">
+            <label for="signInEmail">Email address</label>
+            <input
+              type="email"
+              id="signInEmail"
+              required
+              placeholder="e.g. candidate@gmail.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="signInPassword">Password</label>
+              <button type="button" class="link-btn" id="forgotPassLink">Forgot password?</button>
+            </div>
+            <input
+              type="password"
+              id="signInPassword"
+              required
+              placeholder="Enter your password"
+              autocomplete="current-password"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit-btn" id="signInSubmitBtn">
+            <span>Sign In to Library</span>
+          </button>
+        </form>
+
+        <!-- Form 2: Sign Up (Register) -->
+        <form id="signUpForm" class="auth-form" style="display: none;">
+          <div class="form-group">
+            <label for="signUpFullName">Full name</label>
+            <input
+              type="text"
+              id="signUpFullName"
+              required
+              placeholder="e.g. Chinedu Okafor"
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="signUpEmail">Email address</label>
+            <input
+              type="email"
+              id="signUpEmail"
+              required
+              placeholder="e.g. candidate@gmail.com"
+              autocomplete="email"
+            />
+            <span class="field-hint">Use the same email you used (or will use) for Paystack or class enrolment.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="signUpPassword">Choose password</label>
+            <input
+              type="password"
+              id="signUpPassword"
+              required
+              minlength="6"
+              placeholder="Minimum 6 characters"
+              autocomplete="new-password"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit-btn" id="signUpSubmitBtn">
+            <span>Create Student Account</span>
+          </button>
+        </form>
+
+        <!-- Form 3: Password Recovery -->
+        <form id="recoveryForm" class="auth-form" style="display: none;">
+          <p class="recovery-note">
+            Enter your email and we will send a secure link to reset your password and restore access to your bookshelf.
+          </p>
+
+          <div class="form-group">
+            <label for="recoveryEmail">Email address</label>
+            <input
+              type="email"
+              id="recoveryEmail"
+              required
+              placeholder="e.g. candidate@gmail.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit-btn" id="recoverySubmitBtn">
+            <span>Send Password Reset Link</span>
+          </button>
+
+          <button type="button" class="btn-secondary auth-back-btn" id="backToSignInBtn">
+            Back to Sign In
+          </button>
+        </form>
+
+        <!-- Guest / Quick Access Note -->
+        <div class="auth-footer-note">
+          <p>
+            Looking for free materials? Free resources like the <a href="/techmed-admission-intelligence-guide-2026.pdf" target="_blank">Admission Intelligence Guide</a> and <a href="/tools">Kairo</a> are open to everyone without an account.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Authenticated State: Student Bookshelf View -->
+    <section id="librarySection" class="library-view" style="display: none;">
+      <!-- Student Dashboard Header -->
+      <header class="student-header">
+        <div class="student-profile">
+          <div class="avatar-mark" id="userAvatarMark">T</div>
+          <div class="profile-text">
+            <h1 id="userDisplayName">Welcome to your Library</h1>
+            <p class="user-email-line">
+              <span id="userDisplayEmail">student@techmed.ng</span>
+              <span class="sep">·</span>
+              <span class="account-tag">Student Account</span>
+            </p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <a href="/library/admin" class="btn-secondary header-btn admin-link" title="Admin Operations Desk">
+            <span>⚙ Operations Desk</span>
+          </a>
+          <a href="/resources" class="btn-secondary header-btn">
+            <span>+ Explore More Resources</span>
+          </a>
+          <button type="button" class="btn-signout" id="signOutBtn" title="Sign out of TECHMED">
+            Sign Out
+          </button>
+        </div>
+      </header>
+
+      <!-- System Notice (if remote migration pending) -->
+      <div id="migrationNotice" class="migration-banner" style="display: none;">
+        <div class="notice-icon">ℹ</div>
+        <div class="notice-text">
+          <strong>Database Notice:</strong>
+          <span>The Supabase entitlements table is awaiting administrator migration on this project. If you have an active payment reference, click "Link Payment Reference" below or contact TECHMED on WhatsApp for instant confirmation.</span>
+        </div>
+      </div>
+
+      <!-- Bookshelf Segment Controls -->
+      <div class="bookshelf-toolbar">
+        <div class="segment-tabs" role="tablist">
+          <button type="button" class="segment-btn active" data-filter="all" role="tab" aria-selected="true">
+            All Materials (<span id="countAll">0</span>)
+          </button>
+          <button type="button" class="segment-btn" data-filter="permanent" role="tab" aria-selected="false">
+            Permanent Purchases (<span id="countPermanent">0</span>)
+          </button>
+          <button type="button" class="segment-btn" data-filter="plan" role="tab" aria-selected="false">
+            Plan Inclusions (<span id="countPlan">0</span>)
+          </button>
+          <button type="button" class="segment-btn" data-filter="free" role="tab" aria-selected="false">
+            Free Guides &amp; Tools (<span id="countFree">3</span>)
+          </button>
+        </div>
+
+        <button type="button" id="linkOrderToggleBtn" class="link-order-btn">
+          Link Payment Reference
+        </button>
+      </div>
+
+      <!-- Manual Order Reference Claim Form (Hidden by default) -->
+      <div id="linkOrderCard" class="claim-card" style="display: none;">
+        <div class="claim-inner">
+          <div class="claim-text">
+            <h3>Link a Recent Payment</h3>
+            <p>If you completed payment via Paystack or Bank Transfer and your resource is not appearing yet, enter your transaction reference below to verify and unlock access immediately.</p>
+          </div>
+          <form id="claimOrderForm" class="claim-form">
+            <input
+              type="text"
+              id="claimRefInput"
+              placeholder="e.g. TM-1740000000-XYZ or Paystack Ref"
+              required
+            />
+            <button type="submit" class="btn-primary" id="claimSubmitBtn">
+              Verify Reference
+            </button>
+          </form>
+          <div id="claimFeedback" class="claim-feedback" style="display: none;"></div>
+        </div>
+      </div>
+
+      <!-- Bookshelf Grid Container -->
+      <div id="bookshelfGrid" class="bookshelf-grid">
+        <!-- Rendered dynamically by script -->
+      </div>
+
+      <!-- Empty Bookshelf State -->
+      <div id="emptyBookshelf" class="empty-bookshelf" style="display: none;">
+        <div class="empty-book-icon">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <h2>No purchased resources found yet</h2>
+        <p>
+          You don't have any paid booster systems or cohort plan inclusions linked to this account yet.
+          Explore the resource catalogue to get started, or enrol in TECHMED Mastery for full package access.
+        </p>
+        <div class="empty-actions">
+          <a href="/resources" class="btn-primary">Browse Catalogue</a>
+          <a href="/pricing" class="btn-secondary">View UTME 2027 Mastery Plans</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Loading Skeleton View -->
+    <div id="loadingSection" class="loading-wrap">
+      <div class="spinner"></div>
+      <p id="loadingMessage">Connecting to TECHMED Library...</p>
+      <div id="loadingFallbackActions" style="display: none; margin-top: 16px;">
+        <button type="button" id="btnForceAuthView" class="btn-primary" style="padding: 8px 16px; font-size: 0.9rem;">
+          Continue to Student Sign In &rarr;
+        </button>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script id="catalogDataScript" type="application/json" set:html={catalogJson}></script>
+
+<script>
+  // Safe catalog data extraction from embedded JSON
+  const catalogEl = document.getElementById('catalogDataScript');
+  const CATALOG = catalogEl ? JSON.parse(catalogEl.textContent || '[]') : [];
+
+  // Import browser Supabase client (bundled by Vite as ES Module)
+  import { getSupabase, fetchUserEntitlements, verifyAndClaimOrderReference } from '/src/lib/supabase.ts';
+  import { getEnrolledStudent } from '/src/lib/roster.ts';
+
+  const supabase = getSupabase();
+
+  // DOM Elements
+  const loadingSection = document.getElementById('loadingSection');
+  const authSection = document.getElementById('authSection');
+  const librarySection = document.getElementById('librarySection');
+  const authAlert = document.getElementById('authAlert');
+
+  // Tabs & Forms
+  const tabSignIn = document.getElementById('tabSignIn');
+  const tabSignUp = document.getElementById('tabSignUp');
+  const tabRecovery = document.getElementById('tabRecovery');
+  const signInForm = document.getElementById('signInForm');
+  const signUpForm = document.getElementById('signUpForm');
+  const recoveryForm = document.getElementById('recoveryForm');
+  const forgotPassLink = document.getElementById('forgotPassLink');
+  const backToSignInBtn = document.getElementById('backToSignInBtn');
+
+  // Library Views
+  const userDisplayName = document.getElementById('userDisplayName');
+  const userDisplayEmail = document.getElementById('userDisplayEmail');
+  const userAvatarMark = document.getElementById('userAvatarMark');
+  const signOutBtn = document.getElementById('signOutBtn');
+  const migrationNotice = document.getElementById('migrationNotice');
+  const bookshelfGrid = document.getElementById('bookshelfGrid');
+  const emptyBookshelf = document.getElementById('emptyBookshelf');
+
+  // Counters
+  const countAll = document.getElementById('countAll');
+  const countPermanent = document.getElementById('countPermanent');
+  const countPlan = document.getElementById('countPlan');
+  const countFree = document.getElementById('countFree');
+
+  // Link Order Reference elements
+  const linkOrderToggleBtn = document.getElementById('linkOrderToggleBtn');
+  const linkOrderCard = document.getElementById('linkOrderCard');
+  const claimOrderForm = document.getElementById('claimOrderForm');
+  const claimRefInput = document.getElementById('claimRefInput');
+  const claimFeedback = document.getElementById('claimFeedback');
+
+  let currentUser = null;
+  let currentEntitlements = [];
+  let activeFilter = 'all';
+
+  function showAlert(msg, type = 'error') {
+    if (!authAlert) return;
+    authAlert.textContent = msg;
+    authAlert.className = `auth-alert ${type}`;
+    authAlert.style.display = 'block';
+  }
+
+  function hideAlert() {
+    if (!authAlert) return;
+    authAlert.style.display = 'none';
+  }
+
+  function setAuthTab(tab) {
+    hideAlert();
+    [tabSignIn, tabSignUp, tabRecovery].forEach(btn => {
+      btn?.classList.remove('active');
+      btn?.setAttribute('aria-selected', 'false');
+    });
+
+    signInForm.style.display = 'none';
+    signUpForm.style.display = 'none';
+    recoveryForm.style.display = 'none';
+
+    if (tab === 'signIn') {
+      tabSignIn?.classList.add('active');
+      tabSignIn?.setAttribute('aria-selected', 'true');
+      signInForm.style.display = 'flex';
+    } else if (tab === 'signUp') {
+      tabSignUp?.classList.add('active');
+      tabSignUp?.setAttribute('aria-selected', 'true');
+      signUpForm.style.display = 'flex';
+    } else if (tab === 'recovery') {
+      tabRecovery?.classList.add('active');
+      tabRecovery?.setAttribute('aria-selected', 'true');
+      recoveryForm.style.display = 'flex';
+    }
+  }
+
+  tabSignIn?.addEventListener('click', () => setAuthTab('signIn'));
+  tabSignUp?.addEventListener('click', () => setAuthTab('signUp'));
+  tabRecovery?.addEventListener('click', () => setAuthTab('recovery'));
+  forgotPassLink?.addEventListener('click', () => setAuthTab('recovery'));
+  backToSignInBtn?.addEventListener('click', () => setAuthTab('signIn'));
+
+  // Sign In Handler
+  signInForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const email = (document.getElementById('signInEmail')).value.trim();
+    const password = (document.getElementById('signInPassword')).value;
+    const submitBtn = document.getElementById('signInSubmitBtn');
+
+    if (!email || !password) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign In to Library';
+
+    if (error) {
+      showAlert(error.message || 'Invalid email or password. Please try again.');
+    } else if (data?.user) {
+      currentUser = data.user;
+      showLibraryView(currentUser);
+    }
+  });
+
+  // Sign Up Handler
+  signUpForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const fullName = (document.getElementById('signUpFullName')).value.trim();
+    const email = (document.getElementById('signUpEmail')).value.trim();
+    const password = (document.getElementById('signUpPassword')).value;
+    const submitBtn = document.getElementById('signUpSubmitBtn');
+
+    if (!email || !password) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          role: 'student',
+        },
+      },
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Student Account';
+
+    if (error) {
+      showAlert(error.message || 'Could not register account. Please try again.');
+    } else {
+      if (data?.session) {
+        currentUser = data.user;
+        showLibraryView(currentUser);
+      } else {
+        showAlert('Account created! Please check your email inbox to confirm your address, then sign in.', 'success');
+        setAuthTab('signIn');
+      }
+    }
+  });
+
+  // Password Recovery Handler
+  recoveryForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const email = (document.getElementById('recoveryEmail')).value.trim();
+    const submitBtn = document.getElementById('recoverySubmitBtn');
+
+    if (!email) return;
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending email...';
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/library',
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Password Reset Link';
+
+    if (error) {
+      showAlert(error.message || 'Unable to request password reset.');
+    } else {
+      showAlert('Password reset instructions have been sent to your email address.', 'success');
+    }
+  });
+
+  // Sign Out Handler
+  signOutBtn?.addEventListener('click', async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {
+      console.warn('Sign out error:', e);
+    }
+
+    // Isolate user sessions: purge user-specific offline data and caches from shared browser
+    try {
+      localStorage.removeItem('techmed_claimed_entitlements');
+      localStorage.removeItem('techmed_dynamic_roster');
+      sessionStorage.clear();
+
+      if ('caches' in window) {
+        caches.delete('techmed-reader-v2');
+        caches.delete('techmed-reader-v3');
+      }
+
+      if (navigator.serviceWorker?.controller) {
+        navigator.serviceWorker.controller.postMessage({ action: 'clear-user-cache' });
+      }
+    } catch (cacheErr) {
+      console.warn('Cache clearing notice:', cacheErr);
+    }
+
+    currentUser = null;
+    currentEntitlements = [];
+    showAuthView();
+  });
+
+  // Show Auth View
+  function showAuthView() {
+    loadingSection.style.display = 'none';
+    librarySection.style.display = 'none';
+    authSection.style.display = 'block';
+  }
+
+  // Show Library View
+  async function showLibraryView(user) {
+    loadingSection.style.display = 'none';
+    authSection.style.display = 'none';
+    librarySection.style.display = 'block';
+
+    const displayName = user.user_metadata?.full_name || user.email.split('@')[0];
+    userDisplayName.textContent = `Welcome back, ${displayName}`;
+    userDisplayEmail.textContent = user.email;
+    userAvatarMark.textContent = displayName.charAt(0).toUpperCase();
+
+    // Check cohort plan enrolment
+    const enrolled = getEnrolledStudent(user.email);
+    const accountTag = document.querySelector('.account-tag');
+    if (accountTag) {
+      if (enrolled) {
+        if (enrolled.tier === 'ultimate') {
+          accountTag.textContent = enrolled.hasFounderMentorship
+            ? 'TECHMED Ultimate · Mentorship Confirmed'
+            : 'TECHMED Ultimate Student';
+          accountTag.className = 'account-tag ultimate';
+        } else if (enrolled.tier === 'mastery') {
+          accountTag.textContent = 'TECHMED Mastery · All Boosters Included';
+          accountTag.className = 'account-tag mastery';
+        } else if (enrolled.tier === 'core') {
+          accountTag.textContent = 'TECHMED Core · 20% Standalone Discount';
+          accountTag.className = 'account-tag core';
+        }
+      } else {
+        accountTag.textContent = 'Student Account';
+      }
+    }
+
+    // Fetch user entitlements
+    loadingSection.style.display = 'none';
+    const { entitlements, migrationApplied, error } = await fetchUserEntitlements(user.id, user.email);
+
+    if (!migrationApplied) {
+      migrationNotice.style.display = 'flex';
+    } else {
+      migrationNotice.style.display = 'none';
+    }
+
+    currentEntitlements = entitlements || [];
+    renderBookshelf();
+  }
+
+  // Render Bookshelf Cards
+  function renderBookshelf() {
+    bookshelfGrid.innerHTML = '';
+
+    // Always provide the 3 core free study tools to every authenticated student:
+    const freeItems = CATALOG.filter(r => r.status === 'free').map(r => {
+      const isQuizOrTool = r.deliveryFormat === 'Quiz Platform' || r.deliveryFormat === 'Platform Tool';
+      return {
+        resourceId: r.id,
+        title: r.title,
+        subject: r.subject,
+        deliveryFormat: r.deliveryFormat,
+        grantType: 'free',
+        grantLabel: 'Free Learning Asset',
+        expiresLabel: 'Permanent Access',
+        actionUrl: isQuizOrTool ? (r.accessUrl || r.externalUrl || `/resources/${r.slug}`) : `/library/read/${r.id}`,
+        actionLabel: isQuizOrTool ? 'Open Tool' : 'Read Online',
+        description: r.description,
+      };
+    });
+
+    // Map verified entitlements to catalogue metadata
+    const paidItems = currentEntitlements.map(ent => {
+      const match = CATALOG.find(c => c.id === ent.resourceId || c.slug === ent.resourceId);
+      const isPlan = ent.grantSource === 'plan_inclusion';
+      const isPermanent = ent.grantSource === 'purchase' || ent.grantSource === 'bundle_inclusion' || !ent.expiresAt;
+
+      const grantLabel = isPlan ? 'UTME 2027 Mastery Inclusion' : 'Permanent Standalone Purchase';
+      const expiresLabel = isPermanent
+        ? 'Permanent Lifetime Access'
+        : (ent.expiresAt ? `Valid through ${new Date(ent.expiresAt).toLocaleDateString()}` : 'Valid through UTME 2027');
+
+      const isTool = match?.deliveryFormat === 'Platform Tool' || match?.deliveryFormat === 'Quiz Platform';
+      const actionUrl = isTool
+        ? (match?.accessUrl || match?.externalUrl || `/resources/${match?.slug || ent.resourceId}`)
+        : `/library/read/${match ? match.id : ent.resourceId}`;
+
+      return {
+        resourceId: ent.resourceId,
+        title: match ? match.title : ent.resourceId,
+        subject: match ? match.subject : 'Academic',
+        deliveryFormat: match ? match.deliveryFormat : 'PDF eBook',
+        grantType: isPermanent ? 'permanent' : 'plan',
+        grantLabel,
+        expiresLabel,
+        actionUrl,
+        actionLabel: isTool ? 'Launch Tool' : 'Read Online',
+        description: match ? match.description : 'Authoritative TECHMED preparation resource.',
+      };
+    });
+
+    const allItems = [...paidItems, ...freeItems];
+
+    // Update counts
+    countAll.textContent = String(allItems.length);
+    countPermanent.textContent = String(paidItems.filter(i => i.grantType === 'permanent').length);
+    countPlan.textContent = String(paidItems.filter(i => i.grantType === 'plan').length);
+    countFree.textContent = String(freeItems.length);
+
+    // Apply Filter
+    let filtered = allItems;
+    if (activeFilter === 'permanent') {
+      filtered = paidItems.filter(i => i.grantType === 'permanent');
+    } else if (activeFilter === 'plan') {
+      filtered = paidItems.filter(i => i.grantType === 'plan');
+    } else if (activeFilter === 'free') {
+      filtered = freeItems;
+    }
+
+    if (filtered.length === 0) {
+      bookshelfGrid.style.display = 'none';
+      emptyBookshelf.style.display = 'block';
+    } else {
+      bookshelfGrid.style.display = 'grid';
+      emptyBookshelf.style.display = 'none';
+
+      filtered.forEach(item => {
+        const card = document.createElement('div');
+        card.className = `book-card ${item.grantType}`;
+
+        const isFree = item.grantType === 'free';
+        const typeBadge = item.grantType === 'permanent'
+          ? 'Permanent Purchase'
+          : item.grantType === 'plan'
+            ? 'Cohort Inclusion'
+            : 'Free Tool';
+
+        card.innerHTML = `
+          <div class="book-card-top">
+            <div class="book-meta-row">
+              <span class="book-subject">${item.subject}</span>
+              <span class="sep">·</span>
+              <span class="book-format">${item.deliveryFormat}</span>
+            </div>
+            <h3 class="book-title">${item.title}</h3>
+            <p class="book-desc">${item.description}</p>
+          </div>
+          <div class="book-entitlement-badge ${item.grantType}">
+            <div class="badge-source">${item.grantLabel}</div>
+            <div class="badge-expiry">${item.expiresLabel}</div>
+          </div>
+          <div class="book-card-footer">
+            <a href="${item.actionUrl}" class="btn-primary read-btn" ${item.actionUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
+              ${item.actionLabel} &rarr;
+            </a>
+          </div>
+        `;
+
+        bookshelfGrid.appendChild(card);
+      });
+    }
+  }
+
+  // Segment Toolbar Filter Clicks
+  document.querySelectorAll('.segment-tabs .segment-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.segment-tabs .segment-btn').forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+      activeFilter = btn.getAttribute('data-filter') || 'all';
+      renderBookshelf();
+    });
+  });
+
+  // Toggle Order Claim Card
+  linkOrderToggleBtn?.addEventListener('click', () => {
+    const isHidden = linkOrderCard.style.display === 'none';
+    linkOrderCard.style.display = isHidden ? 'block' : 'none';
+    linkOrderToggleBtn.textContent = isHidden ? 'Close Reference Box' : 'Link Payment Reference';
+  });
+
+  // Claim Order Handler (with strict customer ownership checks)
+  claimOrderForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const ref = claimRefInput.value.trim();
+    if (!ref) return;
+
+    claimFeedback.style.display = 'block';
+    claimFeedback.className = 'claim-feedback info';
+    claimFeedback.textContent = 'Verifying reference with server...';
+
+    try {
+      const res = await verifyAndClaimOrderReference(ref, currentUser);
+
+      if (res.success) {
+        claimFeedback.className = 'claim-feedback success';
+        claimFeedback.textContent = res.message;
+        setTimeout(() => {
+          showLibraryView(currentUser);
+        }, 1200);
+      } else {
+        claimFeedback.className = 'claim-feedback error';
+        claimFeedback.textContent = res.message;
+      }
+    } catch (err: any) {
+      claimFeedback.className = 'claim-feedback error';
+      claimFeedback.textContent = err?.message || 'Unable to connect to verification service. Please try again.';
+    }
+  });
+
+  const btnForceAuthView = document.getElementById('btnForceAuthView');
+  const loadingFallbackActions = document.getElementById('loadingFallbackActions');
+  btnForceAuthView?.addEventListener('click', showAuthView);
+
+  // Initial Auth Check with Bounded Timeout to Prevent Infinite Loading Loop
+  (async function checkInitialSession() {
+    let completed = false;
+
+    // Safety timeout: If Supabase auth retrieval takes longer than 3.5s, reveal student sign-in
+    const timeoutTimer = setTimeout(() => {
+      if (!completed) {
+        console.warn('Session verification timed out; displaying student sign-in.');
+        if (loadingFallbackActions) loadingFallbackActions.style.display = 'block';
+        showAuthView();
+      }
+    }, 3500);
+
+    try {
+      const { data, error } = await supabase.auth.getSession();
+      completed = true;
+      clearTimeout(timeoutTimer);
+
+      if (error) {
+        console.warn('Supabase auth session error:', error.message);
+        showAuthView();
+        return;
+      }
+
+      if (data?.session?.user) {
+        currentUser = data.session.user;
+        await showLibraryView(currentUser);
+      } else {
+        showAuthView();
+      }
+    } catch (e) {
+      completed = true;
+      clearTimeout(timeoutTimer);
+      console.warn('Exception checking session:', e);
+      showAuthView();
+    }
+  })();
+</script>
+
+<style>
+  .library-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--space-12) var(--space-6) var(--space-24);
+    min-height: 75vh;
+  }
+
+  /* Loading State */
+  .loading-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
+    gap: var(--space-4);
+    color: var(--text-light);
+  }
+
+  .spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 800ms linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  /* Auth Wrapper & Card */
+  .auth-wrapper {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .auth-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent-text);
+    margin-bottom: var(--space-3);
+  }
+
+  h1 {
+    font-size: clamp(2rem, 4.5vw, 2.75rem);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.2;
+    margin-bottom: var(--space-4);
+  }
+
+  .subtitle {
+    font-size: 1.05rem;
+    line-height: 1.75;
+    color: var(--text-light);
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8) var(--space-8);
+    text-align: left;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-6);
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--space-3) var(--space-2);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 150ms ease;
+    text-align: center;
+  }
+
+  .tab-btn:hover {
+    color: var(--text);
+  }
+
+  .tab-btn.active {
+    color: var(--accent-text);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .auth-alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-5);
+  }
+
+  .auth-alert.error {
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+  }
+
+  .auth-alert.success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-group label {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--accent-text);
+    cursor: pointer;
+    padding: 0;
+  }
+
+  .link-btn:hover {
+    text-decoration: underline;
+  }
+
+  .form-group input {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    font-size: 0.95rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+  .field-hint {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .recovery-note {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin-bottom: var(--space-2);
+  }
+
+  .auth-submit-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px;
+    margin-top: var(--space-2);
+    font-size: 0.92rem;
+  }
+
+  .auth-back-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 11px;
+    font-size: 0.85rem;
+  }
+
+  .auth-footer-note {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: var(--text-muted);
+    text-align: center;
+  }
+
+  .auth-footer-note a {
+    color: var(--accent-text);
+    text-decoration: none;
+  }
+
+  .auth-footer-note a:hover {
+    text-decoration: underline;
+  }
+
+  /* Authenticated Dashboard Header */
+  .student-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-6);
+    flex-wrap: wrap;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6) var(--space-8);
+    margin-bottom: var(--space-8);
+  }
+
+  .student-profile {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .avatar-mark {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    font-family: var(--font-display);
+    font-weight: 900;
+    font-size: 1.3rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .profile-text h1 {
+    font-size: 1.35rem;
+    margin-bottom: 2px;
+  }
+
+  .user-email-line {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .user-email-line .sep {
+    color: var(--border);
+  }
+
+  .account-tag {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .header-btn {
+    font-size: 0.82rem;
+    padding: 8px 16px;
+  }
+
+  .btn-signout {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .btn-signout:hover {
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.4);
+  }
+
+  /* Migration Notice Banner */
+  .migration-banner {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    background: rgba(201, 162, 39, 0.08);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-6);
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-light);
+  }
+
+  .notice-icon {
+    font-weight: 900;
+    color: var(--accent-text);
+  }
+
+  /* Bookshelf Toolbar */
+  .bookshelf-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-8);
+  }
+
+  .segment-tabs {
+    display: flex;
+    gap: var(--space-2);
+    flex-wrap: wrap;
+  }
+
+  .segment-btn {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 0.82rem;
+    color: var(--text-light);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .segment-btn:hover {
+    color: var(--text);
+    border-color: var(--accent);
+  }
+
+  .segment-btn.active {
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-color: transparent;
+    font-weight: 700;
+  }
+
+  .link-order-btn {
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--accent-text);
+    background: transparent;
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .link-order-btn:hover {
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  /* Claim Order Card */
+  .claim-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-6);
+    margin-bottom: var(--space-8);
+  }
+
+  .claim-text h3 {
+    font-size: 1.05rem;
+    margin-bottom: var(--space-1);
+  }
+
+  .claim-text p {
+    font-size: 0.86rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: var(--space-4);
+  }
+
+  .claim-form {
+    display: flex;
+    gap: var(--space-3);
+    max-width: 580px;
+  }
+
+  .claim-form input {
+    flex: 1;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    color: var(--text);
+    outline: none;
+  }
+
+  .claim-feedback {
+    margin-top: var(--space-3);
+    font-size: 0.84rem;
+    line-height: 1.5;
+  }
+
+  .claim-feedback.error { color: #fca5a5; }
+  .claim-feedback.success { color: #86efac; }
+  .claim-feedback.warning { color: #fde047; }
+  .claim-feedback.info { color: var(--accent-text); }
+
+  /* Bookshelf Grid */
+  .bookshelf-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+  }
+
+  .book-card {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    transition: transform 150ms ease, border-color 150ms ease;
+  }
+
+  .book-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+  }
+
+  .book-card.permanent {
+    border-top: 3px solid var(--accent);
+  }
+
+  .book-card.plan {
+    border-top: 3px solid #38bdf8;
+  }
+
+  .book-card.free {
+    border-top: 3px solid #4ade80;
+  }
+
+  .book-meta-row {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: var(--space-2);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .book-meta-row .sep { color: var(--border); }
+
+  .book-title {
+    font-size: 1.1rem;
+    line-height: 1.35;
+    margin-bottom: var(--space-2);
+  }
+
+  .book-desc {
+    font-size: 0.86rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin-bottom: var(--space-5);
+  }
+
+  .book-entitlement-badge {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-2) var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .badge-source {
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .badge-expiry {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .book-card-footer {
+    padding-top: var(--space-4);
+    border-top: 1px solid var(--border);
+  }
+
+  .read-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 0.84rem;
+    padding: 10px;
+  }
+
+  /* Empty Bookshelf */
+  .empty-bookshelf {
+    text-align: center;
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-16) var(--space-6);
+    max-width: 680px;
+    margin: var(--space-6) auto;
+  }
+
+  .empty-book-icon {
+    width: 72px;
+    height: 72px;
+    margin: 0 auto var(--space-4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--surface-raised);
+    color: var(--text-muted);
+  }
+
+  .empty-bookshelf h2 {
+    font-size: 1.35rem;
+    margin-bottom: var(--space-2);
+  }
+
+  .empty-bookshelf p {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    line-height: 1.7;
+    margin-bottom: var(--space-6);
+  }
+
+  .empty-actions {
+    display: flex;
+    justify-content: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  @media (max-width: 960px) {
+    .bookshelf-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .bookshelf-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .student-header {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-4);
+    }
+
+    .header-actions {
+      width: 100%;
+      justify-content: space-between;
+    }
+
+    .bookshelf-toolbar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .segment-tabs {
+      width: 100%;
+      overflow-x: auto;
+      flex-wrap: nowrap;
+      padding-bottom: 4px;
+    }
+
+    .segment-btn {
+      flex-shrink: 0;
+    }
+
+    .claim-form {
+      flex-direction: column;
+    }
+
+    .auth-card {
+      padding: var(--space-6) var(--space-4);
+    }
+  }
+</style>

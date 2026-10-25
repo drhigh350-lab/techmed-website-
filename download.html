@@ -167,14 +167,40 @@ async function checkOrder() {
   }
 
   try {
-    const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?reference=eq.${encodeURIComponent(reference)}&select=status,product_id,product_name`, {
-      headers: {
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-      },
-    });
-    const rows = await res.json();
-    const order = Array.isArray(rows) ? rows[0] : null;
+    let order = null;
+
+    // Priority 1: Query via secure RPC get_order_status (never exposes customer PII or raw orders table)
+    try {
+      const rpcRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_order_status`, {
+        method: 'POST',
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ p_reference: reference }),
+      });
+      if (rpcRes.ok) {
+        const rpcData = await rpcRes.json();
+        order = Array.isArray(rpcData) ? rpcData[0] : rpcData;
+      }
+    } catch (rpcErr) {
+      console.warn('RPC check unavailable, falling back:', rpcErr);
+    }
+
+    // Fallback: If RPC not yet installed in database, use filtered select
+    if (!order) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?reference=eq.${encodeURIComponent(reference)}&select=status,product_id,product_name`, {
+        headers: {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+      });
+      if (res.ok) {
+        const rows = await res.json();
+        order = Array.isArray(rows) ? rows[0] : null;
+      }
+    }
 
     if (!order) {
       setState('state-error', ICONS.error, 'We could not find that order',
@@ -185,16 +211,35 @@ async function checkOrder() {
     }
 
     if (order.status === 'paid') {
+      const isCohort = order.product_id && (order.product_id.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(order.product_id));
+      if (isCohort) {
+        setState('state-success', ICONS.success, 'Enrolment Confirmed!',
+          `Welcome to the TECHMED UTME 2027 Cohort! Your enrolment for "${order.product_name}" is active. You can now access the student library and bookshelf. Onboarding instructions have also been sent to your email.`,
+          `<div style="display:flex;flex-direction:column;gap:10px;">
+             <a href="/library" class="btn-primary" style="width:100%;justify-content:center;">Open Student Library</a>
+             <a href="${whatsappHref(reference)}" class="btn-secondary" target="_blank" style="width:100%;justify-content:center;text-decoration:none;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-weight:600;">Join WhatsApp Group / Admissions Desk</a>
+           </div>
+           <p class="ref-note">Reference: ${reference}</p>`);
+        return;
+      }
+
       const fileUrl = FILE_URLS[order.product_id];
       if (fileUrl) {
         setState('state-success', ICONS.success, 'Payment confirmed',
           `Your download for "${order.product_name}" is ready.`,
-          `<a href="${fileUrl}" download class="btn-primary" style="width:100%;justify-content:center;">Download Now</a>
+          `<div style="display:flex;flex-direction:column;gap:10px;">
+             <a href="${fileUrl}" download class="btn-primary" style="width:100%;justify-content:center;">Download Now</a>
+             <a href="/library" class="btn-secondary" style="width:100%;justify-content:center;text-decoration:none;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-weight:600;">Read in TECHMED Reader</a>
+           </div>
            <p class="ref-note">Reference: ${reference}</p>`);
       } else {
         setState('state-success', ICONS.success, 'Payment confirmed',
-          `Your payment for "${order.product_name}" went through. Your download link is on its way to your email.`,
-          `<p class="ref-note">Reference: ${reference}</p>`);
+          `Your payment for "${order.product_name}" went through. Access your study manual in the student library or check your email.`,
+          `<div style="display:flex;flex-direction:column;gap:10px;">
+             <a href="/library" class="btn-primary" style="width:100%;justify-content:center;">Open Student Library</a>
+             <a href="${whatsappHref(reference)}" class="btn-secondary" target="_blank" style="width:100%;justify-content:center;text-decoration:none;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-weight:600;">Contact Admissions on WhatsApp</a>
+           </div>
+           <p class="ref-note">Reference: ${reference}</p>`);
       }
       return;
     }

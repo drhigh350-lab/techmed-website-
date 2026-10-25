@@ -1,0 +1,1739 @@
+---
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import { FALLBACK_RESOURCES, type Resource } from '../../../lib/resources';
+import { MANUALS, getReaderManual, type ReaderManual, type ReaderChapter } from '../../../lib/readerContent';
+
+export async function getStaticPaths() {
+  const paths: { params: { id: string }; props: { resource: Resource; manual: ReaderManual | null } }[] = [];
+
+  for (const resource of FALLBACK_RESOURCES) {
+    const manual = getReaderManual(resource.id) || getReaderManual(resource.slug);
+    // Add by ID
+    paths.push({
+      params: { id: resource.id },
+      props: { resource, manual },
+    });
+    // Add by Slug if different from ID
+    if (resource.slug !== resource.id) {
+      paths.push({
+        params: { id: resource.slug },
+        props: { resource, manual },
+      });
+    }
+  }
+
+  return paths;
+}
+
+interface Props {
+  resource: Resource;
+  manual: ReaderManual | null;
+}
+
+const { resource, manual } = Astro.props;
+
+// Default fallback manual if not yet in MANUALS dictionary
+const activeManual: ReaderManual = manual || {
+  id: resource.id,
+  slug: resource.slug,
+  title: resource.title,
+  subtitle: resource.description,
+  subject: resource.subject || 'General',
+  edition: '2027 Candidate Edition',
+  author: 'TECHMED Academic Faculty',
+  totalChapters: 3,
+  estimatedTotalMinutes: 30,
+  targetExam: 'UTME 2027 & Post-UTME',
+  chapters: [
+    {
+      id: 'ch1-intro',
+      number: 1,
+      title: 'Chapter 1: Strategic Orientation & Syllabus Roadmap',
+      estimatedMinutes: 10,
+      isPreview: true,
+      sections: [
+        {
+          id: 'sec-overview',
+          heading: '1.1 Core Examination Architecture',
+          content: `${resource.description}\n\nThis authoritative TECHMED study manual is structured specifically around the tested patterns in Nigerian university entrance examinations. Every module prioritizes high-frequency calculation types, recall shortcuts, and the exact traps past candidates frequently fall into.`,
+          keyTakeaway: 'Focus on high-yield recurring syllabus areas rather than revising all topics with equal weighting.',
+        },
+        {
+          id: 'sec-whats-included',
+          heading: '1.2 What is Covered in This System',
+          content: (resource.whatsIncluded || [
+            'Systematic breakdown of high-frequency exam principles',
+            'Worked examples with step-by-step calculation proofs',
+            'Examiner trap analysis and how to avoid them under time pressure',
+          ]).map((item, idx) => `${idx + 1}. ${item}`).join('\n\n'),
+          keyTakeaway: 'Complete every worked example by hand before checking the provided solution.',
+        },
+      ],
+    },
+    {
+      id: 'ch2-deep-dive',
+      number: 2,
+      title: 'Chapter 2: Master Principles & Worked Solutions',
+      estimatedMinutes: 10,
+      isPreview: false,
+      sections: [
+        {
+          id: 'sec-worked-drill',
+          heading: '2.1 High-Frequency Calculation Patterns',
+          content: `To maximize your examination speed, memorize the primary formula transformations before entering the hall.\n\nPractice working through problems under a 45-second per question timer to simulate real CBT pacing.`,
+          keyTakeaway: 'Speed in CBT comes from immediate pattern recognition, not faster writing.',
+        },
+      ],
+    },
+    {
+      id: 'ch3-formula-bank',
+      number: 3,
+      title: 'Chapter 3: Examiner Traps & Quick-Recall Reference',
+      estimatedMinutes: 10,
+      isPreview: false,
+      sections: [
+        {
+          id: 'sec-traps',
+          heading: '3.1 Frequent Distractor Patterns Used by Examiners',
+          content: `Examiners intentionally design incorrect options to match common mathematical and conceptual errors.\n\nAlways double-check units, signs, and stoichiometry before locking your final selection on screen.`,
+          keyTakeaway: 'When two options look nearly identical with opposing signs or inverted ratios, one of them is usually the correct answer and the other is the deliberate trap.',
+        },
+      ],
+    },
+  ],
+};
+
+const pageUrl = new URL(`/library/read/${resource.id}`, Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'LearningResource',
+    name: activeManual.title,
+    description: activeManual.subtitle,
+    educationalLevel: 'Post-Secondary / UTME Preparation',
+    url: pageUrl,
+    inLanguage: 'en',
+    author: {
+      '@type': 'Organization',
+      name: 'TECHMED',
+    },
+  },
+];
+
+const manualJson = JSON.stringify(activeManual);
+const resourceJson = JSON.stringify({
+  id: resource.id,
+  slug: resource.slug,
+  title: resource.title,
+  price: resource.price || 0,
+  currency: resource.currency || 'NGN',
+  status: resource.status,
+  isAvailableStandalone: resource.isAvailableStandalone,
+  inclusions: resource.inclusions,
+});
+---
+
+<BaseLayout
+  title={`${activeManual.title} — Study Reader | TECHMED Library`}
+  description={activeManual.subtitle}
+  jsonLd={jsonLd}
+>
+  <!-- Global Reading Progress Bar -->
+  <div id="readProgressBar" class="read-progress-bar" aria-hidden="true"></div>
+
+  <!-- In-App Reader Shell -->
+  <div id="readerShell" class="reader-shell theme-dark">
+    <!-- Reader Topbar -->
+    <header class="reader-topbar">
+      <div class="topbar-left">
+        <a href="/library" class="back-link" title="Return to Bookshelf">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span class="back-text">Bookshelf</span>
+        </a>
+        <div class="book-identity">
+          <span class="book-subject-meta">{activeManual.subject} · {activeManual.targetExam}</span>
+          <h1 class="book-nav-title">{activeManual.title}</h1>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <!-- Outline Drawer Toggle -->
+        <button type="button" id="toggleOutlineBtn" class="topbar-btn" aria-label="Toggle Outline">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+          <span class="btn-label">Chapters</span>
+        </button>
+
+        <!-- Theme Controls (Dark, Light, Sepia) -->
+        <div class="theme-switch" role="group" aria-label="Reading theme">
+          <button type="button" class="theme-btn active" data-theme="dark" title="Midnight Slate">
+            Dark
+          </button>
+          <button type="button" class="theme-btn" data-theme="sepia" title="Warm Sepia Paper">
+            Sepia
+          </button>
+          <button type="button" class="theme-btn" data-theme="light" title="Clean White">
+            Light
+          </button>
+        </div>
+
+        <!-- Font Size Scale Controls -->
+        <div class="font-switch" role="group" aria-label="Font size">
+          <button type="button" id="fontDecBtn" class="font-btn" title="Decrease font size">A−</button>
+          <button type="button" id="fontIncBtn" class="font-btn" title="Increase font size">A+</button>
+        </div>
+
+        <!-- Offline Save Button -->
+        <button type="button" id="saveOfflineBtn" class="topbar-btn offline-save-btn" title="Save entire manual to device for offline study">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span id="saveOfflineText" class="btn-label">Save Offline</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Offline Notice Banner -->
+    <div id="offlineNotice" class="offline-notice-strip" style="display: none;" role="status">
+      <span class="offline-bolt">⚡</span>
+      <span><strong>Offline Study Mode:</strong> Active from device cache. All chapters and formula banks remain accessible without internet.</span>
+    </div>
+
+    <!-- Reader Main Content Frame -->
+    <div class="reader-viewport">
+      <!-- Chapter Drawer (Slide-out outline) -->
+      <aside id="chapterDrawer" class="chapter-drawer">
+        <div class="drawer-header">
+          <h3>Table of Contents</h3>
+          <button type="button" id="closeDrawerBtn" class="drawer-close-btn" aria-label="Close Outline">&times;</button>
+        </div>
+        <div class="drawer-meta">
+          <span>{activeManual.totalChapters} Chapters</span>
+          <span class="sep">·</span>
+          <span>~{activeManual.estimatedTotalMinutes} mins total</span>
+        </div>
+        <nav class="chapter-nav">
+          <ul id="chapterNavList" class="chapter-list">
+            <!-- Populated dynamically via JS -->
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Watermark Backdrop (Canvas overlay) -->
+      <canvas id="watermarkCanvas" class="watermark-canvas" aria-hidden="true"></canvas>
+
+      <!-- Reading Article Area -->
+      <main id="readerMain" class="reader-main">
+        <!-- Manual Cover Header -->
+        <header class="manual-cover-header">
+          <div class="cover-meta-row">
+            <span class="meta-tag">{activeManual.subject}</span>
+            <span class="sep">·</span>
+            <span>{activeManual.edition}</span>
+            <span class="sep">·</span>
+            <span>{activeManual.author}</span>
+          </div>
+          <h1 class="manual-title">{activeManual.title}</h1>
+          <p class="manual-subtitle">{activeManual.subtitle}</p>
+          <div class="access-status-indicator" id="accessStatusIndicator">
+            <span class="indicator-dot"></span>
+            <span id="accessStatusText">Verifying access license...</span>
+          </div>
+        </header>
+
+        <!-- Dynamic Chapter Reading Stage -->
+        <article id="readingStage" class="reading-stage">
+          <!-- Rendered dynamically by reader engine -->
+        </article>
+
+        <!-- Chapter Navigation Footer -->
+        <nav class="chapter-footer-nav" aria-label="Chapter Navigation">
+          <button type="button" id="prevChapterBtn" class="btn-secondary nav-chapter-btn" disabled>
+            &larr; Previous Chapter
+          </button>
+          <span id="chapterProgressText" class="chapter-progress-text">Chapter 1 of {activeManual.totalChapters}</span>
+          <button type="button" id="nextChapterBtn" class="btn-primary nav-chapter-btn">
+            Next Chapter &rarr;
+          </button>
+        </nav>
+
+        <!-- Gatekeeper Unlock Card (Shown when unentitled student reaches locked content) -->
+        <section id="gatekeeperCard" class="gatekeeper-card" style="display: none;">
+          <div class="gatekeeper-inner">
+            <div class="gatekeeper-icon" aria-hidden="true">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </div>
+            <h2>Unlock the Complete Study System</h2>
+            <p class="gatekeeper-desc">
+              You are currently reading the free sample preview. Unlock full permanent access to all {activeManual.totalChapters} chapters, the complete formula bank, and worked problem sets.
+            </p>
+
+            <div class="pricing-spotlight">
+              <div class="price-figure">
+                <span class="currency">₦</span>
+                <span class="amount">{resource.price ? resource.price.toLocaleString() : '5,000'}</span>
+              </div>
+              <p class="lifetime-note">One-time purchase · Permanent lifetime bookshelf access</p>
+              {resource.inclusions?.core && (
+                <div class="core-discount-badge">
+                  <span>Enrolled in TECHMED Core? Get 20% off: <strong>{resource.inclusions.core}</strong></span>
+                </div>
+              )}
+            </div>
+
+            <div class="gatekeeper-actions">
+              <button type="button" id="unlockPaystackBtn" class="btn-primary unlock-btn">
+                <span>Unlock with Paystack &rarr;</span>
+              </button>
+              <button type="button" id="unlockTransferBtn" class="btn-secondary unlock-btn">
+                <span>Direct Bank Transfer</span>
+              </button>
+              <a
+                href={resource.whatsappUrl || `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I want to unlock the ${resource.title}. My name is ______.`)}`}
+                target="_blank"
+                rel="noopener"
+                class="whatsapp-link"
+              >
+                Or order directly via WhatsApp &rarr;
+              </a>
+            </div>
+
+            <!-- Reference Link Option -->
+            <div class="already-paid-box">
+              <span>Already completed payment?</span>
+              <button type="button" id="gatekeeperClaimToggle" class="link-btn">
+                Link your payment reference to unlock immediately
+              </button>
+              <div id="gatekeeperClaimForm" class="gatekeeper-claim-form" style="display: none;">
+                <input
+                  type="text"
+                  id="gatekeeperRefInput"
+                  placeholder="Enter transaction reference"
+                  aria-label="Transaction Reference"
+                />
+                <button type="button" id="gatekeeperClaimSubmit" class="btn-primary">
+                  Verify Access
+                </button>
+              </div>
+              <div id="gatekeeperClaimMsg" class="claim-message" style="display: none;"></div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <!-- Direct Bank Transfer Modal -->
+  <div id="transferModal" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>Bank Transfer Details</h3>
+        <button type="button" id="closeTransferModal" class="modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p class="transfer-inst">Transfer the exact resource amount to the official TECHMED account below:</p>
+        <div class="bank-details-box">
+          <div class="detail-row">
+            <span class="label">Bank Name:</span>
+            <span class="val">Moniepoint Microfinance Bank</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Account Number:</span>
+            <span class="val highlight" id="accNumber">6573645432</span>
+            <button type="button" id="copyAccBtn" class="copy-btn">Copy</button>
+          </div>
+          <div class="detail-row">
+            <span class="label">Account Name:</span>
+            <span class="val">Johnson Wisdom Onyekachi</span>
+          </div>
+          <div class="detail-row">
+            <span class="label">Amount:</span>
+            <span class="val highlight">₦{resource.price ? resource.price.toLocaleString() : '5,000'}</span>
+          </div>
+        </div>
+        <p class="verification-note">
+          After completing the transfer, message us on WhatsApp with your payment screenshot or input your transaction reference above for automatic bookshelf activation.
+        </p>
+      </div>
+      <div class="modal-footer">
+        <a
+          href={`https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I have completed a bank transfer for the ${resource.title}. Attached is my receipt.`)}`}
+          target="_blank"
+          rel="noopener"
+          class="btn-primary"
+          style="width: 100%; text-align: center; text-decoration: none;"
+        >
+          Confirm Transfer on WhatsApp
+        </a>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<script id="manualDataScript" type="application/json" set:html={manualJson}></script>
+<script id="resourceDataScript" type="application/json" set:html={resourceJson}></script>
+
+<script>
+  const manualEl = document.getElementById('manualDataScript');
+  const resEl = document.getElementById('resourceDataScript');
+  const MANUAL = manualEl ? JSON.parse(manualEl.textContent || '{}') : {};
+  const RESOURCE = resEl ? JSON.parse(resEl.textContent || '{}') : {};
+
+  import { getSupabase, getCurrentUser, hasActiveResourceAccess, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+
+  const supabase = getSupabase();
+
+  // State
+  let currentUser = null;
+  let isEntitled = RESOURCE.status === 'free';
+  let activeChapterIndex = 0;
+  let currentTheme = 'dark';
+  let currentFontSize = 17; // base font size in px
+
+  // DOM Elements
+  const readerShell = document.getElementById('readerShell');
+  const readProgressBar = document.getElementById('readProgressBar');
+  const readingStage = document.getElementById('readingStage');
+  const watermarkCanvas = document.getElementById('watermarkCanvas');
+  const chapterNavList = document.getElementById('chapterNavList');
+  const chapterDrawer = document.getElementById('chapterDrawer');
+  const toggleOutlineBtn = document.getElementById('toggleOutlineBtn');
+  const closeDrawerBtn = document.getElementById('closeDrawerBtn');
+  const accessStatusIndicator = document.getElementById('accessStatusIndicator');
+  const accessStatusText = document.getElementById('accessStatusText');
+  const gatekeeperCard = document.getElementById('gatekeeperCard');
+  const prevChapterBtn = document.getElementById('prevChapterBtn');
+  const nextChapterBtn = document.getElementById('nextChapterBtn');
+  const chapterProgressText = document.getElementById('chapterProgressText');
+
+  // Theme & Font buttons
+  const themeBtns = document.querySelectorAll('.theme-btn');
+  const fontDecBtn = document.getElementById('fontDecBtn');
+  const fontIncBtn = document.getElementById('fontIncBtn');
+
+  // Checkout & Modal triggers
+  const unlockPaystackBtn = document.getElementById('unlockPaystackBtn');
+  const unlockTransferBtn = document.getElementById('unlockTransferBtn');
+  const transferModal = document.getElementById('transferModal');
+  const closeTransferModal = document.getElementById('closeTransferModal');
+  const copyAccBtn = document.getElementById('copyAccBtn');
+
+  // Claim reference in Gatekeeper
+  const gatekeeperClaimToggle = document.getElementById('gatekeeperClaimToggle');
+  const gatekeeperClaimForm = document.getElementById('gatekeeperClaimForm');
+  const gatekeeperRefInput = document.getElementById('gatekeeperRefInput');
+  const gatekeeperClaimSubmit = document.getElementById('gatekeeperClaimSubmit');
+  const gatekeeperClaimMsg = document.getElementById('gatekeeperClaimMsg');
+
+  // 1. Dynamic Watermark Generator
+  function renderWatermark(userEmail) {
+    if (!watermarkCanvas) return;
+    const ctx = watermarkCanvas.getContext('2d');
+    if (!ctx) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const width = window.innerWidth;
+    const height = Math.max(window.innerHeight * 2, 2000);
+
+    watermarkCanvas.width = width * dpr;
+    watermarkCanvas.height = height * dpr;
+    ctx.scale(dpr, dpr);
+
+    ctx.clearRect(0, 0, width, height);
+
+    const email = userEmail || 'TECHMED Academic Preview';
+    const dateStr = new Date().toLocaleDateString('en-GB');
+    const stamp = `${email} · TECHMED LICENSED READER · ${dateStr} · UNAUTHORIZED SHARING PROHIBITED`;
+
+    ctx.font = '13px "JetBrains Mono", monospace';
+    ctx.fillStyle = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.045)' : 'rgba(255, 255, 255, 0.045)';
+    ctx.rotate((-25 * Math.PI) / 180);
+
+    const stepX = 420;
+    const stepY = 160;
+
+    for (let y = -500; y < height + 800; y += stepY) {
+      for (let x = -800; x < width + 800; x += stepX) {
+        ctx.fillText(stamp, x, y);
+      }
+    }
+  }
+
+  // 2. Initialize Student Session & Entitlement Verification
+  async function initAuthAndAccess() {
+    currentUser = await getCurrentUser();
+    const userEmail = currentUser?.email;
+
+    if (RESOURCE.status === 'free') {
+      isEntitled = true;
+      accessStatusIndicator.className = 'access-status-indicator active';
+      accessStatusText.textContent = 'Free Official Resource · Full Access Granted';
+    } else {
+      isEntitled = await hasActiveResourceAccess(RESOURCE.id, currentUser);
+      if (isEntitled) {
+        accessStatusIndicator.className = 'access-status-indicator active';
+        accessStatusText.textContent = `Licensed to ${userEmail || 'Active Student'} · Permanent Bookshelf Access`;
+      } else {
+        accessStatusIndicator.className = 'access-status-indicator preview';
+        accessStatusText.textContent = userEmail
+          ? `Sample Preview Mode · ${userEmail}`
+          : 'Sample Preview Mode · Sign in or purchase to unlock full manual';
+      }
+    }
+
+    renderWatermark(userEmail);
+    buildChapterNavigation();
+    renderActiveChapter();
+  }
+
+  // 3. Build Table of Contents Drawer
+  function buildChapterNavigation() {
+    chapterNavList.innerHTML = '';
+    MANUAL.chapters.forEach((chap, idx) => {
+      const isLocked = !isEntitled && !chap.isPreview;
+      const li = document.createElement('li');
+      li.className = `chapter-nav-item ${idx === activeChapterIndex ? 'active' : ''} ${isLocked ? 'locked' : ''}`;
+
+      li.innerHTML = `
+        <button type="button" class="chapter-nav-btn" data-index="${idx}">
+          <div class="chap-num-box">${idx + 1}</div>
+          <div class="chap-info">
+            <span class="chap-title">${chap.title}</span>
+            <span class="chap-meta">~${chap.estimatedMinutes} mins ${isLocked ? '· 🔒 Locked' : '· ✓ Available'}</span>
+          </div>
+        </button>
+      `;
+
+      li.querySelector('.chapter-nav-btn').addEventListener('click', () => {
+        selectChapter(idx);
+        closeDrawer();
+      });
+
+      chapterNavList.appendChild(li);
+    });
+  }
+
+  // 4. Select and Render a Chapter
+  function selectChapter(index) {
+    if (index < 0 || index >= MANUAL.chapters.length) return;
+    activeChapterIndex = index;
+
+    // Update Nav List Active Class
+    const items = chapterNavList.querySelectorAll('.chapter-nav-item');
+    items.forEach((item, idx) => {
+      item.classList.toggle('active', idx === activeChapterIndex);
+    });
+
+    renderActiveChapter();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // 5. Render Chapter Body & Handle Locking
+  function renderActiveChapter() {
+    const chapter = MANUAL.chapters[activeChapterIndex];
+    const isLocked = !isEntitled && !chapter.isPreview;
+
+    chapterProgressText.textContent = `Chapter ${activeChapterIndex + 1} of ${MANUAL.totalChapters}`;
+    prevChapterBtn.disabled = activeChapterIndex === 0;
+    nextChapterBtn.disabled = activeChapterIndex === MANUAL.totalChapters - 1;
+
+    readingStage.innerHTML = '';
+
+    if (isLocked) {
+      // Locked Chapter Notice
+      readingStage.innerHTML = `
+        <div class="locked-chapter-banner">
+          <div class="lock-icon">🔒</div>
+          <h2>${chapter.title} is Locked</h2>
+          <p>This chapter and its corresponding formula banks are reserved for verified purchasers and UTME 2027 Mastery students.</p>
+        </div>
+      `;
+      gatekeeperCard.style.display = 'block';
+      return;
+    }
+
+    // Accessible Chapter
+    gatekeeperCard.style.display = 'none';
+
+    const chapterWrap = document.createElement('div');
+    chapterWrap.className = 'chapter-content-wrap';
+
+    let html = `
+      <header class="chapter-content-header">
+        <span class="chap-eyebrow">CHAPTER ${chapter.number} OF ${MANUAL.totalChapters} · ${chapter.estimatedMinutes} MIN READ</span>
+        <h2 class="chap-headline">${chapter.title}</h2>
+      </header>
+    `;
+
+    chapter.sections.forEach(sec => {
+      html += `
+        <section class="reader-section">
+          <h3 class="section-heading">${sec.heading}</h3>
+          <div class="section-text">${sec.content.replace(/\n\n/g, '<br><br>')}</div>
+
+          ${sec.formulaBox ? `
+            <div class="formula-box">
+              <div class="formula-banner">HIGH-YIELD FORMULA</div>
+              <div class="formula-core">${sec.formulaBox.formula}</div>
+              <ul class="formula-terms">
+                ${sec.formulaBox.terms.map(t => `<li><strong>${t.symbol}</strong>: ${t.meaning}</li>`).join('')}
+              </ul>
+              ${sec.formulaBox.notes ? `<p class="formula-note">Note: ${sec.formulaBox.notes}</p>` : ''}
+            </div>
+          ` : ''}
+
+          ${sec.examinerTrap ? `
+            <div class="examiner-trap-box">
+              <div class="trap-label">⚠️ EXAMINER TRAP ALERT</div>
+              <p class="trap-text"><strong>Common Trap:</strong> ${sec.examinerTrap.trap}</p>
+              <p class="fix-text"><strong>Strategic Fix:</strong> ${sec.examinerTrap.fix}</p>
+            </div>
+          ` : ''}
+
+          ${sec.workedExample ? `
+            <div class="worked-example-box">
+              <div class="worked-header">PRACTICE WORKED EXAMPLE</div>
+              <p class="worked-problem"><strong>Problem:</strong> ${sec.workedExample.problem}</p>
+              <div class="step-list">
+                ${sec.workedExample.stepByStep.map(s => `<p class="step-item">${s}</p>`).join('')}
+              </div>
+              <div class="worked-answer"><strong>Final Solution:</strong> ${sec.workedExample.answer}</div>
+            </div>
+          ` : ''}
+
+          ${sec.keyTakeaway ? `
+            <div class="key-takeaway">
+              <span class="takeaway-label">Key Exam Takeaway:</span>
+              <span>${sec.keyTakeaway}</span>
+            </div>
+          ` : ''}
+        </section>
+      `;
+    });
+
+    chapterWrap.innerHTML = html;
+    readingStage.appendChild(chapterWrap);
+
+    // If unentitled and reading preview chapter, also display gatekeeper at bottom
+    if (!isEntitled && chapter.isPreview) {
+      gatekeeperCard.style.display = 'block';
+    }
+  }
+
+  // 6. Navigation Buttons
+  prevChapterBtn?.addEventListener('click', () => {
+    if (activeChapterIndex > 0) selectChapter(activeChapterIndex - 1);
+  });
+
+  nextChapterBtn?.addEventListener('click', () => {
+    if (activeChapterIndex < MANUAL.chapters.length - 1) selectChapter(activeChapterIndex + 1);
+  });
+
+  // 7. Outline Drawer Controls
+  function openDrawer() {
+    chapterDrawer.classList.add('open');
+  }
+  function closeDrawer() {
+    chapterDrawer.classList.remove('open');
+  }
+  toggleOutlineBtn?.addEventListener('click', () => {
+    chapterDrawer.classList.toggle('open');
+  });
+  closeDrawerBtn?.addEventListener('click', closeDrawer);
+
+  // 8. Theme Switcher (Dark, Sepia, Light)
+  themeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      themeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      currentTheme = btn.getAttribute('data-theme') || 'dark';
+
+      readerShell.classList.remove('theme-dark', 'theme-sepia', 'theme-light');
+      readerShell.classList.add(`theme-${currentTheme}`);
+
+      renderWatermark(currentUser?.email);
+    });
+  });
+
+  // 9. Font Sizing Controls
+  fontIncBtn?.addEventListener('click', () => {
+    if (currentFontSize < 23) {
+      currentFontSize += 1.5;
+      readerShell.style.setProperty('--reader-font-size', `${currentFontSize}px`);
+    }
+  });
+
+  fontDecBtn?.addEventListener('click', () => {
+    if (currentFontSize > 14) {
+      currentFontSize -= 1.5;
+      readerShell.style.setProperty('--reader-font-size', `${currentFontSize}px`);
+    }
+  });
+
+  // 10. Scroll Progress Bar
+  window.addEventListener('scroll', () => {
+    const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+    if (docHeight <= 0) {
+      readProgressBar.style.width = '0%';
+      return;
+    }
+    const scrolled = (window.scrollY / docHeight) * 100;
+    readProgressBar.style.width = `${Math.min(scrolled, 100)}%`;
+  });
+
+  // 11. Paystack Checkout Initiation
+  unlockPaystackBtn?.addEventListener('click', async () => {
+    let email = currentUser?.email;
+    if (!email) {
+      email = prompt('Enter your email address to receive your payment receipt & entitlement:');
+      if (!email || !email.includes('@')) {
+        alert('A valid email address is required for receipt delivery.');
+        return;
+      }
+    }
+
+    unlockPaystackBtn.disabled = true;
+    unlockPaystackBtn.innerHTML = '<span>Initiating Checkout...</span>';
+
+    try {
+      const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
+      // Normalize product ID to match Edge Function catalogue
+      let targetProductId = RESOURCE.id;
+      if (targetProductId === 'post-utme-brainstorming-hub' || targetProductId === 'post-utme-hub') targetProductId = 'post-utme-pq';
+      if (targetProductId === 'university-research-file') targetProductId = 'research-file';
+
+      const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuYmdib3JiaHh6c290YWllaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDMyNDcsImV4cCI6MjA5Nzk3OTI0N30.3uM4SaYII60V988NA5PvqphQs6HkTVTnGKpZFqzZY-c',
+        },
+        body: JSON.stringify({
+          product_id: targetProductId,
+          product_name: RESOURCE.title,
+          amount: RESOURCE.price,
+          email: email.trim(),
+          name: currentUser?.user_metadata?.full_name || 'TECHMED Student',
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.data?.authorization_url) {
+        window.location.href = data.data.authorization_url;
+      } else {
+        throw new Error(data.message || 'Payment initiation failed.');
+      }
+    } catch (err: any) {
+      console.warn('Paystack initiate failed:', err);
+      unlockPaystackBtn.disabled = false;
+      unlockPaystackBtn.innerHTML = '<span>Unlock with Paystack &rarr;</span>';
+
+      const confirmWa = confirm(
+        `Online payment could not be started: ${err?.message || 'Connection error'}.\n\nWould you like to complete payment and connect with Tutor TechMed on WhatsApp instead?`
+      );
+      if (confirmWa) {
+        const fallbackUrl = RESOURCE.whatsappUrl || `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I want to buy the ${RESOURCE.title} (₦${RESOURCE.price}). My email is ${email}.`)}`;
+        window.open(fallbackUrl, '_blank');
+      }
+    }
+  });
+
+  // 12. Direct Bank Transfer Modal
+  unlockTransferBtn?.addEventListener('click', () => {
+    transferModal.style.display = 'flex';
+  });
+  closeTransferModal?.addEventListener('click', () => {
+    transferModal.style.display = 'none';
+  });
+  transferModal?.addEventListener('click', (e) => {
+    if (e.target === transferModal) transferModal.style.display = 'none';
+  });
+
+  copyAccBtn?.addEventListener('click', () => {
+    const acc = document.getElementById('accNumber').textContent;
+    navigator.clipboard.writeText(acc);
+    copyAccBtn.textContent = 'Copied!';
+    setTimeout(() => { copyAccBtn.textContent = 'Copy'; }, 2000);
+  });
+
+  // 13. Reference Claim in Gatekeeper
+  gatekeeperClaimToggle?.addEventListener('click', () => {
+    const isHidden = gatekeeperClaimForm.style.display === 'none';
+    gatekeeperClaimForm.style.display = isHidden ? 'flex' : 'none';
+  });
+
+  gatekeeperClaimSubmit?.addEventListener('click', async () => {
+    const ref = gatekeeperRefInput.value.trim();
+    if (!ref) return;
+
+    gatekeeperClaimSubmit.disabled = true;
+    gatekeeperClaimSubmit.textContent = 'Verifying...';
+
+    const res = await verifyAndClaimOrderReference(ref, currentUser);
+
+    gatekeeperClaimMsg.style.display = 'block';
+    gatekeeperClaimMsg.textContent = res.message;
+    gatekeeperClaimMsg.className = `claim-message ${res.success ? 'success' : 'error'}`;
+
+    gatekeeperClaimSubmit.disabled = false;
+    gatekeeperClaimSubmit.textContent = 'Verify Access';
+
+    if (res.success) {
+      isEntitled = true;
+      initAuthAndAccess();
+    }
+  });
+
+  // 14. PWA Offline Caching & Connection Monitor
+  const saveOfflineBtn = document.getElementById('saveOfflineBtn');
+  const saveOfflineText = document.getElementById('saveOfflineText');
+  const offlineNotice = document.getElementById('offlineNotice');
+
+  function updateNetworkStatus() {
+    if (!navigator.onLine) {
+      if (offlineNotice) offlineNotice.style.display = 'flex';
+      renderWatermark(currentUser?.email || 'Offline Student');
+    } else {
+      if (offlineNotice) offlineNotice.style.display = 'none';
+    }
+  }
+
+  window.addEventListener('online', updateNetworkStatus);
+  window.addEventListener('offline', updateNetworkStatus);
+  updateNetworkStatus();
+
+  saveOfflineBtn?.addEventListener('click', async () => {
+    if (!isEntitled) {
+      alert('Access Required: Full study access is required to download this manual for offline reading.');
+      return;
+    }
+
+    saveOfflineBtn.disabled = true;
+    saveOfflineText.textContent = 'Saving offline...';
+
+    try {
+      if ('caches' in window) {
+        const cache = await caches.open('techmed-reader-v3');
+        const res = await fetch(window.location.href);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch manual: HTTP ${res.status}`);
+        }
+        await cache.put(window.location.href, res);
+        saveOfflineBtn.classList.add('saved');
+        saveOfflineText.textContent = '✓ Saved Offline';
+      } else {
+        saveOfflineText.textContent = 'Offline Not Supported';
+      }
+    } catch (err: any) {
+      console.warn('Manual offline caching error:', err);
+      saveOfflineBtn.classList.remove('saved');
+      saveOfflineText.textContent = 'Save Failed';
+      alert('Unable to complete offline save. Please check your storage quota and internet connection.');
+    } finally {
+      setTimeout(() => {
+        saveOfflineBtn.disabled = false;
+      }, 3000);
+    }
+  });
+
+  // Window resize: re-render watermark
+  window.addEventListener('resize', () => {
+    renderWatermark(currentUser?.email);
+  });
+
+  // Run on startup
+  initAuthAndAccess();
+</script>
+
+<style>
+  :root {
+    --reader-font-size: 17px;
+  }
+
+  /* Progress Bar */
+  .read-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 3px;
+    width: 0%;
+    background: var(--accent);
+    z-index: 9999;
+    transition: width 100ms ease;
+  }
+
+  /* Themes */
+  .reader-shell.theme-dark {
+    --reader-bg: #030d17;
+    --reader-surface: #071727;
+    --reader-text: #e2e8f0;
+    --reader-text-muted: #94a3b8;
+    --reader-border: rgba(255, 255, 255, 0.09);
+    --reader-box-bg: rgba(255, 255, 255, 0.03);
+  }
+
+  .reader-shell.theme-sepia {
+    --reader-bg: #fbf7ee;
+    --reader-surface: #f4ede0;
+    --reader-text: #2c251e;
+    --reader-text-muted: #74685a;
+    --reader-border: rgba(0, 0, 0, 0.1);
+    --reader-box-bg: #eae0cf;
+  }
+
+  .reader-shell.theme-light {
+    --reader-bg: #ffffff;
+    --reader-surface: #f8fafc;
+    --reader-text: #0f172a;
+    --reader-text-muted: #64748b;
+    --reader-border: rgba(0, 0, 0, 0.08);
+    --reader-box-bg: #f1f5f9;
+  }
+
+  .reader-shell {
+    background-color: var(--reader-bg);
+    color: var(--reader-text);
+    min-height: 100vh;
+    font-size: var(--reader-font-size);
+    transition: background-color 200ms ease, color 200ms ease;
+    position: relative;
+  }
+
+  /* Topbar */
+  .reader-topbar {
+    position: sticky;
+    top: 0;
+    background: var(--reader-surface);
+    border-bottom: 1px solid var(--reader-border);
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 var(--space-6);
+    z-index: 100;
+  }
+
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+  }
+
+  .back-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--reader-text-muted);
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 6px 10px;
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    transition: color 150ms ease, border-color 150ms ease;
+  }
+
+  .back-link:hover {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .book-identity {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .book-subject-meta {
+    font-size: 0.7rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--reader-text-muted);
+  }
+
+  .book-nav-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--reader-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 320px;
+  }
+
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .topbar-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    color: var(--reader-text);
+    border: 1px solid var(--reader-border);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 150ms ease;
+  }
+
+  .topbar-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .offline-save-btn.saved {
+    border-color: #22c55e;
+    color: #22c55e;
+  }
+
+  /* Offline Notice Banner */
+  .offline-notice-strip {
+    background: rgba(234, 179, 8, 0.12);
+    border-bottom: 1px solid rgba(234, 179, 8, 0.3);
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    color: #eab308;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    position: sticky;
+    top: 64px;
+    z-index: 90;
+  }
+
+  .offline-bolt {
+    font-size: 1rem;
+  }
+
+  /* Theme Switch */
+  .theme-switch {
+    display: flex;
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .theme-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--reader-text-muted);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 150ms ease, color 150ms ease;
+  }
+
+  .theme-btn.active {
+    background: var(--accent);
+    color: #011425;
+  }
+
+  /* Font Scale Switch */
+  .font-switch {
+    display: flex;
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+  }
+
+  .font-btn {
+    background: transparent;
+    border: none;
+    padding: 6px 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--reader-text);
+    cursor: pointer;
+    font-family: inherit;
+  }
+
+  .font-btn:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  /* Viewport & Drawer */
+  .reader-viewport {
+    position: relative;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: var(--space-8) var(--space-6) var(--space-24);
+  }
+
+  .watermark-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 50;
+    opacity: 0.85;
+  }
+
+  /* Slide-out Drawer */
+  .chapter-drawer {
+    position: fixed;
+    top: 64px;
+    left: -320px;
+    width: 320px;
+    height: calc(100vh - 64px);
+    background: var(--reader-surface);
+    border-right: 1px solid var(--reader-border);
+    z-index: 150;
+    padding: var(--space-6);
+    overflow-y: auto;
+    transition: transform 250ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .chapter-drawer.open {
+    transform: translateX(320px);
+  }
+
+  .drawer-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .drawer-header h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .drawer-close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--reader-text-muted);
+    cursor: pointer;
+  }
+
+  .drawer-meta {
+    font-size: 0.8rem;
+    color: var(--reader-text-muted);
+    margin-bottom: var(--space-6);
+  }
+
+  .chapter-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .chapter-nav-btn {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 150ms ease, border-color 150ms ease;
+  }
+
+  .chapter-nav-btn:hover {
+    background: var(--reader-box-bg);
+    border-color: var(--reader-border);
+  }
+
+  .chapter-nav-item.active .chapter-nav-btn {
+    background: var(--reader-box-bg);
+    border-color: var(--accent);
+  }
+
+  .chap-num-box {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    background: var(--reader-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .chapter-nav-item.active .chap-num-box {
+    background: var(--accent);
+    color: #011425;
+  }
+
+  .chap-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .chap-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .chap-meta {
+    font-size: 0.75rem;
+    color: var(--reader-text-muted);
+  }
+
+  /* Manual Cover Header */
+  .manual-cover-header {
+    border-bottom: 1px solid var(--reader-border);
+    padding-bottom: var(--space-8);
+    margin-bottom: var(--space-10);
+  }
+
+  .cover-meta-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.8rem;
+    color: var(--reader-text-muted);
+    margin-bottom: var(--space-3);
+  }
+
+  .meta-tag {
+    color: var(--accent);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .manual-title {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1.2;
+    margin: 0 0 var(--space-2);
+    letter-spacing: -0.02em;
+  }
+
+  .manual-subtitle {
+    font-size: 1.05rem;
+    color: var(--reader-text-muted);
+    line-height: 1.6;
+    margin: 0 0 var(--space-6);
+  }
+
+  .access-status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.8rem;
+    padding: 6px 12px;
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    background: var(--reader-surface);
+  }
+
+  .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #eab308;
+  }
+
+  .access-status-indicator.active .indicator-dot {
+    background: #22c55e;
+  }
+
+  .access-status-indicator.preview .indicator-dot {
+    background: #f97316;
+  }
+
+  /* Reading Stage */
+  .chapter-content-header {
+    margin-bottom: var(--space-8);
+  }
+
+  .chap-eyebrow {
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: var(--space-2);
+  }
+
+  .chap-headline {
+    font-size: 1.6rem;
+    font-weight: 800;
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .reader-section {
+    margin-bottom: var(--space-12);
+  }
+
+  .section-heading {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 var(--space-4);
+    color: var(--reader-text);
+  }
+
+  .section-text {
+    line-height: 1.8;
+    color: var(--reader-text);
+    margin-bottom: var(--space-6);
+  }
+
+  /* Formula Box */
+  .formula-box {
+    background: var(--reader-box-bg);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    padding: var(--space-5) var(--space-6);
+    margin: var(--space-6) 0;
+  }
+
+  .formula-banner {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+
+  .formula-core {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: var(--space-4);
+    letter-spacing: 0.02em;
+    overflow-x: auto;
+  }
+
+  .formula-terms {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-3);
+    font-size: 0.85rem;
+    line-height: 1.6;
+    color: var(--reader-text-muted);
+  }
+
+  .formula-note {
+    font-size: 0.8rem;
+    color: var(--reader-text-muted);
+    font-style: italic;
+    margin: 0;
+  }
+
+  /* Examiner Trap Box */
+  .examiner-trap-box {
+    background: rgba(239, 68, 68, 0.06);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: var(--radius-sm);
+    padding: var(--space-5);
+    margin: var(--space-6) 0;
+  }
+
+  .trap-label {
+    font-size: 0.75rem;
+    font-weight: 800;
+    color: #ef4444;
+    letter-spacing: 0.05em;
+    margin-bottom: var(--space-2);
+  }
+
+  .trap-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0 0 var(--space-2);
+    color: var(--reader-text);
+  }
+
+  .fix-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin: 0;
+    color: #22c55e;
+  }
+
+  /* Worked Example Box */
+  .worked-example-box {
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-6);
+    margin: var(--space-6) 0;
+  }
+
+  .worked-header {
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: var(--space-3);
+  }
+
+  .worked-problem {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    margin: 0 0 var(--space-4);
+  }
+
+  .step-list {
+    border-left: 2px solid var(--reader-border);
+    padding-left: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .step-item {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: var(--reader-text-muted);
+    margin: 0 0 var(--space-2);
+  }
+
+  .worked-answer {
+    font-size: 0.95rem;
+    color: var(--accent);
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--reader-border);
+  }
+
+  .key-takeaway {
+    background: var(--reader-surface);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4) var(--space-5);
+    margin-top: var(--space-6);
+    font-size: 0.85rem;
+    line-height: 1.6;
+  }
+
+  .takeaway-label {
+    font-weight: 700;
+    color: var(--accent);
+    margin-right: 6px;
+  }
+
+  /* Footer Navigation */
+  .chapter-footer-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-8);
+    border-top: 1px solid var(--reader-border);
+    margin-top: var(--space-12);
+  }
+
+  .nav-chapter-btn {
+    padding: 10px 18px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    transition: all 150ms ease;
+  }
+
+  .chapter-progress-text {
+    font-size: 0.85rem;
+    color: var(--reader-text-muted);
+  }
+
+  /* Gatekeeper Card */
+  .gatekeeper-card {
+    background: var(--reader-surface);
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-md);
+    padding: var(--space-8) var(--space-6);
+    margin-top: var(--space-12);
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  .gatekeeper-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: rgba(234, 179, 8, 0.12);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-4);
+  }
+
+  .gatekeeper-card h2 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin: 0 0 var(--space-2);
+  }
+
+  .gatekeeper-desc {
+    font-size: 0.95rem;
+    color: var(--reader-text-muted);
+    max-width: 540px;
+    margin: 0 auto var(--space-6);
+    line-height: 1.6;
+  }
+
+  .pricing-spotlight {
+    margin-bottom: var(--space-6);
+  }
+
+  .price-figure {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    gap: 4px;
+  }
+
+  .price-figure .currency {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .price-figure .amount {
+    font-size: 2.25rem;
+    font-weight: 800;
+  }
+
+  .lifetime-note {
+    font-size: 0.8rem;
+    color: var(--reader-text-muted);
+    margin: 4px 0 0;
+  }
+
+  .core-discount-badge {
+    margin-top: var(--space-3);
+    font-size: 0.8rem;
+    color: var(--accent);
+    background: rgba(234, 179, 8, 0.08);
+    border: 1px solid rgba(234, 179, 8, 0.2);
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .gatekeeper-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: 360px;
+    margin: 0 auto var(--space-6);
+  }
+
+  .unlock-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .whatsapp-link {
+    font-size: 0.85rem;
+    color: var(--reader-text-muted);
+    text-decoration: none;
+    transition: color 150ms ease;
+  }
+
+  .whatsapp-link:hover {
+    color: var(--accent);
+  }
+
+  .already-paid-box {
+    border-top: 1px solid var(--reader-border);
+    padding-top: var(--space-4);
+    font-size: 0.85rem;
+    color: var(--reader-text-muted);
+  }
+
+  .link-btn {
+    background: none;
+    border: none;
+    color: var(--accent);
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-decoration: underline;
+    margin-left: 4px;
+  }
+
+  .gatekeeper-claim-form {
+    display: flex;
+    gap: var(--space-2);
+    max-width: 400px;
+    margin: var(--space-4) auto 0;
+  }
+
+  .gatekeeper-claim-form input {
+    flex: 1;
+    background: var(--reader-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-sm);
+    padding: 8px 12px;
+    color: inherit;
+    font-size: 0.85rem;
+  }
+
+  .claim-message {
+    font-size: 0.8rem;
+    margin-top: var(--space-2);
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  .claim-message.success {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+  }
+
+  .claim-message.error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  /* Modal */
+  .modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(4px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    z-index: 1000;
+  }
+
+  .modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    max-width: 480px;
+    width: 100%;
+    padding: var(--space-6);
+  }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-4);
+  }
+
+  .modal-header h3 {
+    margin: 0;
+    font-size: 1.2rem;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  .bank-details-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+  }
+
+  .detail-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 0;
+    font-size: 0.85rem;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  .detail-row:last-child {
+    border-bottom: none;
+  }
+
+  .detail-row .highlight {
+    font-weight: 700;
+    color: var(--accent);
+  }
+
+  .copy-btn {
+    background: var(--border);
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    color: var(--text);
+  }
+
+  .verification-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Responsive Adjustments */
+  @media (max-width: 768px) {
+    .reader-topbar {
+      padding: 0 var(--space-3);
+    }
+    .back-text {
+      display: none;
+    }
+    .btn-label {
+      display: none;
+    }
+    .book-nav-title {
+      max-width: 160px;
+    }
+    .manual-title {
+      font-size: 1.5rem;
+    }
+    .chapter-drawer {
+      width: 280px;
+      left: -280px;
+    }
+    .chapter-drawer.open {
+      transform: translateX(280px);
+    }
+    .gatekeeper-claim-form {
+      flex-direction: column;
+    }
+  }
+</style>

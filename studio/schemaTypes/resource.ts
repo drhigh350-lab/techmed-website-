@@ -38,6 +38,18 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'subject',
+      title: 'Subject',
+      type: 'string',
+      options: { list: ['Chemistry', 'Biology', 'Physics', 'Mathematics', 'English', 'Admission', 'General'] },
+    }),
+    defineField({
+      name: 'deliveryFormat',
+      title: 'Delivery Format',
+      type: 'string',
+      options: { list: ['PDF eBook', 'Interactive Web', 'Quiz Platform', 'Platform Tool'] },
+    }),
+    defineField({
       name: 'type',
       title: 'Type',
       type: 'string',

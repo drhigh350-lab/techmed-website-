@@ -1,0 +1,35 @@
+---
+import { FALLBACK_RESOURCES } from '../../lib/resources';
+
+export async function getStaticPaths() {
+  const paths: { params: { id: string } }[] = [];
+  for (const r of FALLBACK_RESOURCES) {
+    paths.push({ params: { id: r.id } });
+    if (r.slug !== r.id) {
+      paths.push({ params: { id: r.slug } });
+    }
+  }
+  const extraAliases = ['chem-boost-2026', 'bio-boost-2026', 'phys-boost-2026', 'admission-guide'];
+  for (const alias of extraAliases) {
+    paths.push({ params: { id: alias } });
+  }
+  return paths;
+}
+
+const { id } = Astro.params;
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Opening TECHMED Reader...</title>
+  <meta http-equiv="refresh" content={`0;url=/library/read/${id}`} />
+  <script define:vars={{ targetUrl: `/library/read/${id}` }}>
+    window.location.replace(targetUrl);
+  </script>
+</head>
+<body style="background: #030d17; color: #94a3b8; font-family: sans-serif; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0;">
+  <p>Opening TECHMED Study Reader...</p>
+</body>
+</html>

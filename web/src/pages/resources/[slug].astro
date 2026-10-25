@@ -1,6 +1,7 @@
 ---
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import ResourceDetail from '../../components/ResourceDetail.astro';
+import CheckoutModal from '../../components/CheckoutModal.astro';
 import { getResources, type Resource } from '../../lib/resources';
 
 export async function getStaticPaths() {
@@ -72,4 +73,5 @@ const jsonLd = [
   ogImage={ogImage}
 >
   <ResourceDetail resource={resource} related={related} />
+  <CheckoutModal />
 </BaseLayout>
