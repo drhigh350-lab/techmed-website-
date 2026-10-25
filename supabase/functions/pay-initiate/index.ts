@@ -1,7 +1,8 @@
-// pay-initiate
-// Validates the product and price against a server-side price list
-// (never trusts the price sent by the browser), creates a pending order row,
-// then asks Paystack to start a transaction and returns the checkout URL.
+// supabase/functions/pay-initiate/index.ts
+// Validates product and price against server-side authoritative list,
+// creates and confirms a pending order record FIRST in the database,
+// initializes transaction with Paystack, and returns the checkout URL.
+// If order creation fails, checkout initialization is never reported as successful.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -118,18 +119,52 @@ Deno.serve(async (req) => {
     }, 500);
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured");
+    return jsonResponse({
+      success: false,
+      message: "Database service configuration error. Please contact admissions on WhatsApp.",
+    }, 500);
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Paystack requires amount in kobo (naira x 100)
   const amountKobo = validatedAmount * 100;
   const reference = `techmed_${cleanProductId.replace(/-/g, '_')}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
-  const siteUrl = Deno.env.get("SITE_URL") ?? "https://techmedng.com";
+  // ---------------------------------------------------------------------------
+  // STEP 1: CREATE AND CONFIRM PENDING ORDER IN DATABASE FIRST
+  // Order must exist in database BEFORE any usable Paystack checkout is generated.
+  // If database insertion fails, do NOT proceed to Paystack, and report failure.
+  // ---------------------------------------------------------------------------
+  const { error: dbError } = await supabase.from("orders").insert({
+    reference,
+    product_id: cleanProductId,
+    product_name: product.name,
+    amount: validatedAmount,
+    email: email.trim().toLowerCase(),
+    customer_name: name ?? "TECHMED Student",
+    university: university ?? null,
+    status: "pending",
+  });
 
-  // Route cohort plan enrolments to onboarding (/payment/callback) and resource downloads to /download.html
+  if (dbError) {
+    console.error("Failed to create pending order record:", dbError, "reference:", reference);
+    return jsonResponse({
+      success: false,
+      message: "Could not create pending order record. Please try again or contact admissions on WhatsApp.",
+    }, 500);
+  }
+
+  // ---------------------------------------------------------------------------
+  // STEP 2: INITIALIZE TRANSACTION WITH PAYSTACK
+  // If initialization fails or throws, safely mark the pending order as "failed"
+  // so an unbacked pending record is not left open.
+  // ---------------------------------------------------------------------------
+  const siteUrl = Deno.env.get("SITE_URL") ?? "https://techmedng.com";
   const defaultCallback = product.isCohort
     ? `${siteUrl}/payment/callback?reference=${reference}`
     : `${siteUrl}/download.html?reference=${reference}`;
@@ -165,33 +200,42 @@ Deno.serve(async (req) => {
 
     const paystackJson = await paystackRes.json();
 
-    if (!paystackRes.ok || !paystackJson.status) {
-      console.error("Paystack initialize failed:", paystackJson);
-      return jsonResponse({ success: false, message: paystackJson.message ?? "Could not initiate payment" }, 502);
+    if (!paystackRes.ok || !paystackJson.status || !paystackJson.data?.authorization_url) {
+      console.error("Paystack initialize rejected:", paystackJson, "reference:", reference);
+      // Safely update the pending order so it does not remain pending indefinitely
+      await supabase.from("orders").update({
+        status: "failed",
+        rejection_reason: paystackJson.message ?? "Paystack initialization failed",
+        paystack_response: paystackJson,
+        updated_at: new Date().toISOString(),
+      }).eq("reference", reference);
+
+      return jsonResponse({
+        success: false,
+        message: paystackJson.message ?? "Could not initiate payment session.",
+      }, 502);
     }
 
     paystackData = paystackJson.data;
   } catch (err) {
-    console.error("Paystack request error:", err);
-    return jsonResponse({ success: false, message: "Could not reach Paystack. Please try again or contact support on WhatsApp." }, 502);
+    console.error("Paystack network/request exception:", err, "reference:", reference);
+    // Safely update the pending order on network error
+    await supabase.from("orders").update({
+      status: "failed",
+      rejection_reason: "Network error reaching Paystack gateway",
+      updated_at: new Date().toISOString(),
+    }).eq("reference", reference);
+
+    return jsonResponse({
+      success: false,
+      message: "Could not reach Paystack payment gateway. Please try again or contact support on WhatsApp.",
+    }, 502);
   }
 
-  // Record pending order
-  const { error: dbError } = await supabase.from("orders").insert({
-    reference,
-    product_id: cleanProductId,
-    product_name: product.name,
-    amount: validatedAmount,
-    email: email.trim().toLowerCase(),
-    customer_name: name ?? "TECHMED Student",
-    university: university ?? null,
-    status: "pending",
-  });
-
-  if (dbError) {
-    console.error("Failed to save pending order:", dbError, "reference:", reference);
-  }
-
+  // ---------------------------------------------------------------------------
+  // STEP 3: RETURN CONFIRMED AUTHORIZATION URL
+  // Only reached when BOTH the order is saved in the database AND Paystack initialized.
+  // ---------------------------------------------------------------------------
   return jsonResponse({
     success: true,
     data: {

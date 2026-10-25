@@ -1,3 +1,10 @@
+// supabase/functions/pay-verify/index.ts
+// Verifies transaction with Paystack server-to-server.
+// Enforces strict checks on reference, success status, exact amount in kobo, and NGN currency.
+// Never reports payment as verified when PAYSTACK_SECRET_KEY is missing, Paystack fails,
+// or the database order update fails.
+// Reliably grants entitlements and surfaces recoverable entitlement failures.
+
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const corsHeaders = {
@@ -39,7 +46,8 @@ Deno.serve(async (req) => {
   const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    return jsonResponse({ success: false, message: "Database configuration error" }, 500);
+    console.error("Database configuration missing (SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY)");
+    return jsonResponse({ success: false, status: "error", message: "Database configuration error" }, 500);
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -52,12 +60,12 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (orderError) {
-    console.error("Database query failed:", orderError);
-    return jsonResponse({ success: false, message: "Database error querying order" }, 500);
+    console.error("Database query failed for order:", reference, orderError);
+    return jsonResponse({ success: false, status: "error", message: "Database error querying order" }, 500);
   }
 
   if (!order) {
-    return jsonResponse({ success: false, message: "Order not found" }, 404);
+    return jsonResponse({ success: false, status: "not_found", message: "Order not found" }, 404);
   }
 
   // 2. If already paid, return confirmed status immediately (idempotent)
@@ -65,6 +73,8 @@ Deno.serve(async (req) => {
     return jsonResponse({
       success: true,
       status: "paid",
+      entitlement_granted: true,
+      entitlement_error: null,
       order: {
         reference: order.reference,
         product_id: order.product_id,
@@ -78,16 +88,18 @@ Deno.serve(async (req) => {
     });
   }
 
-  // 3. If pending, query Paystack API directly using PAYSTACK_SECRET_KEY
+  // 3. Require PAYSTACK_SECRET_KEY. Never report verification success without it.
   if (!paystackSecret) {
-    console.warn("PAYSTACK_SECRET_KEY not set in Edge Function; returning current DB status");
+    console.error("PAYSTACK_SECRET_KEY is not configured in pay-verify Edge Function");
     return jsonResponse({
-      success: true,
-      status: order.status,
-      order,
-    });
+      success: false,
+      status: "error",
+      message: "Payment verification service is unavailable (PAYSTACK_SECRET_KEY missing).",
+    }, 500);
   }
 
+  // 4. Query Paystack verification API
+  let paystackData: any;
   try {
     const paystackRes = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
       headers: {
@@ -95,95 +107,136 @@ Deno.serve(async (req) => {
       },
     });
 
-    const paystackData = await paystackRes.json();
+    paystackData = await paystackRes.json();
 
-    if (paystackRes.ok && paystackData.status && paystackData.data?.status === "success") {
-      const paidAmount = paystackData.data.amount / 100; // kobo to NGN
-
-      // Validate amount paid matches expected order amount
-      if (order.amount && Math.abs(paidAmount - order.amount) > 1) {
-        console.error(`Amount mismatch for ${reference}: expected ${order.amount}, got ${paidAmount}`);
-        await supabase
-          .from("orders")
-          .update({
-            status: "mismatched",
-            rejection_reason: `Amount mismatch: expected ₦${order.amount}, received ₦${paidAmount}`,
-            paystack_response: paystackData.data,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("reference", reference);
-
-        return jsonResponse({
-          success: false,
-          status: "mismatched",
-          message: `Payment amount mismatch: expected ₦${order.amount.toLocaleString()}, received ₦${paidAmount.toLocaleString()}`,
-        }, 400);
-      }
-
-      const nowIso = new Date().toISOString();
-
-      // Update order to paid
-      const { error: updateError } = await supabase
-        .from("orders")
-        .update({
-          status: "paid",
-          paid_at: nowIso,
-          verified_at: nowIso,
-          paystack_response: paystackData.data,
-          updated_at: nowIso,
-        })
-        .eq("reference", reference);
-
-      if (updateError) {
-        console.error("Failed to update order to paid:", updateError);
-      }
-
-      // Automatically trigger entitlement grants
-      try {
-        await supabase.rpc("grant_order_entitlements", { p_order_reference: reference });
-      } catch (rpcErr) {
-        console.warn("RPC grant_order_entitlements error (may have been granted by trigger):", rpcErr);
-      }
-
+    if (!paystackRes.ok || !paystackData.status) {
+      console.error("Paystack verification API returned failure:", paystackData);
       return jsonResponse({
-        success: true,
-        status: "paid",
-        order: {
-          reference: order.reference,
-          product_id: order.product_id,
-          product_name: order.product_name,
-          amount: paidAmount,
-          email: order.email,
-          customer_name: order.customer_name,
-          paid_at: nowIso,
-          status: "paid",
-        },
-      });
-    } else if (paystackData.data?.status === "failed" || paystackData.data?.status === "abandoned") {
-      await supabase
-        .from("orders")
-        .update({ status: "failed", rejection_reason: paystackData.data?.gateway_response || "Transaction abandoned or declined" })
-        .eq("reference", reference);
-
-      return jsonResponse({
-        success: true,
-        status: "failed",
-        message: paystackData.data?.gateway_response || "Payment was not completed.",
-        order: { ...order, status: "failed" },
-      });
+        success: false,
+        status: "verification_failed",
+        message: paystackData.message || "Failed to verify transaction with payment gateway.",
+      }, 502);
     }
+  } catch (err) {
+    console.error("Exception connecting to Paystack verify API:", err);
+    return jsonResponse({
+      success: false,
+      status: "gateway_error",
+      message: "Could not reach payment gateway for verification. Please retry or contact support on WhatsApp.",
+    }, 502);
+  }
+
+  const txData = paystackData.data;
+  const isReferenceMatch = txData?.reference === reference;
+  const isStatusSuccess = txData?.status === "success";
+  const expectedKobo = Math.round(Number(order.amount) * 100);
+  const isAmountMatch = txData?.amount === expectedKobo;
+  const isCurrencyNGN = typeof txData?.currency === "string" && txData.currency.toUpperCase() === "NGN";
+
+  // 5. Handle failed or abandoned transactions
+  if (txData?.status === "failed" || txData?.status === "abandoned") {
+    await supabase
+      .from("orders")
+      .update({
+        status: "failed",
+        rejection_reason: txData?.gateway_response || `Transaction ${txData?.status}`,
+        paystack_response: txData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("reference", reference);
 
     return jsonResponse({
-      success: true,
-      status: "pending",
-      order,
-    });
-  } catch (err: any) {
-    console.error("Paystack verification error:", err);
-    return jsonResponse({
-      success: true,
-      status: order.status,
-      order,
+      success: false,
+      status: "failed",
+      message: txData?.gateway_response || `Payment was ${txData?.status}.`,
+      order: { ...order, status: "failed" },
     });
   }
+
+  // 6. Enforce strict validation: reference, status, exact amount in kobo, and currency
+  if (!isReferenceMatch || !isStatusSuccess || !isAmountMatch || !isCurrencyNGN) {
+    const mismatchDetails = [
+      !isReferenceMatch ? `Reference mismatch (expected: ${reference}, got: ${txData?.reference})` : null,
+      !isStatusSuccess ? `Status not success (${txData?.status})` : null,
+      !isAmountMatch ? `Amount mismatch (expected: ${expectedKobo} kobo / ₦${order.amount}, got: ${txData?.amount} kobo)` : null,
+      !isCurrencyNGN ? `Currency mismatch (expected: NGN, got: ${txData?.currency})` : null,
+    ].filter(Boolean).join("; ");
+
+    console.error(`Payment verification rejected for order ${reference}: ${mismatchDetails}`);
+
+    await supabase
+      .from("orders")
+      .update({
+        status: "mismatched",
+        rejection_reason: mismatchDetails,
+        paystack_response: txData,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("reference", reference);
+
+    return jsonResponse({
+      success: false,
+      status: "mismatched",
+      message: `Payment details validation failed: ${mismatchDetails}`,
+    }, 400);
+  }
+
+  // 7. Update order to paid. If order update fails, never report verification success.
+  const nowIso = new Date().toISOString();
+  const { data: updatedOrder, error: updateError } = await supabase
+    .from("orders")
+    .update({
+      status: "paid",
+      paid_at: nowIso,
+      verified_at: nowIso,
+      paystack_response: txData,
+      updated_at: nowIso,
+    })
+    .eq("reference", reference)
+    .select("reference, product_id, product_name, amount, email, customer_name, status, paid_at")
+    .single();
+
+  if (updateError || !updatedOrder) {
+    console.error("Failed to update order to paid in database:", updateError, "reference:", reference);
+    return jsonResponse({
+      success: false,
+      status: "error",
+      message: "Payment confirmed by gateway, but order update failed in database. Please contact admissions with your reference.",
+      reference,
+    }, 500);
+  }
+
+  // 8. Grant entitlements reliably
+  let entitlementGranted = true;
+  let entitlementError: string | null = null;
+
+  try {
+    const { error: rpcErr } = await supabase.rpc("grant_order_entitlements", { p_order_reference: reference });
+    if (rpcErr) {
+      console.error(`Failed to grant entitlements for order ${reference}:`, rpcErr);
+      entitlementGranted = false;
+      entitlementError = rpcErr.message;
+    }
+  } catch (err: any) {
+    console.error(`Exception granting entitlements for order ${reference}:`, err);
+    entitlementGranted = false;
+    entitlementError = err?.message || "Entitlement grant exception";
+  }
+
+  return jsonResponse({
+    success: true,
+    status: "paid",
+    entitlement_granted: entitlementGranted,
+    entitlement_error: entitlementError,
+    order: {
+      reference: updatedOrder.reference,
+      product_id: updatedOrder.product_id,
+      product_name: updatedOrder.product_name,
+      amount: updatedOrder.amount,
+      email: updatedOrder.email,
+      customer_name: updatedOrder.customer_name,
+      paid_at: updatedOrder.paid_at,
+      status: "paid",
+    },
+  });
 });
