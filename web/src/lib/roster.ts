@@ -133,12 +133,17 @@ export function generateRosterEntitlements(
   const includedResourceIds = TIER_INCLUSIONS[student.tier] || [];
   const planId = `cohort-${student.tier}`;
 
-  return includedResourceIds.map((resId) => ({
+  const allItems: Array<{ resId: string; grantSource: 'purchase' | 'plan_inclusion' }> = [
+    { resId: planId, grantSource: 'purchase' },
+    ...includedResourceIds.map((resId) => ({ resId, grantSource: 'plan_inclusion' as const })),
+  ];
+
+  return allItems.map(({ resId, grantSource }) => ({
     id: `roster_${student.tier}_${resId}_${Math.random().toString(36).substring(2, 7)}`,
     userId,
     customerEmail: student.email,
     resourceId: resId,
-    grantSource: 'plan_inclusion',
+    grantSource,
     planId,
     grantedAt: student.enrolledAt,
     expiresAt: student.expiresAt,
@@ -149,6 +154,12 @@ export function generateRosterEntitlements(
 
 function getResourceTitle(id: string): string {
   switch (id) {
+    case 'cohort-core':
+      return 'TECHMED Core Track';
+    case 'cohort-mastery':
+      return 'TECHMED Mastery Track';
+    case 'cohort-ultimate':
+      return 'TECHMED Ultimate Track';
     case 'chemistry-booster':
       return 'Chemistry Booster System';
     case 'biology-booster':

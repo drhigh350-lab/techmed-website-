@@ -68,8 +68,13 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, status: "not_found", message: "Order not found" }, 404);
   }
 
-  // 2. If already paid, return confirmed status immediately (idempotent)
+  // 2. If already paid, ensure entitlements are active and return confirmed status immediately (idempotent)
   if (order.status === "paid") {
+    try {
+      await supabase.rpc("grant_order_entitlements", { p_order_reference: reference });
+    } catch (rpcErr) {
+      console.warn("Idempotent entitlement check on paid order:", rpcErr);
+    }
     return jsonResponse({
       success: true,
       status: "paid",

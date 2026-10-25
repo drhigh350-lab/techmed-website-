@@ -600,26 +600,45 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
       const isPlan = ent.grantSource === 'plan_inclusion';
       const isPermanent = ent.grantSource === 'purchase' || ent.grantSource === 'bundle_inclusion' || !ent.expiresAt;
 
-      const grantLabel = isPlan ? 'UTME 2027 Mastery Inclusion' : 'Permanent Standalone Purchase';
+      const isCohortPlan = ent.resourceId.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(ent.resourceId);
+
+      let title = match?.title;
+      if (!title) {
+        if (ent.resourceId.includes('ultimate')) title = 'TECHMED Ultimate (UTME 2027 Full Track)';
+        else if (ent.resourceId.includes('mastery')) title = 'TECHMED Mastery (UTME 2027 Track)';
+        else if (ent.resourceId.includes('core')) title = 'TECHMED Core (UTME 2027 Track)';
+        else title = ent.resourceTitle || ent.resourceId;
+      }
+
+      const grantLabel = isCohortPlan
+        ? 'UTME 2027 Cohort Enrolment'
+        : (isPlan ? 'UTME 2027 Mastery Inclusion' : 'Permanent Standalone Purchase');
+
       const expiresLabel = isPermanent
         ? 'Permanent Lifetime Access'
         : (ent.expiresAt ? `Valid through ${new Date(ent.expiresAt).toLocaleDateString()}` : 'Valid through UTME 2027');
 
       const isTool = match?.deliveryFormat === 'Platform Tool' || match?.deliveryFormat === 'Quiz Platform';
-      const actionUrl = isTool
+      let actionUrl = isTool
         ? (match?.accessUrl || match?.externalUrl || `/resources/${match?.slug || ent.resourceId}`)
         : `/library/read/${match ? match.id : ent.resourceId}`;
+      let actionLabel = isTool ? 'Launch Tool' : 'Read Online';
+
+      if (isCohortPlan) {
+        actionUrl = '/utme-2027';
+        actionLabel = 'Class Portal & Schedule';
+      }
 
       return {
         resourceId: ent.resourceId,
-        title: match ? match.title : ent.resourceId,
-        subject: match ? match.subject : 'Academic',
-        deliveryFormat: match ? match.deliveryFormat : 'PDF eBook',
+        title,
+        subject: match ? match.subject : (isCohortPlan ? 'UTME 2027 Track' : 'Academic'),
+        deliveryFormat: match ? match.deliveryFormat : (isCohortPlan ? 'Live Telegram + Kairo CBT' : 'PDF eBook'),
         grantType: isPermanent ? 'permanent' : 'plan',
         grantLabel,
         expiresLabel,
         actionUrl,
-        actionLabel: isTool ? 'Launch Tool' : 'Read Online',
+        actionLabel,
         description: match ? match.description : 'Authoritative TECHMED preparation resource.',
       };
     });
