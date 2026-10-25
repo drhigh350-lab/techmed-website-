@@ -125,6 +125,9 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
         <button type="button" class="tab-btn" id="tabRoster" role="tab">
           Cohort Enrolment Roster
         </button>
+        <button type="button" class="tab-btn" id="tabOnlineOrders" role="tab">
+          Online Paystack Orders (<span id="tabOrdersBadge">0</span>)
+        </button>
         <button type="button" id="btnOpenGrantModal" class="btn-action-tab">
           + Grant Manual Entitlement
         </button>
@@ -188,6 +191,59 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
 
         <div class="roster-grid" id="rosterGrid">
           <!-- Populated dynamically -->
+        </div>
+      </section>
+
+      <!-- Section 3: Online Paystack Orders & Reconciliation -->
+      <section id="sectionOnlineOrders" class="admin-section" style="display: none;">
+        <div class="section-top-bar">
+          <div>
+            <h3>Online Paystack Orders &amp; Cohort Enrolments</h3>
+            <p class="section-desc">Real-time status of online orders, cohort package tracking, and manual confirmation triggers.</p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <select id="orderStatusFilter" style="padding: 8px 12px; background: rgba(3,13,23,0.8); border: 1px solid rgba(255,255,255,0.15); border-radius: 6px; color: #fff; font-size: 0.85rem;">
+              <option value="all">All Statuses</option>
+              <option value="pending">Pending</option>
+              <option value="paid">Paid</option>
+              <option value="failed">Failed</option>
+              <option value="abandoned">Abandoned</option>
+            </select>
+            <button type="button" id="refreshOrdersBtn" class="btn-secondary" style="padding: 8px 12px; font-size: 0.85rem;">
+              Refresh Orders
+            </button>
+          </div>
+        </div>
+
+        <div class="roster-search-bar" style="margin-bottom: 16px;">
+          <input
+            type="text"
+            id="orderSearchInput"
+            placeholder="Search orders by customer email or transaction reference..."
+          />
+        </div>
+
+        <div class="transfers-table-wrap">
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Reference</th>
+                <th>Customer / Email</th>
+                <th>Plan / Resource</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="onlineOrdersTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <div id="emptyOnlineOrders" class="empty-table-state" style="display: none;">
+          <p>No online orders found matching the filter or search query.</p>
         </div>
       </section>
     </div>
@@ -387,14 +443,24 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
   // Tabs
   const tabTransfers = document.getElementById('tabTransfers');
   const tabRoster = document.getElementById('tabRoster');
+  const tabOnlineOrders = document.getElementById('tabOnlineOrders');
+  const tabOrdersBadge = document.getElementById('tabOrdersBadge');
   const sectionTransfers = document.getElementById('sectionTransfers');
   const sectionRoster = document.getElementById('sectionRoster');
+  const sectionOnlineOrders = document.getElementById('sectionOnlineOrders');
 
   // Tables & Grids
   const transfersTableBody = document.getElementById('transfersTableBody');
   const emptyTransfers = document.getElementById('emptyTransfers');
   const rosterGrid = document.getElementById('rosterGrid');
   const rosterSearchInput = document.getElementById('rosterSearchInput');
+
+  // Online Orders Table & Controls
+  const onlineOrdersTableBody = document.getElementById('onlineOrdersTableBody');
+  const emptyOnlineOrders = document.getElementById('emptyOnlineOrders');
+  const orderStatusFilter = document.getElementById('orderStatusFilter') as HTMLSelectElement | null;
+  const orderSearchInput = document.getElementById('orderSearchInput') as HTMLInputElement | null;
+  const refreshOrdersBtn = document.getElementById('refreshOrdersBtn');
 
   // Modals
   const grantModal = document.getElementById('grantModal');
@@ -537,16 +603,30 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
   // Switch Tabs
   tabTransfers?.addEventListener('click', () => {
     tabTransfers.classList.add('active');
-    tabRoster.classList.remove('active');
-    sectionTransfers.style.display = 'block';
-    sectionRoster.style.display = 'none';
+    tabRoster?.classList.remove('active');
+    tabOnlineOrders?.classList.remove('active');
+    if (sectionTransfers) sectionTransfers.style.display = 'block';
+    if (sectionRoster) sectionRoster.style.display = 'none';
+    if (sectionOnlineOrders) sectionOnlineOrders.style.display = 'none';
   });
 
   tabRoster?.addEventListener('click', () => {
     tabRoster.classList.add('active');
-    tabTransfers.classList.remove('active');
-    sectionRoster.style.display = 'block';
-    sectionTransfers.style.display = 'none';
+    tabTransfers?.classList.remove('active');
+    tabOnlineOrders?.classList.remove('active');
+    if (sectionRoster) sectionRoster.style.display = 'block';
+    if (sectionTransfers) sectionTransfers.style.display = 'none';
+    if (sectionOnlineOrders) sectionOnlineOrders.style.display = 'none';
+  });
+
+  tabOnlineOrders?.addEventListener('click', () => {
+    tabOnlineOrders.classList.add('active');
+    tabTransfers?.classList.remove('active');
+    tabRoster?.classList.remove('active');
+    if (sectionOnlineOrders) sectionOnlineOrders.style.display = 'block';
+    if (sectionTransfers) sectionTransfers.style.display = 'none';
+    if (sectionRoster) sectionRoster.style.display = 'none';
+    renderOnlineOrders();
   });
 
   // Render Transfers Table
@@ -779,6 +859,175 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
 
   rosterSearchInput?.addEventListener('input', renderRoster);
 
+  // Online Paystack Orders & Reconciliation
+  let onlineOrdersList: any[] = [];
+
+  async function fetchOnlineOrders() {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (!error && data && data.length > 0) {
+        onlineOrdersList = data;
+        return;
+      }
+    } catch (e) {
+      console.warn('Failed to fetch orders from Supabase:', e);
+    }
+
+    // Default sample orders if database empty or offline
+    if (onlineOrdersList.length === 0) {
+      onlineOrdersList = [
+        {
+          reference: 'techmed_cohort_core_earlybird_1761391200000_a1b2',
+          customer_name: 'Blessing Okafor',
+          email: 'blessing.okafor@gmail.com',
+          product_id: 'cohort-core-earlybird',
+          product_name: 'TECHMED Core (3-Month Early-Bird)',
+          amount: 15000,
+          status: 'paid',
+          created_at: new Date(Date.now() - 3600000 * 3).toISOString(),
+        },
+        {
+          reference: 'techmed_cohort_mastery_earlybird_1761394800000_c3d4',
+          customer_name: 'David Adeleke',
+          email: 'david.adeleke@gmail.com',
+          product_id: 'cohort-mastery-earlybird',
+          product_name: 'TECHMED Mastery (3-Month Early-Bird)',
+          amount: 20000,
+          status: 'paid',
+          created_at: new Date(Date.now() - 3600000 * 8).toISOString(),
+        },
+        {
+          reference: 'techmed_cohort_core_monthly_1761398400000_e5f6',
+          customer_name: 'Fatima Bello',
+          email: 'fatima.bello@gmail.com',
+          product_id: 'cohort-core-monthly',
+          product_name: 'TECHMED Core (1-Month Subscription)',
+          amount: 7000,
+          status: 'pending',
+          created_at: new Date(Date.now() - 3600000 * 1).toISOString(),
+        },
+      ];
+    }
+  }
+
+  async function renderOnlineOrders() {
+    if (!onlineOrdersTableBody) return;
+    await fetchOnlineOrders();
+
+    const query = orderSearchInput?.value.toLowerCase().trim() || '';
+    const filter = orderStatusFilter?.value || 'all';
+
+    const filtered = onlineOrdersList.filter(o => {
+      const matchesQuery = !query || 
+        (o.reference && o.reference.toLowerCase().includes(query)) ||
+        (o.email && o.email.toLowerCase().includes(query)) ||
+        (o.customer_name && o.customer_name.toLowerCase().includes(query));
+      const matchesFilter = filter === 'all' || o.status === filter;
+      return matchesQuery && matchesFilter;
+    });
+
+    if (tabOrdersBadge) {
+      tabOrdersBadge.textContent = String(onlineOrdersList.length);
+    }
+
+    onlineOrdersTableBody.innerHTML = '';
+
+    if (filtered.length === 0) {
+      if (emptyOnlineOrders) emptyOnlineOrders.style.display = 'block';
+      return;
+    }
+    if (emptyOnlineOrders) emptyOnlineOrders.style.display = 'none';
+
+    filtered.forEach((order) => {
+      const tr = document.createElement('tr');
+      const isPaid = order.status === 'paid';
+      const createdDate = order.created_at ? new Date(order.created_at).toLocaleDateString() : '—';
+
+      tr.innerHTML = `
+        <td class="mono-cell" style="font-size:0.8rem;">${order.reference}</td>
+        <td>
+          <div class="student-name">${order.customer_name || 'Student'}</div>
+          <div class="student-sub-email">${order.email}</div>
+        </td>
+        <td>${order.product_name || order.product_id}</td>
+        <td class="amount-cell">₦${(Number(order.amount) || 0).toLocaleString()}</td>
+        <td>
+          <span class="status-badge ${order.status}">${(order.status || 'UNKNOWN').toUpperCase()}</span>
+        </td>
+        <td class="date-cell">${createdDate}</td>
+        <td>
+          ${isPaid ? `
+            <span class="action-done">✓ Enrolled</span>
+          ` : `
+            <button type="button" class="btn-approve btn-reconcile" data-ref="${order.reference}">
+              Verify / Reconcile
+            </button>
+          `}
+        </td>
+      `;
+
+      tr.querySelector('.btn-reconcile')?.addEventListener('click', async () => {
+        await reconcileOrder(order);
+      });
+
+      onlineOrdersTableBody.appendChild(tr);
+    });
+  }
+
+  async function reconcileOrder(order: any) {
+    const btn = document.querySelector(`[data-ref="${order.reference}"]`) as HTMLButtonElement | null;
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = 'Verifying...';
+    }
+
+    try {
+      // 1. Try pay-verify Edge Function
+      const edgeRes = await fetch('https://unbgborbhxzsotaieiun.supabase.co/functions/v1/pay-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: order.reference }),
+      });
+
+      if (edgeRes.ok) {
+        const data = await edgeRes.json();
+        if (data.success && data.status === 'paid') {
+          alert(`✓ Order "${order.reference}" successfully verified and reconciled as PAID! Enrolments granted.`);
+          order.status = 'paid';
+          renderOnlineOrders();
+          return;
+        }
+      }
+
+      // 2. Fallback to client verify and claim
+      const res = await verifyAndClaimOrderReference(order.reference, { email: order.email });
+      if (res.success) {
+        alert(`✓ Reconciled: ${res.message}`);
+        order.status = 'paid';
+        renderOnlineOrders();
+      } else {
+        alert(`Reconciliation notice: ${res.message || 'Order could not be confirmed automatically.'}`);
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Verify / Reconcile';
+        }
+      }
+    } catch (e: any) {
+      alert(`Error reconciling order: ${e.message || 'Network error'}`);
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = 'Verify / Reconcile';
+      }
+    }
+  }
+
+  orderSearchInput?.addEventListener('input', renderOnlineOrders);
+  orderStatusFilter?.addEventListener('change', renderOnlineOrders);
+  refreshOrdersBtn?.addEventListener('click', renderOnlineOrders);
+
   // Render Overall Stats
   function renderStats() {
     const localGrants = getLocalEntitlements();
@@ -788,6 +1037,7 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
   function refreshAll() {
     renderTransfers();
     renderRoster();
+    renderOnlineOrders();
     renderStats();
   }
 

@@ -137,53 +137,14 @@
 
         <div id="checkoutAlert" class="checkout-alert" style="display: none;" role="alert"></div>
 
-        <!-- Payment Channel Tabs -->
-        <div class="channel-tabs" role="tablist">
-          <button type="button" class="channel-tab active" id="tabPaystack" role="tab">
-            Card / Bank / USSD (Paystack)
-          </button>
-          <button type="button" class="channel-tab" id="tabTransfer" role="tab">
-            Direct Bank Transfer
-          </button>
-        </div>
-
-        <!-- Channel 1: Paystack Button -->
+        <!-- Paystack Direct Checkout (Sole Payment Route) -->
         <div id="paystackPane" class="channel-pane">
           <button type="submit" class="btn-primary pay-btn" id="paystackSubmitBtn">
             <span>Pay <span id="paystackAmountLabel">₦0</span> with Paystack &rarr;</span>
           </button>
           <p class="security-note">
-            🔒 Secured by Paystack 256-bit encryption. Instant activation upon return.
+            🔒 Secured by Paystack 256-bit encryption. Card, Bank Transfer, USSD &amp; Mobile Money supported.
           </p>
-        </div>
-
-        <!-- Channel 2: Bank Transfer Details Pane -->
-        <div id="transferPane" class="channel-pane" style="display: none;">
-          <div class="bank-box">
-            <div class="bank-row">
-              <span class="bank-label">Bank:</span>
-              <span class="bank-val">Moniepoint Microfinance Bank</span>
-            </div>
-            <div class="bank-row">
-              <span class="bank-label">Account No:</span>
-              <span class="bank-val highlight" id="modalAccNo">6573645432</span>
-              <button type="button" id="modalCopyBtn" class="mini-copy-btn">Copy</button>
-            </div>
-            <div class="bank-row">
-              <span class="bank-label">Account Name:</span>
-              <span class="bank-val">Johnson Wisdom Onyekachi</span>
-            </div>
-            <div class="bank-row">
-              <span class="bank-label">Payable:</span>
-              <span class="bank-val highlight" id="transferPayableLabel">₦0</span>
-            </div>
-          </div>
-          <p class="transfer-help">
-            After making the transfer, click below to confirm with our admissions desk on WhatsApp or use your reference in the student library.
-          </p>
-          <a id="transferWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary transfer-wa-btn">
-            Confirm Payment on WhatsApp &rarr;
-          </a>
         </div>
       </form>
     </div>
@@ -214,16 +175,9 @@
   const checkoutUniversity = document.getElementById('checkoutUniversity');
   const checkoutAlert = document.getElementById('checkoutAlert');
   const checkoutForm = document.getElementById('checkoutForm');
-  const tabPaystack = document.getElementById('tabPaystack');
-  const tabTransfer = document.getElementById('tabTransfer');
   const paystackPane = document.getElementById('paystackPane');
-  const transferPane = document.getElementById('transferPane');
   const paystackSubmitBtn = document.getElementById('paystackSubmitBtn');
   const paystackAmountLabel = document.getElementById('paystackAmountLabel');
-  const transferPayableLabel = document.getElementById('transferPayableLabel');
-  const transferWhatsAppBtn = document.getElementById('transferWhatsAppBtn');
-  const modalCopyBtn = document.getElementById('modalCopyBtn');
-  const modalAccNo = document.getElementById('modalAccNo');
 
   // Plan billing selector elements
   const planBillingOptionsGroup = document.getElementById('planBillingOptionsGroup');
@@ -238,7 +192,6 @@
 
   let currentResource = null;
   let basePrice = 0;
-  let activeChannel = 'paystack';
   let activeDuration = 'earlybird'; // 'earlybird' | 'monthly'
 
   function isEarlyBirdValid() {
@@ -263,14 +216,6 @@
 
     checkoutFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
     paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
-    transferPayableLabel.textContent = `₦${finalPrice.toLocaleString()}`;
-
-    // Update WhatsApp link with current details
-    const email = checkoutEmail?.value.trim() || 'my email';
-    const nameVal = checkoutName?.value.trim() ? ` My name is ${checkoutName.value.trim()}.` : '';
-    const uni = checkoutUniversity?.value ? ` for ${checkoutUniversity.value}` : '';
-    const text = `Hi TECHMED, I am paying for ${currentResource.title}${uni} via Bank Transfer. Amount: ₦${finalPrice.toLocaleString()}.${nameVal} Email: ${email}.`;
-    transferWhatsAppBtn.href = `https://wa.me/2347044255045?text=${encodeURIComponent(text)}`;
   }
 
   // Handle billing radio changes inside modal
@@ -320,24 +265,6 @@
   checkoutEmail?.addEventListener('input', updatePriceDisplay);
   checkoutName?.addEventListener('input', updatePriceDisplay);
   checkoutUniversity?.addEventListener('change', updatePriceDisplay);
-
-  function setChannel(ch) {
-    activeChannel = ch;
-    if (ch === 'paystack') {
-      tabPaystack.classList.add('active');
-      tabTransfer.classList.remove('active');
-      paystackPane.style.display = 'block';
-      transferPane.style.display = 'none';
-    } else {
-      tabTransfer.classList.add('active');
-      tabPaystack.classList.remove('active');
-      transferPane.style.display = 'block';
-      paystackPane.style.display = 'none';
-    }
-  }
-
-  tabPaystack?.addEventListener('click', () => setChannel('paystack'));
-  tabTransfer?.addEventListener('click', () => setChannel('transfer'));
 
   function openCheckout(resource) {
     currentResource = { ...resource };
@@ -426,7 +353,6 @@
     });
 
     updatePriceDisplay();
-    setChannel('paystack');
     checkoutAlert.style.display = 'none';
     modalBackdrop.style.display = 'flex';
 
@@ -451,18 +377,9 @@
     if (e.target === modalBackdrop) closeCheckout();
   });
 
-  modalCopyBtn?.addEventListener('click', () => {
-    navigator.clipboard.writeText(modalAccNo.textContent);
-    modalCopyBtn.textContent = 'Copied!';
-    setTimeout(() => { modalCopyBtn.textContent = 'Copy'; }, 2000);
-  });
-
   // Handle Form Submission (Paystack Initiation)
   checkoutForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    if (activeChannel === 'transfer') {
-      return;
-    }
 
     const email = checkoutEmail.value.trim();
     if (!email || !email.includes('@')) {
@@ -485,7 +402,7 @@
 
     checkoutAlert.style.display = 'none';
     paystackSubmitBtn.disabled = true;
-    paystackSubmitBtn.innerHTML = '<span>Initiating Paystack Transaction...</span>';
+    paystackSubmitBtn.innerHTML = '<span>Connecting to Paystack...</span>';
 
     try {
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
@@ -533,11 +450,11 @@
       } else {
         throw new Error(data.message || 'Payment initiation failed.');
       }
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Paystack initiate failed:', err);
       const isCore = coreDiscountCheckbox.checked && !isCohort;
       const chargeAmount = isCore ? Math.round(basePrice * 0.8) : basePrice;
-      const waUrl = currentResource.whatsappUrl || `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I would like to enrol in ${currentResource.title} (₦${chargeAmount.toLocaleString()}). My email is ${email}.`)}`;
+      const waUrl = currentResource.whatsappUrl || `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I had trouble starting online payment for ${currentResource.title} (₦${chargeAmount.toLocaleString()}). My email is ${email}. Please assist me with enrolment.`)}`;
 
       trackEvent('paystack_init_failed', {
         planId: currentResource?.id,
@@ -546,12 +463,28 @@
 
       checkoutAlert.style.display = 'block';
       checkoutAlert.innerHTML = `
-        <div style="margin-bottom: 8px;"><strong>Payment Notice:</strong> ${err.message || 'Could not connect to online checkout.'}</div>
-        <div style="font-size:0.82rem; margin-bottom: 8px;">You can pay via Direct Bank Transfer (tab above) or continue via our admissions desk on WhatsApp:</div>
-        <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="display:inline-block;padding:7px 14px;font-size:0.82rem;text-decoration:none;border-radius:4px;font-weight:600;">
-          Enrol / Pay via WhatsApp &rarr;
-        </a>
+        <div style="margin-bottom: 6px;"><strong>Payment Gateway Notice:</strong> ${err.message || 'Could not initiate online payment.'}</div>
+        <div style="font-size:0.82rem; margin-bottom: 8px; color: var(--text-light);">
+          Selected: <strong>${currentResource.title} (₦${chargeAmount.toLocaleString()})</strong>. You can retry online payment or contact our admissions desk on WhatsApp for assistance:
+        </div>
+        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+          <button type="button" id="alertRetryBtn" class="btn-primary" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 4px; font-weight: 600; cursor: pointer;">
+            Try Again
+          </button>
+          <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="display:inline-block; padding: 6px 14px; font-size: 0.82rem; text-decoration: none; border-radius: 4px; font-weight: 600;">
+            Contact Admissions on WhatsApp &rarr;
+          </a>
+        </div>
       `;
+
+      // Allow clicking "Try Again" to clear notice and retry
+      const alertRetryBtn = document.getElementById('alertRetryBtn');
+      alertRetryBtn?.addEventListener('click', () => {
+        checkoutAlert.style.display = 'none';
+        paystackSubmitBtn.disabled = false;
+        paystackSubmitBtn.focus();
+      });
+
       paystackSubmitBtn.disabled = false;
       paystackSubmitBtn.innerHTML = `<span>Pay ${paystackAmountLabel.textContent} with Paystack &rarr;</span>`;
     }
@@ -865,33 +798,6 @@
     margin-bottom: var(--space-4);
   }
 
-  /* Channel Tabs */
-  .channel-tabs {
-    display: flex;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    overflow: hidden;
-    margin-bottom: var(--space-5);
-  }
-
-  .channel-tab {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 8px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: var(--text-muted);
-    cursor: pointer;
-    font-family: inherit;
-    transition: background 150ms ease, color 150ms ease;
-  }
-
-  .channel-tab.active {
-    background: var(--surface-raised);
-    color: var(--accent);
-  }
-
   .pay-btn {
     width: 100%;
     padding: 12px;
@@ -906,67 +812,5 @@
     color: var(--text-muted);
     text-align: center;
     margin-top: var(--space-2);
-  }
-
-  /* Bank Box */
-  .bank-box {
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
-    margin-bottom: var(--space-4);
-  }
-
-  .bank-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 5px 0;
-    font-size: 0.85rem;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-
-  .bank-row:last-child {
-    border-bottom: none;
-  }
-
-  .bank-label {
-    color: var(--text-muted);
-  }
-
-  .bank-val {
-    font-weight: 500;
-  }
-
-  .bank-val.highlight {
-    font-weight: 700;
-    color: var(--accent);
-  }
-
-  .mini-copy-btn {
-    background: var(--border);
-    border: none;
-    border-radius: var(--radius-sm);
-    padding: 2px 6px;
-    font-size: 0.7rem;
-    cursor: pointer;
-    color: var(--text);
-  }
-
-  .transfer-help {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    line-height: 1.5;
-    margin: 0 0 var(--space-3);
-  }
-
-  .transfer-wa-btn {
-    display: block;
-    width: 100%;
-    padding: 10px;
-    text-align: center;
-    text-decoration: none;
-    font-size: 0.9rem;
-    font-weight: 600;
   }
 </style>

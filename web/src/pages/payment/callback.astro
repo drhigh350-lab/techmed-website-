@@ -36,7 +36,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         <p class="state-eyebrow">PAYSTACK SECURE VERIFICATION</p>
         <h1 class="state-title">Confirming your payment...</h1>
         <p class="state-desc">
-          We are verifying your transaction reference with Paystack and activating your bookshelf license. This usually takes just a few seconds.
+          We are verifying your transaction reference with Paystack and activating your enrolment. This usually takes just a few seconds.
         </p>
         <div class="ref-pill-box">
           <span class="ref-label">Reference:</span>
@@ -52,19 +52,23 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </svg>
         </div>
         <p class="state-eyebrow success">TRANSACTION CONFIRMED</p>
-        <h1 class="state-title">Payment successful!</h1>
+        <h1 class="state-title" id="successHeading">Payment Confirmed!</h1>
         <p class="state-desc" id="successDesc">
-          Your payment has been verified. Your study manual is now permanently active on your bookshelf.
+          Your payment has been verified and your purchase is active. Welcome to TECHMED!
         </p>
 
         <div class="receipt-box">
           <div class="receipt-row">
-            <span class="receipt-label">Resource:</span>
+            <span class="receipt-label">Enrolment / Item:</span>
             <span id="confirmedProductName" class="receipt-val highlight">—</span>
           </div>
           <div class="receipt-row">
-            <span class="receipt-label">Access License:</span>
-            <span class="receipt-val">Permanent Lifetime Bookshelf</span>
+            <span class="receipt-label">Billing Duration:</span>
+            <span id="confirmedDuration" class="receipt-val">—</span>
+          </div>
+          <div class="receipt-row">
+            <span class="receipt-label">Amount Paid:</span>
+            <span id="confirmedAmount" class="receipt-val highlight">—</span>
           </div>
           <div class="receipt-row">
             <span class="receipt-label">Transaction Reference:</span>
@@ -76,12 +80,36 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </div>
         </div>
 
+        <!-- Post-Payment Account Setup (for unauthenticated students) -->
+        <div id="postPaymentAccountBox" class="account-setup-box" style="display: none;">
+          <div class="setup-badge">STUDENT ACCOUNT SETUP</div>
+          <h2 class="setup-title">Secure your student account</h2>
+          <p class="setup-desc">
+            Your purchase is secure. Create a password to access your dashboard, track classes, and manage your enrolment.
+          </p>
+          <form id="postPaymentAuthForm" class="setup-form">
+            <div class="form-field">
+              <label for="postPaymentEmail">Email Address</label>
+              <input type="email" id="postPaymentEmail" readonly required class="setup-input" />
+            </div>
+            <div class="form-field">
+              <label for="postPaymentPassword">Create Password</label>
+              <input type="password" id="postPaymentPassword" placeholder="Minimum 6 characters" minlength="6" required class="setup-input" />
+            </div>
+            <button type="submit" id="postPaymentSubmitBtn" class="btn-primary action-btn">
+              Create Account &amp; Access Dashboard
+            </button>
+            <p id="postPaymentStatus" class="setup-status" style="display: none;"></p>
+          </form>
+        </div>
+
+        <!-- Direct Access Links -->
         <div class="action-buttons-group">
           <a id="openReaderBtn" href="/library" class="btn-primary action-btn">
-            Open in Study Reader Now &rarr;
+            Open Student Library &amp; Bookshelf &rarr;
           </a>
-          <a href="/library" class="btn-secondary action-btn">
-            Go to My Bookshelf
+          <a id="successWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
+            Join Student WhatsApp Community
           </a>
         </div>
       </div>
@@ -95,23 +123,23 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </svg>
         </div>
         <p class="state-eyebrow warning">TRANSACTION PROCESSING</p>
-        <h1 class="state-title">Confirmation still in progress</h1>
+        <h1 class="state-title">Payment Settlement in Progress</h1>
         <p class="state-desc">
-          Your bank or Paystack is processing the transfer. If you were debited, your reference is recorded and your manual will unlock as soon as settlement completes.
+          Your bank or Paystack is still processing the transfer. If you were debited, your reference is recorded and your enrolment will activate automatically as soon as settlement completes.
         </p>
 
         <div class="pending-actions">
           <button type="button" id="recheckBtn" class="btn-primary action-btn">
-            Check Status Again
+            Check Payment Status Again
           </button>
           <a id="pendingWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
             Notify Admissions Desk on WhatsApp
           </a>
-          <a href="/library" class="text-link">Return to Bookshelf</a>
+          <a href="/pricing" class="text-link">Return to Pricing</a>
         </div>
       </div>
 
-      <!-- State 4: Error / Reference Not Found -->
+      <!-- State 4: Error / Payment Not Completed -->
       <div id="errorState" class="state-block" style="display: none;">
         <div class="status-icon error-icon" aria-hidden="true">
           <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -120,29 +148,37 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
         </div>
-        <p class="state-eyebrow danger">ATTENTION REQUIRED</p>
-        <h1 class="state-title">We couldn't verify that reference yet</h1>
+        <p class="state-eyebrow danger">PAYMENT NOT COMPLETED</p>
+        <h1 class="state-title">We couldn't confirm this payment</h1>
         <p class="state-desc" id="errorMessage">
-          No matching completed transaction was found for this link. If you were charged, don't worry: send us your reference on WhatsApp and our team will grant your access manually.
+          The transaction could not be verified or was cancelled. If your bank account was debited, please contact our admissions desk with your reference and we will verify it manually.
         </p>
 
         <div class="error-actions">
-          <a id="errorWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-primary action-btn">
+          <a href="/pricing" id="retryPricingBtn" class="btn-primary action-btn">
+            Try Again on Pricing Page
+          </a>
+          <a id="errorWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
             Message Support on WhatsApp
           </a>
-          <a href="/library" class="btn-secondary action-btn">
-            Open Student Library
-          </a>
+          <a href="/library" class="text-link">Open Student Library</a>
         </div>
       </div>
     </div>
   </div>
+
+  <script id="catalogData" type="application/json" set:html={catalogMapJson} />
 </BaseLayout>
 
-<script define:vars={{ catalogRaw: catalogMapJson }}>
-  const CATALOG = JSON.parse(catalogRaw);
+<script>
+  import { getSupabase, getCurrentUser, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+  import { trackEvent } from '/src/lib/analytics.ts';
 
-  import { getCurrentUser, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+  const catalogEl = document.getElementById('catalogData');
+  let CATALOG: any[] = [];
+  try {
+    CATALOG = JSON.parse(catalogEl?.textContent || '[]');
+  } catch {}
 
   const loadingState = document.getElementById('loadingState');
   const successState = document.getElementById('successState');
@@ -151,29 +187,74 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
   const displayRef = document.getElementById('displayRef');
   const confirmedProductName = document.getElementById('confirmedProductName');
+  const confirmedDuration = document.getElementById('confirmedDuration');
+  const confirmedAmount = document.getElementById('confirmedAmount');
   const confirmedRef = document.getElementById('confirmedRef');
   const confirmedTime = document.getElementById('confirmedTime');
   const successDesc = document.getElementById('successDesc');
-  const openReaderBtn = document.getElementById('openReaderBtn');
+  const openReaderBtn = document.getElementById('openReaderBtn') as HTMLAnchorElement | null;
+  const successWhatsAppBtn = document.getElementById('successWhatsAppBtn') as HTMLAnchorElement | null;
 
   const recheckBtn = document.getElementById('recheckBtn');
-  const pendingWhatsAppBtn = document.getElementById('pendingWhatsAppBtn');
-  const errorWhatsAppBtn = document.getElementById('errorWhatsAppBtn');
+  const pendingWhatsAppBtn = document.getElementById('pendingWhatsAppBtn') as HTMLAnchorElement | null;
+  const errorWhatsAppBtn = document.getElementById('errorWhatsAppBtn') as HTMLAnchorElement | null;
   const errorMessage = document.getElementById('errorMessage');
+
+  const postPaymentAccountBox = document.getElementById('postPaymentAccountBox');
+  const postPaymentAuthForm = document.getElementById('postPaymentAuthForm');
+  const postPaymentEmail = document.getElementById('postPaymentEmail') as HTMLInputElement | null;
+  const postPaymentPassword = document.getElementById('postPaymentPassword') as HTMLInputElement | null;
+  const postPaymentSubmitBtn = document.getElementById('postPaymentSubmitBtn') as HTMLButtonElement | null;
+  const postPaymentStatus = document.getElementById('postPaymentStatus');
 
   let pollAttempts = 0;
   const MAX_POLL_ATTEMPTS = 5;
+  let currentOrderEmail = '';
+  let activeReference = '';
 
-  function setView(state) {
-    loadingState.style.display = state === 'loading' ? 'block' : 'none';
-    successState.style.display = state === 'success' ? 'block' : 'none';
-    pendingState.style.display = state === 'pending' ? 'block' : 'none';
-    errorState.style.display = state === 'error' ? 'block' : 'none';
+  function setView(state: 'loading' | 'success' | 'pending' | 'error') {
+    if (loadingState) loadingState.style.display = state === 'loading' ? 'block' : 'none';
+    if (successState) successState.style.display = state === 'success' ? 'block' : 'none';
+    if (pendingState) pendingState.style.display = state === 'pending' ? 'block' : 'none';
+    if (errorState) errorState.style.display = state === 'error' ? 'block' : 'none';
   }
 
-  function getReference() {
+  function getReference(): string | null {
     const params = new URLSearchParams(window.location.search);
     return params.get('reference') || params.get('trxref') || params.get('ref');
+  }
+
+  function getPlanDurationLabel(productId?: string): string {
+    if (!productId) return 'Lifetime Access';
+    if (productId.includes('monthly')) return '1-Month Subscription (Renews Monthly)';
+    if (productId.includes('earlybird')) return '3 Months Upfront (Early-Bird Offer)';
+    if (productId.includes('standard')) return '3 Months Upfront (Standard)';
+    if (productId.includes('ultimate')) return 'Full UTME 2027 Access (All Phases)';
+    if (productId.includes('core')) return '3 Months Upfront (Early-Bird Offer)';
+    if (productId.includes('mastery')) return '3 Months Upfront (Early-Bird Offer)';
+    return 'Permanent Lifetime Bookshelf License';
+  }
+
+  function formatNaira(amount?: number | string): string {
+    if (!amount) return '—';
+    const num = Number(amount);
+    return '₦' + num.toLocaleString('en-NG');
+  }
+
+  async function checkServerEdgeVerify(reference: string) {
+    try {
+      const res = await fetch('https://unbgborbhxzsotaieiun.supabase.co/functions/v1/pay-verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference }),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {
+      console.warn('pay-verify edge function call failed, falling back to client RPC:', e);
+    }
+    return null;
   }
 
   async function verifyTransaction() {
@@ -181,47 +262,36 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     if (!reference) {
       setView('error');
-      errorMessage.textContent = 'No payment reference was detected in the URL. If you just finished payment, please check your email receipt or contact TECHMED on WhatsApp.';
+      if (errorMessage) {
+        errorMessage.textContent = 'No payment reference was detected in the URL. If you just finished payment, please check your email receipt or contact TECHMED on WhatsApp.';
+      }
       return;
     }
 
-    displayRef.textContent = reference;
+    activeReference = reference;
+    if (displayRef) displayRef.textContent = reference;
+
+    const waMsg = encodeURIComponent(`Hi TECHMED, I just paid via Paystack. My reference is ${reference}. Please verify my access.`);
+    const waUrl = `https://wa.me/2347044255045?text=${waMsg}`;
+    if (pendingWhatsAppBtn) pendingWhatsAppBtn.href = waUrl;
+    if (errorWhatsAppBtn) errorWhatsAppBtn.href = waUrl;
+    if (successWhatsAppBtn) successWhatsAppBtn.href = waUrl;
+
     const user = await getCurrentUser();
 
-    // Prepare WhatsApp fallback link with reference
-    const waUrl = `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I just paid via Paystack. My reference is ${reference}. Please verify my access.`)}`;
-    pendingWhatsAppBtn.href = waUrl;
-    errorWhatsAppBtn.href = waUrl;
+    // 1. Try server-side Edge verification
+    const edgeResult = await checkServerEdgeVerify(reference);
 
+    if (edgeResult?.success && edgeResult.status === 'paid' && edgeResult.order) {
+      handleSuccessOrder(edgeResult.order, reference, user);
+      return;
+    }
+
+    // 2. Try client RPC verification
     const res = await verifyAndClaimOrderReference(reference, user);
 
     if (res.success && res.order) {
-      // Success!
-      setView('success');
-      const order = res.order;
-      const matchedCatalog = CATALOG.find(c => c.id === order.product_id || c.slug === order.product_id);
-      const title = order.product_name || matchedCatalog?.title || 'TECHMED Study Booster';
-
-      confirmedProductName.textContent = title;
-      confirmedRef.textContent = reference;
-      confirmedTime.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-GB');
-
-      // Set link to reader
-      const readerId = matchedCatalog?.id || order.product_id;
-      if (readerId) {
-        openReaderBtn.href = `/library/read/${readerId}`;
-      } else {
-        openReaderBtn.href = '/library';
-      }
-
-      // Also ensure it is registered in local storage cache
-      saveLocalEntitlement({
-        resourceId: readerId,
-        customerEmail: user?.email || '',
-        grantSource: 'purchase',
-        resourceTitle: title,
-      });
-
+      handleSuccessOrder(res.order, reference, user);
       return;
     }
 
@@ -237,10 +307,142 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     // Failed or not found
     setView('error');
-    if (res.message) {
+    if (errorMessage && res.message) {
       errorMessage.textContent = res.message;
     }
   }
+
+  function handleSuccessOrder(order: any, reference: string, user: any) {
+    setView('success');
+    const matchedCatalog = CATALOG.find(c => c.id === order.product_id || c.slug === order.product_id);
+    const title = order.product_name || matchedCatalog?.title || 'TECHMED Programme Access';
+
+    if (confirmedProductName) confirmedProductName.textContent = title;
+    if (confirmedDuration) confirmedDuration.textContent = getPlanDurationLabel(order.product_id);
+    if (confirmedAmount) confirmedAmount.textContent = formatNaira(order.amount || matchedCatalog?.price);
+    if (confirmedRef) confirmedRef.textContent = reference;
+    if (confirmedTime) {
+      confirmedTime.textContent = new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ', ' + new Date().toLocaleDateString('en-GB');
+    }
+
+    currentOrderEmail = order.email || user?.email || '';
+
+    // Track analytics conversion
+    trackEvent('payment_success', {
+      product_id: order.product_id,
+      amount: order.amount,
+      reference,
+    });
+
+    const isCohort = order.product_id && (order.product_id.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(order.product_id));
+
+    if (openReaderBtn) {
+      if (isCohort) {
+        openReaderBtn.href = '/library';
+        openReaderBtn.textContent = 'Enter Student Dashboard & Library →';
+      } else {
+        const readerId = matchedCatalog?.id || order.product_id;
+        openReaderBtn.href = `/library/read/${readerId}`;
+        openReaderBtn.textContent = 'Open in Study Reader Now →';
+      }
+    }
+
+    // Local entitlement caching
+    saveLocalEntitlement({
+      resourceId: order.product_id,
+      customerEmail: currentOrderEmail,
+      grantSource: 'purchase',
+      resourceTitle: title,
+    });
+
+    // Check if account setup is required (user not signed in)
+    if (!user) {
+      if (postPaymentAccountBox) postPaymentAccountBox.style.display = 'block';
+      if (postPaymentEmail && currentOrderEmail) postPaymentEmail.value = currentOrderEmail;
+    }
+  }
+
+  // Handle post-payment password creation
+  postPaymentAuthForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = postPaymentEmail?.value.trim() || currentOrderEmail;
+    const password = postPaymentPassword?.value || '';
+
+    if (!email || !password || password.length < 6) {
+      if (postPaymentStatus) {
+        postPaymentStatus.style.display = 'block';
+        postPaymentStatus.style.color = '#ef4444';
+        postPaymentStatus.textContent = 'Password must be at least 6 characters.';
+      }
+      return;
+    }
+
+    if (postPaymentSubmitBtn) {
+      postPaymentSubmitBtn.disabled = true;
+      postPaymentSubmitBtn.textContent = 'Setting up account...';
+    }
+
+    try {
+      const supabase = getSupabase();
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+
+      if (error) {
+        if (error.message.includes('already registered')) {
+          if (postPaymentStatus) {
+            postPaymentStatus.style.display = 'block';
+            postPaymentStatus.style.color = '#eab308';
+            postPaymentStatus.textContent = 'An account with this email already exists. You can sign in using your existing password on the Student Library.';
+          }
+        } else {
+          if (postPaymentStatus) {
+            postPaymentStatus.style.display = 'block';
+            postPaymentStatus.style.color = '#ef4444';
+            postPaymentStatus.textContent = error.message;
+          }
+        }
+        if (postPaymentSubmitBtn) {
+          postPaymentSubmitBtn.disabled = false;
+          postPaymentSubmitBtn.textContent = 'Create Account & Access Dashboard';
+        }
+        return;
+      }
+
+      // Link order to new user account
+      if (activeReference) {
+        try {
+          await supabase.rpc('claim_order_reference', {
+            p_reference: activeReference,
+            p_claimant_email: email.toLowerCase(),
+          });
+        } catch (rpcErr) {
+          console.warn('Auto-claim order failed:', rpcErr);
+        }
+      }
+
+      if (postPaymentStatus) {
+        postPaymentStatus.style.display = 'block';
+        postPaymentStatus.style.color = '#22c55e';
+        postPaymentStatus.textContent = 'Account created successfully! Please check your email to verify your address, or continue to your dashboard.';
+      }
+
+      if (postPaymentSubmitBtn) {
+        postPaymentSubmitBtn.style.display = 'none';
+      }
+    } catch (err: any) {
+      if (postPaymentStatus) {
+        postPaymentStatus.style.display = 'block';
+        postPaymentStatus.style.color = '#ef4444';
+        postPaymentStatus.textContent = err.message || 'Error creating account. Please try again.';
+      }
+      if (postPaymentSubmitBtn) {
+        postPaymentSubmitBtn.disabled = false;
+        postPaymentSubmitBtn.textContent = 'Create Account & Access Dashboard';
+      }
+    }
+  });
 
   recheckBtn?.addEventListener('click', () => {
     pollAttempts = 0;
@@ -262,7 +464,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .callback-card {
-    max-width: 520px;
+    max-width: 540px;
     width: 100%;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -281,7 +483,6 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     to { opacity: 1; transform: translateY(0); }
   }
 
-  /* Spinner */
   .spinner-wrap {
     margin-bottom: var(--space-6);
   }
@@ -354,7 +555,6 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     word-break: break-all;
   }
 
-  /* Status Icons */
   .status-icon {
     width: 68px;
     height: 68px;
@@ -383,13 +583,12 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     border: 1px solid rgba(239, 68, 68, 0.3);
   }
 
-  /* Receipt Box */
   .receipt-box {
     background: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: var(--radius-sm);
     padding: var(--space-5);
-    margin-bottom: var(--space-8);
+    margin-bottom: var(--space-6);
     text-align: left;
   }
 
@@ -397,7 +596,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 6px 0;
+    padding: 7px 0;
     font-size: 0.85rem;
     border-bottom: 1px solid var(--border-subtle);
   }
@@ -425,7 +624,73 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     font-size: 0.8rem;
   }
 
-  /* Action Buttons */
+  /* Account setup box */
+  .account-setup-box {
+    background: rgba(3, 105, 161, 0.08);
+    border: 1px solid rgba(14, 165, 233, 0.25);
+    border-radius: var(--radius-sm);
+    padding: var(--space-5);
+    margin-bottom: var(--space-6);
+    text-align: left;
+  }
+
+  .setup-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .setup-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin: 0 0 6px;
+    color: var(--text);
+  }
+
+  .setup-desc {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.5;
+    margin: 0 0 14px;
+  }
+
+  .setup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-field label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .setup-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+
+  .setup-status {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    margin-top: 6px;
+  }
+
   .action-buttons-group,
   .pending-actions,
   .error-actions {

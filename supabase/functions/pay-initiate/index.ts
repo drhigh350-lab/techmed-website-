@@ -107,7 +107,7 @@ Deno.serve(async (req) => {
     console.error("PAYSTACK_SECRET_KEY is not set in Edge Function secrets");
     return jsonResponse({
       success: false,
-      message: "Online payment gateway is undergoing maintenance. Please complete registration via WhatsApp or Bank Transfer.",
+      message: "Online payment gateway is undergoing maintenance. Please contact our admissions desk on WhatsApp (07044255045) for assistance.",
     }, 500);
   }
 
@@ -157,7 +157,7 @@ Deno.serve(async (req) => {
     paystackData = paystackJson.data;
   } catch (err) {
     console.error("Paystack request error:", err);
-    return jsonResponse({ success: false, message: "Could not reach Paystack. Please try again or use direct bank transfer." }, 502);
+    return jsonResponse({ success: false, message: "Could not reach Paystack. Please try again or contact support on WhatsApp." }, 502);
   }
 
   // Record pending order

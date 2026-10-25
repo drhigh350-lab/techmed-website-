@@ -83,17 +83,18 @@ recordTest('Scenario 3: Privilege escalation prevention (users cannot mutate rol
 // -----------------------------------------------------------------------------
 // TEST 4: Authoritative Bank Account Details Across All Surfaces
 // -----------------------------------------------------------------------------
-recordTest('Scenario 4: Authoritative bank account details (Moniepoint MFB, Johnson Wisdom Onyekachi, 6573645432)', () => {
+recordTest('Scenario 4: Authoritative bank account details and student checkout Paystack-only isolation', () => {
   const readAstro = fs.readFileSync(path.join(webRoot, 'src/pages/library/read/[id].astro'), 'utf8');
   assert.ok(readAstro.includes('6573645432'), 'Missing authoritative account 6573645432 in reader');
   assert.ok(readAstro.includes('Johnson Wisdom Onyekachi'), 'Missing account name in reader');
 
-  const modalAstro = fs.readFileSync(path.join(webRoot, 'src/components/CheckoutModal.astro'), 'utf8');
-  assert.ok(modalAstro.includes('6573645432'), 'Missing authoritative account in CheckoutModal');
-  assert.ok(modalAstro.includes('Johnson Wisdom Onyekachi'), 'Missing account name in CheckoutModal');
-
   const adminAstro = fs.readFileSync(path.join(webRoot, 'src/pages/library/admin.astro'), 'utf8');
   assert.ok(adminAstro.includes('6573645432'), 'Missing authoritative account in admin.astro');
+
+  // Verify student CheckoutModal has completely removed the Direct Bank Transfer tab & instructions
+  const modalAstro = fs.readFileSync(path.join(webRoot, 'src/components/CheckoutModal.astro'), 'utf8');
+  assert.ok(!modalAstro.includes('tabTransfer'), 'CheckoutModal still contains tabTransfer');
+  assert.ok(!modalAstro.includes('Direct Bank Transfer'), 'CheckoutModal still contains Direct Bank Transfer');
 
   // Verify outdated account number 6542718903 is completely absent
   assert.ok(!readAstro.includes('6542718903'), 'Found outdated account number in reader');

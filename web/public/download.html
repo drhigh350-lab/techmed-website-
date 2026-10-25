@@ -202,6 +202,23 @@ async function checkOrder() {
       }
     }
 
+    // Also trigger pay-verify Edge Function to verify directly with Paystack API if pending
+    try {
+      const edgeRes = await fetch(`${SUPABASE_URL}/functions/v1/pay-verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference }),
+      });
+      if (edgeRes.ok) {
+        const edgeData = await edgeRes.json();
+        if (edgeData.success && edgeData.order) {
+          order = edgeData.order;
+        }
+      }
+    } catch (edgeErr) {
+      console.warn('pay-verify Edge Function call failed:', edgeErr);
+    }
+
     if (!order) {
       setState('state-error', ICONS.error, 'We could not find that order',
         'This can happen if you refreshed the page or the link was opened twice. Contact us on WhatsApp with your reference and we will confirm manually.',
@@ -214,12 +231,58 @@ async function checkOrder() {
       const isCohort = order.product_id && (order.product_id.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(order.product_id));
       if (isCohort) {
         setState('state-success', ICONS.success, 'Enrolment Confirmed!',
-          `Welcome to the TECHMED UTME 2027 Cohort! Your enrolment for "${order.product_name}" is active. You can now access the student library and bookshelf. Onboarding instructions have also been sent to your email.`,
-          `<div style="display:flex;flex-direction:column;gap:10px;">
+          `Welcome to the TECHMED UTME 2027 Cohort! Your enrolment for "${order.product_name}" is active. You can now access the student library and bookshelf. Create a password below or proceed directly to the library.`,
+          `<div style="display:flex;flex-direction:column;gap:12px;">
              <a href="/library" class="btn-primary" style="width:100%;justify-content:center;">Open Student Library</a>
+             <div id="quickAccountSetup" style="background:var(--surface-raised, rgba(255,255,255,0.05));border:1px solid var(--border);border-radius:6px;padding:12px;text-align:left;">
+               <p style="font-size:0.8rem;font-weight:700;color:var(--primary);margin:0 0 4px;text-transform:uppercase;">Quick Account Setup</p>
+               <p style="font-size:0.8rem;color:var(--text-light);margin:0 0 8px;">Create a password for <strong>${order.email || 'your email'}</strong> to log in on any device:</p>
+               <input type="password" id="dlPassword" placeholder="New Password (min 6 chars)" style="width:100%;padding:8px 10px;margin-bottom:8px;border-radius:4px;border:1px solid var(--border);background:var(--surface);color:var(--text);box-sizing:border-box;">
+               <button type="button" id="dlCreateAccBtn" style="width:100%;padding:8px;background:var(--primary);color:#fff;border:none;border-radius:4px;font-weight:600;cursor:pointer;">Set Password & Link Enrolment</button>
+               <p id="dlAccStatus" style="font-size:0.75rem;margin:6px 0 0;display:none;"></p>
+             </div>
              <a href="${whatsappHref(reference)}" class="btn-secondary" target="_blank" style="width:100%;justify-content:center;text-decoration:none;padding:10px;border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);font-weight:600;">Join WhatsApp Group / Admissions Desk</a>
            </div>
            <p class="ref-note">Reference: ${reference}</p>`);
+
+        // Attach listener for quick account setup
+        setTimeout(() => {
+          const btn = document.getElementById('dlCreateAccBtn');
+          const pass = document.getElementById('dlPassword');
+          const stat = document.getElementById('dlAccStatus');
+          btn?.addEventListener('click', async () => {
+            if (!pass || !pass.value || pass.value.length < 6) {
+              if (stat) { stat.style.display = 'block'; stat.style.color = '#ef4444'; stat.textContent = 'Password must be at least 6 characters.'; }
+              return;
+            }
+            btn.disabled = true;
+            btn.textContent = 'Setting up...';
+            try {
+              const signUpRes = await fetch(`${SUPABASE_URL}/auth/v1/signup`, {
+                method: 'POST',
+                headers: {
+                  'apikey': SUPABASE_ANON_KEY,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email: order.email, password: pass.value }),
+              });
+              const signUpData = await signUpRes.json();
+              if (signUpRes.ok) {
+                if (stat) { stat.style.display = 'block'; stat.style.color = '#22c55e'; stat.textContent = 'Account created! Verification email sent.'; }
+                btn.style.display = 'none';
+              } else {
+                if (stat) { stat.style.display = 'block'; stat.style.color = '#ef4444'; stat.textContent = signUpData.msg || signUpData.error_description || 'Signup error'; }
+                btn.disabled = false;
+                btn.textContent = 'Set Password & Link Enrolment';
+              }
+            } catch (err) {
+              if (stat) { stat.style.display = 'block'; stat.style.color = '#ef4444'; stat.textContent = 'Network error setting password.'; }
+              btn.disabled = false;
+              btn.textContent = 'Set Password & Link Enrolment';
+            }
+          });
+        }, 50);
+
         return;
       }
 

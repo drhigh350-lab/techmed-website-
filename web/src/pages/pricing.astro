@@ -117,67 +117,81 @@ const jsonLd = [
                 <p class="plan-positioning">{plan.positioning}</p>
               </div>
 
-              <!-- Price Box -->
+              <!-- Price Box with Early-Bird and Strikethrough Logic -->
               <div class="card-price-box">
-                <div class="price-primary-row">
-                  <span class="price-figure">{plan.prices.mainAmount}</span>
-                  <span class="price-period">{plan.prices.mainPeriod}</span>
-                </div>
-
-                {plan.prices.secondaryOption && (
-                  <div class="price-secondary-option">
-                    <span>or {plan.prices.secondaryOption}</span>
-                  </div>
+                {plan.id === 'core' && (
+                  isEarlyBirdActive ? (
+                    <div class="price-primary-row coreBillingSelector" data-period="earlybird">
+                      <span class="price-figure">₦15,000</span>
+                      <span class="original-price-strike">₦18,000</span>
+                      <span class="price-period">for 3 months upfront</span>
+                    </div>
+                    <div class="price-secondary-option coreBillingSelector" data-period="monthly">
+                      <span>or ₦7,000 / month</span>
+                    </div>
+                    <div class="early-bird-callout">
+                      <span class="early-bird-tag">Early-bird offer:</span>
+                      <span class="early-bird-text">Save ₦3,000 upfront. Valid through 15 November 2026.</span>
+                    </div>
+                  ) : (
+                    <div class="price-primary-row coreBillingSelector" data-period="earlybird">
+                      <span class="price-figure">₦18,000</span>
+                      <span class="price-period">for 3 months upfront</span>
+                    </div>
+                    <div class="price-secondary-option coreBillingSelector" data-period="monthly">
+                      <span>or ₦7,000 / month</span>
+                    </div>
+                  )
                 )}
 
-                {plan.prices.coverageNote && (
+                {plan.id === 'mastery' && (
+                  isEarlyBirdActive ? (
+                    <div class="price-primary-row">
+                      <span class="price-figure">₦20,000</span>
+                      <span class="original-price-strike">₦25,000</span>
+                      <span class="price-period">for 3 months</span>
+                    </div>
+                    <div class="early-bird-callout">
+                      <span class="early-bird-tag">Early-bird offer:</span>
+                      <span class="early-bird-text">Save ₦5,000 upfront. Valid through 15 November 2026.</span>
+                    </div>
+                  ) : (
+                    <div class="price-primary-row">
+                      <span class="price-figure">₦25,000</span>
+                      <span class="price-period">for 3 months</span>
+                    </div>
+                  )
+                )}
+
+                {plan.id === 'ultimate' && (
+                  <div class="price-primary-row">
+                    <span class="price-figure">₦40,000</span>
+                    <span class="price-period">one-time payment</span>
+                  </div>
                   <div class="price-coverage-note">
-                    <span>{plan.prices.coverageNote}</span>
-                  </div>
-                )}
-
-                {plan.prices.earlyBird && (
-                  <div class="early-bird-callout">
-                    <span class="early-bird-tag">Early-bird:</span>
-                    <span class="early-bird-text">
-                      <strong>{plan.prices.earlyBird.amount}</strong> {plan.prices.earlyBird.condition}
-                    </span>
+                    <span>Programme coverage through UTME 2027</span>
                   </div>
                 )}
               </div>
 
-              <!-- CTA Button -->
+              <!-- Single Primary CTA Button per Plan (Supported IDs: pay-btn-core, pay-btn-mastery, pay-btn-ultimate) -->
               <div class="card-cta-container">
-                {plan.id === 'core' && (
-                  <div class="billing-cycle-selector" id="coreBillingSelector">
-                    <button type="button" class="cycle-pill active" data-period="earlybird" data-price="15000">
-                      <span>3 Months (Early-bird)</span>
-                      <span class="pill-price">₦15,000</span>
-                    </button>
-                    <button type="button" class="cycle-pill" data-period="monthly" data-price="7000">
-                      <span>1 Month Subscription</span>
-                      <span class="pill-price">₦7,000</span>
-                    </button>
-                  </div>
-                )}
-
                 <button
                   type="button"
-                  id={`pay-btn-${plan.id}`}
+                  id={`choose-btn-${plan.id}`}
+                  data-btn-id={`pay-btn-${plan.id}`}
                   class:list={[
                     'cta-button',
-                    'pay-online-btn',
+                    'choose-plan-btn',
+                    `pay-btn-${plan.id}`,
                     { 'cta-button-popular': plan.isPopular },
                     { 'cta-button-ultimate': plan.isBestValue },
                     { 'cta-button-core': !plan.isPopular && !plan.isBestValue },
                   ]}
-                  aria-label={`Pay for ${plan.name} online via Paystack`}
+                  data-plan={plan.id}
+                  aria-label={`${plan.ctaLabel} Plan`}
                 >
-                  <span class="btn-text">
-                    {plan.id === 'core' ? 'Pay ₦15,000 Online (Paystack)' :
-                     plan.id === 'mastery' ? 'Pay ₦20,000 Online (Paystack)' :
-                     'Pay ₦40,000 Online (Paystack)'}
-                  </span>
+                  <span class="btn-text">{plan.ctaLabel}</span>
                   <svg class="cta-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -303,10 +317,11 @@ const jsonLd = [
             <button
               type="button"
               id="pay-btn-ultimate-bottom"
-              class="cta-button-ultimate-large"
-              aria-label="Pay for Ultimate Online via Paystack"
+              class="cta-button-ultimate-large choose-plan-btn"
+              data-plan="ultimate"
+              aria-label="Choose Ultimate Plan"
             >
-              <span>{WHY_ULTIMATE_DATA.ctaLabel} — PAY ₦40,000</span>
+              <span>{WHY_ULTIMATE_DATA.ctaLabel} — ₦40,000</span>
               <svg class="cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                 <path d="M5 12h14M12 5l7 7-7 7" />
               </svg>
@@ -371,107 +386,71 @@ const jsonLd = [
   </main>
 
   <script>
-    let coreSelection = {
-      period: 'earlybird',
-      id: 'cohort-core-earlybird',
-      title: 'TECHMED Core (3-Month Early-Bird)',
-      price: 15000,
-      description: '12 weeks of live teaching across 5 science subjects, 4 hours daily, Kairo CBT drills, and 3 full mock exams.',
-    };
+    import { trackEvent } from '/src/lib/analytics.ts';
 
-    const corePills = document.querySelectorAll('#coreBillingSelector .cycle-pill');
-    const corePayBtn = document.getElementById('pay-btn-core');
+    const EARLY_BIRD_DEADLINE = new Date('2026-11-15T23:59:59Z').getTime();
+    const isEarlyBird = Date.now() <= EARLY_BIRD_DEADLINE;
 
-    corePills.forEach((pill) => {
-      pill.addEventListener('click', () => {
-        corePills.forEach((p) => p.classList.remove('active'));
-        pill.classList.add('active');
-        const period = pill.getAttribute('data-period');
-        if (period === 'monthly') {
-          coreSelection = {
-            period: 'monthly',
-            id: 'cohort-core-monthly',
-            title: 'TECHMED Core (1-Month Subscription)',
-            price: 7000,
-            description: '1 month of live teaching across 5 science subjects, 4 hours daily, and weekly Kairo CBT drills.',
-          };
-          if (corePayBtn) {
-            const btnText = corePayBtn.querySelector('.btn-text');
-            if (btnText) btnText.textContent = 'Pay ₦7,000 Online (Paystack)';
-          }
-        } else {
-          coreSelection = {
-            period: 'earlybird',
-            id: 'cohort-core-earlybird',
-            title: 'TECHMED Core (3-Month Early-Bird)',
-            price: 15000,
-            description: '12 weeks of live teaching across 5 science subjects, 4 hours daily, Kairo CBT drills, and 3 full mock exams.',
-          };
-          if (corePayBtn) {
-            const btnText = corePayBtn.querySelector('.btn-text');
-            if (btnText) btnText.textContent = 'Pay ₦15,000 Online (Paystack)';
-          }
+    document.querySelectorAll('.choose-plan-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const plan = btn.getAttribute('data-plan');
+        if (plan === 'core') {
+          trackEvent('plan_selected', { planId: 'core', planName: 'TECHMED Core', amount: isEarlyBird ? 15000 : 18000 });
+          window.dispatchEvent(
+            new CustomEvent('open-checkout', {
+              detail: {
+                resource: {
+                  id: 'core',
+                  title: isEarlyBird ? 'TECHMED Core (3-Month Early-Bird)' : 'TECHMED Core (3-Month Standard)',
+                  description: '12 weeks of live teaching across 5 science subjects, 4 hours daily, Kairo CBT drills, and 3 full mock exams.',
+                  price: isEarlyBird ? 15000 : 18000,
+                  originalPrice: isEarlyBird ? 18000 : null,
+                  isCohort: true,
+                  subject: 'UTME 2027 Core Track',
+                  deliveryFormat: 'Live Telegram + Kairo CBT',
+                },
+              },
+            })
+          );
+        } else if (plan === 'mastery') {
+          trackEvent('plan_selected', { planId: 'mastery', planName: 'TECHMED Mastery', amount: isEarlyBird ? 20000 : 25000 });
+          window.dispatchEvent(
+            new CustomEvent('open-checkout', {
+              detail: {
+                resource: {
+                  id: 'mastery',
+                  title: isEarlyBird ? 'TECHMED Mastery (3-Month Early-Bird)' : 'TECHMED Mastery (3-Month Standard)',
+                  description: 'Complete Core programme plus 11 comprehensive science formula workbooks and study manuals.',
+                  price: isEarlyBird ? 20000 : 25000,
+                  originalPrice: isEarlyBird ? 25000 : null,
+                  isCohort: true,
+                  subject: 'UTME 2027 Mastery Track',
+                  deliveryFormat: 'Live Telegram + 11 Manuals + CBT',
+                },
+              },
+            })
+          );
+        } else if (plan === 'ultimate') {
+          trackEvent('plan_selected', { planId: 'ultimate', planName: 'TECHMED Ultimate', amount: 40000 });
+          window.dispatchEvent(
+            new CustomEvent('open-checkout', {
+              detail: {
+                resource: {
+                  id: 'ultimate',
+                  title: 'TECHMED Ultimate (Full Programme)',
+                  description: 'Mastery package plus 3 specialist Bootcamps, 4 Subject Revision Packages, Final Revision classes, and eligibility for Founder Mentorship.',
+                  price: 40000,
+                  originalPrice: null,
+                  isCohort: true,
+                  subject: 'UTME 2027 Ultimate Track',
+                  deliveryFormat: 'Full Programme + Bootcamps + Mentorship',
+                },
+              },
+            })
+          );
         }
       });
     });
-
-    corePayBtn?.addEventListener('click', () => {
-      window.dispatchEvent(
-        new CustomEvent('open-checkout', {
-          detail: {
-            resource: {
-              id: coreSelection.id,
-              title: coreSelection.title,
-              description: coreSelection.description,
-              price: coreSelection.price,
-              isCohort: true,
-              subject: 'UTME 2027 Core Track',
-              deliveryFormat: 'Live Telegram + Kairo CBT',
-            },
-          },
-        })
-      );
-    });
-
-    const masteryPayBtn = document.getElementById('pay-btn-mastery');
-    masteryPayBtn?.addEventListener('click', () => {
-      window.dispatchEvent(
-        new CustomEvent('open-checkout', {
-          detail: {
-            resource: {
-              id: 'cohort-mastery-earlybird',
-              title: 'TECHMED Mastery (3-Month Early-Bird)',
-              description: 'Complete Core programme plus 11 comprehensive science formula workbooks and study manuals.',
-              price: 20000,
-              isCohort: true,
-              subject: 'UTME 2027 Mastery Track',
-              deliveryFormat: 'Live Telegram + 11 Manuals + CBT',
-            },
-          },
-        })
-      );
-    });
-
-    const openUltimate = () => {
-      window.dispatchEvent(
-        new CustomEvent('open-checkout', {
-          detail: {
-            resource: {
-              id: 'cohort-ultimate',
-              title: 'TECHMED Ultimate (Full UTME 2027)',
-              description: 'Mastery package plus 3 specialist Bootcamps, 4 Subject Revision Packages, Final Revision classes, and eligibility for Founder Mentorship.',
-              price: 40000,
-              isCohort: true,
-              subject: 'UTME 2027 Ultimate Track',
-              deliveryFormat: 'Full Programme + Bootcamps + Mentorship',
-            },
-          },
-        })
-      );
-    };
-
-    document.getElementById('pay-btn-ultimate')?.addEventListener('click', openUltimate);
-    document.getElementById('pay-btn-ultimate-bottom')?.addEventListener('click', openUltimate);
   </script>
 </BaseLayout>
 
