@@ -102,7 +102,22 @@ Deno.serve(async (req) => {
 
       // Validate amount paid matches expected order amount
       if (order.amount && Math.abs(paidAmount - order.amount) > 1) {
-        console.warn(`Amount mismatch for ${reference}: expected ${order.amount}, got ${paidAmount}`);
+        console.error(`Amount mismatch for ${reference}: expected ${order.amount}, got ${paidAmount}`);
+        await supabase
+          .from("orders")
+          .update({
+            status: "mismatched",
+            rejection_reason: `Amount mismatch: expected ₦${order.amount}, received ₦${paidAmount}`,
+            paystack_response: paystackData.data,
+            updated_at: new Date().toISOString(),
+          })
+          .eq("reference", reference);
+
+        return jsonResponse({
+          success: false,
+          status: "mismatched",
+          message: `Payment amount mismatch: expected ₦${order.amount.toLocaleString()}, received ₦${paidAmount.toLocaleString()}`,
+        }, 400);
       }
 
       const nowIso = new Date().toISOString();

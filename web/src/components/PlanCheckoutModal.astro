@@ -1,0 +1,779 @@
+---
+// Dedicated, mobile-first registration and Paystack checkout modal for TECHMED UTME 2027 paid plans
+// (Core, Mastery, and Ultimate).
+// Zero legacy discount checkboxes, zero untrusted price overrides, and Paystack-only checkout.
+---
+
+<div id="planCheckoutModalBackdrop" class="plan-modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="planModalHeaderTitle">
+  <div class="plan-modal-card">
+    <!-- Header -->
+    <div class="plan-modal-header">
+      <div>
+        <span class="plan-modal-eyebrow">TECHMED UTME 2027 ADMISSIONS</span>
+        <h2 id="planModalHeaderTitle" class="plan-modal-title">Enrol in Preparation Plan</h2>
+      </div>
+      <button type="button" id="closePlanModalBtn" class="plan-close-btn" aria-label="Close checkout">&times;</button>
+    </div>
+
+    <!-- Selected Plan Summary Card -->
+    <div class="plan-summary-box">
+      <div class="plan-summary-top">
+        <span id="planSummaryTrackBadge" class="plan-track-badge">UTME 2027 TRACK</span>
+        <span id="planSummaryDelivery" class="plan-delivery-badge">Live Telegram + CBT</span>
+      </div>
+      <h3 id="planSummaryTitle" class="plan-summary-name">TECHMED Plan</h3>
+      <p id="planSummaryDesc" class="plan-summary-desc">Comprehensive preparation curriculum.</p>
+
+      <div class="plan-price-row">
+        <span class="plan-price-label">Payable Amount:</span>
+        <div class="plan-price-figures">
+          <span id="planSummaryStrikePrice" class="plan-strike-price" style="display: none;">₦0</span>
+          <span id="planSummaryFinalPrice" class="plan-final-price">₦0</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Duration Selector (Only shown for Core plan) -->
+    <div id="coreBillingGroup" class="plan-billing-group" style="display: none;">
+      <label class="billing-group-label">Choose billing option:</label>
+      <div class="billing-cards-grid">
+        <label class="billing-card active" id="cardEarlybird">
+          <input type="radio" name="planCoreBilling" value="earlybird" checked />
+          <div class="billing-card-body">
+            <div class="billing-card-title-row">
+              <span class="billing-title">3 Months Upfront</span>
+              <span class="billing-badge" id="earlybirdPill">Early-Bird</span>
+            </div>
+            <div class="billing-prices">
+              <span class="billing-strike" id="earlybirdStrike">₦18,000</span>
+              <span class="billing-final" id="earlybirdFinal">₦15,000</span>
+            </div>
+            <span class="billing-deadline" id="earlybirdDeadlineNote">Valid through 15 Nov 2026</span>
+          </div>
+        </label>
+
+        <label class="billing-card" id="cardMonthly">
+          <input type="radio" name="planCoreBilling" value="monthly" />
+          <div class="billing-card-body">
+            <div class="billing-card-title-row">
+              <span class="billing-title">Monthly Subscription</span>
+            </div>
+            <div class="billing-prices">
+              <span class="billing-final">₦7,000</span>
+              <span class="billing-period">/ month</span>
+            </div>
+            <span class="billing-deadline">Renews every 30 days</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <!-- Customer Form -->
+    <form id="planCheckoutForm" class="plan-checkout-form">
+      <div class="form-field">
+        <label for="planCustomerEmail">Email Address (Required for Receipt &amp; Dashboard) *</label>
+        <input
+          type="email"
+          id="planCustomerEmail"
+          required
+          placeholder="candidate@gmail.com"
+          autocomplete="email"
+          class="plan-input"
+        />
+        <span class="field-hint">Your enrolment license will be associated with this email address.</span>
+      </div>
+
+      <div class="form-field">
+        <label for="planCustomerName">Student Full Name</label>
+        <input
+          type="text"
+          id="planCustomerName"
+          placeholder="e.g. Samuel Adebayo"
+          autocomplete="name"
+          class="plan-input"
+        />
+        <span class="field-hint">Used for the official class roster and attendance records.</span>
+      </div>
+
+      <div class="form-field">
+        <label for="planCustomerPhone">WhatsApp Phone Number</label>
+        <input
+          type="tel"
+          id="planCustomerPhone"
+          placeholder="e.g. 08012345678"
+          autocomplete="tel"
+          class="plan-input"
+        />
+        <span class="field-hint">Used for live Telegram class access and admissions onboarding.</span>
+      </div>
+
+      <!-- In-Modal Alert for Gateway Notices -->
+      <div id="planAlertBox" class="plan-alert-box" style="display: none;" role="alert"></div>
+
+      <!-- Paystack Payment Button (Only Payment Method) -->
+      <div class="plan-action-container">
+        <button type="submit" id="planSubmitBtn" class="btn-primary plan-pay-btn">
+          <span>Pay <span id="planSubmitAmount">₦0</span> with Paystack &rarr;</span>
+        </button>
+        <div class="paystack-trust-line">
+          <span class="lock-icon" aria-hidden="true">🔒</span>
+          <span>Secured by Paystack 256-bit encryption. Card, Bank Transfer, USSD &amp; Mobile Money.</span>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  import { getCurrentUser } from '/src/lib/supabase.ts';
+  import { trackEvent } from '/src/lib/analytics.ts';
+
+  const modalBackdrop = document.getElementById('planCheckoutModalBackdrop');
+  const closeBtn = document.getElementById('closePlanModalBtn');
+  const planSummaryTitle = document.getElementById('planSummaryTitle');
+  const planSummaryDesc = document.getElementById('planSummaryDesc');
+  const planSummaryDelivery = document.getElementById('planSummaryDelivery');
+  const planSummaryTrackBadge = document.getElementById('planSummaryTrackBadge');
+  const planSummaryStrikePrice = document.getElementById('planSummaryStrikePrice');
+  const planSummaryFinalPrice = document.getElementById('planSummaryFinalPrice');
+  const coreBillingGroup = document.getElementById('coreBillingGroup');
+  const cardEarlybird = document.getElementById('cardEarlybird');
+  const cardMonthly = document.getElementById('cardMonthly');
+  const earlybirdPill = document.getElementById('earlybirdPill');
+  const earlybirdStrike = document.getElementById('earlybirdStrike');
+  const earlybirdFinal = document.getElementById('earlybirdFinal');
+  const earlybirdDeadlineNote = document.getElementById('earlybirdDeadlineNote');
+
+  const planCheckoutForm = document.getElementById('planCheckoutForm');
+  const planCustomerEmail = document.getElementById('planCustomerEmail') as HTMLInputElement | null;
+  const planCustomerName = document.getElementById('planCustomerName') as HTMLInputElement | null;
+  const planCustomerPhone = document.getElementById('planCustomerPhone') as HTMLInputElement | null;
+  const planAlertBox = document.getElementById('planAlertBox');
+  const planSubmitBtn = document.getElementById('planSubmitBtn') as HTMLButtonElement | null;
+  const planSubmitAmount = document.getElementById('planSubmitAmount');
+
+  const EARLY_BIRD_DEADLINE = new Date('2026-11-15T23:59:59Z').getTime();
+
+  let activePlanId = 'core'; // 'core' | 'mastery' | 'ultimate'
+  let activeDuration = 'earlybird'; // 'earlybird' | 'monthly'
+  let authoritativePrice = 15000;
+  let authoritativeOriginalPrice: number | null = 18000;
+  let authoritativeTitle = 'TECHMED Core (3-Month Early-Bird)';
+  let serverProductId = 'cohort-core-earlybird';
+
+  function isEarlyBirdValid(): boolean {
+    return Date.now() <= EARLY_BIRD_DEADLINE;
+  }
+
+  function recalculatePlanDetails() {
+    const earlyValid = isEarlyBirdValid();
+
+    if (activePlanId === 'core') {
+      if (coreBillingGroup) coreBillingGroup.style.display = 'block';
+
+      if (activeDuration === 'monthly') {
+        serverProductId = 'cohort-core-monthly';
+        authoritativePrice = 7000;
+        authoritativeOriginalPrice = null;
+        authoritativeTitle = 'TECHMED Core (1-Month Subscription)';
+        if (cardMonthly) cardMonthly.classList.add('active');
+        if (cardEarlybird) cardEarlybird.classList.remove('active');
+      } else {
+        serverProductId = earlyValid ? 'cohort-core-earlybird' : 'cohort-core-standard';
+        authoritativePrice = earlyValid ? 15000 : 18000;
+        authoritativeOriginalPrice = earlyValid ? 18000 : null;
+        authoritativeTitle = earlyValid ? 'TECHMED Core (3-Month Early-Bird)' : 'TECHMED Core (3-Month Standard)';
+        if (cardEarlybird) cardEarlybird.classList.add('active');
+        if (cardMonthly) cardMonthly.classList.remove('active');
+      }
+
+      if (earlybirdPill) earlybirdPill.style.display = earlyValid ? 'inline' : 'none';
+      if (earlybirdStrike) earlybirdStrike.style.display = earlyValid ? 'inline' : 'none';
+      if (earlybirdFinal) earlybirdFinal.textContent = earlyValid ? '₦15,000' : '₦18,000';
+      if (earlybirdDeadlineNote) earlybirdDeadlineNote.textContent = earlyValid ? 'Valid through 15 Nov 2026' : '3 months upfront preparation';
+
+      if (planSummaryTrackBadge) planSummaryTrackBadge.textContent = 'CORE TRACK';
+      if (planSummaryDelivery) planSummaryDelivery.textContent = 'Live Telegram + Kairo CBT';
+      if (planSummaryDesc) planSummaryDesc.textContent = '12 weeks of live teaching across 5 science subjects, 4 hours daily, Kairo CBT drills, and 3 full mock exams.';
+    } else if (activePlanId === 'mastery') {
+      if (coreBillingGroup) coreBillingGroup.style.display = 'none';
+      serverProductId = earlyValid ? 'cohort-mastery-earlybird' : 'cohort-mastery-standard';
+      authoritativePrice = earlyValid ? 20000 : 25000;
+      authoritativeOriginalPrice = earlyValid ? 25000 : null;
+      authoritativeTitle = earlyValid ? 'TECHMED Mastery (3-Month Early-Bird)' : 'TECHMED Mastery (3-Month Standard)';
+
+      if (planSummaryTrackBadge) planSummaryTrackBadge.textContent = 'MASTERY TRACK';
+      if (planSummaryDelivery) planSummaryDelivery.textContent = 'Live Telegram + 11 Manuals + CBT';
+      if (planSummaryDesc) planSummaryDesc.textContent = 'Complete Core programme plus 11 comprehensive science formula workbooks and study manuals.';
+    } else if (activePlanId === 'ultimate') {
+      if (coreBillingGroup) coreBillingGroup.style.display = 'none';
+      serverProductId = 'cohort-ultimate';
+      authoritativePrice = 40000;
+      authoritativeOriginalPrice = null;
+      authoritativeTitle = 'TECHMED Ultimate (Full Programme)';
+
+      if (planSummaryTrackBadge) planSummaryTrackBadge.textContent = 'ULTIMATE TRACK';
+      if (planSummaryDelivery) planSummaryDelivery.textContent = 'Full Programme + Bootcamps + Mentorship';
+      if (planSummaryDesc) planSummaryDesc.textContent = 'Mastery package plus 3 specialist Bootcamps, 4 Subject Revision Packages, Final Revision classes, and eligibility for Founder Mentorship.';
+    }
+
+    if (planSummaryTitle) planSummaryTitle.textContent = authoritativeTitle;
+    if (planSummaryFinalPrice) planSummaryFinalPrice.textContent = `₦${authoritativePrice.toLocaleString()}`;
+    if (planSubmitAmount) planSubmitAmount.textContent = `₦${authoritativePrice.toLocaleString()}`;
+
+    if (planSummaryStrikePrice) {
+      if (authoritativeOriginalPrice && authoritativeOriginalPrice > authoritativePrice) {
+        planSummaryStrikePrice.style.display = 'inline';
+        planSummaryStrikePrice.textContent = `₦${authoritativeOriginalPrice.toLocaleString()}`;
+      } else {
+        planSummaryStrikePrice.style.display = 'none';
+      }
+    }
+  }
+
+  // Radio button listeners for Core duration selection
+  document.querySelectorAll('input[name="planCoreBilling"]').forEach((radio) => {
+    radio.addEventListener('change', (e) => {
+      const target = e.target as HTMLInputElement;
+      if (target.checked) {
+        activeDuration = target.value;
+        recalculatePlanDetails();
+      }
+    });
+  });
+
+  export function openPlanCheckout(planKey: string) {
+    const cleanKey = (planKey || 'core').toLowerCase().replace('cohort-', '');
+    if (cleanKey.includes('ultimate')) {
+      activePlanId = 'ultimate';
+    } else if (cleanKey.includes('mastery')) {
+      activePlanId = 'mastery';
+    } else {
+      activePlanId = 'core';
+      activeDuration = cleanKey.includes('monthly') ? 'monthly' : 'earlybird';
+      const radioEarly = document.querySelector('input[name="planCoreBilling"][value="earlybird"]') as HTMLInputElement | null;
+      const radioMonth = document.querySelector('input[name="planCoreBilling"][value="monthly"]') as HTMLInputElement | null;
+      if (activeDuration === 'monthly' && radioMonth) radioMonth.checked = true;
+      if (activeDuration === 'earlybird' && radioEarly) radioEarly.checked = true;
+    }
+
+    recalculatePlanDetails();
+
+    if (planAlertBox) planAlertBox.style.display = 'none';
+
+    // Autofill user email if logged in
+    getCurrentUser().then((user) => {
+      if (user?.email && planCustomerEmail && !planCustomerEmail.value) {
+        planCustomerEmail.value = user.email;
+      }
+    });
+
+    if (modalBackdrop) modalBackdrop.style.display = 'flex';
+
+    trackEvent('plan_checkout_opened', {
+      planId: serverProductId,
+      planName: authoritativeTitle,
+      amount: authoritativePrice,
+    });
+  }
+
+  function closePlanModal() {
+    if (modalBackdrop) modalBackdrop.style.display = 'none';
+    trackEvent('plan_checkout_closed', {
+      planId: serverProductId,
+      amount: authoritativePrice,
+    });
+  }
+
+  closeBtn?.addEventListener('click', closePlanModal);
+  modalBackdrop?.addEventListener('click', (e) => {
+    if (e.target === modalBackdrop) closePlanModal();
+  });
+
+  // Handle Form Submission (Initiate Paystack Transaction)
+  planCheckoutForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const email = planCustomerEmail?.value.trim() || '';
+    if (!email || !email.includes('@')) {
+      if (planAlertBox) {
+        planAlertBox.style.display = 'block';
+        planAlertBox.innerHTML = '<strong>Email required:</strong> Please enter a valid email address to receive your payment confirmation.';
+      }
+      return;
+    }
+
+    const name = planCustomerName?.value.trim() || '';
+    const phone = planCustomerPhone?.value.trim() || '';
+
+    if (planAlertBox) planAlertBox.style.display = 'none';
+
+    if (planSubmitBtn) {
+      planSubmitBtn.disabled = true;
+      planSubmitBtn.innerHTML = '<span>Connecting to Paystack...</span>';
+    }
+
+    try {
+      const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
+      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuYmdib3JiaHh6c290YWllaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDMyNDcsImV4cCI6MjA5Nzk3OTI0N30.3uM4SaYII60V988NA5PvqphQs6HkTVTnGKpZFqzZY-c';
+
+      trackEvent('checkout_initiated', {
+        planId: serverProductId,
+        planName: authoritativeTitle,
+        amount: authoritativePrice,
+      });
+
+      // Send payment initiation request to backend
+      const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({
+          product_id: serverProductId,
+          product_name: authoritativeTitle,
+          amount: authoritativePrice, // Note: server validates and enforces authoritative price
+          email,
+          name: name || undefined,
+          phone: phone || undefined,
+          callback_url: `${window.location.origin}/payment/callback`, // Directly routes to paid-class onboarding
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.data?.authorization_url) {
+        trackEvent('paystack_redirect', {
+          reference: data.data.reference,
+          amount: authoritativePrice,
+        });
+        // Redirect directly to hosted Paystack checkout
+        window.location.href = data.data.authorization_url;
+      } else {
+        throw new Error(data.message || 'Payment gateway could not be reached.');
+      }
+    } catch (err: any) {
+      console.warn('Paystack initiate error:', err);
+
+      const waText = encodeURIComponent(`Hi TECHMED, I had trouble starting online payment for ${authoritativeTitle} (₦${authoritativePrice.toLocaleString()}). My email is ${email}. Please assist me with enrolment.`);
+      const waUrl = `https://wa.me/2347044255045?text=${waText}`;
+
+      trackEvent('paystack_init_failed', {
+        planId: serverProductId,
+        error: err?.message,
+      });
+
+      if (planAlertBox) {
+        planAlertBox.style.display = 'block';
+        planAlertBox.innerHTML = `
+          <div class="alert-title"><strong>Payment Gateway Notice:</strong> ${err.message || 'Unable to connect to Paystack.'}</div>
+          <p class="alert-note">
+            Your plan (<strong>${authoritativeTitle} — ₦${authoritativePrice.toLocaleString()}</strong>) is confirmed. You can retry online payment or message our admissions desk on WhatsApp for assistance:
+          </p>
+          <div class="alert-actions">
+            <button type="button" id="planAlertRetryBtn" class="btn-primary mini-btn">Try Again</button>
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-secondary mini-btn">
+              Contact Admissions on WhatsApp &rarr;
+            </a>
+          </div>
+        `;
+
+        document.getElementById('planAlertRetryBtn')?.addEventListener('click', () => {
+          planAlertBox.style.display = 'none';
+          planSubmitBtn?.focus();
+        });
+      }
+
+      if (planSubmitBtn) {
+        planSubmitBtn.disabled = false;
+        planSubmitBtn.innerHTML = `<span>Pay ₦${authoritativePrice.toLocaleString()} with Paystack &rarr;</span>`;
+      }
+    }
+  });
+
+  // Global listeners: triggers when choose-plan buttons are clicked
+  window.addEventListener('open-plan-checkout', (e: any) => {
+    openPlanCheckout(e.detail?.plan || 'core');
+  });
+
+  // Also support open-checkout event if it targets a cohort plan
+  window.addEventListener('open-checkout', (e: any) => {
+    const res = e.detail?.resource;
+    if (res?.isCohort || ['core', 'mastery', 'ultimate', 'cohort-core', 'cohort-mastery', 'cohort-ultimate'].includes(res?.id)) {
+      e.stopImmediatePropagation();
+      openPlanCheckout(res.id || 'core');
+    }
+  });
+</script>
+
+<style>
+  .plan-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-4);
+    z-index: 2500;
+  }
+
+  .plan-modal-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    max-width: 520px;
+    width: 100%;
+    padding: var(--space-8);
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+    max-height: 92vh;
+    overflow-y: auto;
+    position: relative;
+    animation: modalSlideUp 200ms ease;
+  }
+
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .plan-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    margin-bottom: var(--space-5);
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: var(--space-4);
+  }
+
+  .plan-modal-eyebrow {
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .plan-modal-title {
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 2px 0 0;
+    line-height: 1.25;
+  }
+
+  .plan-close-btn {
+    background: transparent;
+    border: none;
+    font-size: 1.8rem;
+    line-height: 1;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0 4px;
+    transition: color 150ms ease;
+  }
+
+  .plan-close-btn:hover {
+    color: var(--text);
+  }
+
+  /* Plan Summary Box */
+  .plan-summary-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+
+  .plan-summary-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+
+  .plan-track-badge {
+    background: rgba(14, 165, 233, 0.15);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.05em;
+  }
+
+  .plan-delivery-badge {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .plan-summary-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+
+  .plan-summary-desc {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    line-height: 1.45;
+    margin: 0 0 var(--space-4);
+  }
+
+  .plan-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .plan-price-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .plan-price-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .plan-strike-price {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  .plan-final-price {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* Core Billing Selector */
+  .plan-billing-group {
+    margin-bottom: var(--space-5);
+  }
+
+  .billing-group-label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+  }
+
+  .billing-cards-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 480px) {
+    .billing-cards-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .billing-card {
+    border: 2px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    background: var(--surface);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+
+  .billing-card input[type="radio"] {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    accent-color: var(--accent);
+  }
+
+  .billing-card.active {
+    border-color: var(--accent);
+    background: rgba(14, 165, 233, 0.06);
+  }
+
+  .billing-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .billing-card-title-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .billing-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .billing-badge {
+    background: #22c55e;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .billing-prices {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  .billing-strike {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+  }
+
+  .billing-final {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .billing-period {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  .billing-deadline {
+    font-size: 0.7rem;
+    color: var(--text-light);
+  }
+
+  /* Form Fields */
+  .plan-checkout-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .form-field label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .plan-input {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font-size: 0.92rem;
+    font-family: inherit;
+    transition: border-color 150ms ease;
+  }
+
+  .plan-input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .field-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  /* Alert Box */
+  .plan-alert-box {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    color: #ef4444;
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    line-height: 1.45;
+  }
+
+  .alert-title {
+    margin-bottom: 6px;
+  }
+
+  .alert-note {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin: 0 0 10px;
+  }
+
+  .alert-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .mini-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+    text-decoration: none;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  /* Actions */
+  .plan-action-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-top: var(--space-2);
+  }
+
+  .plan-pay-btn {
+    width: 100%;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: 800;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .paystack-trust-line {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .lock-icon {
+    font-size: 0.85rem;
+  }
+</style>

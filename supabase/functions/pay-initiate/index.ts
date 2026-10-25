@@ -69,6 +69,7 @@ Deno.serve(async (req) => {
     name?: string;
     phone?: string;
     university?: string | null;
+    callback_url?: string;
   };
 
   try {
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "Invalid JSON body" }, 400);
   }
 
-  const { product_id, email, name, phone, university } = body;
+  const { product_id, email, name, phone, university, callback_url } = body;
 
   if (!product_id || !email || !email.includes("@")) {
     return jsonResponse({ success: false, message: "A valid product_id and email are required" }, 400);
@@ -93,11 +94,17 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "Please select your target university" }, 400);
   }
 
-  // Validate early-bird server-side
+  // Validate early-bird server-side (deadline: 15 November 2026 23:59:59 UTC)
   let validatedAmount = product.amount;
-  if (cleanProductId.includes("earlybird") || cleanProductId === "cohort-core" || cleanProductId === "cohort-mastery") {
+  if (
+    cleanProductId.includes("earlybird") ||
+    cleanProductId === "cohort-core" ||
+    cleanProductId === "cohort-mastery" ||
+    cleanProductId === "core" ||
+    cleanProductId === "mastery"
+  ) {
     if (Date.now() > EARLY_BIRD_DEADLINE) {
-      if (cleanProductId.includes("core")) validatedAmount = 18000;
+      if (cleanProductId.includes("core") && !cleanProductId.includes("monthly")) validatedAmount = 18000;
       if (cleanProductId.includes("mastery")) validatedAmount = 25000;
     }
   }
@@ -122,6 +129,15 @@ Deno.serve(async (req) => {
 
   const siteUrl = Deno.env.get("SITE_URL") ?? "https://techmedng.com";
 
+  // Route cohort plan enrolments to onboarding (/payment/callback) and resource downloads to /download.html
+  const defaultCallback = product.isCohort
+    ? `${siteUrl}/payment/callback?reference=${reference}`
+    : `${siteUrl}/download.html?reference=${reference}`;
+
+  const resolvedCallback = callback_url
+    ? (callback_url.includes("?") ? `${callback_url}&reference=${reference}` : `${callback_url}?reference=${reference}`)
+    : defaultCallback;
+
   let paystackData: { authorization_url?: string; access_code?: string; reference?: string };
 
   try {
@@ -135,7 +151,7 @@ Deno.serve(async (req) => {
         email: email.trim().toLowerCase(),
         amount: amountKobo,
         reference,
-        callback_url: `${siteUrl}/download.html?reference=${reference}`,
+        callback_url: resolvedCallback,
         metadata: {
           product_id: cleanProductId,
           product_name: product.name,

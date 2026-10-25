@@ -141,6 +141,31 @@ Deno.serve(async (req) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
   );
 
+  const { data: existingOrder } = await supabase
+    .from("orders")
+    .select("amount, status")
+    .eq("reference", reference)
+    .maybeSingle();
+
+  if (!existingOrder || existingOrder.status !== "pending") {
+    // Already paid or not pending — idempotent return
+    return jsonResponse({ received: true });
+  }
+
+  const paidAmount = Number(event.data?.amount ?? 0) / 100;
+  if (existingOrder.amount && Math.abs(paidAmount - existingOrder.amount) > 1) {
+    console.error(`Webhook amount mismatch for ${reference}: expected ${existingOrder.amount}, got ${paidAmount}`);
+    await supabase
+      .from("orders")
+      .update({
+        status: "mismatched",
+        rejection_reason: `Amount mismatch: expected ₦${existingOrder.amount}, received ₦${paidAmount}`,
+        paystack_response: event.data,
+      })
+      .eq("reference", reference);
+    return jsonResponse({ received: true });
+  }
+
   const { data: updatedOrder, error } = await supabase
     .from("orders")
     .update({
@@ -155,16 +180,18 @@ Deno.serve(async (req) => {
 
   if (error) {
     console.error("Failed to mark order paid:", error, "reference:", reference);
-    // Still return 200 — Paystack will retry on non-2xx, and retries would
-    // not fix a genuine DB error. This is logged for manual reconciliation.
     return jsonResponse({ received: true });
   }
 
-  // updatedOrder is null if this reference didn't match a pending order —
-  // e.g. a duplicate webhook retry for an already-paid order. That's fine,
-  // nothing further to do (and we must not send a second email).
   if (!updatedOrder) {
     return jsonResponse({ received: true });
+  }
+
+  // Trigger entitlement grant for cohort plans and resources
+  try {
+    await supabase.rpc("grant_order_entitlements", { p_order_reference: reference });
+  } catch (rpcErr) {
+    console.warn("RPC grant_order_entitlements in webhook:", rpcErr);
   }
 
   // ---- Email delivery (best-effort — never affects payment status) ----

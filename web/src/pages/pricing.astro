@@ -1,6 +1,6 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
-import CheckoutModal from '../components/CheckoutModal.astro';
+import PlanCheckoutModal from '../components/PlanCheckoutModal.astro';
 import {
   PRICING_PLANS,
   COMPACT_QUESTIONS,
@@ -381,74 +381,22 @@ const jsonLd = [
       </div>
     </section>
 
-    <!-- Unified Checkout Modal -->
-    <CheckoutModal />
+    <!-- Dedicated Paid-Plan Registration & Checkout Modal (No discount checkbox, Paystack-only) -->
+    <PlanCheckoutModal />
   </main>
 
   <script>
     import { trackEvent } from '/src/lib/analytics.ts';
 
-    const EARLY_BIRD_DEADLINE = new Date('2026-11-15T23:59:59Z').getTime();
-    const isEarlyBird = Date.now() <= EARLY_BIRD_DEADLINE;
-
     document.querySelectorAll('.choose-plan-btn').forEach((btn) => {
       btn.addEventListener('click', () => {
-        const plan = btn.getAttribute('data-plan');
-        if (plan === 'core') {
-          trackEvent('plan_selected', { planId: 'core', planName: 'TECHMED Core', amount: isEarlyBird ? 15000 : 18000 });
-          window.dispatchEvent(
-            new CustomEvent('open-checkout', {
-              detail: {
-                resource: {
-                  id: 'core',
-                  title: isEarlyBird ? 'TECHMED Core (3-Month Early-Bird)' : 'TECHMED Core (3-Month Standard)',
-                  description: '12 weeks of live teaching across 5 science subjects, 4 hours daily, Kairo CBT drills, and 3 full mock exams.',
-                  price: isEarlyBird ? 15000 : 18000,
-                  originalPrice: isEarlyBird ? 18000 : null,
-                  isCohort: true,
-                  subject: 'UTME 2027 Core Track',
-                  deliveryFormat: 'Live Telegram + Kairo CBT',
-                },
-              },
-            })
-          );
-        } else if (plan === 'mastery') {
-          trackEvent('plan_selected', { planId: 'mastery', planName: 'TECHMED Mastery', amount: isEarlyBird ? 20000 : 25000 });
-          window.dispatchEvent(
-            new CustomEvent('open-checkout', {
-              detail: {
-                resource: {
-                  id: 'mastery',
-                  title: isEarlyBird ? 'TECHMED Mastery (3-Month Early-Bird)' : 'TECHMED Mastery (3-Month Standard)',
-                  description: 'Complete Core programme plus 11 comprehensive science formula workbooks and study manuals.',
-                  price: isEarlyBird ? 20000 : 25000,
-                  originalPrice: isEarlyBird ? 25000 : null,
-                  isCohort: true,
-                  subject: 'UTME 2027 Mastery Track',
-                  deliveryFormat: 'Live Telegram + 11 Manuals + CBT',
-                },
-              },
-            })
-          );
-        } else if (plan === 'ultimate') {
-          trackEvent('plan_selected', { planId: 'ultimate', planName: 'TECHMED Ultimate', amount: 40000 });
-          window.dispatchEvent(
-            new CustomEvent('open-checkout', {
-              detail: {
-                resource: {
-                  id: 'ultimate',
-                  title: 'TECHMED Ultimate (Full Programme)',
-                  description: 'Mastery package plus 3 specialist Bootcamps, 4 Subject Revision Packages, Final Revision classes, and eligibility for Founder Mentorship.',
-                  price: 40000,
-                  originalPrice: null,
-                  isCohort: true,
-                  subject: 'UTME 2027 Ultimate Track',
-                  deliveryFormat: 'Full Programme + Bootcamps + Mentorship',
-                },
-              },
-            })
-          );
-        }
+        const plan = btn.getAttribute('data-plan') || 'core';
+        trackEvent('pricing_plan_cta_clicked', { plan });
+        window.dispatchEvent(
+          new CustomEvent('open-plan-checkout', {
+            detail: { plan },
+          })
+        );
       });
     });
   </script>
