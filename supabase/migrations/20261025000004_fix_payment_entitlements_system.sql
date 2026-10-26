@@ -6,14 +6,15 @@
 -- 1. Complete and authoritative product catalogue seeding (Core monthly/earlybird/standard,
 --    Mastery earlybird/standard, Ultimate, and aliases).
 -- 2. Grant the purchased plan ITSELF as an entitlement alongside its bundled resources.
--- 3. Accurate monthly subscription expiry: exactly 1 month from verified payment date.
+-- 3. Accurate start date and monthly subscription expiry (Nov 30 2026 start date rules).
 -- 4. Accurate 3-month cohort plan expiry: explicitly through UTME 2027 completion (2027-05-31).
--- 5. Strict idempotency: retries and duplicate webhooks never create duplicate entitlements
+-- 5. Lifetime access for standalone books and bundled booster inclusions in Mastery & Ultimate.
+-- 6. Strict idempotency: retries and duplicate webhooks never create duplicate entitlements
 --    or extend subscription durations.
--- 6. Preserve standalone lifetime purchases when cohort plans expire.
--- 7. Account resolution: automatically resolve customer user_id from auth.users via email.
--- 8. Restrict Ultimate benefits & founder mentorship to Ultimate customers only.
--- 9. Comprehensive error handling: fail with clear diagnostic when orders or products are missing.
+-- 7. Preserve standalone lifetime purchases when cohort plans expire.
+-- 8. Account resolution: automatically resolve customer user_id from auth.users via email.
+-- 9. Restrict Ultimate benefits & founder mentorship to Ultimate customers only.
+-- 10. Data repair for verified order techmed_cohort_core_monthly_1792965066749_e1fe8821.
 -- ==============================================================================
 
 -- 1. SEED AUTHORITATIVE PRODUCT CATALOGUE WITH ALL COHORT PLANS AND ALIASES
@@ -75,7 +76,9 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS rejection_reason TEXT;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS metadata JSONB NOT NULL DEFAULT '{}'::JSONB;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
 
--- 3. ENSURE IDEMPOTENT ENTITLEMENTS UNIQUE INDEX
+-- 3. ENSURE ENTITLEMENTS TABLE HAS starts_at AND UNIQUE IDEMPOTENCY INDEX
+ALTER TABLE public.entitlements ADD COLUMN IF NOT EXISTS starts_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now());
+
 CREATE UNIQUE INDEX IF NOT EXISTS idx_entitlements_order_resource_unique
 ON public.entitlements (source_order_reference, resource_id)
 WHERE source_order_reference IS NOT NULL;
@@ -94,9 +97,12 @@ DECLARE
   v_bundled_id TEXT;
   v_user_id UUID;
   v_grants_count INTEGER := 0;
+  v_paid_at TIMESTAMPTZ;
+  v_starts_at TIMESTAMPTZ;
   v_plan_expiry TIMESTAMPTZ;
   v_is_monthly BOOLEAN;
   v_canonical_plan_id TEXT;
+  v_cohort_start_threshold TIMESTAMPTZ := '2026-11-30 00:00:00+01'::timestamptz;
 BEGIN
   -- Strict input check
   IF p_order_reference IS NULL OR trim(p_order_reference) = '' THEN
@@ -134,6 +140,9 @@ BEGIN
     END IF;
   END IF;
 
+  -- Determine verified payment timestamp
+  v_paid_at := COALESCE(v_order.paid_at, v_order.created_at, timezone('utc'::text, now()));
+
   -- 4. Backfill order_items if not already present
   IF NOT EXISTS (SELECT 1 FROM public.order_items WHERE order_reference = p_order_reference) THEN
     IF v_order.product_id IS NOT NULL THEN
@@ -161,9 +170,10 @@ BEGIN
       ELSE v_product.id
     END;
 
-    -- Determine subscription & expiry rules
-    -- Rule A: Standalone resources and bundles are PERMANENT LIFETIME (expires_at IS NULL)
+    -- Determine subscription, start date, and expiry rules
+    -- Rule A: Standalone resources and bundles are PERMANENT LIFETIME (expires_at IS NULL, starts immediately)
     IF v_product.product_type IN ('resource', 'bundle') THEN
+      v_starts_at := v_paid_at;
       v_plan_expiry := NULL;
 
       -- Grant the resource or bundle item
@@ -175,6 +185,7 @@ BEGIN
           grant_source,
           source_order_reference,
           plan_id,
+          starts_at,
           expires_at,
           is_active
         )
@@ -185,6 +196,7 @@ BEGIN
           'purchase',
           p_order_reference,
           NULL,
+          v_starts_at,
           NULL, -- Permanent Lifetime Access
           true
         )
@@ -192,6 +204,7 @@ BEGIN
         DO UPDATE SET
           user_id = COALESCE(EXCLUDED.user_id, public.entitlements.user_id),
           customer_email = EXCLUDED.customer_email,
+          starts_at = EXCLUDED.starts_at,
           is_active = true,
           updated_at = timezone('utc'::text, now());
 
@@ -206,6 +219,7 @@ BEGIN
           grant_source,
           source_order_reference,
           plan_id,
+          starts_at,
           expires_at,
           is_active
         )
@@ -216,6 +230,7 @@ BEGIN
           'purchase',
           p_order_reference,
           NULL,
+          v_starts_at,
           NULL,
           true
         )
@@ -223,6 +238,7 @@ BEGIN
         DO UPDATE SET
           user_id = COALESCE(EXCLUDED.user_id, public.entitlements.user_id),
           customer_email = EXCLUDED.customer_email,
+          starts_at = EXCLUDED.starts_at,
           is_active = true,
           updated_at = timezone('utc'::text, now());
 
@@ -237,6 +253,7 @@ BEGIN
             grant_source,
             source_order_reference,
             plan_id,
+            starts_at,
             expires_at,
             is_active
           )
@@ -247,6 +264,7 @@ BEGIN
             'bundle_inclusion',
             p_order_reference,
             v_product.id,
+            v_starts_at,
             NULL, -- Permanent Lifetime Access
             true
           )
@@ -254,6 +272,7 @@ BEGIN
           DO UPDATE SET
             user_id = COALESCE(EXCLUDED.user_id, public.entitlements.user_id),
             customer_email = EXCLUDED.customer_email,
+            starts_at = EXCLUDED.starts_at,
             is_active = true,
             updated_at = timezone('utc'::text, now());
 
@@ -265,12 +284,30 @@ BEGIN
     ELSIF v_product.product_type = 'cohort_plan' THEN
       v_is_monthly := (v_product.id LIKE '%monthly%');
 
-      IF v_is_monthly THEN
-        -- Monthly subscriptions: exactly 1 month from verified payment date (immutable across retries)
-        v_plan_expiry := COALESCE(v_order.paid_at, v_order.created_at, timezone('utc'::text, now())) + INTERVAL '1 month';
+      -- Start Date & Expiry Date Rules:
+      -- Cohort classes officially commence on 30 November 2026 (Africa/Lagos timezone, UTC+1).
+      -- Payments completed before Nov 30, 2026:
+      --   - starts_at = '2026-11-30 00:00:00+01'
+      --   - Core monthly expires 1 month after commencement ('2026-12-30 23:59:59+01')
+      --   - 3-month cohort plans expire through UTME 2027 completion ('2027-05-31 23:59:59+01')
+      -- Payments completed on or after Nov 30, 2026:
+      --   - starts_at = payment date
+      --   - Core monthly expires exactly 1 month after payment date
+      --   - 3-month cohort plans expire through UTME 2027 completion ('2027-05-31 23:59:59+01')
+      IF v_paid_at < v_cohort_start_threshold THEN
+        v_starts_at := v_cohort_start_threshold;
+        IF v_is_monthly THEN
+          v_plan_expiry := '2026-12-30 23:59:59+01'::timestamptz;
+        ELSE
+          v_plan_expiry := '2027-05-31 23:59:59+01'::timestamptz;
+        END IF;
       ELSE
-        -- 3-month cohort plans: authoritative programme expiry through UTME 2027 completion (31 May 2027)
-        v_plan_expiry := timezone('utc'::text, '2027-05-31 23:59:59+00'::timestamptz);
+        v_starts_at := v_paid_at;
+        IF v_is_monthly THEN
+          v_plan_expiry := v_starts_at + INTERVAL '1 month';
+        ELSE
+          v_plan_expiry := '2027-05-31 23:59:59+01'::timestamptz;
+        END IF;
       END IF;
 
       -- STEP 5A: Grant the Cohort Plan ITSELF as an entitlement
@@ -281,6 +318,7 @@ BEGIN
         grant_source,
         source_order_reference,
         plan_id,
+        starts_at,
         expires_at,
         is_active,
         metadata
@@ -292,6 +330,7 @@ BEGIN
         'purchase',
         p_order_reference,
         v_canonical_plan_id,
+        v_starts_at,
         v_plan_expiry,
         true,
         jsonb_build_object(
@@ -305,6 +344,7 @@ BEGIN
       DO UPDATE SET
         user_id = COALESCE(EXCLUDED.user_id, public.entitlements.user_id),
         customer_email = EXCLUDED.customer_email,
+        starts_at = EXCLUDED.starts_at,
         is_active = true,
         expires_at = EXCLUDED.expires_at,
         metadata = EXCLUDED.metadata,
@@ -313,8 +353,9 @@ BEGIN
       v_grants_count := v_grants_count + 1;
 
       -- STEP 5B: Grant included resources for Mastery and Ultimate (Core has no free booster inclusions)
-      -- NOTE: Core never receives booster manuals; Mastery receives 3 science boosters; Ultimate receives
-      -- 3 science boosters + Post-UTME Brainstorming Hub + Founder Mentorship.
+      -- Authoritative rule: Included study books and boosters receive LIFETIME access (expires_at = NULL)
+      -- and activate immediately (starts_at = v_paid_at) so students can study right away.
+      -- The cohort class itself expires at v_plan_expiry.
       FOREACH v_bundled_id IN ARRAY v_product.bundle_item_ids LOOP
         INSERT INTO public.entitlements (
           user_id,
@@ -323,6 +364,7 @@ BEGIN
           grant_source,
           source_order_reference,
           plan_id,
+          starts_at,
           expires_at,
           is_active,
           metadata
@@ -334,7 +376,8 @@ BEGIN
           'plan_inclusion',
           p_order_reference,
           v_canonical_plan_id,
-          v_plan_expiry, -- Matches cohort duration; expiring plan does not affect standalone purchases
+          v_paid_at, -- Immediate start for booster manuals
+          NULL, -- Permanent Lifetime Access for study resources included in Mastery & Ultimate
           true,
           jsonb_build_object('included_by_plan', v_canonical_plan_id)
         )
@@ -342,6 +385,7 @@ BEGIN
         DO UPDATE SET
           user_id = COALESCE(EXCLUDED.user_id, public.entitlements.user_id),
           customer_email = EXCLUDED.customer_email,
+          starts_at = EXCLUDED.starts_at,
           is_active = true,
           expires_at = EXCLUDED.expires_at,
           updated_at = timezone('utc'::text, now());
@@ -362,7 +406,59 @@ BEGIN
 END;
 $$;
 
--- 5. RE-AFFIRM TRIGGER ON ORDER PAID STATUS
+-- 5. UPDATE has_active_resource_access FUNCTION WITH starts_at ENFORCEMENT
+CREATE OR REPLACE FUNCTION public.has_active_resource_access(
+  p_user_id UUID,
+  p_email TEXT,
+  p_resource_id TEXT
+)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+BEGIN
+  RETURN EXISTS (
+    SELECT 1
+    FROM public.entitlements e
+    WHERE (
+      (p_user_id IS NOT NULL AND e.user_id = p_user_id)
+      OR (p_email IS NOT NULL AND lower(e.customer_email) = lower(trim(p_email)))
+    )
+    AND (
+      e.resource_id = p_resource_id
+      OR (p_resource_id = 'post-utme-brainstorming-hub' AND e.resource_id = 'post-utme-pq')
+      OR (p_resource_id = 'post-utme-pq' AND e.resource_id = 'post-utme-brainstorming-hub')
+    )
+    AND e.is_active = true
+    AND (e.starts_at IS NULL OR e.starts_at <= timezone('utc'::text, now()))
+    AND (e.expires_at IS NULL OR e.expires_at > timezone('utc'::text, now()))
+  );
+END;
+$$;
+
+-- 6. UPDATE active_user_entitlements VIEW
+CREATE OR REPLACE VIEW public.active_user_entitlements AS
+SELECT
+  e.id AS entitlement_id,
+  e.user_id,
+  e.customer_email,
+  e.resource_id,
+  p.title AS resource_title,
+  p.product_type,
+  e.grant_source,
+  e.plan_id,
+  e.starts_at,
+  e.granted_at,
+  e.expires_at,
+  (e.expires_at IS NULL) AS is_lifetime
+FROM public.entitlements e
+JOIN public.products p ON p.id = e.resource_id
+WHERE e.is_active = true
+  AND (e.starts_at IS NULL OR e.starts_at <= timezone('utc'::text, now()))
+  AND (e.expires_at IS NULL OR e.expires_at > timezone('utc'::text, now()));
+
+-- 7. RE-AFFIRM TRIGGER ON ORDER PAID STATUS
 CREATE OR REPLACE FUNCTION public.trigger_on_order_paid()
 RETURNS TRIGGER
 LANGUAGE plpgsql
@@ -382,7 +478,42 @@ CREATE TRIGGER on_order_status_paid
   AFTER UPDATE OF status ON public.orders
   FOR EACH ROW EXECUTE FUNCTION public.trigger_on_order_paid();
 
--- 6. SECURE FUNCTION GRANTS
+-- 8. REPAIR EXISTING PRODUCTION ORDER FOR wisdomjohnson207@gmail.com
+-- Reference: techmed_cohort_core_monthly_1792965066749_e1fe8821
+-- Plan: TECHMED Core (1-Month Subscription)
+-- Enforces: Core status only (no Ultimate, no Mastery, no Founder Mentorship)
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM public.orders WHERE reference = 'techmed_cohort_core_monthly_1792965066749_e1fe8821') THEN
+    -- Clean up any inaccurate entitlements (such as erroneous Ultimate or booster records)
+    DELETE FROM public.entitlements
+    WHERE source_order_reference = 'techmed_cohort_core_monthly_1792965066749_e1fe8821'
+      AND resource_id <> 'cohort-core';
+
+    DELETE FROM public.entitlements
+    WHERE (user_id = '032a4583-f869-432f-9d82-e9da31043891' OR lower(customer_email) = 'wisdomjohnson207@gmail.com')
+      AND resource_id = 'cohort-ultimate';
+
+    -- Ensure order has authoritative parameters
+    UPDATE public.orders
+    SET
+      product_id = 'cohort-core-monthly',
+      product_name = 'TECHMED Core (1-Month Subscription)',
+      amount = 7000,
+      status = 'paid',
+      user_id = '032a4583-f869-432f-9d82-e9da31043891',
+      email = 'wisdomjohnson207@gmail.com',
+      paid_at = COALESCE(paid_at, created_at, '2026-10-25 18:00:00+01'::timestamptz),
+      updated_at = timezone('utc'::text, now())
+    WHERE reference = 'techmed_cohort_core_monthly_1792965066749_e1fe8821';
+
+    -- Grant authoritative entitlement (starts Nov 30 2026, expires Dec 30 2026)
+    PERFORM public.grant_order_entitlements('techmed_cohort_core_monthly_1792965066749_e1fe8821');
+  END IF;
+END;
+$$;
+
+-- 9. SECURE FUNCTION GRANTS
 GRANT EXECUTE ON FUNCTION public.grant_order_entitlements(TEXT) TO postgres, service_role;
 GRANT EXECUTE ON FUNCTION public.claim_order_reference(TEXT, TEXT) TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION public.has_active_resource_access(UUID, TEXT, TEXT) TO anon, authenticated, service_role;

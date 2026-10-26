@@ -18,19 +18,10 @@ export interface EnrolledStudent {
   notes?: string;
 }
 
-// Default verified cohort roster (seeded from verified class enrolments)
-// Students registering with these emails automatically receive their plan entitlements.
+// Default staging test roster (used only for development/staging offline testing).
+// In production, verified server-side database entitlements in public.entitlements are authoritative.
+// Email-only roster entries NEVER override verified database entitlements.
 export const VERIFIED_ROSTER: EnrolledStudent[] = [
-  {
-    email: 'wisdomjohnson207@gmail.com',
-    fullName: 'Wisdom Johnson',
-    tier: 'ultimate',
-    enrolledAt: '2026-10-01T00:00:00Z',
-    expiresAt: '2027-05-31T23:59:59Z',
-    paymentReference: 'TM-COHORT-ULT-001',
-    hasFounderMentorship: true,
-    notes: 'Confirmed Ultimate Builder with Founder Mentorship Seat #1',
-  },
   {
     email: 'chinedu.okafor.prep@gmail.com',
     fullName: 'Chinedu Okafor',
@@ -39,7 +30,7 @@ export const VERIFIED_ROSTER: EnrolledStudent[] = [
     expiresAt: '2027-05-31T23:59:59Z',
     paymentReference: 'TM-COHORT-MAS-014',
     hasFounderMentorship: false,
-    notes: 'Mastery Enrolment — All 3 booster systems included',
+    notes: 'Mastery Staging Enrolment — All 3 booster systems included',
   },
   {
     email: 'aminat.bello.exam@gmail.com',
@@ -50,7 +41,7 @@ export const VERIFIED_ROSTER: EnrolledStudent[] = [
     paymentReference: 'TM-COHORT-COR-082',
     isMonthlyRenewal: false,
     hasFounderMentorship: false,
-    notes: 'Core Enrolment (3 months upfront) — 20% discount on standalone e-books',
+    notes: 'Core Staging Enrolment — 20% discount on standalone e-books',
   },
 ];
 

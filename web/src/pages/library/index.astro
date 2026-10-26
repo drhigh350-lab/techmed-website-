@@ -537,30 +537,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     userDisplayEmail.textContent = user.email;
     userAvatarMark.textContent = displayName.charAt(0).toUpperCase();
 
-    // Check cohort plan enrolment
-    const enrolled = getEnrolledStudent(user.email);
-    const accountTag = document.querySelector('.account-tag');
-    if (accountTag) {
-      if (enrolled) {
-        if (enrolled.tier === 'ultimate') {
-          accountTag.textContent = enrolled.hasFounderMentorship
-            ? 'TECHMED Ultimate · Mentorship Confirmed'
-            : 'TECHMED Ultimate Student';
-          accountTag.className = 'account-tag ultimate';
-        } else if (enrolled.tier === 'mastery') {
-          accountTag.textContent = 'TECHMED Mastery · All Boosters Included';
-          accountTag.className = 'account-tag mastery';
-        } else if (enrolled.tier === 'core') {
-          accountTag.textContent = 'TECHMED Core · 20% Standalone Discount';
-          accountTag.className = 'account-tag core';
-        }
-      } else {
-        accountTag.textContent = 'Student Account';
-      }
-    }
-
-    // Fetch user entitlements
-    loadingSection.style.display = 'none';
+    // Fetch authoritative user entitlements from database first
     const { entitlements, migrationApplied, error } = await fetchUserEntitlements(user.id, user.email);
 
     if (!migrationApplied) {
@@ -570,6 +547,55 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     }
 
     currentEntitlements = entitlements || [];
+
+    // Derive account tag authoritatively from verified database entitlements
+    const accountTag = document.querySelector('.account-tag');
+    if (accountTag) {
+      const hasUltimate = currentEntitlements.some(e => e.resourceId === 'cohort-ultimate' || e.resourceId === 'ultimate');
+      const hasMastery = currentEntitlements.some(e => e.resourceId === 'cohort-mastery' || e.resourceId === 'mastery');
+      const hasCore = currentEntitlements.some(e => e.resourceId === 'cohort-core' || e.resourceId === 'core' || e.resourceId.startsWith('cohort-core'));
+
+      if (hasUltimate) {
+        const ultimateEnt = currentEntitlements.find(e => e.resourceId === 'cohort-ultimate' || e.resourceId === 'ultimate');
+        const hasMentorship = (ultimateEnt as any)?.metadata?.has_founder_mentorship === true;
+        accountTag.textContent = hasMentorship
+          ? 'TECHMED Ultimate · Mentorship Confirmed'
+          : 'TECHMED Ultimate Student';
+        accountTag.className = 'account-tag ultimate';
+      } else if (hasMastery) {
+        accountTag.textContent = 'TECHMED Mastery Student';
+        accountTag.className = 'account-tag mastery';
+      } else if (hasCore) {
+        accountTag.textContent = 'TECHMED Core Student';
+        accountTag.className = 'account-tag core';
+      } else {
+        // Fallback to staging roster ONLY if remote database migration has not been executed
+        if (!migrationApplied) {
+          const enrolled = getEnrolledStudent(user.email);
+          if (enrolled) {
+            if (enrolled.tier === 'ultimate') {
+              accountTag.textContent = enrolled.hasFounderMentorship
+                ? 'TECHMED Ultimate · Mentorship Confirmed'
+                : 'TECHMED Ultimate Student';
+              accountTag.className = 'account-tag ultimate';
+            } else if (enrolled.tier === 'mastery') {
+              accountTag.textContent = 'TECHMED Mastery Student';
+              accountTag.className = 'account-tag mastery';
+            } else if (enrolled.tier === 'core') {
+              accountTag.textContent = 'TECHMED Core Student';
+              accountTag.className = 'account-tag core';
+            }
+          } else {
+            accountTag.textContent = 'Student Account';
+            accountTag.className = 'account-tag';
+          }
+        } else {
+          accountTag.textContent = 'Student Account';
+          accountTag.className = 'account-tag';
+        }
+      }
+    }
+
     renderBookshelf();
   }
 
@@ -594,6 +620,8 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
       };
     });
 
+    const now = new Date();
+
     // Map verified entitlements to catalogue metadata
     const paidItems = currentEntitlements.map(ent => {
       const match = CATALOG.find(c => c.id === ent.resourceId || c.slug === ent.resourceId);
@@ -610,13 +638,20 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         else title = ent.resourceTitle || ent.resourceId;
       }
 
+      const isFutureDated = ent.startsAt && new Date(ent.startsAt).getTime() > now.getTime();
+
       const grantLabel = isCohortPlan
-        ? 'UTME 2027 Cohort Enrolment'
+        ? (isFutureDated ? 'UTME 2027 Enrolled (Nov 30 Start)' : 'UTME 2027 Cohort Enrolment')
         : (isPlan ? 'UTME 2027 Mastery Inclusion' : 'Permanent Standalone Purchase');
 
-      const expiresLabel = isPermanent
+      let expiresLabel = isPermanent
         ? 'Permanent Lifetime Access'
         : (ent.expiresAt ? `Valid through ${new Date(ent.expiresAt).toLocaleDateString()}` : 'Valid through UTME 2027');
+
+      if (isCohortPlan && isFutureDated) {
+        const startFormatted = new Date(ent.startsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+        expiresLabel = `Classes start ${startFormatted} · ${expiresLabel}`;
+      }
 
       const isTool = match?.deliveryFormat === 'Platform Tool' || match?.deliveryFormat === 'Quiz Platform';
       let actionUrl = isTool
@@ -626,7 +661,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
       if (isCohortPlan) {
         actionUrl = '/utme-2027';
-        actionLabel = 'Class Portal & Schedule';
+        actionLabel = isFutureDated ? 'View Cohort Schedule' : 'Class Portal & Schedule';
       }
 
       return {

@@ -40,6 +40,7 @@ export interface StudentEntitlement {
   resourceId: string;
   grantSource: 'purchase' | 'bundle_inclusion' | 'plan_inclusion' | 'admin_grant' | 'scholarship' | 'trial';
   planId?: string | null;
+  startsAt?: string | null;
   grantedAt: string;
   expiresAt: string | null; // null = permanent lifetime access
   isActive: boolean;
@@ -58,8 +59,6 @@ export async function getCurrentUser(): Promise<User | null> {
   return session?.user ?? null;
 }
 
-import { generateRosterEntitlements, getEnrolledStudent } from './roster';
-
 export async function fetchUserEntitlements(
   userId?: string,
   userEmail?: string
@@ -69,15 +68,17 @@ export async function fetchUserEntitlements(
   }
 
   const supabase = getSupabase();
-  const rosterGrants = userEmail ? generateRosterEntitlements(userEmail, userId) : [];
+  const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : undefined;
 
   try {
-    let query = supabase.from('entitlements').select('*');
+    let query = supabase.from('entitlements').select('*').eq('is_active', true);
 
-    if (userId) {
-      query = query.or(`user_id.eq.${userId},customer_email.ilike.${userEmail || ''}`);
-    } else if (userEmail) {
-      query = query.ilike('customer_email', userEmail);
+    if (userId && cleanEmail) {
+      query = query.or(`user_id.eq.${userId},customer_email.ilike.${cleanEmail}`);
+    } else if (userId) {
+      query = query.eq('user_id', userId);
+    } else if (cleanEmail) {
+      query = query.ilike('customer_email', cleanEmail);
     }
 
     const { data, error } = await query;
@@ -90,58 +91,50 @@ export async function fetchUserEntitlements(
         error.message?.includes('relation "entitlements" does not exist') ||
         error.code === 'PGRST204'
       ) {
-        // Fallback to roster inclusions + local claimed entitlements
-        const local = getLocalEntitlements(userEmail);
-        const combined = [...rosterGrants];
-        for (const loc of local) {
-          if (!combined.some(c => c.resourceId === loc.resourceId)) {
-            combined.push(loc);
-          }
-        }
+        // Fallback to local claimed cache ONLY when remote table has not been provisioned
+        const local = getLocalEntitlements(cleanEmail);
         return {
-          entitlements: combined,
+          entitlements: local,
           migrationApplied: false,
           error: 'The database entitlements migration is not yet applied on this Supabase project.',
         };
       }
-      return { entitlements: rosterGrants, migrationApplied: true, error: error.message };
+      return { entitlements: [], migrationApplied: true, error: error.message };
     }
 
-    const mapped: StudentEntitlement[] = (data || []).map((row: any) => ({
+    const now = new Date();
+    // Database entitlements are authoritative:
+    // Exclude expired entitlements
+    const activeRows = (data || []).filter((row: any) => {
+      if (!row.is_active) return false;
+      if (row.expires_at) {
+        const exp = new Date(row.expires_at);
+        if (exp.getTime() <= now.getTime()) {
+          return false;
+        }
+      }
+      return true;
+    });
+
+    const mapped: StudentEntitlement[] = activeRows.map((row: any) => ({
       id: row.id,
       userId: row.user_id,
       customerEmail: row.customer_email,
       resourceId: row.resource_id,
       grantSource: row.grant_source,
       planId: row.plan_id,
+      startsAt: row.starts_at || null,
       grantedAt: row.granted_at,
-      expiresAt: row.expires_at,
+      expiresAt: row.expires_at || null,
       isActive: row.is_active,
     }));
 
-    // Merge roster inclusions and locally verified entitlements
-    const local = getLocalEntitlements(userEmail);
-    const combined = [...mapped];
-
-    // Merge roster grants if not already in DB
-    for (const r of rosterGrants) {
-      if (!combined.some(c => c.resourceId === r.resourceId && c.grantSource === 'plan_inclusion')) {
-        combined.push(r);
-      }
-    }
-
-    // Merge local claims
-    for (const loc of local) {
-      if (!combined.some(c => c.resourceId === loc.resourceId)) {
-        combined.push(loc);
-      }
-    }
-
-    return { entitlements: combined, migrationApplied: true };
+    // Authoritative result: Database entitlements are the single source of truth.
+    // Untrusted local storage or static email roster is NEVER merged into successful database results.
+    return { entitlements: mapped, migrationApplied: true };
   } catch (err: any) {
-    const local = getLocalEntitlements(userEmail);
-    const combined = [...rosterGrants, ...local];
-    return { entitlements: combined, migrationApplied: false, error: err?.message || 'Network error' };
+    const local = getLocalEntitlements(cleanEmail);
+    return { entitlements: local, migrationApplied: false, error: err?.message || 'Network error' };
   }
 }
 
@@ -334,27 +327,49 @@ export async function hasActiveResourceAccess(
   resourceId: string,
   user?: { id?: string; email?: string } | null
 ): Promise<boolean> {
-  // Free resources are always accessible
-  if (resourceId === 'admission-intelligence-guide-2026' || resourceId === 'free-quiz-practice' || resourceId === 'kairo') {
+  // Free resources and study tools are open to all candidates without restriction
+  if (
+    resourceId === 'admission-intelligence-guide-2026' ||
+    resourceId === 'free-quiz-practice' ||
+    resourceId === 'kairo'
+  ) {
     return true;
   }
 
-  // Check local cache first
-  const local = getLocalEntitlements(user?.email);
-  if (local.some(e => (e.resourceId === resourceId || e.resourceId === resourceId.replace('-system', '')) && e.isActive)) {
-    return true;
-  }
-
+  // Paid resources require an authenticated student with active verified entitlements
   if (!user?.id && !user?.email) {
     return false;
   }
 
   const { entitlements } = await fetchUserEntitlements(user.id, user.email);
   const now = new Date();
+
   return entitlements.some(e => {
-    const matchesId = e.resourceId === resourceId || e.resourceId === resourceId.replace('-system', '');
+    const matchesId =
+      e.resourceId === resourceId ||
+      e.resourceId === resourceId.replace('-system', '') ||
+      (resourceId === 'post-utme-brainstorming-hub' && e.resourceId === 'post-utme-pq') ||
+      (resourceId === 'post-utme-pq' && e.resourceId === 'post-utme-brainstorming-hub');
+
     if (!matchesId || !e.isActive) return false;
-    if (!e.expiresAt) return true; // Lifetime access
-    return new Date(e.expiresAt) > now;
+
+    // Check starts_at: cannot access resource before its designated activation date
+    if (e.startsAt) {
+      const starts = new Date(e.startsAt);
+      if (starts.getTime() > now.getTime()) {
+        return false;
+      }
+    }
+
+    // Check expires_at: cannot access resource after its expiration date
+    if (e.expiresAt) {
+      const expires = new Date(e.expiresAt);
+      if (expires.getTime() <= now.getTime()) {
+        return false;
+      }
+    }
+
+    // null expiresAt = Permanent Lifetime Access
+    return true;
   });
 }

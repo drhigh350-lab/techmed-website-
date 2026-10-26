@@ -115,16 +115,18 @@ assert(
   'Cohort plan purchases grant the plan itself (e.g. cohort-core, cohort-mastery, cohort-ultimate)'
 );
 
-// Check 6: Monthly subscriptions have exactly 1-month expiry from payment date
+// Check 6: Monthly subscriptions have exactly 1-month expiry from effective start date
 assert(
   migrationSql.includes("v_is_monthly := (v_product.id LIKE '%monthly%');") &&
-  migrationSql.includes("v_plan_expiry := COALESCE(v_order.paid_at, v_order.created_at, timezone('utc'::text, now())) + INTERVAL '1 month';"),
-  'Monthly subscriptions (cohort-core-monthly) expire exactly 1 month from payment date'
+  (migrationSql.includes("v_plan_expiry := '2026-12-30 23:59:59+01'::timestamptz;") ||
+   migrationSql.includes("v_plan_expiry := v_starts_at + INTERVAL '1 month';")),
+  'Monthly subscriptions (cohort-core-monthly) expire exactly 1 month from effective start date'
 );
 
 // Check 7: 3-month cohort plans have authoritative programme expiry through UTME 2027 (2027-05-31)
 assert(
-  migrationSql.includes("v_plan_expiry := timezone('utc'::text, '2027-05-31 23:59:59+00'::timestamptz);"),
+  migrationSql.includes("'2027-05-31 23:59:59+01'::timestamptz") ||
+  migrationSql.includes("'2027-05-31 23:59:59+00'::timestamptz"),
   '3-month cohort plans expire on 31 May 2027 (authoritative UTME 2027 completion date)'
 );
 
