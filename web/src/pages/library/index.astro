@@ -302,7 +302,6 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
   // Import browser Supabase client (bundled by Vite as ES Module)
   import { getSupabase, fetchUserEntitlements, verifyAndClaimOrderReference } from '/src/lib/supabase.ts';
-  import { getEnrolledStudent } from '/src/lib/roster.ts';
 
   const supabase = getSupabase();
 
@@ -569,30 +568,8 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         accountTag.textContent = 'TECHMED Core Student';
         accountTag.className = 'account-tag core';
       } else {
-        // Fallback to staging roster ONLY if remote database migration has not been executed
-        if (!migrationApplied) {
-          const enrolled = getEnrolledStudent(user.email);
-          if (enrolled) {
-            if (enrolled.tier === 'ultimate') {
-              accountTag.textContent = enrolled.hasFounderMentorship
-                ? 'TECHMED Ultimate · Mentorship Confirmed'
-                : 'TECHMED Ultimate Student';
-              accountTag.className = 'account-tag ultimate';
-            } else if (enrolled.tier === 'mastery') {
-              accountTag.textContent = 'TECHMED Mastery Student';
-              accountTag.className = 'account-tag mastery';
-            } else if (enrolled.tier === 'core') {
-              accountTag.textContent = 'TECHMED Core Student';
-              accountTag.className = 'account-tag core';
-            }
-          } else {
-            accountTag.textContent = 'Student Account';
-            accountTag.className = 'account-tag';
-          }
-        } else {
-          accountTag.textContent = 'Student Account';
-          accountTag.className = 'account-tag';
-        }
+        accountTag.textContent = 'Student Account';
+        accountTag.className = 'account-tag';
       }
     }
 

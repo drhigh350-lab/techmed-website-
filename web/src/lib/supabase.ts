@@ -84,35 +84,46 @@ export async function fetchUserEntitlements(
     const { data, error } = await query;
 
     if (error) {
-      // If table doesn't exist yet on remote Supabase (HTTP 404 / code 42P01 / PGRST204)
-      if (
+      const isMissingTable =
         error.code === '42P01' ||
         error.message?.includes('does not exist') ||
         error.message?.includes('relation "entitlements" does not exist') ||
-        error.code === 'PGRST204'
-      ) {
-        // Fallback to local claimed cache ONLY when remote table has not been provisioned
-        const local = getLocalEntitlements(cleanEmail);
-        return {
-          entitlements: local,
-          migrationApplied: false,
-          error: 'The database entitlements migration is not yet applied on this Supabase project.',
-        };
-      }
-      return { entitlements: [], migrationApplied: true, error: error.message };
+        error.code === 'PGRST204';
+
+      return {
+        entitlements: [],
+        migrationApplied: !isMissingTable,
+        error: isMissingTable
+          ? 'The database entitlements migration is not yet applied on this Supabase project.'
+          : error.message,
+      };
     }
 
-    const now = new Date();
+    const nowUtc = Date.now();
     // Database entitlements are authoritative:
-    // Exclude expired entitlements
+    // Exclude records where is_active is false, starts_at is in the future, or expires_at is in the past.
+    // Nullable starts_at is treated as active immediately (per database schema default).
+    // Nullable expires_at is treated as permanent lifetime access.
     const activeRows = (data || []).filter((row: any) => {
-      if (!row.is_active) return false;
-      if (row.expires_at) {
-        const exp = new Date(row.expires_at);
-        if (exp.getTime() <= now.getTime()) {
+      // 1. is_active must be true
+      if (row.is_active !== true) return false;
+
+      // 2. starts_at must not be in the future (consistent UTC comparison)
+      if (row.starts_at) {
+        const startsUtc = new Date(row.starts_at).getTime();
+        if (!isNaN(startsUtc) && startsUtc > nowUtc) {
           return false;
         }
       }
+
+      // 3. expires_at must not be in the past (consistent UTC comparison)
+      if (row.expires_at) {
+        const expiresUtc = new Date(row.expires_at).getTime();
+        if (!isNaN(expiresUtc) && expiresUtc <= nowUtc) {
+          return false;
+        }
+      }
+
       return true;
     });
 
@@ -130,11 +141,14 @@ export async function fetchUserEntitlements(
     }));
 
     // Authoritative result: Database entitlements are the single source of truth.
-    // Untrusted local storage or static email roster is NEVER merged into successful database results.
+    // Untrusted local storage or static email roster is NEVER merged into results.
     return { entitlements: mapped, migrationApplied: true };
   } catch (err: any) {
-    const local = getLocalEntitlements(cleanEmail);
-    return { entitlements: local, migrationApplied: false, error: err?.message || 'Network error' };
+    return {
+      entitlements: [],
+      migrationApplied: false,
+      error: err?.message || 'Network error',
+    };
   }
 }
 
@@ -369,7 +383,7 @@ export async function hasActiveResourceAccess(
       }
     }
 
-    // null expiresAt = Permanent Lifetime Access
+    if (!e.expiresAt) return true; // Lifetime access
     return true;
   });
 }
