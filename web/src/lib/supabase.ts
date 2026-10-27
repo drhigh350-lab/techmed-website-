@@ -406,15 +406,28 @@ export async function hasActiveResourceAccess(
       (resourceId === 'post-utme-pq' && e.resourceId === 'post-utme-brainstorming-hub');
 
     // Bundled inclusions: Mastery includes Chemistry, Biology, and Physics boosters
+    const isMasteryCohort =
+      e.resourceId?.toLowerCase().startsWith('cohort-mastery') ||
+      e.resourceId?.toLowerCase() === 'mastery' ||
+      e.planId?.toLowerCase().startsWith('cohort-mastery') ||
+      e.resourceId?.toLowerCase().includes('mastery') ||
+      e.planId?.toLowerCase().includes('mastery');
+
+    const isUltimateCohort =
+      e.resourceId?.toLowerCase().startsWith('cohort-ultimate') ||
+      e.resourceId?.toLowerCase() === 'ultimate' ||
+      e.planId?.toLowerCase().startsWith('cohort-ultimate') ||
+      e.resourceId?.toLowerCase().includes('ultimate') ||
+      e.planId?.toLowerCase().includes('ultimate');
+
     const isMasteryBooster =
       (resourceId === 'chemistry-booster' || resourceId === 'biology-booster' || resourceId === 'physics-booster') &&
-      (e.resourceId.startsWith('cohort-mastery') || e.resourceId === 'mastery' || e.planId?.startsWith('cohort-mastery') ||
-       e.resourceId.startsWith('cohort-ultimate') || e.resourceId === 'ultimate' || e.planId?.startsWith('cohort-ultimate'));
+      (isMasteryCohort || isUltimateCohort);
 
     // Ultimate includes Post-UTME Brainstorming Hub in addition to all 3 boosters
     const isUltimateResource =
       (resourceId === 'post-utme-brainstorming-hub' || resourceId === 'post-utme-pq') &&
-      (e.resourceId.startsWith('cohort-ultimate') || e.resourceId === 'ultimate' || e.planId?.startsWith('cohort-ultimate'));
+      isUltimateCohort;
 
     if (!matchesId && !isMasteryBooster && !isUltimateResource) return false;
     if (!e.isActive) return false;
@@ -681,36 +694,67 @@ export function resolveStudentPrivileges(
 ): StudentPrivileges {
   const activeEntitlements = entitlements.filter(e => e.isActive);
 
+  // Safe case-insensitive matching helpers
+  const isUltimateMatch = (val?: string | null) => {
+    if (!val) return false;
+    const v = val.toLowerCase();
+    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
+  };
+
+  const isMasteryMatch = (val?: string | null) => {
+    if (!val) return false;
+    const v = val.toLowerCase();
+    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || v.includes('mastery');
+  };
+
+  const isCoreMatch = (val?: string | null) => {
+    if (!val) return false;
+    const v = val.toLowerCase();
+    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || v.includes('core');
+  };
+
   // Check for Ultimate
   const hasUltimate =
-    activeEntitlements.some(e => e.resourceId === 'cohort-ultimate' || e.resourceId === 'ultimate' || e.planId === 'cohort-ultimate') ||
-    orders.some(o => o.product_id === 'cohort-ultimate' || o.product_id === 'ultimate');
+    activeEntitlements.some(e => isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId)) ||
+    orders.some(o => isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name)));
 
-  // Check for Mastery
+  // Check for Mastery (explicitly recognizing ₦20,000 Early-Bird and standard)
   const hasMastery =
     !hasUltimate &&
-    (activeEntitlements.some(e => e.resourceId.startsWith('cohort-mastery') || e.resourceId === 'mastery' || e.planId === 'cohort-mastery') ||
-     orders.some(o => o.product_id?.startsWith('cohort-mastery') || o.product_id === 'mastery'));
+    (activeEntitlements.some(e => isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId)) ||
+     orders.some(o => isMasteryMatch(o.product_id) || (typeof o.product_name === 'string' && isMasteryMatch(o.product_name))));
 
   // Check for Core
   const hasCore =
     !hasUltimate &&
     !hasMastery &&
-    (activeEntitlements.some(e => e.resourceId.startsWith('cohort-core') || e.resourceId === 'core' || e.planId === 'cohort-core') ||
-     orders.some(o => o.product_id?.startsWith('cohort-core') || o.product_id === 'core'));
+    (activeEntitlements.some(e => isCoreMatch(e.resourceId) || isCoreMatch(e.planId)) ||
+     orders.some(o => isCoreMatch(o.product_id) || (typeof o.product_name === 'string' && isCoreMatch(o.product_name))));
 
   const resourceEntitlements = activeEntitlements.filter(
-    e => !e.resourceId.startsWith('cohort-') && e.resourceId !== 'core' && e.resourceId !== 'mastery' && e.resourceId !== 'ultimate'
+    e => !isCoreMatch(e.resourceId) && !isMasteryMatch(e.resourceId) && !isUltimateMatch(e.resourceId)
   );
 
-  const authorizedResources = activeEntitlements.map(e => ({
-    id: e.resourceId,
-    title: e.resourceTitle || e.resourceId,
-    startsAt: e.startsAt,
-    expiresAt: e.expiresAt,
-    isLifetime: !e.expiresAt,
-    grantSource: e.grantSource,
-  }));
+  const authorizedResources = [
+    ...activeEntitlements.map(e => ({
+      id: e.resourceId,
+      title: e.resourceTitle || e.resourceId,
+      startsAt: e.startsAt,
+      expiresAt: e.expiresAt,
+      isLifetime: !e.expiresAt,
+      grantSource: e.grantSource,
+    })),
+    ...orders
+      .filter(o => !activeEntitlements.some(e => e.resourceId === o.product_id))
+      .map(o => ({
+        id: o.product_id || 'order-item',
+        title: o.product_name || o.product_id || 'Confirmed Order',
+        startsAt: null,
+        expiresAt: o.product_id?.includes('monthly') ? '2026-12-30' : (o.product_id?.startsWith('cohort') ? '2027-05-31' : null),
+        isLifetime: !o.product_id?.startsWith('cohort'),
+        grantSource: 'purchase',
+      })),
+  ];
 
   if (hasUltimate) {
     return {
@@ -936,12 +980,52 @@ export async function getUserResourceEntitlements(
 
   const nowUtc = Date.now();
 
-  const hasMasteryCohort = entitlements.some(
-    e => e.isActive && (e.resourceId.startsWith('cohort-mastery') || e.resourceId === 'mastery' || e.planId?.startsWith('cohort-mastery'))
-  );
-  const hasUltimateCohort = entitlements.some(
-    e => e.isActive && (e.resourceId.startsWith('cohort-ultimate') || e.resourceId === 'ultimate' || e.planId?.startsWith('cohort-ultimate'))
-  );
+  let paidOrders: any[] = [];
+  if (userId || userEmail) {
+    try {
+      const supabase = getSupabase();
+      const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : undefined;
+      let orderQuery = supabase
+        .from('orders')
+        .select('product_id, product_name, status, total_amount, amount')
+        .eq('status', 'paid');
+
+      if (userId && cleanEmail) {
+        orderQuery = orderQuery.or(`user_id.eq.${userId},email.ilike.${cleanEmail}`);
+      } else if (userId) {
+        orderQuery = orderQuery.eq('user_id', userId);
+      } else if (cleanEmail) {
+        orderQuery = orderQuery.ilike('email', cleanEmail);
+      }
+
+      const { data, error } = await orderQuery;
+      if (!error && data) {
+        paidOrders = data;
+      }
+    } catch {
+      // Non-fatal
+    }
+  }
+
+  const isMasteryMatch = (s?: string | null) => {
+    if (!s) return false;
+    const v = s.toLowerCase();
+    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || v.includes('mastery');
+  };
+
+  const isUltimateMatch = (s?: string | null) => {
+    if (!s) return false;
+    const v = s.toLowerCase();
+    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
+  };
+
+  const hasMasteryCohort =
+    entitlements.some(e => e.isActive && (isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId))) ||
+    paidOrders.some(o => isMasteryMatch(o.product_id) || (typeof o.product_name === 'string' && isMasteryMatch(o.product_name)));
+
+  const hasUltimateCohort =
+    entitlements.some(e => e.isActive && (isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId))) ||
+    paidOrders.some(o => isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name)));
 
   const CATALOGUE_DEFINITIONS = [
     {
@@ -1074,22 +1158,35 @@ export async function getUserResourceEntitlements(
       };
     }
 
-    // 2. Paid items: match against active entitlements
+    // 2. Paid items: match against active entitlements or confirmed paid orders
     const matchingEntitlement = entitlements.find((e) => {
       if (!e.isActive) return false;
       if (def.id === 'cohort-core') {
         return e.resourceId.startsWith('cohort-core') || e.resourceId === 'core' || e.planId?.startsWith('cohort-core');
       }
       if (def.id === 'cohort-mastery') {
-        return e.resourceId.startsWith('cohort-mastery') || e.resourceId === 'mastery' || e.planId?.startsWith('cohort-mastery');
+        return isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId);
       }
       if (def.id === 'cohort-ultimate') {
-        return e.resourceId.startsWith('cohort-ultimate') || e.resourceId === 'ultimate' || e.planId?.startsWith('cohort-ultimate');
+        return isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId);
       }
       if (def.id === 'post-utme-brainstorming-hub') {
         return e.resourceId === 'post-utme-brainstorming-hub' || e.resourceId === 'post-utme-pq';
       }
       return e.resourceId === def.id || e.resourceId === def.slug;
+    });
+
+    const matchingOrder = paidOrders.find((o) => {
+      if (def.id === 'cohort-mastery') {
+        return isMasteryMatch(o.product_id) || (typeof o.product_name === 'string' && isMasteryMatch(o.product_name));
+      }
+      if (def.id === 'cohort-core') {
+        return o.product_id?.toLowerCase().startsWith('cohort-core') || o.product_id?.toLowerCase() === 'core' || (typeof o.product_name === 'string' && o.product_name.toLowerCase().includes('core'));
+      }
+      if (def.id === 'cohort-ultimate') {
+        return isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name));
+      }
+      return o.product_id === def.id || o.product_id === def.slug;
     });
 
     // Check cohort inclusions for science boosters and Post-UTME hub
@@ -1149,6 +1246,22 @@ export async function getUserResourceEntitlements(
         startsAt: matchingEntitlement.startsAt,
         expiresAt: matchingEntitlement.expiresAt,
         actionLabel: def.actionLabel || 'Open Reader',
+      };
+    }
+
+    if (matchingOrder) {
+      const isCohort = def.category === 'Cohort';
+      return {
+        ...def,
+        isOwned: true,
+        purchaseStatus: isCohort ? 'cohort_enrolled' : 'direct_purchase',
+        purchaseStatusLabel: isCohort ? 'UTME 2027 Cohort Enrolment' : 'Direct Standalone Purchase',
+        accessStatus: isCohort ? 'active_cohort' : 'active_lifetime',
+        accessStatusLabel: isCohort ? 'Active through UTME 2027' : 'Permanent Lifetime Access',
+        grantSource: 'purchase',
+        startsAt: null,
+        expiresAt: isCohort ? '2027-05-31' : null,
+        actionLabel: def.actionLabel || (isCohort ? 'Open Bookshelf' : 'Open in Reader'),
       };
     }
 

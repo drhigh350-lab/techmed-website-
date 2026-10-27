@@ -841,6 +841,39 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     });
   }
 
+  /**
+   * Safely query confirmed paid orders for the authenticated student.
+   * Uses standard async/await with try/catch to prevent query builder errors from halting the dashboard.
+   */
+  async function fetchUserPaidOrders(userId: string, email: string): Promise<any[]> {
+    if (!userId && !email) return [];
+    try {
+      const cleanEmail = email ? email.trim().toLowerCase() : '';
+      let query = supabase
+        .from('orders')
+        .select('*')
+        .eq('status', 'paid');
+
+      if (userId && cleanEmail) {
+        query = query.or(`user_id.eq.${userId},email.ilike.${cleanEmail}`);
+      } else if (userId) {
+        query = query.eq('user_id', userId);
+      } else if (cleanEmail) {
+        query = query.ilike('email', cleanEmail);
+      }
+
+      const { data, error } = await query;
+      if (error) {
+        console.warn('Orders lookup returned error (non-fatal):', error.message);
+        return [];
+      }
+      return data || [];
+    } catch (err) {
+      console.warn('Orders query threw exception (non-fatal):', err);
+      return [];
+    }
+  }
+
   async function loadDashboard() {
     if (loadingState) loadingState.style.display = 'flex';
     if (errorState) errorState.style.display = 'none';
@@ -870,23 +903,28 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
       const email = user.email || '';
       const userId = user.id;
 
-      // Parallel fetch profile, database entitlements, paid orders, and catalogue items
-      const [profileResult, entitlementsResult, ordersResult, resourcesResult] = await Promise.all([
-        fetchUserProfile(userId),
-        fetchUserEntitlements(userId, email),
-        supabase
-          .from('orders')
-          .select('product_id, product_name, status, amount')
-          .eq('status', 'paid')
-          .or(`user_id.eq.${userId},email.ilike.${email}`)
-          .catch(() => ({ data: [] })),
-        getUserResourceEntitlements(userId, email),
+      // Safe, parallel fetch for all dashboard data
+      // Isolated failure of any optional query will not crash the entire dashboard
+      const [profileResult, entitlementsResult, paidOrders, resourcesResult] = await Promise.all([
+        fetchUserProfile(userId).catch(err => {
+          console.warn('Profile fetch error (non-fatal):', err);
+          return { profile: null };
+        }),
+        fetchUserEntitlements(userId, email).catch(err => {
+          console.warn('Entitlements fetch error (non-fatal):', err);
+          return { entitlements: [], migrationApplied: true };
+        }),
+        fetchUserPaidOrders(userId, email),
+        getUserResourceEntitlements(userId, email).catch(err => {
+          console.warn('Resources fetch error (non-fatal):', err);
+          return { items: [], ownedCount: 0, unownedCount: 0 };
+        }),
       ]);
 
-      const profile: StudentProfile | null = profileResult.profile;
-      const entitlements: StudentEntitlement[] = entitlementsResult.entitlements || [];
-      const orders: any[] = (ordersResult as any)?.data || [];
-      allResourceItems = resourcesResult.items || [];
+      const profile: StudentProfile | null = profileResult?.profile || null;
+      const entitlements: StudentEntitlement[] = entitlementsResult?.entitlements || [];
+      const orders: any[] = paidOrders || [];
+      allResourceItems = resourcesResult?.items || [];
 
       // 1. Resolve student privileges authoritatively
       const privileges = resolveStudentPrivileges(entitlements, orders);
@@ -1044,9 +1082,17 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
       if (loadingState) loadingState.style.display = 'none';
       if (dashboardContent) dashboardContent.style.display = 'flex';
     } catch (err: any) {
+      console.error('[Dashboard Error]', err);
       if (loadingState) loadingState.style.display = 'none';
       if (errorState) errorState.style.display = 'block';
-      if (errorMsgText) errorMsgText.textContent = err?.message || 'Error loading dashboard. Please try again.';
+      if (errorMsgText) {
+        const isOffline = typeof navigator !== 'undefined' && !navigator.onLine;
+        if (isOffline) {
+          errorMsgText.textContent = 'Your device appears to be offline. Please check your internet connection and try again.';
+        } else {
+          errorMsgText.textContent = 'We encountered a momentary issue retrieving your student record. Please check your connection and click Retry below.';
+        }
+      }
     }
   }
 
