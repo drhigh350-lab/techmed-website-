@@ -288,35 +288,59 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </p>
 
           <div class="classrooms-grid">
-            {CLASSROOM_LINKS.map((cls) => (
-              <div class="classroom-box" data-classroom-id={cls.id} data-is-community={cls.isCommunity ? 'true' : 'false'}>
-                <div class="box-top">
-                  <div class="platform-badge" data-platform={cls.platform.toLowerCase()}>
-                    {cls.platform === 'Telegram' ? (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
-                    ) : (
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z"/></svg>
-                    )}
-                    <span>{cls.platform}</span>
+            {CLASSROOM_LINKS.map((cls) => {
+              const requiresEnrol = cls.requiresEnrolment !== false;
+              return (
+                <div
+                  class="classroom-box"
+                  data-classroom-id={cls.id}
+                  data-is-community={cls.isCommunity ? 'true' : 'false'}
+                  data-requires-enrolment={requiresEnrol ? 'true' : 'false'}
+                  data-locked-url={cls.url}
+                  data-subject-title={cls.subject}
+                >
+                  <div class="box-top">
+                    <div class="platform-badge" data-platform={cls.platform.toLowerCase()}>
+                      {cls.platform === 'Telegram' ? (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                      ) : (
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z"/></svg>
+                      )}
+                      <span>{cls.platform}</span>
+                    </div>
+                    <span class={`access-pill ${requiresEnrol ? 'locked' : 'unlocked'}`} data-role="classroom-access-pill">
+                      {requiresEnrol ? '🔒 Enrolment Required' : '✓ Open to Everyone'}
+                    </span>
                   </div>
-                  <span class="access-pill" data-role="classroom-access-pill">Checking...</span>
+                  <h3 class="classroom-title">{cls.subject}</h3>
+                  <p class="classroom-desc">{cls.description}</p>
+                  <div class="box-action-wrap">
+                    {requiresEnrol ? (
+                      <a
+                        href="/pricing"
+                        class="btn-secondary locked-classroom-btn"
+                        data-role="classroom-btn"
+                        title="Enrolment in Core, Mastery, or Ultimate required to join"
+                      >
+                        <span>Enrol to Unlock Room</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </a>
+                    ) : (
+                      <a
+                        href={cls.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="btn-primary classroom-join-btn"
+                        data-role="classroom-btn"
+                      >
+                        <span>Join {cls.subject.split(' ')[0]} Room</span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                      </a>
+                    )}
+                  </div>
                 </div>
-                <h3 class="classroom-title">{cls.subject}</h3>
-                <p class="classroom-desc">{cls.desc || cls.description}</p>
-                <div class="box-action-wrap">
-                  <a
-                    href={cls.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="btn-primary classroom-join-btn"
-                    data-role="classroom-btn"
-                  >
-                    <span>Join {cls.subject.split(' ')[0]} Room</span>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-                  </a>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </section>
 
@@ -902,19 +926,39 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
     const classroomBoxes = document.querySelectorAll('.classroom-box');
     classroomBoxes.forEach(box => {
-      const isCommunity = box.getAttribute('data-is-community') === 'true';
+      const requiresEnrol = box.getAttribute('data-requires-enrolment') !== 'false';
       const accessPill = box.querySelector('[data-role="classroom-access-pill"]');
       const actionBtn = box.querySelector('[data-role="classroom-btn"]');
+      const lockedUrl = box.getAttribute('data-locked-url') || '';
+      const subjectTitle = box.getAttribute('data-subject-title') || 'Room';
 
-      if (isCommunity) {
+      if (!requiresEnrol) {
         if (accessPill) {
-          accessPill.textContent = 'Open Community';
+          accessPill.textContent = '✓ Open to Everyone';
           accessPill.className = 'access-pill unlocked';
+        }
+        if (actionBtn && lockedUrl) {
+          actionBtn.setAttribute('href', lockedUrl);
+          actionBtn.setAttribute('target', '_blank');
+          actionBtn.setAttribute('rel', 'noopener noreferrer');
+          actionBtn.className = 'btn-primary classroom-join-btn';
+          const span = actionBtn.querySelector('span');
+          if (span) span.textContent = `Join ${subjectTitle.split(' ')[0]} Room`;
+          actionBtn.removeAttribute('title');
         }
       } else if (hasCohortAccess) {
         if (accessPill) {
           accessPill.textContent = 'Active Enrolment';
           accessPill.className = 'access-pill unlocked';
+        }
+        if (actionBtn && lockedUrl) {
+          actionBtn.setAttribute('href', lockedUrl);
+          actionBtn.setAttribute('target', '_blank');
+          actionBtn.setAttribute('rel', 'noopener noreferrer');
+          actionBtn.className = 'btn-primary classroom-join-btn';
+          const span = actionBtn.querySelector('span');
+          if (span) span.textContent = `Join ${subjectTitle.split(' ')[0]} Room`;
+          actionBtn.removeAttribute('title');
         }
       } else {
         if (accessPill) {
@@ -922,8 +966,12 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           accessPill.className = 'access-pill locked';
         }
         if (actionBtn) {
-          // Allow click with notice or route to pricing
-          actionBtn.setAttribute('title', 'Please enroll in Core, Mastery, or Ultimate to join live Telegram classrooms');
+          actionBtn.setAttribute('href', '/pricing');
+          actionBtn.removeAttribute('target');
+          actionBtn.className = 'btn-secondary locked-classroom-btn';
+          const span = actionBtn.querySelector('span');
+          if (span) span.textContent = 'Enrol to Unlock Room';
+          actionBtn.setAttribute('title', 'Please enroll in Core, Mastery, or Ultimate to join live classrooms');
         }
       }
     });
@@ -1354,8 +1402,13 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
   /* State Cards */
   .state-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
     text-align: center;
-    padding: var(--space-16) var(--space-6);
+    padding: var(--space-12) var(--space-6);
   }
 
   .spinner {
@@ -2061,8 +2114,38 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     font-weight: 700;
     text-decoration: none;
     border-radius: var(--radius-sm);
-    color: #1a0a00;
+    color: #012748;
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    transition: all 180ms ease;
+  }
+
+  .classroom-join-btn:hover {
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .locked-classroom-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px 14px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    color: var(--color-soft-blue);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    transition: all 180ms ease;
+  }
+
+  .locked-classroom-btn:hover {
+    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(201, 162, 39, 0.4);
+    transform: translateY(-1px);
   }
 
   /* Timetable Section */
@@ -3224,14 +3307,16 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
   @media (max-width: 640px) {
     .dashboard-page {
       padding: var(--space-4) var(--space-3) var(--space-12);
+      overflow-x: hidden;
     }
 
     .welcome-heading {
-      font-size: 1.45rem;
+      font-size: 1.4rem;
+      word-break: break-word;
     }
 
     .segmented-control-container {
-      top: 60px;
+      top: 72px;
       margin: 0 0 var(--space-3);
       padding: 4px;
     }
@@ -3239,6 +3324,21 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     .segment-btn {
       padding: 6px 12px;
       font-size: 0.8rem;
+    }
+
+    /* Grids collapse to single-column on mobile to prevent horizontal overflow */
+    .dashboard-grid,
+    .classrooms-grid,
+    .resources-grid,
+    .benefits-checklist,
+    .cbt-features-grid,
+    .quick-tools-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .card-header-row {
+      flex-wrap: wrap;
+      gap: var(--space-2);
     }
 
     .today-sessions-grid {
@@ -3275,7 +3375,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
   @media (max-width: 480px) {
     .welcome-heading {
-      font-size: 1.3rem;
+      font-size: 1.25rem;
     }
 
     .dashboard-card {
@@ -3284,6 +3384,31 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
     .programme-body-grid {
       grid-template-columns: 1fr;
+    }
+
+    .today-live-meta {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+  }
+
+  @media (max-width: 360px) {
+    .welcome-heading {
+      font-size: 1.15rem;
+    }
+
+    .dashboard-page {
+      padding: var(--space-3) var(--space-2) var(--space-10);
+    }
+
+    .dashboard-card {
+      padding: var(--space-3);
+    }
+
+    .segment-btn {
+      padding: 5px 10px;
+      font-size: 0.76rem;
     }
   }
 </style>

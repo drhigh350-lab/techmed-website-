@@ -148,8 +148,22 @@ export async function fetchUserEntitlements(
       // 1. is_active must be true
       if (row.is_active !== true) return false;
 
-      // 2. starts_at must not be in the future (consistent UTC comparison)
-      if (row.starts_at) {
+      // 2. starts_at handling:
+      // Distinguish paid enrolment from programme/resource availability:
+      // Cohort enrolments (Core, Mastery, Ultimate) are active immediately upon confirmed payment,
+      // while live lectures commence on 30 November 2026.
+      // Standalone scheduled resources preserve starts_at and are gated by hasActiveResourceAccess / accessStatus.
+      const isCohortPlan =
+        row.resource_id?.toLowerCase().includes('cohort') ||
+        row.resource_id?.toLowerCase().includes('mastery') ||
+        row.resource_id?.toLowerCase().includes('ultimate') ||
+        row.resource_id?.toLowerCase().includes('core') ||
+        row.plan_id?.toLowerCase().includes('cohort') ||
+        row.plan_id?.toLowerCase().includes('mastery') ||
+        row.plan_id?.toLowerCase().includes('ultimate') ||
+        row.plan_id?.toLowerCase().includes('core');
+
+      if (row.starts_at && !isCohortPlan) {
         const startsUtc = new Date(row.starts_at).getTime();
         if (!isNaN(startsUtc) && startsUtc > nowUtc) {
           return false;
@@ -432,9 +446,11 @@ export async function hasActiveResourceAccess(
     if (!matchesId && !isMasteryBooster && !isUltimateResource) return false;
     if (!e.isActive) return false;
 
+    const isCohortEnrolment = isMasteryCohort || isUltimateCohort || e.resourceId?.toLowerCase().includes('cohort') || e.planId?.toLowerCase().includes('cohort');
+
     // Check starts_at: cannot access resource before its designated activation date
     // Note: For booster materials bundled in cohort plans, students have immediate book access
-    if (e.startsAt && !isMasteryBooster && !isUltimateResource) {
+    if (e.startsAt && !isMasteryBooster && !isUltimateResource && !isCohortEnrolment) {
       const starts = new Date(e.startsAt);
       if (starts.getTime() > now.getTime()) {
         return false;

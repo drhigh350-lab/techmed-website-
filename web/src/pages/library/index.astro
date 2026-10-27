@@ -558,15 +558,44 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     currentEntitlements = entitlements || [];
 
-    // Derive account tag authoritatively from verified database entitlements
+    // Call unified getUserResourceEntitlements for consistent booster bundle inclusions
+    const resResult = await getUserResourceEntitlements(user.id, user.email);
+    currentUserResources = resResult.items || [];
+
+    // Derive account tag authoritatively from verified database entitlements and confirmed orders
     const accountTag = document.querySelector('.account-tag');
     if (accountTag) {
-      const hasUltimate = currentEntitlements.some(e => e.resourceId === 'cohort-ultimate' || e.resourceId === 'ultimate');
-      const hasMastery = currentEntitlements.some(e => e.resourceId === 'cohort-mastery' || e.resourceId === 'mastery');
-      const hasCore = currentEntitlements.some(e => e.resourceId === 'cohort-core' || e.resourceId === 'core' || e.resourceId.startsWith('cohort-core'));
+      const isMasteryMatch = (s?: string | null) => {
+        if (!s) return false;
+        const v = s.toLowerCase();
+        return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || v.includes('mastery');
+      };
+      const isUltimateMatch = (s?: string | null) => {
+        if (!s) return false;
+        const v = s.toLowerCase();
+        return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
+      };
+      const isCoreMatch = (s?: string | null) => {
+        if (!s) return false;
+        const v = s.toLowerCase();
+        return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || v.includes('core');
+      };
+
+      const hasUltimate = currentEntitlements.some(e => isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId)) ||
+        currentUserResources.some(r => isUltimateMatch(r.id) && r.isOwned);
+
+      const hasMastery = !hasUltimate && (
+        currentEntitlements.some(e => isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId)) ||
+        currentUserResources.some(r => isMasteryMatch(r.id) && r.isOwned)
+      );
+
+      const hasCore = !hasUltimate && !hasMastery && (
+        currentEntitlements.some(e => isCoreMatch(e.resourceId) || isCoreMatch(e.planId)) ||
+        currentUserResources.some(r => isCoreMatch(r.id) && r.isOwned)
+      );
 
       if (hasUltimate) {
-        const ultimateEnt = currentEntitlements.find(e => e.resourceId === 'cohort-ultimate' || e.resourceId === 'ultimate');
+        const ultimateEnt = currentEntitlements.find(e => isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId));
         const hasMentorship = (ultimateEnt as any)?.metadata?.has_founder_mentorship === true;
         accountTag.textContent = hasMentorship
           ? 'TECHMED Ultimate · Mentorship Confirmed'
@@ -583,10 +612,6 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         accountTag.className = 'account-tag';
       }
     }
-
-    // Call unified getUserResourceEntitlements for consistent booster bundle inclusions
-    const resResult = await getUserResourceEntitlements(user.id, user.email);
-    currentUserResources = resResult.items || [];
 
     renderBookshelf();
   }

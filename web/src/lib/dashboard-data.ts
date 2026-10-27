@@ -52,6 +52,7 @@ export interface ClassroomLink {
   url: string;
   description: string;
   isCommunity?: boolean;
+  requiresEnrolment?: boolean;
 }
 
 export const PROGRAMME_META = {
@@ -73,6 +74,7 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'Telegram',
     url: 'https://t.me/+-MMNZixSVJM3ZjRk',
     description: 'Live interactive lectures, diagrams, genetics walkthroughs, and pre-class notes.',
+    requiresEnrolment: true,
   },
   {
     id: 'chemistry',
@@ -80,6 +82,7 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'Telegram',
     url: 'https://t.me/+B6xm1bGauWgyZDJk',
     description: 'Stoichiometry, organic chemistry, reaction mechanisms, and calculation chains.',
+    requiresEnrolment: true,
   },
   {
     id: 'physics',
@@ -87,6 +90,7 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'Telegram',
     url: 'https://t.me/+Uhvk2wlI-LQ3MWJk',
     description: 'Formula derivations, mechanics, electromagnetism, and calculation speed drills.',
+    requiresEnrolment: true,
   },
   {
     id: 'english',
@@ -94,6 +98,7 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'Telegram',
     url: 'https://t.me/+WAhmsDP-4rM4OWVk',
     description: 'Lexis, grammatical structure, The Lekki Headmaster, and comprehension tactics.',
+    requiresEnrolment: true,
   },
   {
     id: 'mathematics',
@@ -101,6 +106,7 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'Telegram',
     url: 'https://t.me/+H5AcDzEEd49kMTJk',
     description: 'Calculus, algebra, mensuration, coordinate geometry, and JAMB problem-solving.',
+    requiresEnrolment: true,
   },
   {
     id: 'brainstorming-group',
@@ -108,16 +114,36 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     platform: 'WhatsApp',
     url: 'https://chat.whatsapp.com/HKR7lb7mRoA5wivQLjUhUc?s=cl&p=a&mlu=4&ilr=4&iam=2',
     description: 'Direct candidate collaboration, daily questions, and study accountability group.',
+    requiresEnrolment: true,
+    isCommunity: false,
+  },
+  {
+    id: 'paid-class-official',
+    subject: 'Paid Class Official Group',
+    platform: 'WhatsApp',
+    url: 'https://chat.whatsapp.com/FbCsdrxF7KE3E1q2ckwKOW?s=cl&p=a&mlu=4&ilr=4&iam=2',
+    description: 'Official announcements, timetable changes, class reminders, and admission updates for paid students.',
+    requiresEnrolment: true,
+    isCommunity: false,
+  },
+  {
+    id: 'free-intensive-community',
+    subject: 'Free Intensive Classes, Quizzes & Strategies',
+    platform: 'WhatsApp',
+    url: 'https://chat.whatsapp.com/LicHJ6aIHNV6x34CrbpviV?s=cl&p=a&mlu=4&ilr=4&iam=2',
+    description: 'Free intensive classes, practice quizzes, and admission strategy breakdowns open to every candidate.',
     isCommunity: true,
+    requiresEnrolment: false,
   },
   {
     id: 'whatsapp-channel',
     subject: 'TECHMED Official WhatsApp Channel',
     platform: 'WhatsApp',
-    url: 'https://whatsapp.com/channel/0029Vb4wUuS6buMI3U1t8u1s',
-    backupUrl: 'https://whatsapp.com/channel/0029Vb8nzXH545v4f8EF103D',
-    description: 'Official announcements, timetable changes, class reminders, and admission updates.',
+    url: 'https://whatsapp.com/channel/0029Vb8nzXH545v4f8EF103D',
+    backupUrl: 'https://whatsapp.com/channel/0029Vb4wUuS6buMI3U1t8u1s',
+    description: 'Public announcements, daily tips, syllabus alerts, and admission guidance for all candidates.',
     isCommunity: true,
+    requiresEnrolment: false,
   },
 ];
 
