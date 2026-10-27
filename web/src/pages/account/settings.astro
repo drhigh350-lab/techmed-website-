@@ -1,0 +1,590 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StudentHubNav from '../../components/StudentHubNav.astro';
+
+const title = 'Account Settings | TECHMED';
+const description = 'Manage your TECHMED account security, email, password recovery, and profile preferences.';
+---
+
+<BaseLayout title={title} description={description}>
+  <main class="settings-page">
+    <div class="settings-container">
+      <!-- Loading State -->
+      <div id="loadingState" class="settings-card state-card">
+        <div class="spinner"></div>
+        <p>Loading your account settings...</p>
+      </div>
+
+      <!-- Unauthorized State -->
+      <div id="unauthCard" class="settings-card state-card" style="display: none;">
+        <h2>Authentication Required</h2>
+        <p>Please log in to manage your student account settings.</p>
+        <a href="/login?redirect=/account/settings" class="btn-primary auth-btn">Log In</a>
+      </div>
+
+      <!-- Main Settings Content -->
+      <div id="settingsContent" class="settings-content" style="display: none;">
+        <!-- Header & Nav Tabs -->
+        <header class="settings-header">
+          <div class="header-titles">
+            <span class="eyebrow">Student Hub</span>
+            <h1 class="page-title">Account Settings</h1>
+            <p class="page-sub">Review your credentials, security settings, and communication preferences.</p>
+          </div>
+
+          <StudentHubNav activeTab="settings" />
+        </header>
+
+        <!-- Alert Banner -->
+        <div id="settingsAlert" class="settings-alert" style="display: none;" role="alert"></div>
+
+        <div class="settings-grid">
+          <!-- Card 1: Account Credentials -->
+          <section class="settings-card credentials-card">
+            <h2 class="card-heading">Account Credentials</h2>
+
+            <div class="field-item">
+              <span class="field-label">Email Address</span>
+              <div class="field-val-row">
+                <span class="field-value" id="displayEmail">--</span>
+                <span class="verified-indicator">Active</span>
+              </div>
+            </div>
+
+            <div class="field-item">
+              <span class="field-label">Student ID Reference</span>
+              <span class="field-value code-font" id="displayUserId">--</span>
+            </div>
+
+            <div class="field-item">
+              <span class="field-label">Account Verification Status</span>
+              <div class="status-wrap">
+                <span class="status-badge" id="accountStatusBadge">Checking...</span>
+              </div>
+            </div>
+
+            <div class="field-item">
+              <span class="field-label">Account Created</span>
+              <span class="field-value" id="displayCreatedAt">--</span>
+            </div>
+          </section>
+
+          <!-- Card 2: Security & Password -->
+          <section class="settings-card security-card">
+            <h2 class="card-heading">Security & Password</h2>
+            <p class="card-desc">
+              To update your password, request a secure reset email. You'll receive a link valid for 1 hour to set a new password.
+            </p>
+
+            <div class="action-box">
+              <button type="button" class="btn-primary reset-pass-btn" id="requestResetBtn">
+                <span>Send Password Reset Email</span>
+              </button>
+              <span class="action-hint">A reset link will be sent to your registered email address.</span>
+            </div>
+          </section>
+
+          <!-- Card 3: Profile & Communication Summary -->
+          <section class="settings-card comms-card">
+            <div class="card-header-with-action">
+              <h2 class="card-heading">Personal & Contact Info</h2>
+              <a href="/account/onboarding" class="btn-secondary small-btn">Update Profile</a>
+            </div>
+
+            <div class="summary-list">
+              <div class="summary-row">
+                <span class="summary-key">Full Name</span>
+                <span class="summary-val" id="displayFullName">Not set</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-key">Primary Phone</span>
+                <span class="summary-val" id="displayPhone">Not set</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-key">WhatsApp Number</span>
+                <span class="summary-val" id="displayWhatsapp">Not set</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-key">Telegram Handle</span>
+                <span class="summary-val" id="displayTelegram">Not set</span>
+              </div>
+              <div class="summary-row">
+                <span class="summary-key">Parent / Guardian</span>
+                <span class="summary-val" id="displayParent">Not provided</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Card 4: Session & Sign Out -->
+          <section class="settings-card session-card">
+            <h2 class="card-heading">Session Management</h2>
+            <p class="card-desc">
+              Signing out will end your current browser session. You will need your email and password to log in again.
+            </p>
+
+            <button type="button" class="btn-danger signout-btn" id="settingsSignOutBtn">
+              Sign Out of TECHMED
+            </button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { getSupabase, fetchUserProfile, checkIsVerifiedStudent } from '../../lib/supabase';
+
+  const supabase = getSupabase();
+
+  const loadingState = document.getElementById('loadingState');
+  const unauthCard = document.getElementById('unauthCard');
+  const settingsContent = document.getElementById('settingsContent');
+  const settingsAlert = document.getElementById('settingsAlert');
+
+  const displayEmail = document.getElementById('displayEmail');
+  const displayUserId = document.getElementById('displayUserId');
+  const accountStatusBadge = document.getElementById('accountStatusBadge');
+  const displayCreatedAt = document.getElementById('displayCreatedAt');
+
+  const displayFullName = document.getElementById('displayFullName');
+  const displayPhone = document.getElementById('displayPhone');
+  const displayWhatsapp = document.getElementById('displayWhatsapp');
+  const displayTelegram = document.getElementById('displayTelegram');
+  const displayParent = document.getElementById('displayParent');
+
+  const requestResetBtn = document.getElementById('requestResetBtn');
+  const settingsSignOutBtn = document.getElementById('settingsSignOutBtn');
+
+  let currentUserEmail = '';
+
+  function showAlert(msg: string, type: 'error' | 'success' = 'error') {
+    if (!settingsAlert) return;
+    settingsAlert.textContent = msg;
+    settingsAlert.className = `settings-alert ${type}`;
+    settingsAlert.style.display = 'block';
+  }
+
+  function hideAlert() {
+    if (!settingsAlert) return;
+    settingsAlert.style.display = 'none';
+  }
+
+  async function loadSettings() {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+
+    if (!user) {
+      if (loadingState) loadingState.style.display = 'none';
+      if (unauthCard) unauthCard.style.display = 'block';
+      setTimeout(() => {
+        window.location.href = '/login?redirect=/account/settings';
+      }, 1000);
+      return;
+    }
+
+    currentUserEmail = user.email || '';
+    if (displayEmail) displayEmail.textContent = currentUserEmail;
+    if (displayUserId) displayUserId.textContent = user.id;
+
+    if (user.created_at && displayCreatedAt) {
+      const d = new Date(user.created_at);
+      displayCreatedAt.textContent = d.toLocaleDateString('en-GB', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+      });
+    }
+
+    // Check Verified Status
+    try {
+      const { isVerified, verifiedPlanOrProduct } = await checkIsVerifiedStudent(user.id, user.email);
+      if (accountStatusBadge) {
+        if (isVerified) {
+          accountStatusBadge.textContent = 'Verified Student';
+          accountStatusBadge.className = 'status-badge verified';
+        } else {
+          accountStatusBadge.textContent = 'Free Registered Candidate';
+          accountStatusBadge.className = 'status-badge unverified';
+        }
+      }
+    } catch {
+      if (accountStatusBadge) {
+        accountStatusBadge.textContent = 'Registered Candidate';
+        accountStatusBadge.className = 'status-badge';
+      }
+    }
+
+    // Load Profile
+    try {
+      const { profile } = await fetchUserProfile(user.id);
+      if (profile) {
+        if (displayFullName) displayFullName.textContent = profile.fullName || user.user_metadata?.full_name || 'Not set';
+        if (displayPhone) displayPhone.textContent = profile.phone || 'Not set';
+        if (displayWhatsapp) displayWhatsapp.textContent = profile.whatsappPhone || 'Not set';
+        if (displayTelegram) displayTelegram.textContent = profile.telegramPhone || 'Not set';
+        if (displayParent) displayParent.textContent = profile.parentPhone || 'Not provided';
+      }
+    } catch {
+      // Non-fatal fallback
+    }
+
+    if (loadingState) loadingState.style.display = 'none';
+    if (settingsContent) settingsContent.style.display = 'block';
+  }
+
+  // Request password reset email
+  requestResetBtn?.addEventListener('click', async () => {
+    if (!currentUserEmail) return;
+    hideAlert();
+
+    const originalText = requestResetBtn.innerHTML;
+    requestResetBtn.innerHTML = '<span>Sending...</span>';
+    (requestResetBtn as HTMLButtonElement).disabled = true;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(currentUserEmail, {
+        redirectTo: `${window.location.origin}/login?tab=login`,
+      });
+
+      if (error) {
+        showAlert(`Error: ${error.message}`);
+      } else {
+        showAlert(`Password reset link dispatched to ${currentUserEmail}. Please check your inbox.`, 'success');
+      }
+    } catch (err: any) {
+      showAlert(`Network error: ${err.message}`);
+    } finally {
+      requestResetBtn.innerHTML = originalText;
+      (requestResetBtn as HTMLButtonElement).disabled = false;
+    }
+  });
+
+  // Sign out handler
+  settingsSignOutBtn?.addEventListener('click', async () => {
+    try {
+      await supabase.auth.signOut();
+    } finally {
+      window.location.href = '/';
+    }
+  });
+
+  loadSettings();
+</script>
+
+<style>
+  .settings-page {
+    min-height: calc(100vh - 180px);
+    padding: var(--space-8) var(--space-6) var(--space-16);
+    background: radial-gradient(circle at 50% 10%, rgba(9, 71, 110, 0.2), transparent 70%), var(--bg);
+  }
+
+  .settings-container {
+    max-width: 920px;
+    margin: 0 auto;
+  }
+
+  .settings-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  }
+
+  .state-card {
+    text-align: center;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid rgba(201, 162, 39, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto var(--space-4);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .auth-btn {
+    display: inline-block;
+    margin-top: var(--space-4);
+    padding: 10px 20px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: var(--radius-sm);
+  }
+
+  /* Header & Tabs */
+  .settings-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  .page-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin: 4px 0 var(--space-2);
+    color: var(--text);
+  }
+
+  .page-sub {
+    font-size: 0.92rem;
+    color: var(--text-light);
+    margin-bottom: var(--space-6);
+  }
+
+  .hub-nav-tabs {
+    display: flex;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .tab-link {
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 2px solid transparent;
+    transition: all 150ms ease;
+    white-space: nowrap;
+  }
+
+  .tab-link:hover {
+    color: var(--text);
+  }
+
+  .tab-link.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+
+  /* Alert */
+  .settings-alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-6);
+  }
+
+  .settings-alert.error {
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+  }
+
+  .settings-alert.success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+  }
+
+  /* Grid */
+  .settings-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .card-heading {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header-with-action {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .card-header-with-action .card-heading {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+  }
+
+  .card-desc {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    line-height: 1.55;
+    margin-bottom: var(--space-4);
+  }
+
+  .field-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: var(--space-3) 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .field-label {
+    font-size: 0.76rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .field-val-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .field-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .code-font {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .verified-indicator {
+    font-size: 0.72rem;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    padding: 2px 8px;
+    border-radius: var(--radius-full);
+  }
+
+  .status-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+  }
+
+  .status-badge.verified {
+    background: rgba(201, 162, 39, 0.16);
+    color: var(--accent);
+    border: 1px solid rgba(201, 162, 39, 0.4);
+  }
+
+  .status-badge.unverified {
+    background: rgba(152, 176, 196, 0.12);
+    color: var(--text-light);
+    border: 1px solid rgba(152, 176, 196, 0.25);
+  }
+
+  .action-box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    align-items: flex-start;
+  }
+
+  .reset-pass-btn {
+    padding: 10px 18px;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .reset-pass-btn:hover:not(:disabled) {
+    box-shadow: 0 4px 12px rgba(201, 162, 39, 0.3);
+  }
+
+  .action-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+  }
+
+  .summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.88rem;
+  }
+
+  .summary-key {
+    color: var(--text-light);
+  }
+
+  .summary-val {
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .small-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-family: var(--font-display);
+    font-weight: 600;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+  }
+
+  .btn-danger {
+    padding: 10px 18px;
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    font-weight: 700;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.35);
+    border-radius: var(--radius-sm);
+    color: #f87171;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .btn-danger:hover {
+    background: rgba(239, 68, 68, 0.22);
+    color: #fca5a5;
+  }
+</style>

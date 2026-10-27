@@ -1,0 +1,71 @@
+---
+export interface Props {
+  activeTab?: 'dashboard' | 'onboarding' | 'settings' | 'library';
+}
+
+const { activeTab = 'dashboard' } = Astro.props;
+---
+
+<nav class="hub-nav-tabs" aria-label="Student space navigation">
+  <a
+    href="/dashboard"
+    class:list={['tab-link', { active: activeTab === 'dashboard' }]}
+    aria-current={activeTab === 'dashboard' ? 'page' : undefined}
+  >
+    Dashboard
+  </a>
+  <a
+    href="/account/onboarding"
+    class:list={['tab-link', { active: activeTab === 'onboarding' }]}
+    aria-current={activeTab === 'onboarding' ? 'page' : undefined}
+  >
+    Profile &amp; Onboarding
+  </a>
+  <a
+    href="/account/settings"
+    class:list={['tab-link', { active: activeTab === 'settings' }]}
+    aria-current={activeTab === 'settings' ? 'page' : undefined}
+  >
+    Account Settings
+  </a>
+  <a
+    href="/library"
+    class:list={['tab-link', { active: activeTab === 'library' }]}
+    aria-current={activeTab === 'library' ? 'page' : undefined}
+  >
+    Bookshelf &amp; Materials
+  </a>
+</nav>
+
+<style>
+  .hub-nav-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    padding-bottom: 2px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-link {
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 2px solid transparent;
+    transition: all 150ms ease;
+    white-space: nowrap;
+  }
+
+  .tab-link:hover {
+    color: var(--text);
+  }
+
+  .tab-link.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+</style>

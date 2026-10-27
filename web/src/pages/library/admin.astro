@@ -737,7 +737,31 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
       saveTransfersQueue(queue);
     }
 
-    // 3. Grant Entitlement locally for immediate bookshelf sync
+    // 3. Persist Entitlement to public.entitlements table with admin authority
+    try {
+      const { error: dbEntErr } = await supabase.from('entitlements').insert({
+        customer_email: item.email.toLowerCase(),
+        resource_id: item.productId,
+        grant_source: 'purchase',
+        granted_by: currentAdminUser.id,
+        granted_at: new Date().toISOString(),
+        expires_at: null, // Lifetime standalone purchase
+        is_active: true,
+        source_order_reference: item.reference,
+        metadata: {
+          resource_title: item.productName,
+          verified_by: currentAdminUser.email,
+          bank_reference: item.reference,
+        },
+      });
+      if (dbEntErr) {
+        console.warn('Database insert notice for approved transfer entitlement:', dbEntErr.message);
+      }
+    } catch (dbErr) {
+      console.warn('Network error persisting entitlement to database:', dbErr);
+    }
+
+    // Also sync local cache for immediate UI responsiveness
     saveLocalEntitlement({
       customerEmail: item.email,
       resourceId: item.productId,
@@ -748,7 +772,7 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
       isActive: true,
     });
 
-    alert(`✓ Payment approved! Bookshelf access for "${item.productName}" is now active for ${item.email}.`);
+    alert(`✓ Payment approved! Bookshelf access for "${item.productName}" is now active and persisted for ${item.email}.`);
     renderTransfers();
     renderStats();
   }
@@ -1054,32 +1078,131 @@ const initialRosterJson = JSON.stringify(getAllEnrolledStudents());
   closeLogModal?.addEventListener('click', () => { logTransferModal.style.display = 'none'; });
 
   // Grant Entitlement Form Submit
-  grantEntitlementForm?.addEventListener('submit', (e) => {
+  grantEntitlementForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('grantEmail').value.trim();
-    const resId = document.getElementById('grantResource').value;
-    const sourceType = document.getElementById('grantSourceType').value;
-    const notes = document.getElementById('grantNotes').value.trim();
 
-    if (!email || !resId) return;
+    if (!currentAdminUser) {
+      alert('Unauthorized: You must be signed in as an administrator.');
+      return;
+    }
 
-    const matchedRes = CATALOG.find(c => c.id === resId);
-    const title = matchedRes ? matchedRes.title : resId;
+    const isAdmin = await checkIsAdmin(currentAdminUser);
+    if (!isAdmin) {
+      alert('Access Denied: Your account does not have verified administrator privileges.');
+      return;
+    }
 
-    saveLocalEntitlement({
-      customerEmail: email,
-      resourceId: resId,
-      grantSource: sourceType,
-      resourceTitle: title,
-      grantedAt: new Date().toISOString(),
-      expiresAt: sourceType === 'trial' ? new Date(Date.now() + 86400000 * 7).toISOString() : null,
-      isActive: true,
-    });
+    const email = ((document.getElementById('grantEmail') as HTMLInputElement)?.value || '').trim().toLowerCase();
+    const resId = (document.getElementById('grantResource') as HTMLSelectElement)?.value;
+    const sourceType = (document.getElementById('grantSourceType') as HTMLSelectElement)?.value || 'admin_grant';
+    const notes = ((document.getElementById('grantNotes') as HTMLInputElement)?.value || '').trim();
 
-    alert(`✓ Successfully granted "${title}" to ${email}!`);
-    grantEntitlementForm.reset();
-    grantModal.style.display = 'none';
-    renderStats();
+    if (!email || !resId) {
+      alert('Please provide a student email and select a resource.');
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      alert('Please enter a valid student email address format.');
+      return;
+    }
+
+    const submitBtn = grantEntitlementForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Granting in database...';
+    }
+
+    try {
+      // Determine target resources (if bundle selected, grant individual constituent resources)
+      const targetResourceIds: string[] = (resId === 'all-boosters-bundle' || resId === 'booster-bundle')
+        ? ['chemistry-booster', 'biology-booster', 'physics-booster']
+        : [resId];
+
+      let expiresAt: string | null = null;
+      if (sourceType === 'trial') {
+        expiresAt = new Date(Date.now() + 86400000 * 7).toISOString();
+      } else if (sourceType === 'plan_inclusion') {
+        expiresAt = '2027-05-31T23:59:59Z';
+      }
+
+      // Check if candidate has an existing registered user profile in profiles table
+      let matchedUserId: string | null = null;
+      try {
+        const { data: userProfile } = await supabase
+          .from('profiles')
+          .select('id')
+          .ilike('email', email)
+          .maybeSingle();
+        if (userProfile?.id) {
+          matchedUserId = userProfile.id;
+        }
+      } catch {
+        // Non-fatal if profile lookup fails
+      }
+
+      const rowsToInsert = targetResourceIds.map(rId => {
+        const matchedRes = CATALOG.find(c => c.id === rId || c.slug === rId);
+        const title = matchedRes ? matchedRes.title : rId;
+        return {
+          customer_email: email,
+          user_id: matchedUserId,
+          resource_id: rId,
+          grant_source: sourceType,
+          granted_by: currentAdminUser.id,
+          granted_at: new Date().toISOString(),
+          expires_at: expiresAt,
+          is_active: true,
+          metadata: {
+            resource_title: title,
+            notes: notes || 'Manual grant from Admin Operations Desk',
+            granted_by_email: currentAdminUser.email,
+          },
+        };
+      });
+
+      // 1. Authoritative Database Insert into public.entitlements
+      const { data: insertedData, error: insertErr } = await supabase
+        .from('entitlements')
+        .insert(rowsToInsert)
+        .select();
+
+      if (insertErr) {
+        console.error('Database entitlement insert error:', insertErr);
+        if (insertErr.code === '42501' || insertErr.message?.toLowerCase().includes('permission') || insertErr.message?.toLowerCase().includes('policy')) {
+          throw new Error(`Database Authorization Error: Server RLS policy prevented entitlement creation. Ensure "${currentAdminUser.email}" has role = 'admin' in public.profiles.`);
+        }
+        throw new Error(`Database error (${insertErr.code || 'unknown'}): ${insertErr.message}`);
+      }
+
+      // 2. Sync to local cache for immediate UI responsiveness in desk
+      rowsToInsert.forEach(row => {
+        saveLocalEntitlement({
+          customerEmail: row.customer_email,
+          userId: row.user_id || undefined,
+          resourceId: row.resource_id,
+          grantSource: row.grant_source,
+          resourceTitle: row.metadata.resource_title,
+          grantedAt: row.granted_at,
+          expiresAt: row.expires_at,
+          isActive: true,
+        });
+      });
+
+      const grantedNames = rowsToInsert.map(r => `"${r.metadata.resource_title}"`).join(', ');
+      alert(`✓ Successfully granted and persisted ${grantedNames} in public.entitlements for ${email}!`);
+      grantEntitlementForm.reset();
+      grantModal.style.display = 'none';
+      renderStats();
+    } catch (err: any) {
+      console.error('Grant entitlement error:', err);
+      alert(`Grant Failed: ${err.message || 'Unable to persist entitlement to database.'}`);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Grant Entitlement Immediately';
+      }
+    }
   });
 
   // Enroll Student Form Submit

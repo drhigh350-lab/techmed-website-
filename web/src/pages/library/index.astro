@@ -190,6 +190,9 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         </div>
 
         <div class="header-actions">
+          <a href="/dashboard" class="btn-secondary header-btn" title="Student Dashboard">
+            <span>Dashboard</span>
+          </a>
           <a href="/library/admin" class="btn-secondary header-btn admin-link" title="Admin Operations Desk">
             <span>⚙ Operations Desk</span>
           </a>
@@ -301,7 +304,13 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   const CATALOG = catalogEl ? JSON.parse(catalogEl.textContent || '[]') : [];
 
   // Import browser Supabase client (bundled by Vite as ES Module)
-  import { getSupabase, fetchUserEntitlements, verifyAndClaimOrderReference } from '/src/lib/supabase.ts';
+  import {
+    getSupabase,
+    fetchUserEntitlements,
+    verifyAndClaimOrderReference,
+    getUserResourceEntitlements,
+    type UserResourceEntitlementItem,
+  } from '/src/lib/supabase.ts';
 
   const supabase = getSupabase();
 
@@ -345,6 +354,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
   let currentUser = null;
   let currentEntitlements = [];
+  let currentUserResources: UserResourceEntitlementItem[] = [];
   let activeFilter = 'all';
 
   function showAlert(msg, type = 'error') {
@@ -515,6 +525,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     currentUser = null;
     currentEntitlements = [];
+    currentUserResources = [];
     showAuthView();
   });
 
@@ -573,6 +584,10 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
       }
     }
 
+    // Call unified getUserResourceEntitlements for consistent booster bundle inclusions
+    const resResult = await getUserResourceEntitlements(user.id, user.email);
+    currentUserResources = resResult.items || [];
+
     renderBookshelf();
   }
 
@@ -580,95 +595,93 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   function renderBookshelf() {
     bookshelfGrid.innerHTML = '';
 
-    // Always provide the 3 core free study tools to every authenticated student:
-    const freeItems = CATALOG.filter(r => r.status === 'free').map(r => {
-      const isQuizOrTool = r.deliveryFormat === 'Quiz Platform' || r.deliveryFormat === 'Platform Tool';
-      return {
-        resourceId: r.id,
-        title: r.title,
-        subject: r.subject,
-        deliveryFormat: r.deliveryFormat,
-        grantType: 'free',
-        grantLabel: 'Free Learning Asset',
-        expiresLabel: 'Permanent Access',
-        actionUrl: isQuizOrTool ? (r.accessUrl || r.externalUrl || `/resources/${r.slug}`) : `/library/read/${r.id}`,
-        actionLabel: isQuizOrTool ? 'Open Tool' : 'Read Online',
-        description: r.description,
-      };
-    });
+    // 1. Map owned and accessible resources from getUserResourceEntitlements
+    const ownedItems = currentUserResources.filter(item => item.isOwned);
 
-    const now = new Date();
+    const mappedItems = ownedItems.map(item => {
+      const match = CATALOG.find(c => c.id === item.id || c.slug === item.slug);
+      const isFree = item.status === 'free';
+      const isCohort = item.category === 'Cohort';
+      const isPlan = item.purchaseStatus === 'plan_inclusion' || item.purchaseStatus === 'cohort_enrolled';
 
-    // Map verified entitlements to catalogue metadata
-    const paidItems = currentEntitlements.map(ent => {
-      const match = CATALOG.find(c => c.id === ent.resourceId || c.slug === ent.resourceId);
-      const isPlan = ent.grantSource === 'plan_inclusion';
-      const isPermanent = ent.grantSource === 'purchase' || ent.grantSource === 'bundle_inclusion' || !ent.expiresAt;
+      const grantType = isFree
+        ? 'free'
+        : isPlan
+          ? 'plan'
+          : 'permanent';
 
-      const isCohortPlan = ent.resourceId.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(ent.resourceId);
+      const grantLabel = isFree
+        ? 'Free Learning Asset'
+        : (item.purchaseStatusLabel || (isPlan ? 'Cohort Inclusion' : 'Permanent Standalone Purchase'));
 
-      let title = match?.title;
-      if (!title) {
-        if (ent.resourceId.includes('ultimate')) title = 'TECHMED Ultimate (UTME 2027 Full Track)';
-        else if (ent.resourceId.includes('mastery')) title = 'TECHMED Mastery (UTME 2027 Track)';
-        else if (ent.resourceId.includes('core')) title = 'TECHMED Core (UTME 2027 Track)';
-        else title = ent.resourceTitle || ent.resourceId;
-      }
+      const expiresLabel = isFree
+        ? 'Permanent Access'
+        : (item.accessStatusLabel || 'Permanent Lifetime Access');
 
-      const isFutureDated = ent.startsAt && new Date(ent.startsAt).getTime() > now.getTime();
-
-      const grantLabel = isCohortPlan
-        ? (isFutureDated ? 'UTME 2027 Enrolled (Nov 30 Start)' : 'UTME 2027 Cohort Enrolment')
-        : (isPlan ? 'UTME 2027 Mastery Inclusion' : 'Permanent Standalone Purchase');
-
-      let expiresLabel = isPermanent
-        ? 'Permanent Lifetime Access'
-        : (ent.expiresAt ? `Valid through ${new Date(ent.expiresAt).toLocaleDateString()}` : 'Valid through UTME 2027');
-
-      if (isCohortPlan && isFutureDated) {
-        const startFormatted = new Date(ent.startsAt).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
-        expiresLabel = `Classes start ${startFormatted} · ${expiresLabel}`;
-      }
-
-      const isTool = match?.deliveryFormat === 'Platform Tool' || match?.deliveryFormat === 'Quiz Platform';
-      let actionUrl = isTool
-        ? (match?.accessUrl || match?.externalUrl || `/resources/${match?.slug || ent.resourceId}`)
-        : `/library/read/${match ? match.id : ent.resourceId}`;
-      let actionLabel = isTool ? 'Launch Tool' : 'Read Online';
-
-      if (isCohortPlan) {
-        actionUrl = '/utme-2027';
-        actionLabel = isFutureDated ? 'View Cohort Schedule' : 'Class Portal & Schedule';
-      }
+      const actionUrl = item.readerUrl || item.externalUrl || (isCohort ? '/utme-2027' : `/resources/${item.slug}`);
+      const actionLabel = isCohort
+        ? 'Class Portal & Schedule'
+        : (item.externalUrl ? 'Open Tool' : (actionUrl.startsWith('/library/read') ? 'Read Online' : (item.actionLabel || 'Access Resource')));
 
       return {
-        resourceId: ent.resourceId,
-        title,
-        subject: match ? match.subject : (isCohortPlan ? 'UTME 2027 Track' : 'Academic'),
-        deliveryFormat: match ? match.deliveryFormat : (isCohortPlan ? 'Live Telegram + Kairo CBT' : 'PDF eBook'),
-        grantType: isPermanent ? 'permanent' : 'plan',
+        resourceId: item.id,
+        title: item.title,
+        subject: match?.subject || item.subject || (isCohort ? 'UTME 2027 Track' : 'Academic'),
+        deliveryFormat: match?.deliveryFormat || (isCohort ? 'Live Telegram + Kairo CBT' : item.type || 'PDF eBook'),
+        grantType,
         grantLabel,
         expiresLabel,
         actionUrl,
         actionLabel,
-        description: match ? match.description : 'Authoritative TECHMED preparation resource.',
+        description: match?.description || `${item.title} — authoritative TECHMED learning asset.`,
       };
     });
 
-    const allItems = [...paidItems, ...freeItems];
+    // 2. Include any non-catalogued direct entitlements if present
+    currentEntitlements.forEach(ent => {
+      const alreadyIncluded = mappedItems.some(m => m.resourceId === ent.resourceId);
+      if (!alreadyIncluded) {
+        const match = CATALOG.find(c => c.id === ent.resourceId || c.slug === ent.resourceId);
+        const isPlan = ent.grantSource === 'plan_inclusion';
+        const isPermanent = ent.grantSource === 'purchase' || ent.grantSource === 'bundle_inclusion' || !ent.expiresAt;
+        const isCohortPlan = ent.resourceId.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(ent.resourceId);
+
+        let title = match?.title || ent.resourceTitle || ent.resourceId;
+        const grantLabel = isCohortPlan ? 'UTME 2027 Cohort Enrolment' : (isPlan ? 'Cohort Inclusion' : 'Permanent Standalone Purchase');
+        const expiresLabel = isPermanent ? 'Permanent Lifetime Access' : (ent.expiresAt ? `Valid through ${new Date(ent.expiresAt).toLocaleDateString()}` : 'Valid through UTME 2027');
+        const actionUrl = isCohortPlan ? '/utme-2027' : `/library/read/${match ? match.id : ent.resourceId}`;
+
+        mappedItems.push({
+          resourceId: ent.resourceId,
+          title,
+          subject: match?.subject || (isCohortPlan ? 'UTME 2027 Track' : 'Academic'),
+          deliveryFormat: match?.deliveryFormat || (isCohortPlan ? 'Live Telegram + Kairo CBT' : 'PDF eBook'),
+          grantType: isPermanent ? 'permanent' : 'plan',
+          grantLabel,
+          expiresLabel,
+          actionUrl,
+          actionLabel: isCohortPlan ? 'Class Portal & Schedule' : 'Read Online',
+          description: match?.description || 'Authoritative TECHMED preparation resource.',
+        });
+      }
+    });
+
+    const permanentItems = mappedItems.filter(i => i.grantType === 'permanent');
+    const planItems = mappedItems.filter(i => i.grantType === 'plan');
+    const freeItems = mappedItems.filter(i => i.grantType === 'free');
 
     // Update counts
-    countAll.textContent = String(allItems.length);
-    countPermanent.textContent = String(paidItems.filter(i => i.grantType === 'permanent').length);
-    countPlan.textContent = String(paidItems.filter(i => i.grantType === 'plan').length);
+    countAll.textContent = String(mappedItems.length);
+    countPermanent.textContent = String(permanentItems.length);
+    countPlan.textContent = String(planItems.length);
     countFree.textContent = String(freeItems.length);
 
     // Apply Filter
-    let filtered = allItems;
+    let filtered = mappedItems;
     if (activeFilter === 'permanent') {
-      filtered = paidItems.filter(i => i.grantType === 'permanent');
+      filtered = permanentItems;
     } else if (activeFilter === 'plan') {
-      filtered = paidItems.filter(i => i.grantType === 'plan');
+      filtered = planItems;
     } else if (activeFilter === 'free') {
       filtered = freeItems;
     }

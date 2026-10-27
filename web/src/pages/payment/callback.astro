@@ -171,7 +171,13 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 </BaseLayout>
 
 <script>
-  import { getSupabase, getCurrentUser, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+  import {
+    getSupabase,
+    getCurrentUser,
+    verifyAndClaimOrderReference,
+    saveLocalEntitlement,
+    SUPABASE_ANON_KEY,
+  } from '/src/lib/supabase.ts';
   import { trackEvent } from '/src/lib/analytics.ts';
 
   const catalogEl = document.getElementById('catalogData');
@@ -240,8 +246,6 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     const num = Number(amount);
     return '₦' + num.toLocaleString('en-NG');
   }
-
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuYmdib3JiaHh6c290YWllaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDMyNDcsImV4cCI6MjA5Nzk3OTI0N30.3uM4SaYII60V988NA5PvqphQs6HkTVTnGKpZFqzZY-c';
 
   async function checkServerEdgeVerify(reference: string) {
     try {
@@ -344,8 +348,12 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     if (openReaderBtn) {
       if (isCohort) {
-        openReaderBtn.href = '/library';
-        openReaderBtn.textContent = 'Enter Student Dashboard & Library →';
+        openReaderBtn.href = '/dashboard';
+        openReaderBtn.textContent = 'Enter Student Dashboard →';
+        if (successWhatsAppBtn) {
+          successWhatsAppBtn.href = 'https://chat.whatsapp.com/HKR7lb7mRoA5wivQLjUhUc?s=cl&p=a&mlu=4&ilr=4&iam=2';
+          successWhatsAppBtn.textContent = 'Join Student Brainstorming Group';
+        }
       } else {
         const readerId = matchedCatalog?.id || order.product_id;
         openReaderBtn.href = `/library/read/${readerId}`;
@@ -431,7 +439,10 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
       if (postPaymentStatus) {
         postPaymentStatus.style.display = 'block';
         postPaymentStatus.style.color = '#22c55e';
-        postPaymentStatus.textContent = 'Account created successfully! Please check your email to verify your address, or continue to your dashboard.';
+        postPaymentStatus.innerHTML = 'Account created successfully! Redirecting to your dashboard... <a href="/dashboard" style="color:#22c55e;font-weight:700;text-decoration:underline;">Click here if not redirected &rarr;</a>';
+        setTimeout(() => {
+          window.location.href = '/dashboard';
+        }, 1500);
       }
 
       if (postPaymentSubmitBtn) {

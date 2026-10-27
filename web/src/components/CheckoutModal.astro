@@ -152,7 +152,7 @@
 </div>
 
 <script>
-  import { getCurrentUser } from '/src/lib/supabase.ts';
+  import { getCurrentUser, SUPABASE_ANON_KEY } from '/src/lib/supabase.ts';
   import { trackEvent } from '/src/lib/analytics.ts';
 
   const modalBackdrop = document.getElementById('checkoutModalBackdrop');
@@ -406,7 +406,6 @@
 
     try {
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuYmdib3JiaHh6c290YWllaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDMyNDcsImV4cCI6MjA5Nzk3OTI0N30.3uM4SaYII60V988NA5PvqphQs6HkTVTnGKpZFqzZY-c';
       const isCore = coreDiscountCheckbox.checked && !isCohort;
       const chargeAmount = isCore ? Math.round(basePrice * 0.8) : basePrice;
 

@@ -1,0 +1,2715 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import StudentHubNav from '../components/StudentHubNav.astro';
+import {
+  PROGRAMME_META,
+  CLASSROOM_LINKS,
+  TIMETABLE_SCHEDULE,
+  TIMETABLE_SUNDAY_NOTE,
+  TWELVE_WEEK_CURRICULUM,
+  ONBOARDING_FIRST_STEPS,
+} from '../lib/dashboard-data';
+
+const title = 'Student Dashboard | TECHMED';
+const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled plan, 12-week curriculum, timetable, subject classrooms, and Kairo CBT drills.';
+---
+
+<BaseLayout title={title} description={description}>
+  <main class="dashboard-page">
+    <div class="dashboard-container">
+      <!-- Loading State -->
+      <div id="loadingState" class="dashboard-card state-card" aria-live="polite">
+        <div class="spinner"></div>
+        <p class="state-text">Loading your student dashboard...</p>
+      </div>
+
+      <!-- Error State -->
+      <div id="errorState" class="dashboard-card state-card error-card" style="display: none;" role="alert">
+        <div class="error-icon">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <h2>Unable to Load Dashboard</h2>
+        <p id="errorMsgText">We encountered an issue retrieving your student record. Please check your connection and try again.</p>
+        <button type="button" class="btn-primary retry-btn" id="retryLoadBtn">Retry</button>
+      </div>
+
+      <!-- Unauthorized State -->
+      <div id="unauthCard" class="dashboard-card state-card" style="display: none;">
+        <div class="lock-icon">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <h2>Student Authentication Required</h2>
+        <p>Please log in with your student account to access your personal dashboard.</p>
+        <p class="redirect-sub">Redirecting to login...</p>
+        <a href="/login?redirect=/dashboard" class="btn-primary auth-btn">Log In to Dashboard</a>
+      </div>
+
+      <!-- Main Dashboard View -->
+      <div id="dashboardContent" class="dashboard-content" style="display: none;">
+        <!-- Top Navigation Bar for Dashboard Hub -->
+        <header class="dashboard-header-nav">
+          <div class="header-titles">
+            <span class="eyebrow">UTME 2027 Student Space</span>
+            <div class="welcome-heading-row">
+              <h1 class="welcome-heading">
+                Welcome back, <span id="studentGreetingName">Student</span>!
+              </h1>
+              <div class="status-badge-container">
+                <span class="status-badge" id="verifiedStatusBadge">Checking status...</span>
+              </div>
+            </div>
+            <p class="welcome-sub" id="welcomeSub">Candidate record for the 2027 admission cycle.</p>
+          </div>
+
+          <!-- Section Navigation Tabs -->
+          <StudentHubNav activeTab="dashboard" />
+        </header>
+
+        <!-- Programme Schedule & Dates Banner -->
+        <section class="programme-overview-card">
+          <div class="programme-header-row">
+            <div class="programme-badge">OFFICIAL PROGRAMME SCHEDULE</div>
+            <div class="dates-pill">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>{PROGRAMME_META.officialDates}</span>
+            </div>
+          </div>
+          <div class="programme-body-grid">
+            <div class="overview-item">
+              <span class="overview-label">Lecture Schedule</span>
+              <span class="overview-val">{PROGRAMME_META.intensiveLectureDates}</span>
+              <span class="overview-sub">12 Weeks Intensive Live Classes</span>
+            </div>
+            <div class="overview-item">
+              <span class="overview-label">Daily Teaching</span>
+              <span class="overview-val">4 Hours Daily (Mon–Sat)</span>
+              <span class="overview-sub">Session A (7–9 PM) · Session B (9:10–11:10 PM)</span>
+            </div>
+            <div class="overview-item">
+              <span class="overview-label">Sunday Assessments</span>
+              <span class="overview-val">8 Drills · 4 JAMB Mocks</span>
+              <span class="overview-sub">180 Questions · 2 Hours on Kairo CBT</span>
+            </div>
+            <div class="overview-item">
+              <span class="overview-label">Active Plan Tier</span>
+              <div id="planPillContainer" class="tier-pill-slot">
+                <span class="plan-pill unverified">Free Account</span>
+              </div>
+              <span class="overview-sub" id="planExpirySub">Authoritative database record</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Profile Completion Alert Banner -->
+        <div id="incompleteBanner" class="profile-progress-card" style="display: none;">
+          <div class="progress-meta">
+            <div class="progress-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
+            </div>
+            <div class="progress-text">
+              <div class="progress-title-row">
+                <h3 id="progressTitle">Complete Your Student Profile</h3>
+                <span class="progress-badge" id="progressStepTag">Step 1 of 3</span>
+              </div>
+              <p id="progressDesc">
+                Your target university, course, and UTME subject combination are not yet set up. Complete onboarding to personalize your syllabus track.
+              </p>
+            </div>
+          </div>
+          <a href="/account/onboarding" class="btn-primary resume-onboarding-btn" id="resumeOnboardingBtn">
+            Resume Onboarding
+          </a>
+        </div>
+
+        <!-- Student Profile Completed Pill Notice (if complete) -->
+        <div id="profileCompletePill" class="profile-complete-banner" style="display: none;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"/></svg>
+          <span>Student profile complete (UTME subjects &amp; academic goals configured).</span>
+          <a href="/account/onboarding" class="profile-edit-link">Edit Details</a>
+        </div>
+
+        <!-- Academic Snapshot & Direct Channels -->
+        <div class="dashboard-grid">
+          <!-- Academic Target Card -->
+          <section class="dashboard-card academic-card">
+            <div class="card-header-row">
+              <h2 class="card-title">Academic Target</h2>
+              <a href="/account/onboarding" class="card-edit-action" title="Edit course and university">Edit</a>
+            </div>
+
+            <div class="target-fields">
+              <div class="target-field">
+                <span class="field-label">Target Course</span>
+                <span class="field-val" id="displayTargetCourse">Not configured yet</span>
+              </div>
+              <div class="target-field">
+                <span class="field-label">First-Choice University</span>
+                <span class="field-val" id="displayTargetUniversity">Not configured yet</span>
+              </div>
+            </div>
+
+            <div class="subjects-block">
+              <div class="subjects-label-row">
+                <span class="field-label">UTME 4-Subject Combination</span>
+                <a href="/jamb-syllabus-2027" class="syllabus-link">Open Syllabus Tracker →</a>
+              </div>
+              <div class="subjects-pills-wrap" id="subjectPills">
+                <span class="subject-pill compulsory">English Language (Compulsory)</span>
+                <span class="subject-empty-note">Complete onboarding to choose your 3 electives</span>
+              </div>
+            </div>
+          </section>
+
+          <!-- Communication Channels Card -->
+          <section class="dashboard-card channels-card">
+            <div class="card-header-row">
+              <h2 class="card-title">Direct Channels</h2>
+              <a href="/account/onboarding" class="card-edit-action" title="Update phone or handles">Edit</a>
+            </div>
+
+            <ul class="channels-list">
+              <li>
+                <span class="channel-name">Primary Mobile</span>
+                <span class="channel-val" id="displayPhone">--</span>
+              </li>
+              <li>
+                <span class="channel-name">WhatsApp (Live Class Links)</span>
+                <span class="channel-val" id="displayWhatsapp">--</span>
+              </li>
+              <li>
+                <span class="channel-name">Telegram (Builder Community)</span>
+                <span class="channel-val" id="displayTelegram">--</span>
+              </li>
+              <li>
+                <span class="channel-name">Parent / Guardian Phone</span>
+                <span class="channel-val" id="displayParent">Optional (Not set)</span>
+              </li>
+            </ul>
+          </section>
+        </div>
+
+        <!-- First-Step Guide for Newly Enrolled Students -->
+        <section class="dashboard-card quickstart-card" id="quickstartSection">
+          <div class="card-header-row">
+            <div>
+              <span class="section-tag">ORIENTATION CHECKLIST</span>
+              <h2 class="card-title">First-Step Guide for Students</h2>
+            </div>
+            <span class="guide-note">Complete these 5 steps for a successful programme launch</span>
+          </div>
+
+          <div class="steps-grid">
+            {ONBOARDING_FIRST_STEPS.map((step) => (
+              <div class="step-box">
+                <div class="step-num">{step.stepNumber}</div>
+                <div class="step-content">
+                  <h3 class="step-heading">{step.title}</h3>
+                  <p class="step-desc">{step.desc}</p>
+                  <a href={step.actionUrl} class="step-link">
+                    {step.actionLabel} &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <!-- Subject Classrooms & Student Communities -->
+        <section class="dashboard-card classrooms-card" id="classroomSection">
+          <div class="card-header-row">
+            <div>
+              <span class="section-tag">LIVE TEACHING HUBS</span>
+              <h2 class="card-title">Subject Classrooms &amp; Communities</h2>
+            </div>
+            <div class="class-lock-status" id="classroomAccessNotice">
+              <span class="status-indicator-dot"></span>
+              <span id="classroomAccessText">Authorizing access...</span>
+            </div>
+          </div>
+          <p class="section-sub">
+            All intensive live lectures take place in our dedicated subject classrooms. Enrolled Core, Mastery, and Ultimate students receive full access.
+          </p>
+
+          <div class="classrooms-grid">
+            {CLASSROOM_LINKS.map((cls) => (
+              <div class="classroom-box" data-classroom-id={cls.id} data-is-community={cls.isCommunity ? 'true' : 'false'}>
+                <div class="box-top">
+                  <div class="platform-badge" data-platform={cls.platform.toLowerCase()}>
+                    {cls.platform === 'Telegram' ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.75-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z"/></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2c-5.46 0-9.91 4.45-9.91 9.91 0 1.75.46 3.45 1.32 4.95L2.05 22l5.25-1.38c1.45.79 3.08 1.21 4.74 1.21 5.46 0 9.91-4.45 9.91-9.91 0-2.65-1.03-5.14-2.9-7.01A9.816 9.816 0 0012.04 2z"/></svg>
+                    )}
+                    <span>{cls.platform}</span>
+                  </div>
+                  <span class="access-pill" data-role="classroom-access-pill">Checking...</span>
+                </div>
+                <h3 class="classroom-title">{cls.subject}</h3>
+                <p class="classroom-desc">{cls.desc || cls.description}</p>
+                <div class="box-action-wrap">
+                  <a
+                    href={cls.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="btn-primary classroom-join-btn"
+                    data-role="classroom-btn"
+                  >
+                    <span>Join {cls.subject.split(' ')[0]} Room</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <!-- Official Class Timetable Section (Structured Content) -->
+        <section class="dashboard-card timetable-card" id="timetableSection">
+          <div class="card-header-row">
+            <div>
+              <span class="section-tag">OFFICIAL CLASS TIMETABLE</span>
+              <h2 class="card-title">Weekly Lecture &amp; Break Schedule</h2>
+            </div>
+            <div class="timetable-period">
+              <span>Monday to Saturday</span>
+              <span class="period-dot">·</span>
+              <span class="highlight-time">7:00 PM – 11:10 PM</span>
+            </div>
+          </div>
+          <p class="section-sub">
+            Structured two-session teaching format designed to maximize focus and retention without cognitive fatigue.
+          </p>
+
+          <!-- Desktop Timetable Table -->
+          <div class="table-scroll-wrap">
+            <table class="timetable-table" aria-label="Official UTME 2027 Class Timetable">
+              <thead>
+                <tr>
+                  <th scope="col" class="th-day">Day</th>
+                  <th scope="col" class="th-session">
+                    <span class="session-label">Session A</span>
+                    <span class="session-time">7:00 PM – 9:00 PM</span>
+                  </th>
+                  <th scope="col" class="th-break">
+                    <span class="session-label">Break</span>
+                    <span class="session-time">9:00 – 9:10 PM</span>
+                  </th>
+                  <th scope="col" class="th-session">
+                    <span class="session-label">Session B</span>
+                    <span class="session-time">9:10 PM – 11:10 PM</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {TIMETABLE_SCHEDULE.map((slot) => (
+                  <tr>
+                    <td class="td-day">
+                      <strong>{slot.day}</strong>
+                    </td>
+                    <td class="td-session">
+                      <div class="slot-subject">{slot.sessionA.subjects}</div>
+                      {slot.sessionA.notes && <div class="slot-note">{slot.sessionA.notes}</div>}
+                    </td>
+                    <td class="td-break">
+                      <div class="break-tag">10 Min Break</div>
+                    </td>
+                    <td class="td-session">
+                      <div class="slot-subject">{slot.sessionB.subjects}</div>
+                      {slot.sessionB.notes && <div class="slot-note">{slot.sessionB.notes}</div>}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Sunday Assessments Card -->
+          <div class="sunday-assessment-box">
+            <div class="sunday-badge">SUNDAY ROUTINE</div>
+            <div class="sunday-content">
+              <h3 class="sunday-title">{TIMETABLE_SUNDAY_NOTE.activity}</h3>
+              <p class="sunday-desc">{TIMETABLE_SUNDAY_NOTE.description}</p>
+            </div>
+            <a href="/tools" class="btn-secondary sunday-action-btn">Open Kairo CBT</a>
+          </div>
+
+          <!-- Important Break & Subject Slot Explanatory Callout -->
+          <div class="timetable-callout">
+            <div class="callout-icon">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            </div>
+            <div class="callout-text">
+              <h4>A 10-minute break separates the two daily sessions</h4>
+              <p>
+                Biology and Mathematics share designated session slots to accommodate students offering either subject (e.g. Pre-Med candidates offering Biology vs Engineering candidates offering Mathematics).
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 12-Week Intensive Curriculum Section (Structured Content) -->
+        <section class="dashboard-card curriculum-card" id="curriculumSection">
+          <div class="curriculum-header-block">
+            <div class="card-header-row">
+              <div>
+                <span class="section-tag">UTME 2027 12-WEEK INTENSIVE CURRICULUM</span>
+                <h2 class="card-title">Comprehensive 5-Subject Syllabus Breakdown</h2>
+              </div>
+              <div class="curriculum-dates-badge">
+                <span>{PROGRAMME_META.intensiveLectureDates}</span>
+              </div>
+            </div>
+            <p class="section-sub">
+              Transcribed authoritatively from official TECHMED syllabus standards. All 12 weeks cover English, Biology, Chemistry, Physics, and Mathematics with targeted weekly assessments.
+            </p>
+
+            <!-- Subject Filter Pills -->
+            <div class="subject-filter-toolbar" role="toolbar" aria-label="Filter subjects">
+              <span class="filter-label">Filter Subject:</span>
+              <div class="subject-filter-btns">
+                <button type="button" class="sub-filter-btn active" data-subject="all">All 5 Subjects</button>
+                <button type="button" class="sub-filter-btn" data-subject="physics">Physics</button>
+                <button type="button" class="sub-filter-btn" data-subject="chemistry">Chemistry</button>
+                <button type="button" class="sub-filter-btn" data-subject="english">English</button>
+                <button type="button" class="sub-filter-btn" data-subject="biology">Biology</button>
+                <button type="button" class="sub-filter-btn" data-subject="mathematics">Mathematics</button>
+              </div>
+            </div>
+
+            <!-- Week Quick-Jump Tabs -->
+            <div class="week-nav-scroll" role="tablist" aria-label="Select week">
+              {TWELVE_WEEK_CURRICULUM.map((w, idx) => (
+                <button
+                  type="button"
+                  class:list={['week-tab-btn', { active: idx === 0 }]}
+                  data-week-target={`week-${w.weekNumber}`}
+                  role="tab"
+                  aria-selected={idx === 0 ? 'true' : 'false'}
+                >
+                  <span class="tab-wk">Wk {w.weekNumber}</span>
+                  <span class="tab-dates">{w.dates}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <!-- 12-Week Content Accordions / Cards -->
+          <div class="weeks-container">
+            {TWELVE_WEEK_CURRICULUM.map((w, idx) => (
+              <article
+                class:list={['week-card', { 'week-active': idx === 0 }]}
+                id={`week-${w.weekNumber}`}
+                data-week-num={w.weekNumber}
+              >
+                <header class="week-card-header">
+                  <div class="week-title-wrap">
+                    <span class="week-tag">WEEK {w.weekNumber}</span>
+                    <span class="week-dates-inline">{w.dates}</span>
+                    <h3 class="week-theme">{w.theme}</h3>
+                  </div>
+                  <div class:list={['assessment-pill', w.assessment.type]}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    <span>{w.assessment.title} · {w.assessment.date}</span>
+                  </div>
+                </header>
+
+                <!-- Assessment Details Notice -->
+                <div class="assessment-notice-banner">
+                  <div class="assessment-badge">{w.assessment.type === 'mock' ? 'JAMB-STANDARD MOCK' : 'WEEKLY DRILL'}</div>
+                  <div class="assessment-meta">
+                    <strong>{w.assessment.title} ({w.assessment.date})</strong>
+                    {w.assessment.questions && <span>· {w.assessment.questions} Questions</span>}
+                    {w.assessment.duration && <span>· {w.assessment.duration}</span>}
+                    {w.assessment.scope && <span>· Scope: {w.assessment.scope}</span>}
+                  </div>
+                  <p class="assessment-desc">{w.assessment.details}</p>
+                </div>
+
+                <!-- 5 Subject Breakdowns -->
+                <div class="subjects-grid">
+                  <!-- Physics -->
+                  <div class="curriculum-subject-col" data-subject="physics">
+                    <div class="subj-header physics">
+                      <span class="subj-dot"></span>
+                      <h4>Physics</h4>
+                    </div>
+                    <ul class="topics-list">
+                      {w.physics.map((t) => (
+                        <li class="topic-item">
+                          <strong class="topic-title">{t.title}</strong>
+                          <p class="topic-desc">{t.details}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <!-- Chemistry -->
+                  <div class="curriculum-subject-col" data-subject="chemistry">
+                    <div class="subj-header chemistry">
+                      <span class="subj-dot"></span>
+                      <h4>Chemistry</h4>
+                    </div>
+                    <ul class="topics-list">
+                      {w.chemistry.map((t) => (
+                        <li class="topic-item">
+                          <strong class="topic-title">{t.title}</strong>
+                          <p class="topic-desc">{t.details}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <!-- English -->
+                  <div class="curriculum-subject-col" data-subject="english">
+                    <div class="subj-header english">
+                      <span class="subj-dot"></span>
+                      <h4>English Language</h4>
+                    </div>
+                    <ul class="topics-list">
+                      {w.english.map((t) => (
+                        <li class="topic-item">
+                          <strong class="topic-title">{t.title}</strong>
+                          <p class="topic-desc">{t.details}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <!-- Biology -->
+                  <div class="curriculum-subject-col" data-subject="biology">
+                    <div class="subj-header biology">
+                      <span class="subj-dot"></span>
+                      <h4>Biology</h4>
+                    </div>
+                    <ul class="topics-list">
+                      {w.biology.map((t) => (
+                        <li class="topic-item">
+                          <strong class="topic-title">{t.title}</strong>
+                          <p class="topic-desc">{t.details}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <!-- Mathematics -->
+                  <div class="curriculum-subject-col" data-subject="mathematics">
+                    <div class="subj-header mathematics">
+                      <span class="subj-dot"></span>
+                      <h4>Mathematics</h4>
+                    </div>
+                    <ul class="topics-list">
+                      {w.mathematics.map((t) => (
+                        <li class="topic-item">
+                          <strong class="topic-title">{t.title}</strong>
+                          <p class="topic-desc">{t.details}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        <!-- Kairo CBT, Drills & Mock Examinations Schedule -->
+        <section class="dashboard-card cbt-schedule-card" id="cbtSection">
+          <div class="card-header-row">
+            <div>
+              <span class="section-tag">EXAMINATION READINESS ENGINE</span>
+              <h2 class="card-title">Kairo CBT, Weekly Drills &amp; Mock Examinations</h2>
+            </div>
+            <a href="/tools" class="btn-primary">Launch Kairo CBT &rarr;</a>
+          </div>
+          <p class="section-sub">
+            Continuous testing mirrors real JAMB CBT conditions, builds calculation speed, and eliminates avoidable exam errors before examination day.
+          </p>
+
+          <div class="cbt-features-grid">
+            <div class="cbt-feature-box">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              </div>
+              <h3>8 Sunday CBT Drills</h3>
+              <p>Weekly timed tests every Sunday reviewing high-dependency topics from the previous week's live classes.</p>
+            </div>
+            <div class="cbt-feature-box">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+              </div>
+              <h3>4 Full JAMB-Standard Mocks</h3>
+              <p>180 questions in 2 hours across all 4 subjects on Dec 27, Jan 24, Jan 31, and the final grand mock on Feb 21.</p>
+            </div>
+            <div class="cbt-feature-box">
+              <div class="feature-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              </div>
+              <h3>Error Identification &amp; Analytics</h3>
+              <p>Review wrong answers immediately with step-by-step explanatory solutions and speed-accuracy pacing metrics.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Entitlement & Benefits Section: Authorized Benefits (Verified) vs Free Next Steps (Unverified) -->
+        <section class="dashboard-card benefits-section" id="benefitsSection">
+          <div class="benefits-header">
+            <div class="benefits-title-group">
+              <h2 class="card-title" id="privilegesSectionTitle">Authorized Privileges &amp; Materials</h2>
+              <p class="section-sub" id="privilegesSectionSub">
+                Based strictly on verified database records.
+              </p>
+            </div>
+          </div>
+
+          <!-- Interactive Resource Filter Segmented Tabs -->
+          <div class="resource-filter-bar" role="tablist" aria-label="Filter student resources">
+            <button type="button" class="filter-tab active" data-filter="all-my" role="tab" aria-selected="true" id="tabAllMy">
+              My Unlocked Items (<span id="myItemsCount" class="tabular-nums">0</span>)
+            </button>
+            <button type="button" class="filter-tab" data-filter="boosters" role="tab" aria-selected="false" id="tabBoosters">
+              Study Boosters
+            </button>
+            <button type="button" class="filter-tab" data-filter="cohorts" role="tab" aria-selected="false" id="tabCohorts">
+              Cohort Masterclasses
+            </button>
+            <button type="button" class="filter-tab" data-filter="catalogue" role="tab" aria-selected="false" id="tabCatalogue">
+              Full Catalogue
+            </button>
+          </div>
+
+          <!-- Empty State Notice for Candidates with 0 Paid Purchases -->
+          <div id="resourcesEmptyBanner" class="resources-empty-banner" style="display: none;">
+            <div class="empty-icon-wrap">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+            <div class="empty-text-wrap">
+              <h4 class="empty-title">Free Registered Account · No Paid Boosters Unlocked Yet</h4>
+              <p class="empty-desc">You have immediate access to the free official guide and practice quizzes below. Standalone booster systems or cohort masterclasses unlock automatically when confirmed in the database.</p>
+            </div>
+            <a href="/pricing" class="btn-secondary empty-action-btn">Explore Plans</a>
+          </div>
+
+          <!-- Student Active Resources List -->
+          <div id="authorizedResourcesContainer" class="resources-grid"></div>
+
+          <!-- Authorized Features List -->
+          <div class="benefits-list-box" id="benefitsListBox">
+            <h3 class="benefits-list-heading">Authorized Programme Inclusions</h3>
+            <ul class="benefits-checklist" id="benefitsChecklist"></ul>
+          </div>
+
+          <!-- Unverified Next Steps / Call to Action (non-blocking for free accounts) -->
+          <div id="unverifiedNotice" class="next-steps-panel" style="display: none;">
+            <div class="panel-header">
+              <div class="info-badge-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </div>
+              <div class="panel-title-text">
+                <h3>Recommended Next Steps</h3>
+                <p>You have a free registered account. Verified TECHMED student privileges, cohort masterclasses, and booster systems unlock automatically when you enroll in a 2027 cohort or complete a study resource purchase.</p>
+              </div>
+            </div>
+
+            <div class="next-steps-grid" id="nextStepsCardsGrid"></div>
+          </div>
+        </section>
+
+        <!-- Quick Access Hub Tools -->
+        <section class="dashboard-card quick-access-card">
+          <h2 class="card-title">Study Tools &amp; Quick Links</h2>
+          <div class="quick-tools-grid">
+            <a href="/library" class="tool-card">
+              <div class="tool-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              </div>
+              <div class="tool-info">
+                <span class="tool-title">Student Bookshelf</span>
+                <span class="tool-desc">View and read your active booster books, formula sheets, and study manuals.</span>
+              </div>
+            </a>
+
+            <a href="/tools" class="tool-card">
+              <div class="tool-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              </div>
+              <div class="tool-info">
+                <span class="tool-title">Kairo CBT Speed Drills</span>
+                <span class="tool-desc">Practice timed questions in English, Biology, Chemistry, Physics, and Math.</span>
+              </div>
+            </a>
+
+            <a href="/jamb-syllabus-2027" class="tool-card">
+              <div class="tool-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+              </div>
+              <div class="tool-info">
+                <span class="tool-title">UTME 2027 Syllabus Tracker</span>
+                <span class="tool-desc">Detailed topic breakdowns and revision checklists for your combination.</span>
+              </div>
+            </a>
+
+            <a href="/pricing" class="tool-card">
+              <div class="tool-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+              </div>
+              <div class="tool-info">
+                <span class="tool-title">Cohort Plans &amp; Pricing</span>
+                <span class="tool-desc">Review Core, Mastery, and Ultimate tracks starting 30 November 2026.</span>
+              </div>
+            </a>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import {
+    getSupabase,
+    fetchUserProfile,
+    fetchUserEntitlements,
+    resolveStudentPrivileges,
+    getUserResourceEntitlements,
+    type StudentProfile,
+    type StudentEntitlement,
+    type UserResourceEntitlementItem,
+  } from '../lib/supabase';
+
+  const supabase = getSupabase();
+
+  // State elements
+  const loadingState = document.getElementById('loadingState');
+  const errorState = document.getElementById('errorState');
+  const errorMsgText = document.getElementById('errorMsgText');
+  const unauthCard = document.getElementById('unauthCard');
+  const dashboardContent = document.getElementById('dashboardContent');
+  const retryLoadBtn = document.getElementById('retryLoadBtn');
+
+  // Welcome elements
+  const studentGreetingName = document.getElementById('studentGreetingName');
+  const studentStatusBadge = document.getElementById('verifiedStatusBadge') || document.getElementById('studentStatusBadge');
+  const welcomeSub = document.getElementById('welcomeSub');
+
+  // Profile progress elements
+  const profileProgressCard = document.getElementById('incompleteBanner') || document.getElementById('profileProgressCard');
+  const profileCompletePill = document.getElementById('profileCompletePill');
+  const progressTitle = document.getElementById('progressTitle');
+  const progressStepTag = document.getElementById('progressStepTag');
+  const progressDesc = document.getElementById('progressDesc');
+
+  // Academic target elements
+  const displayCourse = document.getElementById('displayTargetCourse') || document.getElementById('displayCourse');
+  const displayUniversity = document.getElementById('displayTargetUniversity') || document.getElementById('displayUniversity');
+  const subjectsContainer = document.getElementById('subjectPills') || document.getElementById('subjectsContainer');
+
+  // Channels elements
+  const displayPhone = document.getElementById('displayPhone');
+  const displayWhatsapp = document.getElementById('displayWhatsapp');
+  const displayTelegram = document.getElementById('displayTelegram');
+  const displayParent = document.getElementById('displayParent');
+
+  // Benefits & Privileges elements
+  const privilegesSectionTitle = document.getElementById('privilegesSectionTitle');
+  const privilegesSectionSub = document.getElementById('privilegesSectionSub');
+  const planPillContainer = document.getElementById('planPillContainer');
+  const planExpirySub = document.getElementById('planExpirySub');
+  const authorizedResourcesContainer = document.getElementById('authorizedResourcesContainer');
+  const benefitsListBox = document.getElementById('benefitsListBox');
+  const benefitsChecklist = document.getElementById('benefitsChecklist');
+  const unverifiedNextSteps = document.getElementById('unverifiedNotice') || document.getElementById('unverifiedNextSteps');
+  const nextStepsCardsGrid = document.getElementById('nextStepsCardsGrid');
+
+  // Classroom section elements
+  const classroomAccessNotice = document.getElementById('classroomAccessNotice');
+  const classroomAccessText = document.getElementById('classroomAccessText');
+
+  // Resource Filter & Empty State Elements
+  const filterTabs = document.querySelectorAll('.filter-tab');
+  const myItemsCount = document.getElementById('myItemsCount');
+  const resourcesEmptyBanner = document.getElementById('resourcesEmptyBanner');
+
+  let allResourceItems: UserResourceEntitlementItem[] = [];
+  let currentFilter = 'all-my';
+
+  function renderResourceCards(filter: string) {
+    if (!authorizedResourcesContainer) return;
+
+    let filtered: UserResourceEntitlementItem[] = [];
+    if (filter === 'all-my') {
+      filtered = allResourceItems.filter(item => item.isOwned);
+    } else if (filter === 'boosters') {
+      filtered = allResourceItems.filter(
+        item => item.category === 'Academic' || item.id.includes('booster') || item.id === 'post-utme-brainstorming-hub'
+      );
+    } else if (filter === 'cohorts') {
+      filtered = allResourceItems.filter(item => item.category === 'Cohort');
+    } else {
+      filtered = allResourceItems;
+    }
+
+    // Toggle empty banner if filter is 'all-my' and student owns 0 paid items
+    const paidOwned = allResourceItems.filter(item => item.isOwned && item.status === 'paid').length;
+    if (resourcesEmptyBanner) {
+      if (filter === 'all-my' && paidOwned === 0) {
+        resourcesEmptyBanner.style.display = 'flex';
+      } else {
+        resourcesEmptyBanner.style.display = 'none';
+      }
+    }
+
+    if (filtered.length === 0) {
+      authorizedResourcesContainer.innerHTML = `
+        <div class="empty-filter-msg">
+          <p>No resources found in this category.</p>
+        </div>
+      `;
+      return;
+    }
+
+    authorizedResourcesContainer.innerHTML = filtered.map(item => `
+      <div class="resource-card ${item.isOwned ? 'card-owned' : 'card-unowned'}">
+        <div class="resource-meta-top">
+          <span class="meta-item">${item.type}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="meta-item">${item.subject || item.category}</span>
+          <span class="meta-sep" aria-hidden="true">·</span>
+          <span class="meta-item ${item.isOwned ? 'meta-owned' : 'meta-unowned'}">${item.purchaseStatusLabel}</span>
+        </div>
+        <h4 class="resource-title">${item.title}</h4>
+        <div class="resource-access-row">
+          <span class="access-dot ${item.accessStatus}"></span>
+          <span class="access-text">${item.accessStatusLabel}</span>
+        </div>
+        <div class="card-action-wrap">
+          ${item.isOwned ? `
+            <a href="${item.readerUrl || item.externalUrl || '/library'}" class="btn-primary resource-action-btn" ${item.externalUrl ? 'target="_blank" rel="noopener"' : ''}>
+              ${item.actionLabel} &rarr;
+            </a>
+          ` : `
+            <div class="unowned-action-box">
+              <span class="resource-price tabular-nums">₦${item.priceNgn ? item.priceNgn.toLocaleString() : '3,000'}</span>
+              <a href="${item.storeUrl || '/pricing'}" class="btn-secondary resource-action-btn">
+                ${item.actionLabel} &rarr;
+              </a>
+            </div>
+          `}
+        </div>
+      </div>
+    `).join('');
+  }
+
+  function updateClassroomsAccess(hasCohortAccess: boolean, planName?: string) {
+    if (classroomAccessNotice && classroomAccessText) {
+      if (hasCohortAccess) {
+        classroomAccessNotice.classList.add('unlocked');
+        classroomAccessNotice.classList.remove('locked');
+        classroomAccessText.textContent = `Unlocked · Enrolled in ${planName || 'UTME 2027 Cohort'}`;
+      } else {
+        classroomAccessNotice.classList.add('locked');
+        classroomAccessNotice.classList.remove('unlocked');
+        classroomAccessText.textContent = 'Enrolment Required for Live Lecture Rooms';
+      }
+    }
+
+    const classroomBoxes = document.querySelectorAll('.classroom-box');
+    classroomBoxes.forEach(box => {
+      const isCommunity = box.getAttribute('data-is-community') === 'true';
+      const accessPill = box.querySelector('[data-role="classroom-access-pill"]');
+      const actionBtn = box.querySelector('[data-role="classroom-btn"]');
+
+      if (isCommunity) {
+        if (accessPill) {
+          accessPill.textContent = 'Open Community';
+          accessPill.className = 'access-pill unlocked';
+        }
+      } else if (hasCohortAccess) {
+        if (accessPill) {
+          accessPill.textContent = 'Active Enrolment';
+          accessPill.className = 'access-pill unlocked';
+        }
+      } else {
+        if (accessPill) {
+          accessPill.textContent = 'Enrolment Required';
+          accessPill.className = 'access-pill locked';
+        }
+        if (actionBtn) {
+          // Allow click with notice or route to pricing
+          actionBtn.setAttribute('title', 'Please enroll in Core, Mastery, or Ultimate to join live Telegram classrooms');
+        }
+      }
+    });
+  }
+
+  async function loadDashboard() {
+    if (loadingState) loadingState.style.display = 'flex';
+    if (errorState) errorState.style.display = 'none';
+    if (unauthCard) unauthCard.style.display = 'none';
+    if (dashboardContent) dashboardContent.style.display = 'none';
+
+    try {
+      const { data: sessionData, error: sessionErr } = await supabase.auth.getSession();
+
+      if (sessionErr) {
+        throw new Error(sessionErr.message);
+      }
+
+      const user = sessionData?.session?.user;
+
+      if (!user) {
+        if (loadingState) loadingState.style.display = 'none';
+        if (unauthCard) unauthCard.style.display = 'block';
+
+        // Graceful redirect to login with destination param
+        setTimeout(() => {
+          window.location.href = '/login?redirect=/dashboard';
+        }, 1200);
+        return;
+      }
+
+      const email = user.email || '';
+      const userId = user.id;
+
+      // Parallel fetch profile, database entitlements, paid orders, and catalogue items
+      const [profileResult, entitlementsResult, ordersResult, resourcesResult] = await Promise.all([
+        fetchUserProfile(userId),
+        fetchUserEntitlements(userId, email),
+        supabase
+          .from('orders')
+          .select('product_id, product_name, status, amount')
+          .eq('status', 'paid')
+          .or(`user_id.eq.${userId},email.ilike.${email}`)
+          .catch(() => ({ data: [] })),
+        getUserResourceEntitlements(userId, email),
+      ]);
+
+      const profile: StudentProfile | null = profileResult.profile;
+      const entitlements: StudentEntitlement[] = entitlementsResult.entitlements || [];
+      const orders: any[] = (ordersResult as any)?.data || [];
+      allResourceItems = resourcesResult.items || [];
+
+      // 1. Resolve student privileges authoritatively
+      const privileges = resolveStudentPrivileges(entitlements, orders);
+
+      // 2. Welcome & Identity
+      const displayName =
+        profile?.fullName?.trim() ||
+        user.user_metadata?.full_name?.trim() ||
+        user.user_metadata?.name?.trim() ||
+        email.split('@')[0];
+
+      if (studentGreetingName) studentGreetingName.textContent = displayName;
+
+      if (studentStatusBadge) {
+        studentStatusBadge.textContent = privileges.statusLabel;
+        studentStatusBadge.className = `status-badge ${privileges.badgeType}`;
+      }
+
+      if (welcomeSub) {
+        welcomeSub.textContent = privileges.planName
+          ? `Enrolled in ${privileges.planName} · UTME 2027`
+          : 'Free student account · UTME 2027';
+      }
+
+      // 3. Profile Completion State
+      const isCompleted = profile?.onboardingCompleted === true;
+      const step = profile?.onboardingStep || 1;
+
+      if (isCompleted) {
+        if (profileProgressCard) profileProgressCard.style.display = 'none';
+        if (profileCompletePill) profileCompletePill.style.display = 'flex';
+      } else {
+        if (profileCompletePill) profileCompletePill.style.display = 'none';
+        if (profileProgressCard) profileProgressCard.style.display = 'flex';
+        if (progressStepTag) progressStepTag.textContent = `Step ${step} of 3`;
+        if (progressTitle) {
+          progressTitle.textContent = step === 1
+            ? 'Set Up Contact Numbers & Channels'
+            : step === 2
+            ? 'Set Up Desired Course & Target University'
+            : 'Select Your 4 UTME Subjects';
+        }
+      }
+
+      // 4. Academic Snapshot
+      if (profile?.targetCourse && displayCourse) {
+        displayCourse.textContent = profile.targetCourse;
+      }
+      if (profile?.targetUniversity && displayUniversity) {
+        displayUniversity.textContent = profile.targetUniversity;
+      }
+
+      if (subjectsContainer) {
+        if (profile?.utmeSubjects && profile.utmeSubjects.length > 0) {
+          subjectsContainer.innerHTML = profile.utmeSubjects
+            .map((sub: string) => {
+              const isEnglish = sub.toLowerCase() === 'english';
+              return `<span class="subject-pill ${isEnglish ? 'compulsory' : ''}">${sub}${isEnglish ? ' (Compulsory)' : ''}</span>`;
+            })
+            .join('');
+        }
+      }
+
+      // 5. Communication Channels
+      if (profile?.phone && displayPhone) displayPhone.textContent = profile.phone;
+      if (profile?.whatsappPhone && displayWhatsapp) displayWhatsapp.textContent = profile.whatsappPhone;
+      if (profile?.telegramPhone && displayTelegram) displayTelegram.textContent = profile.telegramPhone;
+      if (profile?.parentPhone && displayParent) displayParent.textContent = profile.parentPhone;
+
+      // 6. Benefits, Active Resources & Plan Tier Pill
+      const isCohortEnrolled =
+        privileges.badgeType === 'ultimate' ||
+        privileges.badgeType === 'mastery' ||
+        privileges.badgeType === 'core';
+
+      if (planPillContainer) {
+        if (privileges.planName) {
+          planPillContainer.innerHTML = `<span class="plan-pill ${privileges.badgeType}">${privileges.planName}</span>`;
+        } else {
+          planPillContainer.innerHTML = `<span class="plan-pill unverified">Free Account</span>`;
+        }
+      }
+
+      if (planExpirySub) {
+        if (isCohortEnrolled) {
+          planExpirySub.textContent = privileges.hasFounderMentorship
+            ? 'Full Cohort Access + Founder Mentorship'
+            : 'Full 12-Week Intensive Cohort Access';
+        } else if (privileges.badgeType === 'resource_purchaser') {
+          planExpirySub.textContent = 'Lifetime Study Booster License';
+        } else {
+          planExpirySub.textContent = 'Enrolment in Core, Mastery, or Ultimate required for live classes';
+        }
+      }
+
+      // Update Classroom Access badges and links based on database-backed privileges
+      updateClassroomsAccess(isCohortEnrolled, privileges.planName);
+
+      // Render authorized features
+      if (benefitsChecklist) {
+        benefitsChecklist.innerHTML = privileges.authorizedBenefits
+          .map(benefit => `
+            <li class="benefit-item">
+              <svg class="benefit-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+              <span>${benefit}</span>
+            </li>
+          `)
+          .join('');
+      }
+
+      // Resource list rendering
+      const ownedItems = allResourceItems.filter(i => i.isOwned);
+      if (myItemsCount) myItemsCount.textContent = ownedItems.length.toString();
+
+      if (privileges.isVerified && privileges.authorizedResources.length > 0) {
+        if (privilegesSectionTitle) privilegesSectionTitle.textContent = 'Active Entitlements & Student Bookshelf';
+        if (privilegesSectionSub) {
+          privilegesSectionSub.textContent = `You have ${privileges.authorizedResources.length} verified item(s) in your student account.`;
+        }
+      } else {
+        if (privilegesSectionTitle) privilegesSectionTitle.textContent = 'Student Resources & Bookshelf';
+        if (privilegesSectionSub) {
+          privilegesSectionSub.textContent = 'Authoritatively synchronized with your verified database entitlements.';
+        }
+      }
+
+      // Render resource cards according to active filter
+      renderResourceCards(currentFilter);
+
+      // If unverified, render next steps cards (non-blocking)
+      if (!privileges.isVerified) {
+        if (unverifiedNextSteps) {
+          unverifiedNextSteps.style.display = 'block';
+        }
+        if (nextStepsCardsGrid) {
+          nextStepsCardsGrid.innerHTML = privileges.nextSteps
+            .map(stepItem => `
+              <div class="next-step-card ${stepItem.primary ? 'primary-step' : ''}">
+                <div class="step-card-text">
+                  <h4 class="step-card-title">${stepItem.title}</h4>
+                  <p class="step-card-desc">${stepItem.description}</p>
+                </div>
+                <a href="${stepItem.href}" class="${stepItem.primary ? 'btn-primary step-btn' : 'btn-secondary step-btn'}">
+                  ${stepItem.actionLabel}
+                </a>
+              </div>
+            `)
+            .join('');
+        }
+      } else {
+        if (unverifiedNextSteps) unverifiedNextSteps.style.display = 'none';
+      }
+
+      // Display main content
+      if (loadingState) loadingState.style.display = 'none';
+      if (dashboardContent) dashboardContent.style.display = 'flex';
+    } catch (err: any) {
+      if (loadingState) loadingState.style.display = 'none';
+      if (errorState) errorState.style.display = 'block';
+      if (errorMsgText) errorMsgText.textContent = err?.message || 'Error loading dashboard. Please try again.';
+    }
+  }
+
+  // Filter tab interactions for Student Resources
+  filterTabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      filterTabs.forEach(t => {
+        t.classList.remove('active');
+        t.setAttribute('aria-selected', 'false');
+      });
+      tab.classList.add('active');
+      tab.setAttribute('aria-selected', 'true');
+      currentFilter = tab.getAttribute('data-filter') || 'all-my';
+      renderResourceCards(currentFilter);
+    });
+  });
+
+  // Week selector interactions in Curriculum
+  const weekTabBtns = document.querySelectorAll('.week-tab-btn');
+  const weekCards = document.querySelectorAll('.week-card');
+
+  weekTabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      weekTabBtns.forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-selected', 'false');
+      });
+      btn.classList.add('active');
+      btn.setAttribute('aria-selected', 'true');
+
+      const targetId = btn.getAttribute('data-week-target');
+      weekCards.forEach(card => {
+        if (card.id === targetId) {
+          card.classList.add('week-active');
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+          card.classList.remove('week-active');
+        }
+      });
+    });
+  });
+
+  // Subject filter buttons in Curriculum
+  const subFilterBtns = document.querySelectorAll('.sub-filter-btn');
+  subFilterBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      subFilterBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const subject = btn.getAttribute('data-subject') || 'all';
+
+      const subjectCols = document.querySelectorAll('.curriculum-subject-col');
+      subjectCols.forEach(col => {
+        const colSubj = col.getAttribute('data-subject');
+        if (subject === 'all' || colSubj === subject) {
+          (col as HTMLElement).style.display = 'flex';
+        } else {
+          (col as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  });
+
+  retryLoadBtn?.addEventListener('click', loadDashboard);
+
+  loadDashboard();
+</script>
+
+<style>
+  .dashboard-page {
+    min-height: calc(100vh - 180px);
+    padding: var(--space-8) var(--space-4) var(--space-16);
+    background: radial-gradient(circle at 50% 5%, rgba(11, 27, 61, 0.4), transparent 60%), var(--bg);
+  }
+
+  .dashboard-container {
+    max-width: 1080px;
+    margin: 0 auto;
+  }
+
+  .dashboard-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+
+  .dashboard-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  }
+
+  /* State Cards */
+  .state-card {
+    text-align: center;
+    padding: var(--space-16) var(--space-6);
+  }
+
+  .spinner {
+    width: 42px;
+    height: 42px;
+    border: 3px solid rgba(201, 162, 39, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    margin: 0 auto var(--space-4);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .state-text {
+    font-size: 0.95rem;
+    color: var(--text-light);
+  }
+
+  .error-card {
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.05);
+  }
+
+  .error-icon {
+    color: #ef4444;
+    margin-bottom: var(--space-3);
+  }
+
+  .retry-btn {
+    display: inline-block;
+    margin-top: var(--space-4);
+    padding: 8px 20px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+
+  .lock-icon {
+    color: var(--accent);
+    margin-bottom: var(--space-3);
+  }
+
+  .redirect-sub {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: var(--space-4);
+  }
+
+  .auth-btn {
+    display: inline-block;
+    padding: 10px 22px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: var(--radius-sm);
+  }
+
+  /* Header Navigation */
+  .dashboard-header-nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  .welcome-heading-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin: 4px 0 2px;
+  }
+
+  .welcome-heading {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.25;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .welcome-sub {
+    font-size: 0.92rem;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  .status-badge {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+  }
+
+  .status-badge.ultimate {
+    background: rgba(201, 162, 39, 0.2);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .status-badge.mastery {
+    background: rgba(37, 99, 235, 0.2);
+    border-color: #3b82f6;
+    color: #60a5fa;
+  }
+
+  .status-badge.core {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10b981;
+    color: #34d399;
+  }
+
+  .status-badge.resource_purchaser {
+    background: rgba(147, 51, 234, 0.2);
+    border-color: #a855f7;
+    color: #c084fc;
+  }
+
+  .status-badge.unverified {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border);
+    color: var(--text-muted);
+  }
+
+  /* Programme Overview Card */
+  .programme-overview-card {
+    background: linear-gradient(135deg, rgba(11, 27, 61, 0.9), rgba(15, 23, 42, 0.95));
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: var(--radius-lg);
+    padding: var(--space-6);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .programme-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+    padding-bottom: var(--space-4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .programme-badge {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+  }
+
+  .dates-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+    padding: 4px 12px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .programme-body-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .overview-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    background: rgba(255, 255, 255, 0.03);
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .overview-label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    font-weight: 600;
+  }
+
+  .overview-val {
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .overview-sub {
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+
+  .tier-pill-slot {
+    display: flex;
+    align-items: center;
+  }
+
+  .plan-pill {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-sm);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+
+  .plan-pill.ultimate {
+    background: rgba(201, 162, 39, 0.25);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .plan-pill.mastery {
+    background: rgba(37, 99, 235, 0.25);
+    border-color: #3b82f6;
+    color: #93c5fd;
+  }
+
+  .plan-pill.core {
+    background: rgba(16, 185, 129, 0.25);
+    border-color: #10b981;
+    color: #6ee7b7;
+  }
+
+  .plan-pill.unverified {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-muted);
+  }
+
+  /* Profile Progress & Completed */
+  .profile-progress-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    background: rgba(201, 162, 39, 0.08);
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4) var(--space-6);
+    flex-wrap: wrap;
+  }
+
+  .progress-meta {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    max-width: 650px;
+  }
+
+  .progress-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .progress-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .progress-title-row h3 {
+    font-size: 0.98rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .progress-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #1a0a00;
+    background: var(--accent);
+    padding: 1px 7px;
+    border-radius: var(--radius-full);
+  }
+
+  .progress-text p {
+    font-size: 0.84rem;
+    color: var(--text-light);
+    margin: 3px 0 0;
+    line-height: 1.45;
+  }
+
+  .resume-onboarding-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  .profile-complete-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    font-size: 0.86rem;
+    color: #4ade80;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .profile-edit-link {
+    margin-left: auto;
+    font-size: 0.8rem;
+    color: var(--text);
+    text-decoration: underline;
+    font-weight: 600;
+  }
+
+  /* Academic & Channels Grid */
+  .dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--space-6);
+  }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .section-tag {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  .card-title {
+    font-size: 1.22rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .card-edit-action {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  .target-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    margin-bottom: var(--space-4);
+  }
+
+  .target-field {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: rgba(255, 255, 255, 0.02);
+    padding: var(--space-3);
+    border-radius: var(--radius-md);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .field-label {
+    font-size: 0.74rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .field-val {
+    font-size: 0.94rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .subjects-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-3);
+  }
+
+  .subjects-label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.78rem;
+  }
+
+  .syllabus-link {
+    font-size: 0.78rem;
+    color: var(--accent);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .subjects-pills-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+  }
+
+  .subject-pill {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+  }
+
+  .subject-pill.compulsory {
+    border-color: rgba(201, 162, 39, 0.4);
+    background: rgba(201, 162, 39, 0.1);
+    color: var(--accent);
+  }
+
+  .subject-empty-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .channels-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .channels-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-md);
+  }
+
+  .channel-name {
+    font-size: 0.82rem;
+    color: var(--text-light);
+  }
+
+  .channel-val {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  /* Quickstart Checklist */
+  .quickstart-card {
+    background: linear-gradient(180deg, var(--surface), rgba(15, 23, 42, 0.8));
+  }
+
+  .guide-note {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-2);
+  }
+
+  .step-box {
+    display: flex;
+    gap: var(--space-3);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .step-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .step-content {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .step-heading {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .step-desc {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  .step-link {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--accent);
+    text-decoration: none;
+    margin-top: auto;
+    padding-top: 6px;
+  }
+
+  /* Classrooms Section */
+  .class-lock-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .class-lock-status.unlocked {
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.3);
+    color: #4ade80;
+  }
+
+  .class-lock-status.locked {
+    background: rgba(234, 179, 8, 0.12);
+    border-color: rgba(234, 179, 8, 0.3);
+    color: #facc15;
+  }
+
+  .status-indicator-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .classrooms-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .classroom-box {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    transition: transform 150ms ease, border-color 150ms ease;
+  }
+
+  .classroom-box:hover {
+    border-color: rgba(201, 162, 39, 0.4);
+    transform: translateY(-2px);
+  }
+
+  .box-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-2);
+  }
+
+  .platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+  }
+
+  .platform-badge[data-platform="telegram"] {
+    background: rgba(0, 136, 204, 0.15);
+    color: #38bdf8;
+    border: 1px solid rgba(0, 136, 204, 0.3);
+  }
+
+  .platform-badge[data-platform="whatsapp"] {
+    background: rgba(37, 211, 102, 0.15);
+    color: #4ade80;
+    border: 1px solid rgba(37, 211, 102, 0.3);
+  }
+
+  .access-pill {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+  }
+
+  .access-pill.unlocked {
+    background: rgba(34, 197, 94, 0.15);
+    border-color: #22c55e;
+    color: #4ade80;
+  }
+
+  .access-pill.locked {
+    background: rgba(234, 179, 8, 0.15);
+    border-color: #eab308;
+    color: #facc15;
+  }
+
+  .classroom-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 4px 0;
+  }
+
+  .classroom-desc {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin: 0 0 var(--space-4);
+    line-height: 1.45;
+    flex-grow: 1;
+  }
+
+  .classroom-join-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 9px 14px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+  }
+
+  /* Timetable Section */
+  .timetable-period {
+    font-size: 0.84rem;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .highlight-time {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .period-dot {
+    color: var(--text-muted);
+  }
+
+  .table-scroll-wrap {
+    overflow-x: auto;
+    margin: var(--space-4) 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    background: rgba(0, 0, 0, 0.2);
+  }
+
+  .timetable-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.88rem;
+  }
+
+  .timetable-table th,
+  .timetable-table td {
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    vertical-align: middle;
+  }
+
+  .timetable-table thead th {
+    background: rgba(255, 255, 255, 0.04);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .session-label {
+    display: block;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .session-time {
+    display: block;
+    font-size: 0.74rem;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+  }
+
+  .td-day strong {
+    font-family: var(--font-display);
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+
+  .slot-subject {
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .slot-note {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  .break-tag {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    background: rgba(234, 179, 8, 0.12);
+    border: 1px solid rgba(234, 179, 8, 0.3);
+    color: #facc15;
+    border-radius: var(--radius-sm);
+  }
+
+  .sunday-assessment-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    background: rgba(37, 99, 235, 0.08);
+    border: 1px solid rgba(37, 99, 235, 0.3);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    margin: var(--space-4) 0;
+    flex-wrap: wrap;
+  }
+
+  .sunday-badge {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: #60a5fa;
+  }
+
+  .sunday-content {
+    flex-grow: 1;
+  }
+
+  .sunday-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+
+  .sunday-desc {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  .sunday-action-btn {
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  .timetable-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 3px solid var(--accent);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+
+  .callout-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .callout-text h4 {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+
+  .callout-text p {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* Curriculum Section */
+  .curriculum-header-block {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .curriculum-dates-badge {
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+  }
+
+  .subject-filter-toolbar {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    padding: var(--space-2) 0;
+  }
+
+  .filter-label {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .subject-filter-btns {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .sub-filter-btn {
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .sub-filter-btn:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .sub-filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a0a00;
+    font-weight: 700;
+  }
+
+  .week-nav-scroll {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: var(--space-2) 0 var(--space-3);
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .week-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 78px;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 150ms ease;
+    white-space: nowrap;
+  }
+
+  .week-tab-btn:hover {
+    color: var(--text);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .week-tab-btn.active {
+    background: rgba(201, 162, 39, 0.15);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .tab-wk {
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  .tab-dates {
+    font-size: 0.68rem;
+    opacity: 0.8;
+  }
+
+  .weeks-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .week-card {
+    display: none;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--space-5);
+  }
+
+  .week-card.week-active {
+    display: flex;
+    animation: fadeIn 200ms ease;
+  }
+
+  .week-card-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-3);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .week-tag {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    padding: 2px 7px;
+    border-radius: var(--radius-sm);
+    margin-right: 6px;
+  }
+
+  .week-dates-inline {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .week-theme {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 4px 0 0;
+  }
+
+  .assessment-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .assessment-pill.drill {
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    color: #93c5fd;
+  }
+
+  .assessment-pill.mock {
+    background: rgba(234, 179, 8, 0.15);
+    border: 1px solid rgba(234, 179, 8, 0.35);
+    color: #fde047;
+  }
+
+  .assessment-notice-banner {
+    background: rgba(0, 0, 0, 0.25);
+    border-left: 3px solid var(--accent);
+    padding: var(--space-3) var(--space-4);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    margin-bottom: var(--space-4);
+  }
+
+  .assessment-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+  }
+
+  .assessment-meta {
+    font-size: 0.84rem;
+    color: var(--text);
+    margin: 2px 0;
+  }
+
+  .assessment-desc {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin: 0;
+  }
+
+  .subjects-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .curriculum-subject-col {
+    display: flex;
+    flex-direction: column;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+  }
+
+  .subj-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: var(--space-2);
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .subj-header h4 {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .subj-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .subj-header.physics .subj-dot { background: #38bdf8; }
+  .subj-header.chemistry .subj-dot { background: #f43f5e; }
+  .subj-header.english .subj-dot { background: #a855f7; }
+  .subj-header.biology .subj-dot { background: #34d399; }
+  .subj-header.mathematics .subj-dot { background: #fbbf24; }
+
+  .topics-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .topic-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .topic-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .topic-desc {
+    font-size: 0.74rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  /* CBT Feature Grid */
+  .cbt-features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .cbt-feature-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .feature-icon {
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+
+  .cbt-feature-box h3 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+
+  .cbt-feature-box p {
+    font-size: 0.8rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* Benefits & Resources */
+  .benefits-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .benefits-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .section-sub {
+    font-size: 0.88rem;
+    color: var(--text-light);
+    margin: 2px 0 0;
+  }
+
+  .resource-filter-bar {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+    overflow-x: auto;
+  }
+
+  .filter-tab {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    padding: var(--space-2) var(--space-3);
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all 150ms ease;
+    white-space: nowrap;
+  }
+
+  .filter-tab:hover {
+    color: var(--text);
+  }
+
+  .filter-tab.active {
+    background: rgba(201, 162, 39, 0.15);
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .resources-empty-banner {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    background: rgba(201, 162, 39, 0.05);
+    border: 1px dashed rgba(201, 162, 39, 0.35);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .empty-icon-wrap {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .empty-text-wrap {
+    flex-grow: 1;
+    min-width: 240px;
+  }
+
+  .empty-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+  }
+
+  .empty-desc {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin: 2px 0 0;
+    line-height: 1.4;
+  }
+
+  .empty-action-btn {
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  .resources-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-4);
+  }
+
+  .resource-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .resource-card.card-owned {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.02);
+  }
+
+  .resource-meta-top {
+    font-size: 0.74rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .meta-owned {
+    color: #4ade80;
+    font-weight: 700;
+  }
+
+  .meta-unowned {
+    color: var(--text-muted);
+  }
+
+  .resource-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .resource-access-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+
+  .access-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .access-dot.active { background: #22c55e; }
+  .access-dot.locked { background: #facc15; }
+
+  .card-action-wrap {
+    margin-top: auto;
+    padding-top: var(--space-2);
+  }
+
+  .resource-action-btn {
+    display: inline-block;
+    width: 100%;
+    text-align: center;
+    padding: 7px 12px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+  }
+
+  .unowned-action-box {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-2);
+  }
+
+  .resource-price {
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .benefits-list-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .benefits-list-heading {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 var(--space-3);
+  }
+
+  .benefits-checklist {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: var(--space-2) var(--space-4);
+  }
+
+  .benefit-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+
+  .benefit-check {
+    color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  /* Next steps panel */
+  .next-steps-panel {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+  }
+
+  .panel-header {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  .info-badge-icon {
+    color: var(--accent);
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  .panel-title-text h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+
+  .panel-title-text p {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  .next-steps-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .next-step-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-sm);
+    padding: var(--space-3);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .next-step-card.primary-step {
+    border-color: rgba(201, 162, 39, 0.3);
+  }
+
+  .step-card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 2px;
+  }
+
+  .step-card-desc {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    margin: 0;
+    line-height: 1.35;
+  }
+
+  .step-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+    margin-top: auto;
+  }
+
+  /* Quick Tools Grid */
+  .quick-tools-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+
+  .tool-card {
+    display: flex;
+    gap: var(--space-3);
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    text-decoration: none;
+    transition: transform 150ms ease, border-color 150ms ease;
+  }
+
+  .tool-card:hover {
+    border-color: rgba(201, 162, 39, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .tool-icon {
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .tool-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .tool-title {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .tool-desc {
+    font-size: 0.78rem;
+    color: var(--text-light);
+    line-height: 1.35;
+  }
+
+  @media (max-width: 640px) {
+    .welcome-heading {
+      font-size: 1.45rem;
+    }
+
+    .target-fields {
+      grid-template-columns: 1fr;
+    }
+
+    .timetable-table {
+      font-size: 0.78rem;
+    }
+
+    .timetable-table th,
+    .timetable-table td {
+      padding: var(--space-2);
+    }
+  }
+</style>

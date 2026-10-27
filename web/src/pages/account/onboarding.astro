@@ -1,0 +1,1389 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import StudentHubNav from '../../components/StudentHubNav.astro';
+
+const title = 'Student Profile & Onboarding | TECHMED';
+const description = 'Complete your TECHMED student profile: contact numbers, target university and course, and 4 UTME subjects.';
+---
+
+<BaseLayout title={title} description={description}>
+  <main class="onboarding-page">
+    <div class="onboarding-container">
+      <!-- Loading State -->
+      <div id="loadingState" class="state-card loading-card">
+        <div class="spinner"></div>
+        <p>Loading your student profile...</p>
+      </div>
+
+      <!-- Unauthorized State -->
+      <div id="unauthCard" class="state-card" style="display: none;">
+        <h2>Authentication Required</h2>
+        <p>Please log in or create an account to access student onboarding.</p>
+        <a href="/login?redirect=/account/onboarding" class="btn-primary auth-link-btn">Go to Login</a>
+      </div>
+
+      <!-- Main Onboarding Card -->
+      <div id="onboardingCard" class="onboarding-card" style="display: none;">
+        <!-- Hub Navigation Tabs -->
+        <StudentHubNav activeTab="onboarding" />
+
+        <header class="onboarding-header">
+          <div class="header-badges">
+            <span class="step-tag" id="stepBadge">Step 1 of 3</span>
+            <span class="status-tag" id="profileStatusBadge" style="display: none;">Profile Complete</span>
+          </div>
+          <h1 class="onboarding-title" id="onboardingHeading">Contact & Channels</h1>
+          <p class="onboarding-sub" id="onboardingSubheading">
+            Set up your direct communication channels for class updates, mentorship, and CBT notifications.
+          </p>
+
+          <!-- Step Progress Track -->
+          <div class="steps-indicator" role="progressbar" aria-valuenow="1" aria-valuemin="1" aria-valuemax="3" id="stepProgressBar">
+            <div class="step-dot active" data-step="1">
+              <span class="dot-num">1</span>
+              <span class="dot-label">Contact</span>
+            </div>
+            <div class="step-line" id="line1"></div>
+            <div class="step-dot" data-step="2">
+              <span class="dot-num">2</span>
+              <span class="dot-label">Academics</span>
+            </div>
+            <div class="step-line" id="line2"></div>
+            <div class="step-dot" data-step="3">
+              <span class="dot-num">3</span>
+              <span class="dot-label">UTME Subjects</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- Feedback Alert -->
+        <div id="onboardingAlert" class="onboarding-alert" style="display: none;" role="alert"></div>
+
+        <!-- Verified Status Clarification Notice -->
+        <div class="disclaimer-banner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="disclaimer-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <p>
+            <strong>Account Profile:</strong> Completing this profile customizes your syllabus tracking and study tools. It does not automatically grant paid cohort access or verified student status (verified status is granted when a qualifying purchase is confirmed).
+          </p>
+        </div>
+
+        <!-- Multi-Step Form -->
+        <form id="onboardingForm" novalidate>
+          <!-- STEP 1: CONTACT DETAILS -->
+          <fieldset class="form-step" id="step1" data-step="1">
+            <legend class="sr-only">Contact Details</legend>
+
+            <div class="form-group">
+              <label for="fullName">Full Name <span class="required">*</span></label>
+              <input
+                type="text"
+                id="fullName"
+                name="fullName"
+                required
+                autocomplete="name"
+                placeholder="e.g. Wisdom Johnson"
+                class="form-input"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="primaryPhone">Primary Phone Number <span class="required">*</span></label>
+              <input
+                type="tel"
+                id="primaryPhone"
+                name="primaryPhone"
+                required
+                autocomplete="tel"
+                placeholder="e.g. 08012345678 or +2348012345678"
+                class="form-input"
+              />
+              <span class="field-hint">Your active Nigerian mobile number for SMS and phone contact.</span>
+            </div>
+
+            <!-- WhatsApp Number with toggle -->
+            <div class="form-group">
+              <div class="label-with-toggle">
+                <label for="whatsappPhone">WhatsApp Number <span class="required">*</span></label>
+                <label class="toggle-label">
+                  <input type="checkbox" id="sameAsPhoneWhatsapp" class="sync-checkbox" />
+                  <span>Same as primary phone</span>
+                </label>
+              </div>
+              <input
+                type="tel"
+                id="whatsappPhone"
+                name="whatsappPhone"
+                required
+                placeholder="e.g. 08012345678"
+                class="form-input"
+              />
+              <span class="field-hint">Used for official study group broadcasts and live class links.</span>
+            </div>
+
+            <!-- Telegram Number with toggle -->
+            <div class="form-group">
+              <div class="label-with-toggle">
+                <label for="telegramPhone">Telegram Phone / Handle <span class="required">*</span></label>
+                <label class="toggle-label">
+                  <input type="checkbox" id="sameAsPhoneTelegram" class="sync-checkbox" />
+                  <span>Same as primary phone</span>
+                </label>
+              </div>
+              <input
+                type="text"
+                id="telegramPhone"
+                name="telegramPhone"
+                required
+                placeholder="e.g. 08012345678 or @username"
+                class="form-input"
+              />
+              <span class="field-hint">Used for the UTME 2027 Builder Community discussions and daily drills.</span>
+            </div>
+
+            <!-- Parent/Guardian Phone (Optional) -->
+            <div class="form-group">
+              <label for="parentPhone">Parent / Guardian Phone Number <span class="optional">(Optional)</span></label>
+              <input
+                type="tel"
+                id="parentPhone"
+                name="parentPhone"
+                placeholder="e.g. 08087654321"
+                class="form-input"
+              />
+              <span class="field-hint">For periodic academic milestone reports and mentorship updates.</span>
+            </div>
+          </fieldset>
+
+          <!-- STEP 2: ACADEMIC GOALS -->
+          <fieldset class="form-step" id="step2" data-step="2" style="display: none;">
+            <legend class="sr-only">Academic Goals</legend>
+
+            <div class="form-group">
+              <label for="targetCourse">Desired Course of Study <span class="required">*</span></label>
+              <input
+                type="text"
+                id="targetCourse"
+                name="targetCourse"
+                required
+                placeholder="e.g. Medicine and Surgery, Nursing Science, Pharmacy, Computer Science"
+                list="courseSuggestions"
+                class="form-input"
+              />
+              <datalist id="courseSuggestions">
+                <option value="Medicine and Surgery">
+                <option value="Nursing Science">
+                <option value="Pharmacy">
+                <option value="Medical Laboratory Science">
+                <option value="Dentistry">
+                <option value="Computer Science">
+                <option value="Software Engineering">
+                <option value="Mechanical Engineering">
+                <option value="Electrical / Electronics Engineering">
+                <option value="Law">
+                <option value="Biochemistry">
+                <option value="Microbiology">
+              </datalist>
+              <span class="field-hint">Enter your dream department for the 2027 admission cycle.</span>
+            </div>
+
+            <div class="form-group">
+              <label for="targetUniversity">Target University <span class="required">*</span></label>
+              <input
+                type="text"
+                id="targetUniversity"
+                name="targetUniversity"
+                required
+                placeholder="e.g. University of Lagos (UNILAG), University of Ibadan (UI)"
+                list="universitySuggestions"
+                class="form-input"
+              />
+              <datalist id="universitySuggestions">
+                <option value="University of Lagos (UNILAG)">
+                <option value="University of Ibadan (UI)">
+                <option value="Obafemi Awolowo University (OAU)">
+                <option value="University of Benin (UNIBEN)">
+                <option value="University of Nigeria, Nsukka (UNN)">
+                <option value="Ahmadu Bello University (ABU Zaria)">
+                <option value="University of Ilorin (UNILORIN)">
+                <option value="Lagos State University (LASU)">
+                <option value="Federal University of Technology, Akure (FUTA)">
+                <option value="Olabisi Onabanjo University (OOU)">
+              </datalist>
+              <span class="field-hint">Your first-choice institution for Post-UTME cut-off tracking.</span>
+            </div>
+          </fieldset>
+
+          <!-- STEP 3: UTME SUBJECT SELECTION -->
+          <fieldset class="form-step" id="step3" data-step="3" style="display: none;">
+            <legend class="sr-only">UTME Subjects</legend>
+
+            <div class="subject-selection-header">
+              <div class="selection-requirement">
+                <h3>UTME Subject Combination</h3>
+                <p>JAMB requires exactly 4 subjects. <strong>English Language is compulsory</strong> for every candidate. Select 3 additional science / calculation subjects below.</p>
+              </div>
+              <div class="selection-counter" id="subjectCounterBadge">
+                <span id="selectedCountText">3 of 3 additional subjects selected</span>
+              </div>
+            </div>
+
+            <div class="subjects-grid">
+              <!-- Compulsory English -->
+              <div class="subject-card compulsory" id="cardEnglish">
+                <div class="subject-checkbox-wrap">
+                  <input
+                    type="checkbox"
+                    id="subEnglish"
+                    name="utmeSubject"
+                    value="English"
+                    checked
+                    disabled
+                  />
+                  <div class="subject-details">
+                    <span class="subject-title">English Language</span>
+                    <span class="subject-desc">JAMB Compulsory for all candidates</span>
+                  </div>
+                </div>
+                <span class="compulsory-pill">Compulsory</span>
+              </div>
+
+              <!-- Biology -->
+              <label class="subject-card" for="subBiology" id="cardBiology">
+                <div class="subject-checkbox-wrap">
+                  <input
+                    type="checkbox"
+                    id="subBiology"
+                    name="utmeSubject"
+                    value="Biology"
+                    class="elective-subject-cb"
+                  />
+                  <div class="subject-details">
+                    <span class="subject-title">Biology</span>
+                    <span class="subject-desc">Living systems, anatomy & genetics</span>
+                  </div>
+                </div>
+                <span class="subject-state-indicator"></span>
+              </label>
+
+              <!-- Chemistry -->
+              <label class="subject-card" for="subChemistry" id="cardChemistry">
+                <div class="subject-checkbox-wrap">
+                  <input
+                    type="checkbox"
+                    id="subChemistry"
+                    name="utmeSubject"
+                    value="Chemistry"
+                    class="elective-subject-cb"
+                  />
+                  <div class="subject-details">
+                    <span class="subject-title">Chemistry</span>
+                    <span class="subject-desc">Physical, organic & inorganic revision</span>
+                  </div>
+                </div>
+                <span class="subject-state-indicator"></span>
+              </label>
+
+              <!-- Physics -->
+              <label class="subject-card" for="subPhysics" id="cardPhysics">
+                <div class="subject-checkbox-wrap">
+                  <input
+                    type="checkbox"
+                    id="subPhysics"
+                    name="utmeSubject"
+                    value="Physics"
+                    class="elective-subject-cb"
+                  />
+                  <div class="subject-details">
+                    <span class="subject-title">Physics</span>
+                    <span class="subject-desc">Mechanics, optics, waves & calculations</span>
+                  </div>
+                </div>
+                <span class="subject-state-indicator"></span>
+              </label>
+
+              <!-- Mathematics -->
+              <label class="subject-card" for="subMathematics" id="cardMathematics">
+                <div class="subject-checkbox-wrap">
+                  <input
+                    type="checkbox"
+                    id="subMathematics"
+                    name="utmeSubject"
+                    value="Mathematics"
+                    class="elective-subject-cb"
+                  />
+                  <div class="subject-details">
+                    <span class="subject-title">Mathematics</span>
+                    <span class="subject-desc">Algebra, geometry, trigonometry & calculus</span>
+                  </div>
+                </div>
+                <span class="subject-state-indicator"></span>
+              </label>
+            </div>
+
+            <div id="subjectErrorMsg" class="validation-warning" style="display: none;">
+              Please select exactly 3 additional subjects to complete your 4-subject combination.
+            </div>
+          </fieldset>
+
+          <!-- Form Action Bar -->
+          <footer class="form-actions-bar">
+            <button
+              type="button"
+              class="btn-secondary nav-step-btn"
+              id="prevStepBtn"
+              style="display: none;"
+            >
+              Previous
+            </button>
+
+            <button
+              type="button"
+              class="btn-outline save-draft-btn"
+              id="saveResumeBtn"
+            >
+              <span>Save & Resume Later</span>
+            </button>
+
+            <button
+              type="button"
+              class="btn-primary nav-step-btn"
+              id="nextStepBtn"
+            >
+              <span>Continue to Academics</span>
+            </button>
+
+            <button
+              type="submit"
+              class="btn-primary complete-btn"
+              id="completeBtn"
+              style="display: none;"
+            >
+              <span>Complete Profile & Go to Dashboard</span>
+            </button>
+          </footer>
+        </form>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { getSupabase, fetchUserProfile, saveUserProfile, ALLOWED_UTME_SUBJECTS } from '../../lib/supabase';
+
+  const supabase = getSupabase();
+
+  // State
+  let currentStep = 1;
+  let userId = '';
+  let userEmail = '';
+  let isSaving = false;
+
+  // DOM Elements
+  const loadingState = document.getElementById('loadingState');
+  const unauthCard = document.getElementById('unauthCard');
+  const onboardingCard = document.getElementById('onboardingCard');
+  const onboardingAlert = document.getElementById('onboardingAlert');
+  const stepBadge = document.getElementById('stepBadge');
+  const profileStatusBadge = document.getElementById('profileStatusBadge');
+  const onboardingHeading = document.getElementById('onboardingHeading');
+  const onboardingSubheading = document.getElementById('onboardingSubheading');
+
+  const step1 = document.getElementById('step1');
+  const step2 = document.getElementById('step2');
+  const step3 = document.getElementById('step3');
+
+  const line1 = document.getElementById('line1');
+  const line2 = document.getElementById('line2');
+  const stepDots = document.querySelectorAll('.step-dot');
+
+  // Input elements
+  const fullNameInput = document.getElementById('fullName') as HTMLInputElement;
+  const primaryPhoneInput = document.getElementById('primaryPhone') as HTMLInputElement;
+  const whatsappPhoneInput = document.getElementById('whatsappPhone') as HTMLInputElement;
+  const telegramPhoneInput = document.getElementById('telegramPhone') as HTMLInputElement;
+  const parentPhoneInput = document.getElementById('parentPhone') as HTMLInputElement;
+  const targetCourseInput = document.getElementById('targetCourse') as HTMLInputElement;
+  const targetUniversityInput = document.getElementById('targetUniversity') as HTMLInputElement;
+
+  const sameAsPhoneWhatsapp = document.getElementById('sameAsPhoneWhatsapp') as HTMLInputElement;
+  const sameAsPhoneTelegram = document.getElementById('sameAsPhoneTelegram') as HTMLInputElement;
+
+  const electiveCheckboxes = document.querySelectorAll('.elective-subject-cb') as NodeListOf<HTMLInputElement>;
+  const subjectCounterBadge = document.getElementById('subjectCounterBadge');
+  const selectedCountText = document.getElementById('selectedCountText');
+  const subjectErrorMsg = document.getElementById('subjectErrorMsg');
+
+  // Action buttons
+  const prevStepBtn = document.getElementById('prevStepBtn');
+  const nextStepBtn = document.getElementById('nextStepBtn');
+  const saveResumeBtn = document.getElementById('saveResumeBtn');
+  const completeBtn = document.getElementById('completeBtn');
+  const onboardingForm = document.getElementById('onboardingForm');
+
+  function showAlert(msg: string, type: 'error' | 'success' | 'info' = 'error') {
+    if (!onboardingAlert) return;
+    onboardingAlert.textContent = msg;
+    onboardingAlert.className = `onboarding-alert ${type}`;
+    onboardingAlert.style.display = 'block';
+    onboardingAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function hideAlert() {
+    if (!onboardingAlert) return;
+    onboardingAlert.style.display = 'none';
+  }
+
+  // Sync checkboxes handlers
+  sameAsPhoneWhatsapp?.addEventListener('change', () => {
+    if (sameAsPhoneWhatsapp.checked) {
+      whatsappPhoneInput.value = primaryPhoneInput.value.trim();
+      whatsappPhoneInput.readOnly = true;
+    } else {
+      whatsappPhoneInput.readOnly = false;
+    }
+  });
+
+  sameAsPhoneTelegram?.addEventListener('change', () => {
+    if (sameAsPhoneTelegram.checked) {
+      telegramPhoneInput.value = primaryPhoneInput.value.trim();
+      telegramPhoneInput.readOnly = true;
+    } else {
+      telegramPhoneInput.readOnly = false;
+    }
+  });
+
+  primaryPhoneInput?.addEventListener('input', () => {
+    if (sameAsPhoneWhatsapp?.checked) {
+      whatsappPhoneInput.value = primaryPhoneInput.value.trim();
+    }
+    if (sameAsPhoneTelegram?.checked) {
+      telegramPhoneInput.value = primaryPhoneInput.value.trim();
+    }
+  });
+
+  // UTME Subject Selection Logic
+  function getSelectedSubjects(): string[] {
+    const subjects = ['English'];
+    electiveCheckboxes.forEach((cb) => {
+      if (cb.checked && ALLOWED_UTME_SUBJECTS.includes(cb.value as any)) {
+        subjects.push(cb.value);
+      }
+    });
+    return subjects;
+  }
+
+  function updateSubjectUI() {
+    const selected = getSelectedSubjects();
+    const additionalCount = selected.length - 1; // excluding English
+
+    if (selectedCountText) {
+      selectedCountText.textContent = `${additionalCount} of 3 additional subjects selected`;
+    }
+
+    if (additionalCount === 3) {
+      subjectCounterBadge?.classList.add('valid');
+      subjectCounterBadge?.classList.remove('invalid');
+      if (subjectErrorMsg) subjectErrorMsg.style.display = 'none';
+    } else {
+      subjectCounterBadge?.classList.remove('valid');
+      if (additionalCount > 3) {
+        subjectCounterBadge?.classList.add('invalid');
+      }
+    }
+
+    // Update active highlight classes on cards
+    electiveCheckboxes.forEach((cb) => {
+      const card = cb.closest('.subject-card');
+      if (cb.checked) {
+        card?.classList.add('selected');
+      } else {
+        card?.classList.remove('selected');
+      }
+
+      // If already selected 3 electives, disable other unchecked checkboxes
+      if (additionalCount >= 3 && !cb.checked) {
+        cb.disabled = true;
+        card?.classList.add('disabled');
+      } else {
+        cb.disabled = false;
+        card?.classList.remove('disabled');
+      }
+    });
+  }
+
+  electiveCheckboxes.forEach((cb) => {
+    cb.addEventListener('change', () => {
+      updateSubjectUI();
+    });
+  });
+
+  // Step transitions
+  function renderStep(step: number) {
+    hideAlert();
+    currentStep = step;
+
+    if (step1) step1.style.display = step === 1 ? 'flex' : 'none';
+    if (step2) step2.style.display = step === 2 ? 'flex' : 'none';
+    if (step3) step3.style.display = step === 3 ? 'flex' : 'none';
+
+    // Update badge and headings
+    if (stepBadge) stepBadge.textContent = `Step ${step} of 3`;
+
+    if (step === 1) {
+      if (onboardingHeading) onboardingHeading.textContent = 'Contact & Channels';
+      if (onboardingSubheading) {
+        onboardingSubheading.textContent = 'Set up your direct communication channels for class updates and mentorship.';
+      }
+      if (prevStepBtn) prevStepBtn.style.display = 'none';
+      if (nextStepBtn) {
+        nextStepBtn.style.display = 'inline-flex';
+        nextStepBtn.querySelector('span')!.textContent = 'Continue to Academics';
+      }
+      if (completeBtn) completeBtn.style.display = 'none';
+    } else if (step === 2) {
+      if (onboardingHeading) onboardingHeading.textContent = 'Academic Aspirations';
+      if (onboardingSubheading) {
+        onboardingSubheading.textContent = 'Select your target department and first-choice university for Post-UTME tracking.';
+      }
+      if (prevStepBtn) prevStepBtn.style.display = 'inline-flex';
+      if (nextStepBtn) {
+        nextStepBtn.style.display = 'inline-flex';
+        nextStepBtn.querySelector('span')!.textContent = 'Continue to UTME Subjects';
+      }
+      if (completeBtn) completeBtn.style.display = 'none';
+    } else if (step === 3) {
+      if (onboardingHeading) onboardingHeading.textContent = 'Select Your 4 UTME Subjects';
+      if (onboardingSubheading) {
+        onboardingSubheading.textContent = 'English Language is compulsory. Choose exactly 3 additional subjects to complete your combination.';
+      }
+      if (prevStepBtn) prevStepBtn.style.display = 'inline-flex';
+      if (nextStepBtn) nextStepBtn.style.display = 'none';
+      if (completeBtn) completeBtn.style.display = 'inline-flex';
+      updateSubjectUI();
+    }
+
+    // Step dots and progress lines
+    stepDots.forEach((dot) => {
+      const dotStep = parseInt(dot.getAttribute('data-step') || '1', 10);
+      dot.classList.toggle('active', dotStep === step);
+      dot.classList.toggle('completed', dotStep < step);
+    });
+
+    if (line1) line1.classList.toggle('active', step >= 2);
+    if (line2) line2.classList.toggle('active', step >= 3);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function validateCurrentStep(): boolean {
+    hideAlert();
+    if (currentStep === 1) {
+      const name = fullNameInput.value.trim();
+      const phone = primaryPhoneInput.value.trim();
+      const whatsapp = whatsappPhoneInput.value.trim();
+      const telegram = telegramPhoneInput.value.trim();
+
+      if (!name) {
+        showAlert('Please enter your full name.');
+        fullNameInput.focus();
+        return false;
+      }
+      if (!phone || phone.length < 9) {
+        showAlert('Please enter a valid primary phone number.');
+        primaryPhoneInput.focus();
+        return false;
+      }
+      if (!whatsapp) {
+        showAlert('Please enter your WhatsApp phone number or check "Same as primary phone".');
+        whatsappPhoneInput.focus();
+        return false;
+      }
+      if (!telegram) {
+        showAlert('Please enter your Telegram number or handle.');
+        telegramPhoneInput.focus();
+        return false;
+      }
+      return true;
+    }
+
+    if (currentStep === 2) {
+      const course = targetCourseInput.value.trim();
+      const uni = targetUniversityInput.value.trim();
+
+      if (!course) {
+        showAlert('Please provide your desired course of study.');
+        targetCourseInput.focus();
+        return false;
+      }
+      if (!uni) {
+        showAlert('Please provide your target university.');
+        targetUniversityInput.focus();
+        return false;
+      }
+      return true;
+    }
+
+    if (currentStep === 3) {
+      const subjects = getSelectedSubjects();
+      if (subjects.length !== 4) {
+        if (subjectErrorMsg) subjectErrorMsg.style.display = 'block';
+        showAlert('You must select exactly 4 UTME subjects in total (English + 3 science electives).');
+        return false;
+      }
+      return true;
+    }
+
+    return true;
+  }
+
+  // Gather form payload
+  function getFormData(isCompleting = false) {
+    return {
+      fullName: fullNameInput.value.trim(),
+      phone: primaryPhoneInput.value.trim(),
+      whatsappPhone: whatsappPhoneInput.value.trim(),
+      telegramPhone: telegramPhoneInput.value.trim(),
+      parentPhone: parentPhoneInput.value.trim(),
+      targetCourse: targetCourseInput.value.trim(),
+      targetUniversity: targetUniversityInput.value.trim(),
+      utmeSubjects: getSelectedSubjects(),
+      onboardingStep: currentStep,
+      onboardingCompleted: isCompleting,
+    };
+  }
+
+  // Save progress helper
+  async function persistProfile(isCompleting = false): Promise<boolean> {
+    if (!userId) return false;
+    const payload = getFormData(isCompleting);
+
+    try {
+      const { profile, error } = await saveUserProfile(userId, payload);
+      if (error) {
+        showAlert(`Error saving profile: ${error}`);
+        return false;
+      }
+      return Boolean(profile);
+    } catch (err: any) {
+      showAlert(`Network error: ${err.message || 'Could not save profile'}`);
+      return false;
+    }
+  }
+
+  // Next / Prev button event listeners
+  nextStepBtn?.addEventListener('click', async () => {
+    if (!validateCurrentStep()) return;
+
+    // Save progress asynchronously while stepping forward
+    persistProfile(false);
+    renderStep(currentStep + 1);
+  });
+
+  prevStepBtn?.addEventListener('click', () => {
+    if (currentStep > 1) {
+      renderStep(currentStep - 1);
+    }
+  });
+
+  // Save & Resume Later
+  saveResumeBtn?.addEventListener('click', async () => {
+    if (isSaving) return;
+    isSaving = true;
+    const prevText = saveResumeBtn.innerHTML;
+    saveResumeBtn.innerHTML = '<span>Saving...</span>';
+
+    const success = await persistProfile(false);
+    isSaving = false;
+    saveResumeBtn.innerHTML = prevText;
+
+    if (success) {
+      showAlert('Progress saved successfully! You can resume this onboarding at any time.', 'success');
+    }
+  });
+
+  // Final Form Submission
+  onboardingForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!validateCurrentStep()) return;
+
+    if (isSaving) return;
+    isSaving = true;
+    if (completeBtn) {
+      completeBtn.disabled = true;
+      completeBtn.innerHTML = '<span>Saving Profile...</span>';
+    }
+
+    const success = await persistProfile(true);
+
+    if (success) {
+      showAlert('Profile completed! Redirecting to your student dashboard...', 'success');
+      setTimeout(() => {
+        window.location.href = '/dashboard?welcome=true';
+      }, 800);
+    } else {
+      isSaving = false;
+      if (completeBtn) {
+        completeBtn.disabled = false;
+        completeBtn.innerHTML = '<span>Complete Profile & Go to Dashboard</span>';
+      }
+    }
+  });
+
+  // Initialize and load saved profile
+  async function init() {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+
+    if (!user) {
+      if (loadingState) loadingState.style.display = 'none';
+      if (unauthCard) unauthCard.style.display = 'block';
+      return;
+    }
+
+    userId = user.id;
+    userEmail = user.email || '';
+
+    try {
+      const { profile } = await fetchUserProfile(userId);
+
+      if (profile) {
+        if (profile.fullName) fullNameInput.value = profile.fullName;
+        else if (user.user_metadata?.full_name) fullNameInput.value = user.user_metadata.full_name;
+
+        if (profile.phone) primaryPhoneInput.value = profile.phone;
+        else if (user.user_metadata?.phone) primaryPhoneInput.value = user.user_metadata.phone;
+
+        if (profile.whatsappPhone) {
+          whatsappPhoneInput.value = profile.whatsappPhone;
+          if (profile.whatsappPhone === profile.phone && profile.phone) {
+            sameAsPhoneWhatsapp.checked = true;
+            whatsappPhoneInput.readOnly = true;
+          }
+        }
+
+        if (profile.telegramPhone) {
+          telegramPhoneInput.value = profile.telegramPhone;
+          if (profile.telegramPhone === profile.phone && profile.phone) {
+            sameAsPhoneTelegram.checked = true;
+            telegramPhoneInput.readOnly = true;
+          }
+        }
+
+        if (profile.parentPhone) parentPhoneInput.value = profile.parentPhone;
+        if (profile.targetCourse) targetCourseInput.value = profile.targetCourse;
+        if (profile.targetUniversity) targetUniversityInput.value = profile.targetUniversity;
+
+        // Populate UTME Subjects
+        if (Array.isArray(profile.utmeSubjects) && profile.utmeSubjects.length > 0) {
+          electiveCheckboxes.forEach((cb) => {
+            cb.checked = profile.utmeSubjects!.includes(cb.value);
+          });
+        } else {
+          // Default biology + chemistry + physics for health sciences
+          const defaultElectives = ['Biology', 'Chemistry', 'Physics'];
+          electiveCheckboxes.forEach((cb) => {
+            cb.checked = defaultElectives.includes(cb.value);
+          });
+        }
+
+        if (profile.onboardingCompleted) {
+          if (profileStatusBadge) profileStatusBadge.style.display = 'inline-block';
+          if (completeBtn) {
+            completeBtn.querySelector('span')!.textContent = 'Update Profile & Go to Dashboard';
+          }
+        }
+
+        // Resume saved step (defaults to 1 if not set)
+        const stepToResume = profile.onboardingStep && profile.onboardingStep >= 1 && profile.onboardingStep <= 3
+          ? profile.onboardingStep
+          : 1;
+
+        if (loadingState) loadingState.style.display = 'none';
+        if (onboardingCard) onboardingCard.style.display = 'block';
+        renderStep(stepToResume);
+      } else {
+        // New user with no profile row yet
+        if (user.user_metadata?.full_name) fullNameInput.value = user.user_metadata.full_name;
+        if (user.user_metadata?.phone) primaryPhoneInput.value = user.user_metadata.phone;
+
+        // Default default 3 electives
+        const defaultElectives = ['Biology', 'Chemistry', 'Physics'];
+        electiveCheckboxes.forEach((cb) => {
+          cb.checked = defaultElectives.includes(cb.value);
+        });
+
+        if (loadingState) loadingState.style.display = 'none';
+        if (onboardingCard) onboardingCard.style.display = 'block';
+        renderStep(1);
+      }
+    } catch {
+      if (loadingState) loadingState.style.display = 'none';
+      if (onboardingCard) onboardingCard.style.display = 'block';
+      renderStep(1);
+    }
+  }
+
+  init();
+</script>
+
+<style>
+  .onboarding-page {
+    min-height: calc(100vh - 160px);
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: var(--space-8) var(--space-4) var(--space-16);
+    background: radial-gradient(circle at 50% 10%, rgba(9, 71, 110, 0.22), transparent 60%), var(--bg);
+  }
+
+  .onboarding-container {
+    width: 100%;
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  .state-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-12) var(--space-6);
+    text-align: center;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+  }
+
+  .loading-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    color: var(--text-light);
+  }
+
+  .spinner {
+    width: 38px;
+    height: 38px;
+    border: 3px solid rgba(201, 162, 39, 0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .onboarding-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  }
+
+  .hub-nav-tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    padding-bottom: 2px;
+    margin-bottom: var(--space-6);
+  }
+
+  .tab-link {
+    font-family: var(--font-display);
+    font-size: 0.86rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 2px solid transparent;
+    transition: all 150ms ease;
+    white-space: nowrap;
+  }
+
+  .tab-link:hover {
+    color: var(--text);
+  }
+
+  .tab-link.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .onboarding-header {
+    margin-bottom: var(--space-6);
+  }
+
+  .header-badges {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    margin-bottom: var(--space-3);
+  }
+
+  .step-tag {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .status-tag {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    padding: 3px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .onboarding-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: var(--space-2);
+    color: var(--text);
+  }
+
+  .onboarding-sub {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-light);
+    margin-bottom: var(--space-6);
+  }
+
+  /* Step Indicator Progress */
+  .steps-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-3) 0;
+    margin-bottom: var(--space-4);
+  }
+
+  .step-dot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: default;
+  }
+
+  .dot-num {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    transition: all 200ms ease;
+  }
+
+  .dot-label {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+
+  .step-dot.active .dot-num {
+    background: var(--accent);
+    color: #1a0a00;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+  }
+
+  .step-dot.active .dot-label {
+    color: var(--text);
+  }
+
+  .step-dot.completed .dot-num {
+    background: #09476e;
+    color: var(--text-on-dark-surface);
+    border-color: var(--accent);
+  }
+
+  .step-line {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 var(--space-3);
+    transition: background 250ms ease;
+  }
+
+  .step-line.active {
+    background: var(--accent);
+  }
+
+  /* Alerts & Disclaimers */
+  .onboarding-alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-5);
+  }
+
+  .onboarding-alert.error {
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+  }
+
+  .onboarding-alert.success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+  }
+
+  .disclaimer-banner {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-3) var(--space-4);
+    background: rgba(9, 71, 110, 0.25);
+    border: 1px solid rgba(152, 176, 196, 0.25);
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    line-height: 1.5;
+    color: var(--text-light);
+    margin-bottom: var(--space-6);
+  }
+
+  .disclaimer-icon {
+    flex-shrink: 0;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+
+  /* Form Elements */
+  .form-step {
+    border: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .label-with-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  label {
+    font-family: var(--font-display);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .required {
+    color: #ef4444;
+  }
+
+  .optional {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: normal;
+  }
+
+  .toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--accent);
+    cursor: pointer;
+  }
+
+  .form-input {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+  .form-input:read-only {
+    opacity: 0.75;
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .field-hint {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* Subject Selection Grid */
+  .subject-selection-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    margin-bottom: var(--space-2);
+  }
+
+  .selection-requirement h3 {
+    font-size: 1.05rem;
+    margin-bottom: 2px;
+  }
+
+  .selection-requirement p {
+    font-size: 0.84rem;
+    color: var(--text-light);
+    line-height: 1.5;
+  }
+
+  .selection-counter {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 4px 12px;
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .selection-counter.valid {
+    color: #4ade80;
+    background: rgba(74, 222, 128, 0.12);
+    border-color: rgba(74, 222, 128, 0.35);
+  }
+
+  .selection-counter.invalid {
+    color: #f87171;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.35);
+  }
+
+  .subjects-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-3);
+  }
+
+  .subject-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: var(--space-4) var(--space-5);
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .subject-card:hover:not(.disabled) {
+    border-color: rgba(201, 162, 39, 0.5);
+    background: rgba(255, 255, 255, 0.04);
+  }
+
+  .subject-card.selected {
+    border-color: var(--accent);
+    background: rgba(201, 162, 39, 0.08);
+  }
+
+  .subject-card.compulsory {
+    cursor: default;
+    border-left: 3px solid var(--accent);
+    background: rgba(9, 71, 110, 0.15);
+  }
+
+  .subject-card.disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .subject-checkbox-wrap {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+  }
+
+  .subject-checkbox-wrap input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .subject-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .subject-title {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: var(--text);
+  }
+
+  .subject-desc {
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+
+  .compulsory-pill {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--accent);
+    border: 1px solid rgba(201, 162, 39, 0.4);
+  }
+
+  .validation-warning {
+    color: #fca5a5;
+    font-size: 0.82rem;
+    padding: var(--space-2) var(--space-3);
+    background: rgba(239, 68, 68, 0.1);
+    border-radius: var(--radius-sm);
+    margin-top: var(--space-2);
+  }
+
+  /* Form Actions */
+  .form-actions-bar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--space-3);
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+    border-top: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+
+  .nav-step-btn,
+  .complete-btn,
+  .save-draft-btn {
+    padding: 10px 18px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.88rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .complete-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    color: #1a0a00;
+    border: none;
+  }
+
+  .complete-btn:hover {
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+  }
+
+  .save-draft-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-light);
+    margin-right: auto;
+  }
+
+  .save-draft-btn:hover {
+    border-color: var(--accent);
+    color: var(--text);
+  }
+
+  .auth-link-btn {
+    display: inline-block;
+    margin-top: var(--space-4);
+    padding: 10px 20px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    text-decoration: none;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border-radius: var(--radius-sm);
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    .onboarding-card {
+      padding: var(--space-5);
+    }
+
+    .steps-indicator {
+      gap: 4px;
+    }
+
+    .dot-label {
+      display: none;
+    }
+
+    .form-actions-bar {
+      flex-direction: column-reverse;
+      gap: var(--space-3);
+    }
+
+    .save-draft-btn,
+    .nav-step-btn,
+    .complete-btn {
+      width: 100%;
+      text-align: center;
+      margin-right: 0;
+    }
+
+    .subject-selection-header {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+</style>

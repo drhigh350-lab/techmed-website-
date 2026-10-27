@@ -6,8 +6,8 @@
     "studio"
   ],
   "scripts": {
-    "dev": "npm run dev --workspace=web",
-    "build": "npm run build --workspace=web",
+    "dev": "npm run dev --workspace=techmed-web",
+    "build": "npm run build --workspace=techmed-web",
     "lint": "node -e 'process.exit(0)'"
   },
   "dependencies": {

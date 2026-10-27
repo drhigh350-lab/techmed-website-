@@ -1,3 +1,639 @@
 ---
-return Astro.redirect('/library');
+import BaseLayout from '../layouts/BaseLayout.astro';
+
+const title = 'Student Account Access | TECHMED';
+const description = 'Log in or create your student account to access your UTME 2027 preparation dashboard, materials, and onboarding.';
 ---
+
+<BaseLayout title={title} description={description}>
+  <main class="auth-page">
+    <div class="auth-wrapper">
+      <header class="auth-header">
+        <span class="eyebrow">TECHMED Student Access</span>
+        <h1 class="auth-title">Welcome to Your Student Hub</h1>
+        <p class="auth-sub">
+          Sign in or create your account to manage your UTME 2027 profile, access study resources, and track your progress.
+        </p>
+      </header>
+
+      <div class="auth-card">
+        <!-- Auth Tabs -->
+        <div class="auth-tabs" role="tablist">
+          <button
+            type="button"
+            class="tab-btn active"
+            id="tabLogin"
+            role="tab"
+            aria-selected="true"
+            aria-controls="loginForm"
+          >
+            Sign In
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            id="tabRegister"
+            role="tab"
+            aria-selected="false"
+            aria-controls="registerForm"
+          >
+            Create Account
+          </button>
+          <button
+            type="button"
+            class="tab-btn"
+            id="tabRecovery"
+            role="tab"
+            aria-selected="false"
+            aria-controls="recoveryForm"
+          >
+            Reset Password
+          </button>
+        </div>
+
+        <!-- Feedback Alert -->
+        <div id="authAlert" class="auth-alert" style="display: none;" role="alert"></div>
+
+        <!-- Form 1: Sign In -->
+        <form id="loginForm" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="loginEmail">Email address</label>
+            <input
+              type="email"
+              id="loginEmail"
+              required
+              autocomplete="email"
+              placeholder="candidate@gmail.com"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <div class="label-row">
+              <label for="loginPassword">Password</label>
+              <button type="button" class="text-link forgot-btn" id="forgotPassLink">Forgot password?</button>
+            </div>
+            <input
+              type="password"
+              id="loginPassword"
+              required
+              autocomplete="current-password"
+              placeholder="Enter your password"
+              class="form-input"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit" id="loginSubmitBtn">
+            <span>Sign In to Student Account</span>
+          </button>
+        </form>
+
+        <!-- Form 2: Create Account -->
+        <form id="registerForm" class="auth-form" style="display: none;" novalidate>
+          <div class="form-group">
+            <label for="registerName">Full Name</label>
+            <input
+              type="text"
+              id="registerName"
+              required
+              autocomplete="name"
+              placeholder="e.g. Wisdom Johnson"
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerEmail">Email address</label>
+            <input
+              type="email"
+              id="registerEmail"
+              required
+              autocomplete="email"
+              placeholder="candidate@gmail.com"
+              class="form-input"
+            />
+            <span class="form-hint">Use the same email you used (or plan to use) for cohort enrollment or resource purchases.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="registerPhone">Phone Number</label>
+            <input
+              type="tel"
+              id="registerPhone"
+              required
+              autocomplete="tel"
+              placeholder="08012345678 or +234..."
+              class="form-input"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="registerPassword">Create Password</label>
+            <input
+              type="password"
+              id="registerPassword"
+              required
+              minlength="6"
+              autocomplete="new-password"
+              placeholder="At least 6 characters"
+              class="form-input"
+            />
+          </div>
+
+          <div class="account-notice-box">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="notice-icon"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <p>
+              Account registration creates your student profile. Verified TECHMED student status is automatically granted once a qualifying cohort enrollment or resource purchase is confirmed.
+            </p>
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit" id="registerSubmitBtn">
+            <span>Create Student Account</span>
+          </button>
+        </form>
+
+        <!-- Form 3: Password Recovery -->
+        <form id="recoveryForm" class="auth-form" style="display: none;" novalidate>
+          <p class="recovery-text">
+            Enter the email associated with your student account. We'll send you a secure link to reset your password.
+          </p>
+
+          <div class="form-group">
+            <label for="recoveryEmail">Email address</label>
+            <input
+              type="email"
+              id="recoveryEmail"
+              required
+              autocomplete="email"
+              placeholder="candidate@gmail.com"
+              class="form-input"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary auth-submit" id="recoverySubmitBtn">
+            <span>Send Password Reset Link</span>
+          </button>
+
+          <button type="button" class="btn-secondary auth-back-btn" id="backToSignInBtn">
+            Back to Sign In
+          </button>
+        </form>
+
+        <footer class="auth-footer">
+          <p class="guest-note">
+            Free resources like the <a href="/foundation-protocol" class="text-link">Admission Guide</a> and <a href="/tools" class="text-link">Kairo CBT Practice</a> are open to everyone without an account.
+          </p>
+        </footer>
+      </div>
+    </div>
+  </main>
+</BaseLayout>
+
+<script>
+  import { getSupabase, sanitizeRedirectUrl } from '../lib/supabase';
+
+  const supabase = getSupabase();
+
+  // Elements
+  const tabLogin = document.getElementById('tabLogin');
+  const tabRegister = document.getElementById('tabRegister');
+  const tabRecovery = document.getElementById('tabRecovery');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const recoveryForm = document.getElementById('recoveryForm');
+  const authAlert = document.getElementById('authAlert');
+  const forgotPassLink = document.getElementById('forgotPassLink');
+  const backToSignInBtn = document.getElementById('backToSignInBtn');
+
+  // URL parameters handling with open-redirect security validation
+  const urlParams = new URLSearchParams(window.location.search);
+  const redirectTarget = sanitizeRedirectUrl(urlParams.get('redirect'), '/dashboard');
+  const initialTab = urlParams.get('tab');
+
+  function showAlert(msg: string, type: 'error' | 'success' = 'error') {
+    if (!authAlert) return;
+    authAlert.textContent = msg;
+    authAlert.className = `auth-alert ${type}`;
+    authAlert.style.display = 'block';
+  }
+
+  function hideAlert() {
+    if (!authAlert) return;
+    authAlert.style.display = 'none';
+  }
+
+  function switchTab(tab: 'login' | 'register' | 'recovery') {
+    hideAlert();
+    [tabLogin, tabRegister, tabRecovery].forEach(b => {
+      b?.classList.remove('active');
+      b?.setAttribute('aria-selected', 'false');
+    });
+
+    if (loginForm) loginForm.style.display = 'none';
+    if (registerForm) registerForm.style.display = 'none';
+    if (recoveryForm) recoveryForm.style.display = 'none';
+
+    if (tab === 'login') {
+      tabLogin?.classList.add('active');
+      tabLogin?.setAttribute('aria-selected', 'true');
+      if (loginForm) loginForm.style.display = 'flex';
+    } else if (tab === 'register') {
+      tabRegister?.classList.add('active');
+      tabRegister?.setAttribute('aria-selected', 'true');
+      if (registerForm) registerForm.style.display = 'flex';
+    } else if (tab === 'recovery') {
+      tabRecovery?.classList.add('active');
+      tabRecovery?.setAttribute('aria-selected', 'true');
+      if (recoveryForm) recoveryForm.style.display = 'flex';
+    }
+  }
+
+  tabLogin?.addEventListener('click', () => switchTab('login'));
+  tabRegister?.addEventListener('click', () => switchTab('register'));
+  tabRecovery?.addEventListener('click', () => switchTab('recovery'));
+  forgotPassLink?.addEventListener('click', () => switchTab('recovery'));
+  backToSignInBtn?.addEventListener('click', () => switchTab('login'));
+
+  // Default tab selection
+  if (initialTab === 'signup' || initialTab === 'register' || window.location.pathname.includes('register')) {
+    switchTab('register');
+  }
+
+  // Already logged in check
+  supabase.auth.getSession().then(({ data }) => {
+    if (data?.session) {
+      window.location.href = redirectTarget;
+    }
+  });
+
+  // Handle Login
+  loginForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const email = (document.getElementById('loginEmail') as HTMLInputElement)?.value.trim();
+    const password = (document.getElementById('loginPassword') as HTMLInputElement)?.value;
+    const submitBtn = document.getElementById('loginSubmitBtn') as HTMLButtonElement;
+
+    if (!email || !password) {
+      showAlert('Please enter both your email address and password.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing in...';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Sign In to Student Account';
+
+    if (error) {
+      showAlert(error.message || 'Invalid email or password. Please verify and try again.');
+    } else if (data?.user) {
+      window.location.href = redirectTarget;
+    }
+  });
+
+  // Handle Register
+  registerForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const fullName = (document.getElementById('registerName') as HTMLInputElement)?.value.trim();
+    const email = (document.getElementById('registerEmail') as HTMLInputElement)?.value.trim().toLowerCase();
+    const phone = (document.getElementById('registerPhone') as HTMLInputElement)?.value.trim();
+    const password = (document.getElementById('registerPassword') as HTMLInputElement)?.value;
+    const submitBtn = document.getElementById('registerSubmitBtn') as HTMLButtonElement;
+
+    if (!fullName || !email || !password) {
+      showAlert('Please fill in your name, email, and password.');
+      return;
+    }
+
+    if (password.length < 6) {
+      showAlert('Password must be at least 6 characters long.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Creating account...';
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
+          full_name: fullName,
+          name: fullName,
+          phone: phone || '',
+          whatsapp_phone: phone || '',
+          telegram_phone: phone || '',
+          role: 'student',
+        },
+      },
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Create Student Account';
+
+    if (error) {
+      showAlert(error.message || 'Could not create account. Please try again.');
+    } else if (data?.user) {
+      // If auto-logged in, navigate to onboarding to complete profile
+      if (data.session) {
+        window.location.href = '/account/onboarding';
+      } else {
+        showAlert(
+          'Account created successfully! Please check your email inbox to verify your address, then sign in.',
+          'success'
+        );
+        switchTab('login');
+      }
+    }
+  });
+
+  // Handle Password Recovery
+  recoveryForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const email = (document.getElementById('recoveryEmail') as HTMLInputElement)?.value.trim();
+    const submitBtn = document.getElementById('recoverySubmitBtn') as HTMLButtonElement;
+
+    if (!email) {
+      showAlert('Please enter your account email address.');
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending reset link...';
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/login?tab=login`,
+    });
+
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Send Password Reset Link';
+
+    if (error) {
+      showAlert(error.message || 'Unable to send reset email. Please try again.');
+    } else {
+      showAlert(
+        `If an account exists for ${email}, a reset link has been dispatched to your inbox.`,
+        'success'
+      );
+    }
+  });
+</script>
+
+<style>
+  .auth-page {
+    min-height: calc(100vh - 180px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-12) var(--space-6);
+    background: radial-gradient(circle at 50% 20%, rgba(9, 71, 110, 0.25), transparent 70%), var(--bg);
+  }
+
+  .auth-wrapper {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .auth-header {
+    text-align: center;
+    margin-bottom: var(--space-8);
+  }
+
+  .eyebrow {
+    display: inline-block;
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    margin-bottom: var(--space-2);
+  }
+
+  .auth-title {
+    font-size: 1.85rem;
+    font-weight: 800;
+    line-height: 1.25;
+    margin-bottom: var(--space-3);
+    color: var(--text);
+  }
+
+  .auth-sub {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: var(--text-light);
+  }
+
+  .auth-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-8);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
+  }
+
+  .auth-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: var(--space-6);
+  }
+
+  .tab-btn {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    padding: var(--space-3) var(--space-2);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 150ms ease;
+    text-align: center;
+  }
+
+  .tab-btn:hover {
+    color: var(--text);
+  }
+
+  .tab-btn.active {
+    color: var(--accent-text, var(--accent));
+    border-bottom-color: var(--accent);
+    font-weight: 700;
+  }
+
+  .auth-alert {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    line-height: 1.5;
+    margin-bottom: var(--space-5);
+  }
+
+  .auth-alert.error {
+    background: rgba(220, 38, 38, 0.12);
+    border: 1px solid rgba(220, 38, 38, 0.35);
+    color: #fca5a5;
+  }
+
+  .auth-alert.success {
+    background: rgba(34, 197, 94, 0.12);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    color: #86efac;
+  }
+
+  .auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-5);
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  label {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .form-input {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .form-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+  }
+
+  .form-hint {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  .text-link {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 0.8rem;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+
+  .text-link:hover {
+    color: var(--accent-light, #deb943);
+  }
+
+  .account-notice-box {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-3) var(--space-4);
+    background: rgba(9, 71, 110, 0.25);
+    border: 1px solid rgba(152, 176, 196, 0.25);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    color: var(--text-light);
+  }
+
+  .notice-icon {
+    flex-shrink: 0;
+    color: var(--accent);
+    margin-top: 2px;
+  }
+
+  .auth-submit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 12px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 150ms ease, box-shadow 150ms ease;
+  }
+
+  .auth-submit:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
+  }
+
+  .auth-submit:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .auth-back-btn {
+    width: 100%;
+    padding: 10px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-light);
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .auth-back-btn:hover {
+    border-color: var(--text);
+    color: var(--text);
+  }
+
+  .recovery-text {
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-light);
+  }
+
+  .auth-footer {
+    margin-top: var(--space-6);
+    padding-top: var(--space-5);
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+
+  .guest-note {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+</style>
