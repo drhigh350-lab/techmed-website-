@@ -65,8 +65,38 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           <StudentHubNav activeTab="dashboard" />
         </header>
 
+        <!-- Apple-Inspired Segmented View Switcher -->
+        <div class="segmented-control-container">
+          <nav class="dashboard-segmented-nav" role="tablist" aria-label="Dashboard sections">
+            <button type="button" class="segment-btn active" data-view="all" role="tab" aria-selected="true">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              <span>All Views</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="overview" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span>Overview</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="timetable" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Timetable</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="curriculum" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <span>Curriculum</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="classrooms" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+              <span>Classrooms</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="resources" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+              <span>Bookshelf & CBT</span>
+            </button>
+          </nav>
+        </div>
+
         <!-- Programme Schedule & Dates Banner -->
-        <section class="programme-overview-card">
+        <section class="programme-overview-card dashboard-view-section" data-section-view="overview">
           <div class="programme-header-row">
             <div class="programme-badge">OFFICIAL PROGRAMME SCHEDULE</div>
             <div class="dates-pill">
@@ -100,8 +130,35 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
         </section>
 
+        <!-- Today's Live Class & Routine Quick Glance -->
+        <div id="todayScheduleGlance" class="today-glance-card dashboard-view-section" data-section-view="overview">
+          <div class="today-badge-row">
+            <span class="live-pulse-dot" aria-hidden="true"></span>
+            <span class="today-day-label" id="todayDayName">Today's Class Schedule</span>
+            <span class="today-time-badge">7:00 PM – 11:10 PM</span>
+          </div>
+          <div class="today-sessions-grid">
+            <div class="today-session-item">
+              <span class="session-tag-small">SESSION A · 7:00 – 9:00 PM</span>
+              <span class="today-session-subject" id="todaySessionASubject">Loading today's lecture...</span>
+            </div>
+            <div class="today-break-item">
+              <span class="break-pill-small">10-Min Break</span>
+            </div>
+            <div class="today-session-item">
+              <span class="session-tag-small">SESSION B · 9:10 – 11:10 PM</span>
+              <span class="today-session-subject" id="todaySessionBSubject">Loading today's lecture...</span>
+            </div>
+          </div>
+          <div class="today-action-row">
+            <button type="button" class="btn-subtle today-view-timetable-btn" id="todayViewTimetableLink">
+              View Full Weekly Timetable &rarr;
+            </button>
+          </div>
+        </div>
+
         <!-- Profile Completion Alert Banner -->
-        <div id="incompleteBanner" class="profile-progress-card" style="display: none;">
+        <div id="incompleteBanner" class="profile-progress-card dashboard-view-section" data-section-view="overview" style="display: none;">
           <div class="progress-meta">
             <div class="progress-icon">
               <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
@@ -122,14 +179,14 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </div>
 
         <!-- Student Profile Completed Pill Notice (if complete) -->
-        <div id="profileCompletePill" class="profile-complete-banner" style="display: none;">
+        <div id="profileCompletePill" class="profile-complete-banner dashboard-view-section" data-section-view="overview" style="display: none;">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"/></svg>
           <span>Student profile complete (UTME subjects &amp; academic goals configured).</span>
           <a href="/account/onboarding" class="profile-edit-link">Edit Details</a>
         </div>
 
         <!-- Academic Snapshot & Direct Channels -->
-        <div class="dashboard-grid">
+        <div class="dashboard-grid dashboard-view-section" data-section-view="overview">
           <!-- Academic Target Card -->
           <section class="dashboard-card academic-card">
             <div class="card-header-row">
@@ -189,7 +246,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </div>
 
         <!-- First-Step Guide for Newly Enrolled Students -->
-        <section class="dashboard-card quickstart-card" id="quickstartSection">
+        <section class="dashboard-card quickstart-card dashboard-view-section" data-section-view="overview" id="quickstartSection">
           <div class="card-header-row">
             <div>
               <span class="section-tag">ORIENTATION CHECKLIST</span>
@@ -215,7 +272,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- Subject Classrooms & Student Communities -->
-        <section class="dashboard-card classrooms-card" id="classroomSection">
+        <section class="dashboard-card classrooms-card dashboard-view-section" data-section-view="classrooms" id="classroomSection">
           <div class="card-header-row">
             <div>
               <span class="section-tag">LIVE TEACHING HUBS</span>
@@ -264,7 +321,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- Official Class Timetable Section (Structured Content) -->
-        <section class="dashboard-card timetable-card" id="timetableSection">
+        <section class="dashboard-card timetable-card dashboard-view-section" data-section-view="timetable" id="timetableSection">
           <div class="card-header-row">
             <div>
               <span class="section-tag">OFFICIAL CLASS TIMETABLE</span>
@@ -323,6 +380,36 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
             </table>
           </div>
 
+          <!-- Mobile Day-by-Day Cards View (Displays seamlessly on <= 640px) -->
+          <div class="mobile-day-cards" aria-label="Mobile Weekly Timetable">
+            {TIMETABLE_SCHEDULE.map((slot) => (
+              <div class="day-schedule-card" data-day={slot.day.toLowerCase()}>
+                <div class="day-card-header">
+                  <div class="day-name-row">
+                    <span class="day-name">{slot.day}</span>
+                    <span class="today-indicator-tag">TODAY</span>
+                  </div>
+                  <span class="day-time">7:00 PM – 11:10 PM</span>
+                </div>
+                <div class="day-card-body">
+                  <div class="day-session-box">
+                    <span class="session-badge">Session A · 7:00 – 9:00 PM</span>
+                    <strong class="session-subject-title">{slot.sessionA.subjects}</strong>
+                    {slot.sessionA.notes && <p class="session-note-text">{slot.sessionA.notes}</p>}
+                  </div>
+                  <div class="day-break-divider">
+                    <span class="break-tag-mini">10-Min Break · 9:00 – 9:10 PM</span>
+                  </div>
+                  <div class="day-session-box">
+                    <span class="session-badge">Session B · 9:10 – 11:10 PM</span>
+                    <strong class="session-subject-title">{slot.sessionB.subjects}</strong>
+                    {slot.sessionB.notes && <p class="session-note-text">{slot.sessionB.notes}</p>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
           <!-- Sunday Assessments Card -->
           <div class="sunday-assessment-box">
             <div class="sunday-badge">SUNDAY ROUTINE</div>
@@ -348,7 +435,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- 12-Week Intensive Curriculum Section (Structured Content) -->
-        <section class="dashboard-card curriculum-card" id="curriculumSection">
+        <section class="dashboard-card curriculum-card dashboard-view-section" data-section-view="curriculum" id="curriculumSection">
           <div class="curriculum-header-block">
             <div class="card-header-row">
               <div>
@@ -513,7 +600,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- Kairo CBT, Drills & Mock Examinations Schedule -->
-        <section class="dashboard-card cbt-schedule-card" id="cbtSection">
+        <section class="dashboard-card cbt-schedule-card dashboard-view-section" data-section-view="resources" id="cbtSection">
           <div class="card-header-row">
             <div>
               <span class="section-tag">EXAMINATION READINESS ENGINE</span>
@@ -551,7 +638,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- Entitlement & Benefits Section: Authorized Benefits (Verified) vs Free Next Steps (Unverified) -->
-        <section class="dashboard-card benefits-section" id="benefitsSection">
+        <section class="dashboard-card benefits-section dashboard-view-section" data-section-view="resources" id="benefitsSection">
           <div class="benefits-header">
             <div class="benefits-title-group">
               <h2 class="card-title" id="privilegesSectionTitle">Authorized Privileges &amp; Materials</h2>
@@ -615,7 +702,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </section>
 
         <!-- Quick Access Hub Tools -->
-        <section class="dashboard-card quick-access-card">
+        <section class="dashboard-card quick-access-card dashboard-view-section" data-section-view="resources">
           <h2 class="card-title">Study Tools &amp; Quick Links</h2>
           <div class="quick-tools-grid">
             <a href="/library" class="tool-card">
@@ -675,6 +762,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     type StudentEntitlement,
     type UserResourceEntitlementItem,
   } from '../lib/supabase';
+  import { TIMETABLE_SCHEDULE } from '../lib/dashboard-data';
 
   const supabase = getSupabase();
 
@@ -1154,6 +1242,84 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
       });
     });
   });
+
+  // Today's Live Class Schedule Calculation
+  function initTodaySchedule() {
+    const todayDayName = document.getElementById('todayDayName');
+    const todaySessionASubject = document.getElementById('todaySessionASubject');
+    const todaySessionBSubject = document.getElementById('todaySessionBSubject');
+
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDay = days[new Date().getDay()];
+
+    if (todayDayName) {
+      todayDayName.textContent = `Today is ${currentDay} · Live Schedule`;
+    }
+
+    if (currentDay === 'Sunday') {
+      if (todaySessionASubject) todaySessionASubject.textContent = 'Weekly Sunday CBT Speed Drill / JAMB Mock (180 Qs · 2 Hours)';
+      if (todaySessionBSubject) todaySessionBSubject.textContent = 'Review Solutions & Speed Analytics on Kairo CBT';
+    } else {
+      const todaySlot = TIMETABLE_SCHEDULE.find(s => s.day.toLowerCase() === currentDay.toLowerCase());
+      if (todaySlot) {
+        if (todaySessionASubject) todaySessionASubject.textContent = todaySlot.sessionA.subjects;
+        if (todaySessionBSubject) todaySessionBSubject.textContent = todaySlot.sessionB.subjects;
+      }
+    }
+
+    // Highlight today in mobile day cards
+    const dayCards = document.querySelectorAll('.day-schedule-card');
+    dayCards.forEach(card => {
+      const cardDay = card.getAttribute('data-day');
+      if (cardDay === currentDay.toLowerCase()) {
+        card.classList.add('is-today');
+      } else {
+        card.classList.remove('is-today');
+      }
+    });
+  }
+
+  // Apple-Inspired Segmented View Switcher Handler
+  const segmentBtns = document.querySelectorAll('.segment-btn');
+  const viewSections = document.querySelectorAll('.dashboard-view-section');
+
+  function setDashboardView(targetView: string) {
+    segmentBtns.forEach(btn => {
+      const isMatch = btn.getAttribute('data-view') === targetView;
+      btn.classList.toggle('active', isMatch);
+      btn.setAttribute('aria-selected', isMatch ? 'true' : 'false');
+    });
+
+    viewSections.forEach(sec => {
+      const secView = sec.getAttribute('data-section-view');
+      const el = sec as HTMLElement;
+      if (targetView === 'all' || secView === targetView) {
+        el.style.display = '';
+      } else {
+        el.style.display = 'none';
+      }
+    });
+  }
+
+  segmentBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const view = btn.getAttribute('data-view') || 'all';
+      setDashboardView(view);
+      if (view !== 'all') {
+        const firstVisible = document.querySelector(`.dashboard-view-section[data-section-view="${view}"]`);
+        firstVisible?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  });
+
+  const todayViewTimetableLink = document.getElementById('todayViewTimetableLink');
+  todayViewTimetableLink?.addEventListener('click', () => {
+    setDashboardView('timetable');
+    const timetableSec = document.getElementById('timetableSection');
+    timetableSec?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+
+  initTodaySchedule();
 
   retryLoadBtn?.addEventListener('click', loadDashboard);
 
@@ -2740,13 +2906,361 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     line-height: 1.35;
   }
 
+  /* Apple-Inspired Segmented Control Switcher */
+  .segmented-control-container {
+    position: sticky;
+    top: 72px;
+    z-index: 30;
+    margin: var(--space-2) 0 var(--space-4);
+    background: rgba(1, 39, 72, 0.75);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    padding: 6px;
+    border-radius: var(--radius-lg);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  }
+
+  .dashboard-segmented-nav {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dashboard-segmented-nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  .segment-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    min-height: 44px;
+    font-family: var(--font-display);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--color-soft-blue);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    flex-shrink: 0;
+  }
+
+  .segment-btn:hover {
+    color: var(--color-white);
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .segment-btn.active {
+    color: var(--color-white);
+    background: rgba(9, 71, 110, 0.85);
+    border-color: rgba(201, 162, 39, 0.4);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+    font-weight: 700;
+  }
+
+  .segment-btn.active svg {
+    color: var(--color-gold);
+  }
+
+  /* Today's Live Class Glance Card */
+  .today-glance-card {
+    background: linear-gradient(135deg, rgba(9, 71, 110, 0.35), rgba(1, 39, 72, 0.65));
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    border-radius: var(--radius-lg);
+    padding: var(--space-5);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .today-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .live-pulse-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #22c55e;
+    border-radius: 50%;
+    display: inline-block;
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    animation: pulse-ring 2s infinite cubic-bezier(0.45, 0, 0.55, 1);
+  }
+
+  @keyframes pulse-ring {
+    0% {
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+    70% {
+      box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    }
+  }
+
+  .today-day-label {
+    font-family: var(--font-display);
+    font-size: 0.96rem;
+    font-weight: 800;
+    color: var(--color-white);
+    letter-spacing: -0.01em;
+  }
+
+  .today-time-badge {
+    margin-left: auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+  }
+
+  .today-sessions-grid {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    gap: var(--space-3);
+    align-items: center;
+    background: rgba(1, 39, 72, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: var(--radius-md);
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .today-session-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .session-tag-small {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-soft-blue);
+  }
+
+  .today-session-subject {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+
+  .today-break-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .break-pill-small {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    background: rgba(201, 162, 39, 0.15);
+    border: 1px dashed rgba(201, 162, 39, 0.4);
+    padding: 3px 8px;
+    border-radius: var(--radius-full);
+    white-space: nowrap;
+  }
+
+  .today-action-row {
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .today-view-timetable-btn {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px 8px;
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    transition: color 150ms ease;
+  }
+
+  .today-view-timetable-btn:hover {
+    color: var(--color-gold-light);
+    text-decoration: underline;
+  }
+
+  /* Mobile Day-by-Day Cards */
+  .mobile-day-cards {
+    display: none;
+    flex-direction: column;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+  }
+
+  .day-schedule-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-3);
+    transition: border-color 150ms ease;
+  }
+
+  .day-schedule-card.is-today {
+    background: linear-gradient(135deg, rgba(9, 71, 110, 0.3), rgba(1, 39, 72, 0.5));
+    border-color: rgba(201, 162, 39, 0.5);
+    box-shadow: 0 4px 16px rgba(201, 162, 39, 0.08);
+  }
+
+  .day-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-bottom: var(--space-2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .day-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .day-name {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--color-white);
+  }
+
+  .today-indicator-tag {
+    display: none;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #1a0a00;
+    background: var(--color-gold);
+    padding: 2px 7px;
+    border-radius: var(--radius-full);
+  }
+
+  .day-schedule-card.is-today .today-indicator-tag {
+    display: inline-block;
+  }
+
+  .day-time {
+    font-size: 0.8rem;
+    color: var(--color-soft-blue);
+    font-weight: 600;
+  }
+
+  .day-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .day-session-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    background: rgba(1, 39, 72, 0.35);
+    padding: var(--space-3);
+    border-radius: var(--radius-sm);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+  }
+
+  .session-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--color-soft-blue);
+  }
+
+  .session-subject-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-white);
+  }
+
+  .session-note-text {
+    font-size: 0.78rem;
+    color: var(--color-soft-blue);
+    margin: 0;
+  }
+
+  .day-break-divider {
+    text-align: center;
+    padding: 2px 0;
+  }
+
+  .break-tag-mini {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-gold);
+    background: rgba(201, 162, 39, 0.12);
+    border: 1px dashed rgba(201, 162, 39, 0.35);
+    padding: 2px 10px;
+    border-radius: var(--radius-full);
+  }
+
   @media (max-width: 640px) {
+    .dashboard-page {
+      padding: var(--space-4) var(--space-3) var(--space-12);
+    }
+
     .welcome-heading {
       font-size: 1.45rem;
     }
 
+    .segmented-control-container {
+      top: 60px;
+      margin: 0 0 var(--space-3);
+      padding: 4px;
+    }
+
+    .segment-btn {
+      padding: 6px 12px;
+      font-size: 0.8rem;
+    }
+
+    .today-sessions-grid {
+      grid-template-columns: 1fr;
+      gap: var(--space-2);
+    }
+
+    .today-break-item {
+      justify-content: flex-start;
+    }
+
     .target-fields {
       grid-template-columns: 1fr;
+    }
+
+    /* On mobile, show day-by-day cards instead of crowded table */
+    .table-scroll-wrap {
+      display: none;
+    }
+
+    .mobile-day-cards {
+      display: flex;
     }
 
     .timetable-table {
@@ -2756,6 +3270,20 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     .timetable-table th,
     .timetable-table td {
       padding: var(--space-2);
+    }
+  }
+
+  @media (max-width: 480px) {
+    .welcome-heading {
+      font-size: 1.3rem;
+    }
+
+    .dashboard-card {
+      padding: var(--space-4);
+    }
+
+    .programme-body-grid {
+      grid-template-columns: 1fr;
     }
   }
 </style>

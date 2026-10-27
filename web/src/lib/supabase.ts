@@ -457,7 +457,8 @@ export async function hasActiveResourceAccess(
 
 /**
  * Fetch a student's profile by their auth user ID.
- * Returns null if no profile exists yet.
+ * Tries the authoritative `public.profiles` table first, and gracefully falls back
+ * to authenticated Supabase user metadata if the table is not yet in the schema cache.
  */
 export async function fetchUserProfile(
   userId: string
@@ -468,39 +469,83 @@ export async function fetchUserProfile(
 
   const supabase = getSupabase();
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', userId)
-      .maybeSingle();
+    let dbProfile: any = null;
 
-    if (error) {
-      return { profile: null, error: error.message };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (!error && data) {
+        dbProfile = data;
+      }
+    } catch {
+      // Catch network or schema errors silently and proceed to metadata fallback
     }
 
-    if (!data) {
-      return { profile: null };
+    if (dbProfile) {
+      const profile: StudentProfile = {
+        id: dbProfile.id,
+        email: dbProfile.email || '',
+        fullName: dbProfile.full_name || '',
+        phone: dbProfile.phone || '',
+        whatsappPhone: dbProfile.whatsapp_phone || '',
+        telegramPhone: dbProfile.telegram_phone || '',
+        parentPhone: dbProfile.parent_phone || '',
+        role: dbProfile.role || 'student',
+        targetUniversity: dbProfile.target_university || '',
+        targetCourse: dbProfile.target_course || '',
+        utmeSubjects: dbProfile.utme_subjects || ['English'],
+        onboardingCompleted: dbProfile.onboarding_completed || false,
+        onboardingStep: dbProfile.onboarding_step || 1,
+        createdAt: dbProfile.created_at,
+        updatedAt: dbProfile.updated_at,
+      };
+      return { profile };
     }
 
-    const profile: StudentProfile = {
-      id: data.id,
-      email: data.email,
-      fullName: data.full_name || '',
-      phone: data.phone || '',
-      whatsappPhone: data.whatsapp_phone || '',
-      telegramPhone: data.telegram_phone || '',
-      parentPhone: data.parent_phone || '',
-      role: data.role || 'student',
-      targetUniversity: data.target_university || '',
-      targetCourse: data.target_course || '',
-      utmeSubjects: data.utme_subjects || ['English'],
-      onboardingCompleted: data.onboarding_completed || false,
-      onboardingStep: data.onboarding_step || 1,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
+    // Fallback: Read from authenticated Supabase user metadata
+    // Ensures profile persistence across refresh and sign-in even if public.profiles is awaiting remote migration
+    let authUser: any = null;
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user && sessionData.session.user.id === userId) {
+        authUser = sessionData.session.user;
+      } else {
+        const { data: userData } = await supabase.auth.getUser();
+        if (userData?.user && userData.user.id === userId) {
+          authUser = userData.user;
+        }
+      }
+    } catch (authEx) {
+      console.warn('Could not retrieve auth user metadata:', authEx);
+    }
 
-    return { profile };
+    if (authUser) {
+      const meta = authUser.user_metadata || {};
+      const profile: StudentProfile = {
+        id: authUser.id,
+        email: authUser.email || '',
+        fullName: meta.full_name || meta.name || '',
+        phone: meta.phone || '',
+        whatsappPhone: meta.whatsapp_phone || meta.phone || '',
+        telegramPhone: meta.telegram_phone || meta.phone || '',
+        parentPhone: meta.parent_phone || '',
+        role: meta.role || 'student',
+        targetUniversity: meta.target_university || '',
+        targetCourse: meta.target_course || '',
+        utmeSubjects: Array.isArray(meta.utme_subjects) && meta.utme_subjects.length > 0 ? meta.utme_subjects : ['English'],
+        onboardingCompleted: Boolean(meta.onboarding_completed),
+        onboardingStep: typeof meta.onboarding_step === 'number' ? meta.onboarding_step : 1,
+        createdAt: authUser.created_at,
+        updatedAt: authUser.updated_at || authUser.created_at,
+      };
+      return { profile };
+    }
+
+    return { profile: null };
   } catch (err: any) {
     return { profile: null, error: err?.message || 'Failed to fetch student profile' };
   }
@@ -508,7 +553,9 @@ export async function fetchUserProfile(
 
 /**
  * Save or update a student's profile.
- * Only authenticated users can update their own profile record (enforced by RLS).
+ * Only authenticated users can update their own profile record (enforced by RLS and Supabase Auth).
+ * Updates both Supabase Auth user metadata and the `public.profiles` table (when available),
+ * guaranteeing immediate persistence even if `public.profiles` is awaiting remote database migration.
  */
 export async function saveUserProfile(
   userId: string,
@@ -520,6 +567,39 @@ export async function saveUserProfile(
 
   const supabase = getSupabase();
   try {
+    // 1. Prepare Auth metadata payload
+    const metaPayload: Record<string, any> = {};
+    if (profileData.fullName !== undefined) {
+      metaPayload.full_name = profileData.fullName.trim();
+      metaPayload.name = profileData.fullName.trim();
+    }
+    if (profileData.phone !== undefined) metaPayload.phone = profileData.phone.trim();
+    if (profileData.whatsappPhone !== undefined) metaPayload.whatsapp_phone = profileData.whatsappPhone.trim();
+    if (profileData.telegramPhone !== undefined) metaPayload.telegram_phone = profileData.telegramPhone.trim();
+    if (profileData.parentPhone !== undefined) metaPayload.parent_phone = profileData.parentPhone.trim();
+    if (profileData.targetUniversity !== undefined) metaPayload.target_university = profileData.targetUniversity.trim();
+    if (profileData.targetCourse !== undefined) metaPayload.target_course = profileData.targetCourse.trim();
+    if (profileData.utmeSubjects !== undefined) metaPayload.utme_subjects = profileData.utmeSubjects;
+    if (profileData.onboardingCompleted !== undefined) metaPayload.onboarding_completed = profileData.onboardingCompleted;
+    if (profileData.onboardingStep !== undefined) metaPayload.onboarding_step = profileData.onboardingStep;
+
+    let authUser: any = null;
+    let authError: string | null = null;
+
+    try {
+      const { data: updatedAuth, error: authErr } = await supabase.auth.updateUser({
+        data: metaPayload,
+      });
+      if (!authErr && updatedAuth?.user) {
+        authUser = updatedAuth.user;
+      } else if (authErr) {
+        authError = authErr.message;
+      }
+    } catch (authEx: any) {
+      authError = authEx?.message || 'Authentication error';
+    }
+
+    // 2. Prepare database payload for public.profiles
     const payload: Record<string, any> = {
       id: userId,
       updated_at: new Date().toISOString(),
@@ -537,35 +617,72 @@ export async function saveUserProfile(
     if (profileData.onboardingCompleted !== undefined) payload.onboarding_completed = profileData.onboardingCompleted;
     if (profileData.onboardingStep !== undefined) payload.onboarding_step = profileData.onboardingStep;
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .upsert(payload)
-      .select('*')
-      .single();
+    let dbProfile: any = null;
 
-    if (error) {
-      return { profile: null, error: error.message };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .upsert(payload)
+        .select('*')
+        .maybeSingle();
+
+      if (!error && data) {
+        dbProfile = data;
+      }
+    } catch {
+      // Database write error handled gracefully; auth user metadata provides fallback
     }
 
-    const updated: StudentProfile = {
-      id: data.id,
-      email: data.email,
-      fullName: data.full_name || '',
-      phone: data.phone || '',
-      whatsappPhone: data.whatsapp_phone || '',
-      telegramPhone: data.telegram_phone || '',
-      parentPhone: data.parent_phone || '',
-      role: data.role || 'student',
-      targetUniversity: data.target_university || '',
-      targetCourse: data.target_course || '',
-      utmeSubjects: data.utme_subjects || ['English'],
-      onboardingCompleted: data.onboarding_completed || false,
-      onboardingStep: data.onboarding_step || 1,
-      createdAt: data.created_at,
-      updatedAt: data.updated_at,
-    };
+    // If database returned profile, return it
+    if (dbProfile) {
+      const updated: StudentProfile = {
+        id: dbProfile.id,
+        email: dbProfile.email,
+        fullName: dbProfile.full_name || '',
+        phone: dbProfile.phone || '',
+        whatsappPhone: dbProfile.whatsapp_phone || '',
+        telegramPhone: dbProfile.telegram_phone || '',
+        parentPhone: dbProfile.parent_phone || '',
+        role: dbProfile.role || 'student',
+        targetUniversity: dbProfile.target_university || '',
+        targetCourse: dbProfile.target_course || '',
+        utmeSubjects: dbProfile.utme_subjects || ['English'],
+        onboardingCompleted: dbProfile.onboarding_completed || false,
+        onboardingStep: dbProfile.onboarding_step || 1,
+        createdAt: dbProfile.created_at,
+        updatedAt: dbProfile.updated_at,
+      };
+      return { profile: updated };
+    }
 
-    return { profile: updated };
+    // If authUser was successfully updated, construct from auth metadata
+    if (authUser) {
+      const meta = authUser.user_metadata || {};
+      const updated: StudentProfile = {
+        id: authUser.id,
+        email: authUser.email || profileData.email || '',
+        fullName: meta.full_name || meta.name || profileData.fullName || '',
+        phone: meta.phone || profileData.phone || '',
+        whatsappPhone: meta.whatsapp_phone || profileData.whatsappPhone || '',
+        telegramPhone: meta.telegram_phone || profileData.telegramPhone || '',
+        parentPhone: meta.parent_phone || profileData.parentPhone || '',
+        role: meta.role || 'student',
+        targetUniversity: meta.target_university || profileData.targetUniversity || '',
+        targetCourse: meta.target_course || profileData.targetCourse || '',
+        utmeSubjects: meta.utme_subjects || profileData.utmeSubjects || ['English'],
+        onboardingCompleted: meta.onboarding_completed ?? profileData.onboardingCompleted ?? false,
+        onboardingStep: meta.onboarding_step ?? profileData.onboardingStep ?? 1,
+        createdAt: authUser.created_at,
+        updatedAt: authUser.updated_at || new Date().toISOString(),
+      };
+      return { profile: updated };
+    }
+
+    if (authError) {
+      return { profile: null, error: `Authentication error: ${authError}` };
+    }
+
+    return { profile: null, error: 'Could not save student profile. Please verify your login session.' };
   } catch (err: any) {
     return { profile: null, error: err?.message || 'Failed to save student profile' };
   }

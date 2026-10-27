@@ -16,7 +16,25 @@
 --    or paid entitlements.
 -- ==============================================================================
 
--- 1. EXTEND PROFILES TABLE WITH ONBOARDING FIELDS
+-- 1. ENSURE PROFILES TABLE EXISTS AND EXTEND WITH ONBOARDING FIELDS
+CREATE TABLE IF NOT EXISTS public.profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  email TEXT NOT NULL,
+  full_name TEXT,
+  phone TEXT,
+  role TEXT NOT NULL DEFAULT 'student' CHECK (role IN ('student', 'admin', 'instructor')),
+  target_university TEXT,
+  target_course TEXT,
+  whatsapp_phone TEXT,
+  telegram_phone TEXT,
+  parent_phone TEXT,
+  utme_subjects TEXT[] DEFAULT ARRAY['English']::TEXT[],
+  onboarding_completed BOOLEAN NOT NULL DEFAULT false,
+  onboarding_step INTEGER NOT NULL DEFAULT 1,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT timezone('utc'::text, now())
+);
+
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS whatsapp_phone TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS telegram_phone TEXT;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS parent_phone TEXT;
