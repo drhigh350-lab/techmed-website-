@@ -62,17 +62,16 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
 
           <!-- Section Navigation Tabs -->
-          <StudentHubNav activeTab="dashboard" />
+          <!-- Account utility navigation to avoid stacked competing tab bars -->
+          <div class="header-account-nav">
+            <StudentHubNav activeTab="dashboard" variant="account" />
+          </div>
         </header>
 
-        <!-- Apple-Inspired Segmented View Switcher -->
+        <!-- Apple-Inspired Segmented View Switcher: 5 clear destinations, no redundant All Views -->
         <div class="segmented-control-container">
           <nav class="dashboard-segmented-nav" role="tablist" aria-label="Dashboard sections">
-            <button type="button" class="segment-btn active" data-view="all" role="tab" aria-selected="true">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              <span>All Views</span>
-            </button>
-            <button type="button" class="segment-btn" data-view="overview" role="tab" aria-selected="false">
+            <button type="button" class="segment-btn active" data-view="overview" role="tab" aria-selected="true">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
               <span>Overview</span>
             </button>
@@ -90,12 +89,12 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
             </button>
             <button type="button" class="segment-btn" data-view="resources" role="tab" aria-selected="false">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span>Bookshelf & CBT</span>
+              <span>Bookshelf &amp; CBT</span>
             </button>
           </nav>
         </div>
 
-        <!-- Programme Schedule & Dates Banner -->
+        <!-- 1. Official Programme Schedule — programme dates and duration -->
         <section class="programme-overview-card dashboard-view-section" data-section-view="overview">
           <div class="programme-header-row">
             <div class="programme-badge">OFFICIAL PROGRAMME SCHEDULE</div>
@@ -130,7 +129,33 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
         </section>
 
-        <!-- Today's Live Class & Routine Quick Glance -->
+        <!-- 2. Orientation Checklist — the next relevant onboarding steps -->
+        <section class="dashboard-card quickstart-card dashboard-view-section" data-section-view="overview" id="quickstartSection">
+          <div class="card-header-row">
+            <div>
+              <span class="section-tag">ORIENTATION CHECKLIST</span>
+              <h2 class="card-title">First-Step Guide for Students</h2>
+            </div>
+            <span class="guide-note">Complete these 5 steps for a successful programme launch</span>
+          </div>
+
+          <div class="steps-grid">
+            {ONBOARDING_FIRST_STEPS.map((step) => (
+              <div class="step-box">
+                <div class="step-num">{step.stepNumber}</div>
+                <div class="step-content">
+                  <h3 class="step-heading">{step.title}</h3>
+                  <p class="step-desc">{step.desc}</p>
+                  <a href={step.actionUrl} class="step-link">
+                    {step.actionLabel} &rarr;
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <!-- 3. Today's Schedule — authoritative current-day classes/CBT with path to Timetable -->
         <div id="todayScheduleGlance" class="today-glance-card dashboard-view-section" data-section-view="overview">
           <div class="today-badge-row">
             <span class="live-pulse-dot" aria-hidden="true"></span>
@@ -157,119 +182,36 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
         </div>
 
-        <!-- Profile Completion Alert Banner -->
-        <div id="incompleteBanner" class="profile-progress-card dashboard-view-section" data-section-view="overview" style="display: none;">
-          <div class="progress-meta">
-            <div class="progress-icon">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
-            </div>
-            <div class="progress-text">
-              <div class="progress-title-row">
-                <h3 id="progressTitle">Complete Your Student Profile</h3>
-                <span class="progress-badge" id="progressStepTag">Step 1 of 3</span>
+        <!-- 4. Relevant Next Action — Single clear next step (mutually exclusive, no contradiction) -->
+        <div class="relevant-action-wrapper dashboard-view-section" data-section-view="overview">
+          <!-- Shown when onboarding is incomplete -->
+          <div id="incompleteBanner" class="profile-progress-card" style="display: none;">
+            <div class="progress-meta">
+              <div class="progress-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 14 14"/></svg>
               </div>
-              <p id="progressDesc">
-                Your target university, course, and UTME subject combination are not yet set up. Complete onboarding to personalize your syllabus track.
-              </p>
-            </div>
-          </div>
-          <a href="/account/onboarding" class="btn-primary resume-onboarding-btn" id="resumeOnboardingBtn">
-            Resume Onboarding
-          </a>
-        </div>
-
-        <!-- Student Profile Completed Pill Notice (if complete) -->
-        <div id="profileCompletePill" class="profile-complete-banner dashboard-view-section" data-section-view="overview" style="display: none;">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"/></svg>
-          <span>Student profile complete (UTME subjects &amp; academic goals configured).</span>
-          <a href="/account/onboarding" class="profile-edit-link">Edit Details</a>
-        </div>
-
-        <!-- Academic Snapshot & Direct Channels -->
-        <div class="dashboard-grid dashboard-view-section" data-section-view="overview">
-          <!-- Academic Target Card -->
-          <section class="dashboard-card academic-card">
-            <div class="card-header-row">
-              <h2 class="card-title">Academic Target</h2>
-              <a href="/account/onboarding" class="card-edit-action" title="Edit course and university">Edit</a>
-            </div>
-
-            <div class="target-fields">
-              <div class="target-field">
-                <span class="field-label">Target Course</span>
-                <span class="field-val" id="displayTargetCourse">Not configured yet</span>
-              </div>
-              <div class="target-field">
-                <span class="field-label">First-Choice University</span>
-                <span class="field-val" id="displayTargetUniversity">Not configured yet</span>
-              </div>
-            </div>
-
-            <div class="subjects-block">
-              <div class="subjects-label-row">
-                <span class="field-label">UTME 4-Subject Combination</span>
-                <a href="/jamb-syllabus-2027" class="syllabus-link">Open Syllabus Tracker →</a>
-              </div>
-              <div class="subjects-pills-wrap" id="subjectPills">
-                <span class="subject-pill compulsory">English Language (Compulsory)</span>
-                <span class="subject-empty-note">Complete onboarding to choose your 3 electives</span>
-              </div>
-            </div>
-          </section>
-
-          <!-- Communication Channels Card -->
-          <section class="dashboard-card channels-card">
-            <div class="card-header-row">
-              <h2 class="card-title">Direct Channels</h2>
-              <a href="/account/onboarding" class="card-edit-action" title="Update phone or handles">Edit</a>
-            </div>
-
-            <ul class="channels-list">
-              <li>
-                <span class="channel-name">Primary Mobile</span>
-                <span class="channel-val" id="displayPhone">--</span>
-              </li>
-              <li>
-                <span class="channel-name">WhatsApp (Live Class Links)</span>
-                <span class="channel-val" id="displayWhatsapp">--</span>
-              </li>
-              <li>
-                <span class="channel-name">Telegram (Builder Community)</span>
-                <span class="channel-val" id="displayTelegram">--</span>
-              </li>
-              <li>
-                <span class="channel-name">Parent / Guardian Phone</span>
-                <span class="channel-val" id="displayParent">Optional (Not set)</span>
-              </li>
-            </ul>
-          </section>
-        </div>
-
-        <!-- First-Step Guide for Newly Enrolled Students -->
-        <section class="dashboard-card quickstart-card dashboard-view-section" data-section-view="overview" id="quickstartSection">
-          <div class="card-header-row">
-            <div>
-              <span class="section-tag">ORIENTATION CHECKLIST</span>
-              <h2 class="card-title">First-Step Guide for Students</h2>
-            </div>
-            <span class="guide-note">Complete these 5 steps for a successful programme launch</span>
-          </div>
-
-          <div class="steps-grid">
-            {ONBOARDING_FIRST_STEPS.map((step) => (
-              <div class="step-box">
-                <div class="step-num">{step.stepNumber}</div>
-                <div class="step-content">
-                  <h3 class="step-heading">{step.title}</h3>
-                  <p class="step-desc">{step.desc}</p>
-                  <a href={step.actionUrl} class="step-link">
-                    {step.actionLabel} &rarr;
-                  </a>
+              <div class="progress-text">
+                <div class="progress-title-row">
+                  <h3 id="progressTitle">Complete Your Student Profile</h3>
+                  <span class="progress-badge" id="progressStepTag">Step 1 of 3</span>
                 </div>
+                <p id="progressDesc">
+                  Your target university, course, and UTME subject combination are not yet set up. Complete onboarding to personalize your syllabus track.
+                </p>
               </div>
-            ))}
+            </div>
+            <a href="/account/onboarding" class="btn-primary resume-onboarding-btn" id="resumeOnboardingBtn">
+              Resume Onboarding
+            </a>
           </div>
-        </section>
+
+          <!-- Shown when onboarding is complete: subtle confirmation with edit link -->
+          <div id="profileCompletePill" class="profile-complete-banner" style="display: none;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="check-icon"><polyline points="20 6 9 17 4 12"/></svg>
+            <span>Student profile complete (UTME subjects &amp; academic goals configured).</span>
+            <a href="/account/onboarding" class="profile-edit-link">Edit Details</a>
+          </div>
+        </div>
 
         <!-- Subject Classrooms & Student Communities -->
         <section class="dashboard-card classrooms-card dashboard-view-section" data-section-view="classrooms" id="classroomSection">
@@ -1341,7 +1283,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     viewSections.forEach(sec => {
       const secView = sec.getAttribute('data-section-view');
       const el = sec as HTMLElement;
-      if (targetView === 'all' || secView === targetView) {
+      if (secView === targetView) {
         el.style.display = '';
       } else {
         el.style.display = 'none';
@@ -1351,12 +1293,10 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
   segmentBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const view = btn.getAttribute('data-view') || 'all';
+      const view = btn.getAttribute('data-view') || 'overview';
       setDashboardView(view);
-      if (view !== 'all') {
-        const firstVisible = document.querySelector(`.dashboard-view-section[data-section-view="${view}"]`);
-        firstVisible?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
+      const firstVisible = document.querySelector(`.dashboard-view-section[data-section-view="${view}"]`);
+      firstVisible?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
 
@@ -1366,6 +1306,9 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     const timetableSec = document.getElementById('timetableSection');
     timetableSec?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+
+  // Default to Overview view initially
+  setDashboardView('overview');
 
   initTodaySchedule();
 
@@ -1478,8 +1421,23 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
   /* Header Navigation */
   .dashboard-header-nav {
     display: flex;
-    flex-direction: column;
+    justify-content: space-between;
+    align-items: flex-start;
     gap: var(--space-4);
+    flex-wrap: wrap;
+    margin-bottom: var(--space-2);
+  }
+
+  .header-titles {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 640px;
+  }
+
+  .header-account-nav {
+    margin-top: var(--space-2);
+    align-self: flex-start;
   }
 
   .eyebrow {
@@ -1489,6 +1447,11 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--accent);
+  }
+
+  :root[data-theme='light'] .eyebrow,
+  html[data-theme='light'] .eyebrow {
+    color: var(--accent-text);
   }
 
   .welcome-heading-row {
@@ -1528,27 +1491,55 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
   }
 
   .status-badge.ultimate {
-    background: rgba(201, 162, 39, 0.2);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: rgba(201, 162, 39, 0.15);
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+  }
+
+  :root[data-theme='light'] .status-badge.ultimate,
+  html[data-theme='light'] .status-badge.ultimate {
+    background: rgba(201, 162, 39, 0.12);
+    border-color: var(--color-gold-deep);
+    color: var(--color-gold-text);
   }
 
   .status-badge.mastery {
-    background: rgba(37, 99, 235, 0.2);
+    background: rgba(37, 99, 235, 0.18);
     border-color: #3b82f6;
     color: #60a5fa;
   }
 
+  :root[data-theme='light'] .status-badge.mastery,
+  html[data-theme='light'] .status-badge.mastery {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
+  }
+
   .status-badge.core {
-    background: rgba(16, 185, 129, 0.2);
+    background: rgba(16, 185, 129, 0.18);
     border-color: #10b981;
     color: #34d399;
   }
 
+  :root[data-theme='light'] .status-badge.core,
+  html[data-theme='light'] .status-badge.core {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
+  }
+
   .status-badge.resource_purchaser {
-    background: rgba(147, 51, 234, 0.2);
+    background: rgba(147, 51, 234, 0.18);
     border-color: #a855f7;
     color: #c084fc;
+  }
+
+  :root[data-theme='light'] .status-badge.resource_purchaser,
+  html[data-theme='light'] .status-badge.resource_purchaser {
+    background: #faf5ff;
+    border-color: #d8b4fe;
+    color: #6b21a8;
   }
 
   .status-badge.unverified {
@@ -1557,13 +1548,25 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     color: var(--text-muted);
   }
 
+  :root[data-theme='light'] .status-badge.unverified,
+  html[data-theme='light'] .status-badge.unverified {
+    background: var(--surface-raised);
+    color: var(--text-muted);
+  }
+
   /* Programme Overview Card */
   .programme-overview-card {
-    background: linear-gradient(135deg, rgba(11, 27, 61, 0.9), rgba(15, 23, 42, 0.95));
-    border: 1px solid rgba(201, 162, 39, 0.3);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     padding: var(--space-6);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--card-shadow);
+  }
+
+  :root[data-theme='light'] .programme-overview-card,
+  html[data-theme='light'] .programme-overview-card {
+    background: #ffffff;
+    border-color: var(--border);
   }
 
   .programme-header-row {
@@ -1574,7 +1577,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     gap: var(--space-3);
     margin-bottom: var(--space-5);
     padding-bottom: var(--space-4);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    border-bottom: 1px solid var(--border);
   }
 
   .programme-badge {
@@ -1583,6 +1586,11 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     font-weight: 800;
     letter-spacing: 0.08em;
     color: var(--accent);
+  }
+
+  :root[data-theme='light'] .programme-badge,
+  html[data-theme='light'] .programme-badge {
+    color: var(--accent-text);
   }
 
   .dates-pill {
@@ -1595,7 +1603,13 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     background: rgba(255, 255, 255, 0.06);
     padding: 4px 12px;
     border-radius: var(--radius-full);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    border: 1px solid var(--border);
+  }
+
+  :root[data-theme='light'] .dates-pill,
+  html[data-theme='light'] .dates-pill {
+    background: var(--surface-raised);
+    border-color: var(--border);
   }
 
   .programme-body-grid {
@@ -1611,15 +1625,26 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     background: rgba(255, 255, 255, 0.03);
     padding: var(--space-4);
     border-radius: var(--radius-md);
-    border: 1px solid rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+  }
+
+  :root[data-theme='light'] .overview-item,
+  html[data-theme='light'] .overview-item {
+    background: var(--surface-raised);
+    border-color: var(--border);
   }
 
   .overview-label {
     font-size: 0.75rem;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: var(--text-muted);
+    color: var(--text-light);
     font-weight: 600;
+  }
+
+  :root[data-theme='light'] .overview-label,
+  html[data-theme='light'] .overview-label {
+    color: var(--text-muted);
   }
 
   .overview-val {
@@ -1641,37 +1666,66 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
   .plan-pill {
     display: inline-block;
+    font-family: var(--font-display);
     font-size: 0.8rem;
     font-weight: 700;
     padding: 3px 10px;
-    border-radius: var(--radius-sm);
-    background: rgba(255, 255, 255, 0.08);
-    color: var(--text);
-    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    border: 1px solid transparent;
   }
 
   .plan-pill.ultimate {
-    background: rgba(201, 162, 39, 0.25);
-    border-color: var(--accent);
-    color: var(--accent);
+    background: rgba(201, 162, 39, 0.2);
+    border-color: var(--color-gold);
+    color: var(--color-gold);
+  }
+
+  :root[data-theme='light'] .plan-pill.ultimate,
+  html[data-theme='light'] .plan-pill.ultimate {
+    background: rgba(201, 162, 39, 0.12);
+    border-color: var(--color-gold-deep);
+    color: var(--color-gold-text);
   }
 
   .plan-pill.mastery {
-    background: rgba(37, 99, 235, 0.25);
+    background: rgba(37, 99, 235, 0.2);
     border-color: #3b82f6;
-    color: #93c5fd;
+    color: #60a5fa;
+  }
+
+  :root[data-theme='light'] .plan-pill.mastery,
+  html[data-theme='light'] .plan-pill.mastery {
+    background: #eff6ff;
+    border-color: #93c5fd;
+    color: #1d4ed8;
   }
 
   .plan-pill.core {
-    background: rgba(16, 185, 129, 0.25);
+    background: rgba(16, 185, 129, 0.2);
     border-color: #10b981;
-    color: #6ee7b7;
+    color: #34d399;
+  }
+
+  :root[data-theme='light'] .plan-pill.core,
+  html[data-theme='light'] .plan-pill.core {
+    background: #ecfdf5;
+    border-color: #a7f3d0;
+    color: #047857;
   }
 
   .plan-pill.unverified {
     background: rgba(255, 255, 255, 0.05);
+    border-color: var(--border);
     color: var(--text-muted);
   }
+
+  :root[data-theme='light'] .plan-pill.unverified,
+  html[data-theme='light'] .plan-pill.unverified {
+    background: var(--surface-raised);
+    color: var(--text-muted);
+  }
+
+
 
   /* Profile Progress & Completed */
   .profile-progress-card {

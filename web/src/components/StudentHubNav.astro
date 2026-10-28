@@ -1,12 +1,13 @@
 ---
 export interface Props {
-  activeTab?: 'dashboard' | 'onboarding' | 'settings' | 'library';
+  activeTab?: 'dashboard' | 'onboarding' | 'settings';
+  variant?: 'tabs' | 'account';
 }
 
-const { activeTab = 'dashboard' } = Astro.props;
+const { activeTab = 'dashboard', variant = 'tabs' } = Astro.props;
 ---
 
-<nav class="hub-nav-tabs" aria-label="Student space navigation">
+<nav class:list={['hub-nav-tabs', `variant-${variant}`]} aria-label="Student space navigation">
   <a
     href="/dashboard"
     class:list={['tab-link', { active: activeTab === 'dashboard' }]}
@@ -28,19 +29,17 @@ const { activeTab = 'dashboard' } = Astro.props;
   >
     Account Settings
   </a>
-  <a
-    href="/library"
-    class:list={['tab-link', { active: activeTab === 'library' }]}
-    aria-current={activeTab === 'library' ? 'page' : undefined}
-  >
-    Bookshelf &amp; Materials
-  </a>
 </nav>
 
 <style>
   .hub-nav-tabs {
     display: flex;
     gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .hub-nav-tabs.variant-tabs {
     border-bottom: 1px solid var(--border);
     overflow-x: auto;
     padding-bottom: 2px;
@@ -49,14 +48,20 @@ const { activeTab = 'dashboard' } = Astro.props;
 
   .tab-link {
     font-family: var(--font-display);
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     font-weight: 600;
     color: var(--text-muted);
     text-decoration: none;
-    padding: var(--space-3) var(--space-4);
-    border-bottom: 2px solid transparent;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-sm);
     transition: all 150ms ease;
     white-space: nowrap;
+  }
+
+  .variant-tabs .tab-link {
+    border-radius: 0;
+    padding: var(--space-3) var(--space-4);
+    border-bottom: 2px solid transparent;
   }
 
   .tab-link:hover {
@@ -64,8 +69,63 @@ const { activeTab = 'dashboard' } = Astro.props;
   }
 
   .tab-link.active {
+    color: var(--text);
+    font-weight: 700;
+  }
+
+  .variant-tabs .tab-link.active {
     color: var(--accent);
     border-bottom-color: var(--accent);
+  }
+
+  :root[data-theme='light'] .variant-tabs .tab-link.active,
+  html[data-theme='light'] .variant-tabs .tab-link.active {
+    color: var(--color-deep-navy);
+    border-bottom-color: var(--color-gold);
+  }
+
+  /* Account variant — subtle utility pills in header, avoiding two stacked competing tab bars */
+  .variant-account {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-full);
+    padding: 3px 6px;
+  }
+
+  :root[data-theme='light'] .variant-account,
+  html[data-theme='light'] .variant-account {
+    background: var(--surface-raised);
+    border-color: var(--border);
+  }
+
+  .variant-account .tab-link {
+    font-size: 0.78rem;
+    padding: 5px 12px;
+    border-radius: var(--radius-full);
+    color: var(--text-light);
+  }
+
+  .variant-account .tab-link:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.06);
+  }
+
+  :root[data-theme='light'] .variant-account .tab-link:hover,
+  html[data-theme='light'] .variant-account .tab-link:hover {
+    background: rgba(1, 39, 72, 0.06);
+    color: var(--text);
+  }
+
+  .variant-account .tab-link.active {
+    color: var(--color-white);
+    background: var(--color-professional-blue);
     font-weight: 700;
+  }
+
+  :root[data-theme='light'] .variant-account .tab-link.active,
+  html[data-theme='light'] .variant-account .tab-link.active {
+    color: var(--color-deep-navy);
+    background: #ffffff;
+    box-shadow: 0 1px 4px rgba(1, 39, 72, 0.1);
   }
 </style>
