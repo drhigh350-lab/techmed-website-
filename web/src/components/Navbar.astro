@@ -91,6 +91,17 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
         </div>
       </div>
 
+      <!-- Direct Mobile Quick Auth Trigger (Header bar on mobile screens) -->
+      <a href="/login" class="mobile-header-auth-btn" id="mobileHeaderLoginBtn" aria-label="Student Log In">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        <span>Log In</span>
+      </a>
+
+      <!-- Direct Mobile Avatar Link (when authenticated) -->
+      <a href="/dashboard" class="mobile-header-avatar-link" id="mobileHeaderAvatarLink" style="display: none;" aria-label="Student Dashboard">
+        <span class="avatar-initials tiny" id="mobileHeaderAvatarInitials">--</span>
+      </a>
+
       <a class="cta" href={channelUrl} target="_blank" rel="noopener">Become a Builder</a>
 
       <button class="menu-toggle" id="menuToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="mobileMenu">
@@ -104,26 +115,57 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   <div class="mobile-menu" id="mobileMenu">
     <!-- Mobile Account Section -->
     <div class="mobile-account-section">
+      <div class="mobile-account-header">
+        <span class="mobile-account-eyebrow">STUDENT PORTAL · UTME 2027</span>
+      </div>
+
       <!-- Logged Out View -->
       <div id="mobileAuthLoggedOut" class="mobile-auth-loggedout">
-        <a href="/login" class="mobile-auth-btn mobile-login-btn">Log In</a>
-        <a href="/register" class="mobile-auth-btn mobile-signup-btn">Create Account</a>
+        <p class="mobile-auth-intro">Sign in to access your dashboard, 12-week curriculum, timetable, and CBT drills.</p>
+        <div class="mobile-auth-actions">
+          <a href="/login?redirect=/dashboard" class="mobile-auth-btn mobile-login-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+            <span>Log In</span>
+          </a>
+          <a href="/register?redirect=/dashboard" class="mobile-auth-btn mobile-signup-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span>Create Account</span>
+          </a>
+        </div>
       </div>
       <!-- Logged In View -->
       <div id="mobileAuthLoggedIn" class="mobile-auth-loggedin" style="display: none;">
         <div class="mobile-user-row">
           <div class="avatar-initials small" id="mobileAvatarInitials">--</div>
           <div class="mobile-user-info">
-            <span class="mobile-user-name" id="mobileUserName">Student</span>
+            <div class="mobile-user-name-row">
+              <span class="mobile-user-name" id="mobileUserName">Student</span>
+              <span class="dropdown-verified-badge" id="mobileVerifiedBadge" style="display: none;">Verified</span>
+            </div>
             <span class="mobile-user-email" id="mobileUserEmail">student@email.com</span>
           </div>
         </div>
         <div class="mobile-user-links">
-          <a href="/dashboard" class="mobile-account-link">Student Dashboard</a>
-          <a href="/account/onboarding" class="mobile-account-link">Profile & Onboarding</a>
-          <a href="/account/settings" class="mobile-account-link">Account Settings</a>
-          <a href="/library" class="mobile-account-link">Bookshelf & Resources</a>
-          <button type="button" class="mobile-signout-btn" id="mobileSignOutBtn">Sign Out</button>
+          <a href="/dashboard" class="mobile-account-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            <span>Student Dashboard</span>
+          </a>
+          <a href="/account/onboarding" class="mobile-account-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            <span>Profile &amp; Onboarding</span>
+          </a>
+          <a href="/account/settings" class="mobile-account-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            <span>Account Settings</span>
+          </a>
+          <a href="/library" class="mobile-account-link">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            <span>Bookshelf &amp; Resources</span>
+          </a>
+          <button type="button" class="mobile-signout-btn" id="mobileSignOutBtn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+            <span>Sign Out</span>
+          </button>
         </div>
       </div>
     </div>
@@ -216,6 +258,10 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   const mobileUserName = document.getElementById('mobileUserName');
   const mobileUserEmail = document.getElementById('mobileUserEmail');
   const mobileSignOutBtn = document.getElementById('mobileSignOutBtn');
+  const mobileHeaderLoginBtn = document.getElementById('mobileHeaderLoginBtn');
+  const mobileHeaderAvatarLink = document.getElementById('mobileHeaderAvatarLink');
+  const mobileHeaderAvatarInitials = document.getElementById('mobileHeaderAvatarInitials');
+  const mobileVerifiedBadge = document.getElementById('mobileVerifiedBadge');
 
   function computeInitials(nameOrEmail?: string): string {
     if (!nameOrEmail) return 'TM';
@@ -243,7 +289,12 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       if (dropdownStudentName) dropdownStudentName.textContent = name;
       if (dropdownStudentEmail) dropdownStudentEmail.textContent = email;
 
-      // Mobile
+      // Mobile Quick Header
+      if (mobileHeaderLoginBtn) mobileHeaderLoginBtn.style.display = 'none';
+      if (mobileHeaderAvatarLink) mobileHeaderAvatarLink.style.display = 'inline-flex';
+      if (mobileHeaderAvatarInitials) mobileHeaderAvatarInitials.textContent = initials;
+
+      // Mobile Menu Drawer
       if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = 'none';
       if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = 'block';
       if (mobileAvatarInitials) mobileAvatarInitials.textContent = initials;
@@ -256,6 +307,9 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
         if (dropdownVerifiedBadge) {
           dropdownVerifiedBadge.style.display = isVerified ? 'inline-block' : 'none';
         }
+        if (mobileVerifiedBadge) {
+          mobileVerifiedBadge.style.display = isVerified ? 'inline-block' : 'none';
+        }
       } catch {
         // Fallback silently if offline/network error
       }
@@ -265,9 +319,14 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       if (navUserMenu) navUserMenu.style.display = 'none';
       if (navUserDropdown) navUserDropdown.classList.remove('open');
 
-      // Mobile
-      if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = 'grid';
+      // Mobile Quick Header
+      if (mobileHeaderLoginBtn) mobileHeaderLoginBtn.style.display = 'inline-flex';
+      if (mobileHeaderAvatarLink) mobileHeaderAvatarLink.style.display = 'none';
+
+      // Mobile Menu Drawer
+      if (mobileAuthLoggedOut) mobileAuthLoggedOut.style.display = 'block';
       if (mobileAuthLoggedIn) mobileAuthLoggedIn.style.display = 'none';
+      if (mobileVerifiedBadge) mobileVerifiedBadge.style.display = 'none';
     }
   }
 
@@ -695,24 +754,55 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     display: none;
   }
 
-  /* Mobile Account Section */
+  /* Direct Mobile Header Auth Triggers (hidden on desktop) */
+  .mobile-header-auth-btn,
+  .mobile-header-avatar-link {
+    display: none !important;
+  }
+
+  /* Mobile Account Section in Drawer */
   .mobile-account-section {
     padding: var(--space-4) var(--space-6);
     border-bottom: 1px solid var(--border-on-dark-surface);
-    background: rgba(0, 0, 0, 0.2);
+    background: rgba(1, 27, 51, 0.45);
   }
 
-  .mobile-auth-loggedout {
+  .mobile-account-header {
+    margin-bottom: var(--space-2);
+  }
+
+  .mobile-account-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+
+  .mobile-auth-intro {
+    font-size: 0.82rem;
+    color: var(--text-light-on-dark-surface);
+    line-height: 1.45;
+    margin: 0 0 var(--space-3);
+  }
+
+  .mobile-auth-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: var(--space-3);
   }
 
   .mobile-auth-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
     text-align: center;
-    padding: 10px 14px;
+    padding: 10px 12px;
+    min-height: 44px;
     font-family: var(--font-display);
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     font-weight: 700;
     border-radius: var(--radius-sm);
     text-decoration: none;
@@ -720,14 +810,25 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   }
 
   .mobile-login-btn {
-    border: 1px solid var(--border-on-dark-surface);
+    border: 1px solid rgba(255, 255, 255, 0.28);
     color: var(--text-on-dark-surface);
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .mobile-login-btn:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(201, 162, 39, 0.12);
   }
 
   .mobile-signup-btn {
     background: linear-gradient(135deg, var(--accent), var(--accent-deep));
     color: #1a0a00;
+    border: 1px solid transparent;
+  }
+
+  .mobile-signup-btn:hover {
+    box-shadow: 0 4px 12px rgba(201, 162, 39, 0.35);
   }
 
   .mobile-auth-loggedin {
@@ -746,6 +847,13 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     display: flex;
     flex-direction: column;
     overflow: hidden;
+  }
+
+  .mobile-user-name-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
   }
 
   .mobile-user-name {
@@ -768,24 +876,41 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   }
 
   .mobile-account-link {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     color: var(--text-light-on-dark-surface);
     font-size: 0.9rem;
     text-decoration: none;
-    padding: 6px 0;
+    padding: 7px 0;
+    transition: color 150ms ease;
   }
 
   .mobile-account-link:hover {
     color: var(--accent);
   }
 
+  .mobile-account-link svg {
+    flex-shrink: 0;
+    opacity: 0.85;
+  }
+
   .mobile-signout-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     background: none;
     border: none;
     color: #f87171;
     text-align: left;
     font-size: 0.9rem;
-    padding: 6px 0;
+    padding: 7px 0;
     cursor: pointer;
+    transition: opacity 150ms ease;
+  }
+
+  .mobile-signout-btn:hover {
+    opacity: 0.8;
   }
 
   @media (max-width: 960px) {
@@ -799,7 +924,47 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     .cta,
     .desktop-theme-toggle,
     .nav-account-container {
-      display: none;
+      display: none !important;
+    }
+
+    /* Show Mobile Header Auth triggers */
+    .mobile-header-auth-btn {
+      display: inline-flex !important;
+      align-items: center;
+      gap: 6px;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 0.8rem;
+      color: var(--text-on-dark-surface);
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      padding: 6px 13px;
+      border-radius: var(--radius-full);
+      text-decoration: none;
+      min-height: 36px;
+      transition: all 150ms ease;
+      white-space: nowrap;
+    }
+
+    .mobile-header-auth-btn:hover {
+      background: rgba(201, 162, 39, 0.15);
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .mobile-header-avatar-link {
+      display: inline-flex !important;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 50%;
+    }
+
+    .avatar-initials.tiny {
+      width: 32px;
+      height: 32px;
+      font-size: 0.78rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
     }
 
     .menu-toggle {

@@ -36,16 +36,16 @@ const dashboardAstroSrc = readFileSync(dashboardPagePath, 'utf-8');
 const dashboardDataSrc = readFileSync(dashboardDataPath, 'utf-8');
 const onboardingAstroSrc = readFileSync(onboardingPagePath, 'utf-8');
 
-// 1. Apple-Inspired Segmented View Switcher
+// 1. Apple-Inspired Segmented View Switcher (5 clear destinations, redundant All Views removed)
 assert(
   dashboardAstroSrc.includes('class="dashboard-segmented-nav"') &&
-  dashboardAstroSrc.includes('data-view="all"') &&
+  !dashboardAstroSrc.includes('data-view="all"') &&
   dashboardAstroSrc.includes('data-view="overview"') &&
   dashboardAstroSrc.includes('data-view="timetable"') &&
   dashboardAstroSrc.includes('data-view="curriculum"') &&
   dashboardAstroSrc.includes('data-view="classrooms"') &&
   dashboardAstroSrc.includes('data-view="resources"'),
-  '4. Segmented view switcher provides 6 views: All, Overview, Timetable, Curriculum, Classrooms, Bookshelf & CBT'
+  '4. Segmented view switcher provides 5 destinations: Overview, Timetable, Curriculum, Classrooms, Bookshelf & CBT (no All Views)'
 );
 
 // 2. Today's Live Class Glance Card
@@ -70,11 +70,11 @@ assert(
 
 // 4. Programme Dates Consistency
 assert(
-  dashboardDataSrc.includes('30 November 2026 – 28 February 2027') &&
+  dashboardDataSrc.includes('30 November 2026 – UTME Examination Date') &&
   dashboardDataSrc.includes('30 November 2026 – 21 February 2027') &&
   dashboardAstroSrc.includes('{PROGRAMME_META.officialDates}') &&
   dashboardAstroSrc.includes('{PROGRAMME_META.intensiveLectureDates}'),
-  '7. Official programme dates consistently enforce 30 November 2026 – 28 February 2027'
+  '7. Official programme dates consistently enforce 30 November 2026 – UTME Examination Date'
 );
 
 // 5. Timetable Schedule Integrity
@@ -94,10 +94,11 @@ assert(
   dashboardDataSrc.includes('weekNumber: 12') &&
   dashboardDataSrc.includes('First Monthly JAMB-Standard Mock') &&
   dashboardDataSrc.includes('Sunday, 27 December') &&
-  dashboardDataSrc.includes('Final Monthly JAMB-Standard Mock') &&
-  dashboardDataSrc.includes('Sunday, 21 February') &&
+  dashboardDataSrc.includes('Second Monthly JAMB-Standard Mock') &&
+  dashboardDataSrc.includes('Sunday, 24 January') &&
+  dashboardDataSrc.includes('Weekly CBT Drill 12') &&
   dashboardDataSrc.includes('questions: 180'),
-  '9. 12-week curriculum transcribes all 5 subjects, weekly drills, and 4 cumulative JAMB mock exams'
+  '9. 12-week curriculum transcribes all 5 subjects, weekly drills, and 3 cumulative JAMB mock exams'
 );
 
 // 7. Classroom and Community URLs

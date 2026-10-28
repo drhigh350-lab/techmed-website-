@@ -441,6 +441,12 @@ const description = 'Log in or create your student account to access your UTME 2
     box-shadow: 0 12px 36px rgba(0, 0, 0, 0.2);
   }
 
+  :root[data-theme='light'] .auth-card,
+  html[data-theme='light'] .auth-card {
+    background: #ffffff;
+    box-shadow: var(--card-shadow);
+  }
+
   .auth-tabs {
     display: flex;
     border-bottom: 1px solid var(--border);
@@ -563,6 +569,13 @@ const description = 'Log in or create your student account to access your UTME 2
     border-radius: var(--radius-sm);
     font-size: 0.8rem;
     line-height: 1.5;
+    color: var(--text-light);
+  }
+
+  :root[data-theme='light'] .account-notice-box,
+  html[data-theme='light'] .account-notice-box {
+    background: #eff6ff;
+    border-color: #bfdbfe;
     color: var(--text-light);
   }
 

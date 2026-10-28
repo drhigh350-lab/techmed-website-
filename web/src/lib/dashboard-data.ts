@@ -1,6 +1,6 @@
 // web/src/lib/dashboard-data.ts
 // Official TECHMED UTME 2027 Cohort Curriculum, Timetable, and Classroom Data.
-// Transcribed authoritatively from official TECHMED syllabus and schedule specifications.
+// Transcribed authoritatively from official JAMB syllabus and schedule specifications.
 
 export interface SubjectTopic {
   title: string;
@@ -57,9 +57,8 @@ export interface ClassroomLink {
 
 export const PROGRAMME_META = {
   title: 'UTME 2027 Paid Classes',
-  officialDates: '30 November 2026 – 28 February 2027',
-  intensiveLectureDates: '30 November 2026 – 21 February 2027',
-  examReadinessDates: '22 February 2027 – 28 February 2027',
+  officialDates: '30 November 2026 – UTME Examination Date',
+  intensiveLectureDates: '30 November 2026 – 21 February 2027 (12 Weeks Core)',
   dailyHours: '4 Hours Daily (Two 2-Hour Live Sessions, Monday to Saturday)',
   breakDuration: '10-Minute Break between sessions',
   monthlyFeeNgn: 7000,
@@ -153,7 +152,7 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'Biology / Mathematics',
-      notes: 'Parallel streams for candidates offering Biology or Mathematics',
+      notes: 'Parallel streams run concurrently; candidates attend their registered subject (Biology or Mathematics).',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -162,7 +161,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Chemistry',
-      notes: 'Full cohort intensive lecture & calculation breakdown',
     },
   },
   {
@@ -170,7 +168,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'English Language',
-      notes: 'Use of English, lexis, structure & prescribed novel',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -179,7 +176,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Physics',
-      notes: 'Formula derivation, mechanics & problem walkthroughs',
     },
   },
   {
@@ -187,7 +183,7 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'Mathematics / Biology',
-      notes: 'Parallel streams for candidates offering Mathematics or Biology',
+      notes: 'Parallel streams run concurrently; candidates attend their registered subject (Mathematics or Biology).',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -196,7 +192,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Chemistry',
-      notes: 'Equilibrium, kinetics, organic chemistry & question practice',
     },
   },
   {
@@ -204,7 +199,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'English Language',
-      notes: 'Passage comprehension, concord, oral forms & vocabulary',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -213,7 +207,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Physics',
-      notes: 'Electromagnetism, optics, waves & calculation chains',
     },
   },
   {
@@ -221,7 +214,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'Chemistry',
-      notes: 'Acids, bases, salts, qualitative analysis & synthesis',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -230,7 +222,7 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Biology / Mathematics',
-      notes: 'Parallel streams for candidates offering Biology or Mathematics',
+      notes: 'Parallel streams run concurrently; candidates attend their registered subject (Biology or Mathematics).',
     },
   },
   {
@@ -238,7 +230,6 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionA: {
       time: '7:00 PM – 9:00 PM',
       subjects: 'English Language',
-      notes: 'Exam strategy, idioms, common errors & speed technique',
     },
     breakTime: {
       time: '9:00 PM – 9:10 PM',
@@ -247,18 +238,49 @@ export const TIMETABLE_SCHEDULE: TimetableSlot[] = [
     sessionB: {
       time: '9:10 PM – 11:10 PM',
       subjects: 'Physics',
-      notes: 'Modern physics, atomic models & weekly problem consolidation',
     },
   },
 ];
 
 export const TIMETABLE_SUNDAY_NOTE = {
   day: 'Sunday',
-  activity: 'Weekly CBT Drills & Monthly JAMB-Standard Mock Examinations',
+  activity: 'Weekly CBT Drills & 3 Monthly JAMB-Standard Mock Examinations',
   time: 'Self-Paced / Scheduled Window on Kairo CBT',
   description:
-    'Every Sunday features a cumulative CBT Drill to reinforce understanding. On scheduled monthly mock dates, a full 180-question, 2-hour JAMB-standard simulation replaces the weekly drill.',
+    'Sundays feature timed CBT Drills to reinforce high-yield topics. The fourth Sunday of each programme month is reserved for a full 180-question, 2-hour JAMB-standard mock (Mock 1: 27 December 2026 · Mock 2: 24 January 2027 · Mock 3: 28 February 2027), preparing students directly towards their UTME examination date.',
 };
+
+export interface MockExamSchedule {
+  mockNumber: number;
+  title: string;
+  date: string;
+  description: string;
+  rule: string;
+}
+
+export const THREE_MONTHLY_MOCKS: MockExamSchedule[] = [
+  {
+    mockNumber: 1,
+    title: 'First Monthly JAMB-Standard Mock',
+    date: 'Sunday, 27 December 2026',
+    description: '180 questions in 2 hours across all 4 subjects evaluating Month 1 retention.',
+    rule: '4th Sunday of December 2026',
+  },
+  {
+    mockNumber: 2,
+    title: 'Second Monthly JAMB-Standard Mock',
+    date: 'Sunday, 24 January 2027',
+    description: '180 questions in 2 hours assessing cumulative retention across two months of high-dependency topics.',
+    rule: '4th Sunday of January 2027',
+  },
+  {
+    mockNumber: 3,
+    title: 'Third Monthly JAMB-Standard Mock',
+    date: 'Sunday, 28 February 2027',
+    description: 'Full-scope JAMB exam simulation under timed exam conditions as candidates advance towards UTME.',
+    rule: '4th Sunday of February 2027',
+  },
+];
 
 export const TWELVE_WEEK_CURRICULUM: WeekCurriculum[] = [
   // WEEK 1
@@ -883,13 +905,10 @@ export const TWELVE_WEEK_CURRICULUM: WeekCurriculum[] = [
       },
     ],
     assessment: {
-      title: 'Third Monthly JAMB-Standard Mock',
+      title: 'Weekly CBT Drill 9',
       date: 'Sunday, 31 January',
-      type: 'mock',
-      questions: 180,
-      duration: '2 Hours',
-      scope: 'Weeks 1–9 Cumulative',
-      details: 'Comprehensive 180-question mock testing endurance, speed accuracy, and ecology/electromagnetism.',
+      type: 'drill',
+      details: 'Timed assessment reinforcing ecology, electromagnetism, and environmental chemistry under exam pressure.',
     },
   },
 
@@ -1127,13 +1146,10 @@ export const TWELVE_WEEK_CURRICULUM: WeekCurriculum[] = [
       },
     ],
     assessment: {
-      title: 'Final Monthly JAMB-Standard Mock',
+      title: 'Weekly CBT Drill 12',
       date: 'Sunday, 21 February',
-      type: 'mock',
-      questions: 180,
-      duration: '2 Hours',
-      scope: 'Weeks 1–12 Complete Syllabus',
-      details: 'Full exam simulation mirroring actual JAMB CBT conditions, timing, and score distribution.',
+      type: 'drill',
+      details: 'Full syllabus consolidation drill covering core calculation and diagram questions across all subjects.',
     },
   },
 ];
