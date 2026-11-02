@@ -16,7 +16,8 @@
     "@portabletext/to-html": "^5.0.3",
     "@sanity/client": "^7.26.2",
     "@supabase/supabase-js": "^2.118.0",
-    "astro": "^5.1.0"
+    "astro": "^5.1.0",
+    "pdfjs-dist": "^4.10.38"
   },
   "devDependencies": {
     "@astrojs/cloudflare": "^12.6.13",

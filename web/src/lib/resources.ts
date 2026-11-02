@@ -92,7 +92,18 @@ export interface Resource {
   deliveryFormat?: 'PDF eBook' | 'Interactive Web' | 'Quiz Platform' | 'Platform Tool';
   sampleExcerpt?: string;
   isAvailableStandalone?: boolean;
+  isBundle?: boolean;
+  bundleItemIds?: string[];
+  bundleItems?: {
+    id: string;
+    title: string;
+    description: string;
+    fileType: string;
+    readerUrl: string;
+    badge?: string;
+  }[];
 }
+
 
 const WHATSAPP_NUMBER = '2347044255045';
 
@@ -181,6 +192,66 @@ export const FALLBACK_RESOURCES: Resource[] = [
       'No account or sign-up required to start',
     ],
     whoItsFor: 'Students who want consistent, low-friction practice without a paywall.',
+  },
+  {
+    id: 'booster-bundle',
+    slug: 'all-science-boosters-bundle',
+    title: 'All Science Boosters Bundle',
+    description:
+      'The complete triple science revision suite — Chemistry, Biology, and Physics Booster Systems combined into one unified study bundle.',
+    category: 'Academic',
+    subject: 'General',
+    type: 'Booster System',
+    status: 'paid',
+    order: 2.5,
+    price: 9000,
+    currency: 'NGN',
+    thumbnail: ICONS.flask,
+    primaryImage: '/images/resources/chemistry-booster-system.jpg',
+    featured: true,
+    tags: ['Bundle', 'Chemistry', 'Biology', 'Physics', 'Mastery Included'],
+    actionLabel: 'Open Bundle in Reader',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
+    isBundle: true,
+    bundleItemIds: ['chemistry-booster', 'biology-booster', 'physics-booster'],
+    bundleItems: [
+      {
+        id: 'chemistry-booster',
+        title: 'Chemistry Booster System',
+        description: 'The Mole Concept Cure & Ultimate Formula Bank covering stoichiometry, acids, equilibrium & organic reactions.',
+        fileType: 'PDF Document',
+        readerUrl: '/library/read/chemistry-booster',
+        badge: 'Included in Bundle',
+      },
+      {
+        id: 'biology-booster',
+        title: 'Biology Booster System',
+        description: 'Memory aids, high-yield rapid revision tables, recurring misconceptions and examiner traps for rapid recall.',
+        fileType: 'PDF Document',
+        readerUrl: '/library/read/biology-booster',
+        badge: 'Included in Bundle',
+      },
+      {
+        id: 'physics-booster',
+        title: 'Physics Booster System',
+        description: 'Calculation frameworks, formula banks, and the step-by-step Examiner Traps Playbook.',
+        fileType: 'PDF Document',
+        readerUrl: '/library/read/physics-booster',
+        badge: 'Included in Bundle',
+      },
+    ],
+    inclusions: {
+      mastery: true,
+      ultimate: true,
+      note: 'Included in Mastery and Ultimate cohorts. Available standalone as a triple-science package.',
+    },
+    whatsIncluded: [
+      'Chemistry Booster System (PDF & Embedded Reader)',
+      'Biology Booster System (PDF & Embedded Reader)',
+      'Physics Booster System (PDF & Embedded Reader)',
+    ],
+    whoItsFor: 'Candidates taking UTME Chemistry, Biology, and Physics who want all three booster systems together.',
   },
   {
     id: 'chemistry-booster',

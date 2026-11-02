@@ -130,6 +130,9 @@ const resourceJson = JSON.stringify({
   status: resource.status,
   isAvailableStandalone: resource.isAvailableStandalone,
   inclusions: resource.inclusions,
+  isBundle: resource.isBundle || false,
+  bundleItemIds: resource.bundleItemIds || [],
+  bundleItems: resource.bundleItems || [],
 });
 ---
 
@@ -159,6 +162,47 @@ const resourceJson = JSON.stringify({
       </div>
 
       <div class="topbar-right">
+        <!-- PDF Viewer Specific Controls (Visible when viewing original PDF) -->
+        <div id="pdfControlsGroup" class="pdf-controls-group" style="display: none;">
+          <!-- In-Document Search Toggle Button -->
+          <button type="button" id="pdfSearchToggleBtn" class="topbar-btn search-toggle-btn" title="Search document text (Ctrl+F)" aria-label="Search document text">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span class="btn-label">Search</span>
+          </button>
+
+          <!-- Document Zoom Controls -->
+          <div class="zoom-controls" role="group" aria-label="PDF Document Zoom">
+            <button type="button" id="pdfZoomOutBtn" class="topbar-btn zoom-btn" title="Zoom Out (−)" aria-label="Zoom Out">−</button>
+            <span id="pdfZoomLevel" class="zoom-display" title="Current Zoom">100%</span>
+            <button type="button" id="pdfZoomInBtn" class="topbar-btn zoom-btn" title="Zoom In (+)" aria-label="Zoom In">+</button>
+            <button type="button" id="pdfFitWidthBtn" class="topbar-btn fit-btn" title="Fit to Width">Fit Width</button>
+            <button type="button" id="pdfFitPageBtn" class="topbar-btn fit-btn" title="Fit to Page">Fit Page</button>
+          </div>
+
+          <!-- Page Navigation & Indicator -->
+          <div class="pdf-page-controls" id="pdfPageControls" role="group" aria-label="PDF Page Navigation">
+            <button type="button" id="pdfPrevPageBtn" class="page-nav-arrow" title="Previous Page (ArrowLeft)" aria-label="Previous Page" disabled>&larr;</button>
+            <div class="page-num-indicator">
+              <input
+                type="number"
+                id="pdfPageInput"
+                class="page-num-input"
+                min="1"
+                max="1"
+                value="1"
+                title="Type page number and press Enter to jump"
+                aria-label="Current page number"
+              />
+              <span class="page-sep">/</span>
+              <span id="pdfTotalPages" class="tabular-nums">1</span>
+            </div>
+            <button type="button" id="pdfNextPageBtn" class="page-nav-arrow" title="Next Page (ArrowRight)" aria-label="Next Page">&rarr;</button>
+          </div>
+        </div>
+
         <!-- Outline Drawer Toggle -->
         <button type="button" id="toggleOutlineBtn" class="topbar-btn" aria-label="Toggle Outline">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -168,6 +212,15 @@ const resourceJson = JSON.stringify({
           </svg>
           <span class="btn-label">Chapters</span>
         </button>
+
+        <!-- Bundle Navigator Toggle (Visible for bundle resources or when companion bundle manuals exist) -->
+        <button type="button" id="toggleBundleBtn" class="topbar-btn bundle-toggle-btn" style="display: none;" title="Browse all manuals in this bundle" aria-label="Toggle Bundle Documents">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span class="btn-label">Bundle</span>
+        </button>
+
 
         <!-- Theme Controls (Dark, Light, Sepia) -->
         <div class="theme-switch" role="group" aria-label="Reading theme">
@@ -182,8 +235,8 @@ const resourceJson = JSON.stringify({
           </button>
         </div>
 
-        <!-- Font Size Scale Controls -->
-        <div class="font-switch" role="group" aria-label="Font size">
+        <!-- Font Size Scale Controls (Preserved for HTML fallback mode) -->
+        <div class="font-switch" id="fontSwitchGroup" role="group" aria-label="Font size" style="display: none;">
           <button type="button" id="fontDecBtn" class="font-btn" title="Decrease font size">A−</button>
           <button type="button" id="fontIncBtn" class="font-btn" title="Increase font size">A+</button>
         </div>
@@ -200,10 +253,65 @@ const resourceJson = JSON.stringify({
       </div>
     </header>
 
+    <!-- Dedicated In-Document Search Toolbar -->
+    <div id="pdfSearchBar" class="pdf-search-bar" style="display: none;" role="search" aria-label="Document Search">
+      <div class="pdf-search-inner">
+        <div class="search-input-group">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input
+            type="text"
+            id="pdfSearchInput"
+            class="pdf-search-input"
+            placeholder="Search document text... (Enter to find)"
+            aria-label="Search term in document"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="button" id="pdfSearchClearBtn" class="search-clear-btn" title="Clear search" aria-label="Clear search" style="display: none;">&times;</button>
+        </div>
+
+        <div class="search-actions-group">
+          <span id="pdfSearchCount" class="search-match-count" aria-live="polite">0 of 0</span>
+          <button type="button" id="pdfSearchPrevBtn" class="search-nav-btn" title="Previous match (Shift+Enter)" aria-label="Previous match" disabled>&uarr;</button>
+          <button type="button" id="pdfSearchNextBtn" class="search-nav-btn" title="Next match (Enter)" aria-label="Next match" disabled>&darr;</button>
+          <button type="button" id="pdfSearchCloseBtn" class="search-close-btn" title="Close search (Esc)" aria-label="Close search">&times;</button>
+        </div>
+      </div>
+      <div id="pdfSearchMessage" class="pdf-search-status-banner" style="display: none;" role="status"></div>
+    </div>
+
     <!-- Offline Notice Banner -->
     <div id="offlineNotice" class="offline-notice-strip" style="display: none;" role="status">
       <span class="offline-bolt">⚡</span>
       <span><strong>Offline Study Mode:</strong> Active from device cache. All chapters and formula banks remain accessible without internet.</span>
+    </div>
+
+    <!-- Persistent Resume Reading Prompt Toast/Banner (Phase 4) -->
+    <div id="resumePromptBanner" class="resume-prompt-banner" style="display: none;" role="region" aria-label="Resume Reading">
+      <div class="resume-prompt-content">
+        <div class="resume-prompt-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="resume-prompt-text">
+          <span class="resume-prompt-title">Resume your reading?</span>
+          <span class="resume-prompt-desc" id="resumePromptDesc">You were on Page 12 of 85 (14%).</span>
+        </div>
+      </div>
+      <div class="resume-prompt-actions">
+        <button type="button" id="resumeContinueBtn" class="btn-primary resume-action-btn">
+          Continue (Page <span id="resumeTargetPage">1</span>) &rarr;
+        </button>
+        <button type="button" id="resumeRestartBtn" class="btn-secondary resume-action-btn">
+          Start from Beginning
+        </button>
+        <button type="button" id="resumeDismissBtn" class="resume-close-btn" title="Dismiss" aria-label="Dismiss">&times;</button>
+      </div>
     </div>
 
     <!-- Reader Main Content Frame -->
@@ -221,6 +329,22 @@ const resourceJson = JSON.stringify({
         </div>
         <nav class="chapter-nav">
           <ul id="chapterNavList" class="chapter-list">
+            <!-- Populated dynamically via JS -->
+          </ul>
+        </nav>
+      </aside>
+
+      <!-- Bundle Quick-Switch Drawer -->
+      <aside id="bundleDrawer" class="chapter-drawer bundle-drawer">
+        <div class="drawer-header">
+          <h3>Bundle Documents</h3>
+          <button type="button" id="closeBundleDrawerBtn" class="drawer-close-btn" aria-label="Close Bundle Drawer">&times;</button>
+        </div>
+        <div class="drawer-meta">
+          <span id="bundleDrawerSub">Collection Contents</span>
+        </div>
+        <nav class="chapter-nav">
+          <ul id="bundleDrawerList" class="chapter-list">
             <!-- Populated dynamically via JS -->
           </ul>
         </nav>
@@ -247,6 +371,53 @@ const resourceJson = JSON.stringify({
             <span id="accessStatusText">Verifying access license...</span>
           </div>
         </header>
+
+        <!-- In-Platform Resource Bundle Explorer (For Multi-Document Bundles & ZIP Archives) -->
+        <section id="bundleExplorerSection" class="bundle-explorer-card" style="display: none;">
+          <div class="bundle-explorer-inner">
+            <div class="bundle-badge-row">
+              <span class="bundle-pill">MULTI-DOCUMENT RESOURCE BUNDLE</span>
+              <span id="bundleStatusBadge" class="bundle-status-badge">Licensed</span>
+            </div>
+            <h2 id="bundleExplorerTitle" class="bundle-heading">{resource.title}</h2>
+            <p id="bundleExplorerDesc" class="bundle-desc">
+              All documents in this bundle can be accessed and read directly inside the TECHMED reader without manual download or external archive extraction. Select any item below:
+            </p>
+            <div id="bundleItemsList" class="bundle-items-grid">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </section>
+
+        <!-- Embedded PDF Viewer Stage (Mozilla PDF.js) -->
+        <div id="pdfViewerStage" class="pdf-viewer-stage" style="display: none;">
+          <!-- Loading state -->
+          <div id="pdfLoadingBox" class="pdf-state-box pdf-loading-box">
+            <div class="pdf-spinner" aria-hidden="true"></div>
+            <div class="pdf-state-text">
+              <h3>Loading Document...</h3>
+              <p id="pdfLoadingStatus">Fetching PDF pages from secure storage</p>
+            </div>
+          </div>
+
+          <!-- Error state -->
+          <div id="pdfErrorBox" class="pdf-state-box pdf-error-box" style="display: none;">
+            <div class="pdf-error-icon">⚠️</div>
+            <div class="pdf-state-text">
+              <h3 id="pdfErrorTitle">Unable to Load PDF</h3>
+              <p id="pdfErrorMessage">An error occurred while rendering the document.</p>
+              <div class="pdf-error-actions">
+                <button type="button" id="pdfRetryBtn" class="btn-secondary">Retry Loading</button>
+                <button type="button" id="pdfFallbackBtn" class="btn-primary">Switch to Text Reader</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Continuous Scroll Page Stream Container -->
+          <div id="pdfPagesContainer" class="pdf-pages-container" role="document" aria-label="PDF Document Pages">
+            <!-- Dynamic page wrappers created by reader engine -->
+          </div>
+        </div>
 
         <!-- Dynamic Chapter Reading Stage -->
         <article id="readingStage" class="reading-stage">
@@ -389,16 +560,72 @@ const resourceJson = JSON.stringify({
   const MANUAL = manualEl ? JSON.parse(manualEl.textContent || '{}') : {};
   const RESOURCE = resEl ? JSON.parse(resEl.textContent || '{}') : {};
 
-  import { getSupabase, getCurrentUser, hasActiveResourceAccess, verifyAndClaimOrderReference, saveLocalEntitlement } from '/src/lib/supabase.ts';
+  import {
+    getSupabase,
+    getCurrentUser,
+    hasActiveResourceAccess,
+    verifyAndClaimOrderReference,
+    saveLocalEntitlement,
+    getSecureResourcePdf,
+    getReadingProgress,
+    saveReadingProgress,
+    clearUserLocalReadingProgress,
+    type ReadingProgressRecord,
+  } from '/src/lib/supabase.ts';
+  import { parseZipArchive, type ZipArchive, type ZipEntry } from '/src/lib/zipReader.ts';
+  import * as pdfjsLib from 'pdfjs-dist';
+
+  // Configure local worker
+  try {
+    if (pdfjsLib?.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/pdf.worker.min.mjs';
+    }
+  } catch (workerErr) {
+    console.warn('PDF.js worker setup warning:', workerErr);
+  }
+
+  // Preload official TECHMED brand logo for watermarking
+  const brandLogo = new Image();
+  brandLogo.src = '/images/logo.png';
+  let logoLoaded = false;
+  brandLogo.onload = () => {
+    logoLoaded = true;
+    renderWatermark();
+    if (isPdfMode) {
+      reRenderVisiblePages();
+    }
+  };
 
   const supabase = getSupabase();
 
   // State
-  let currentUser = null;
+  let currentUser: any = null;
   let isEntitled = RESOURCE.status === 'free';
   let activeChapterIndex = 0;
   let currentTheme = 'dark';
   let currentFontSize = 17; // base font size in px
+
+  // PDF Viewer State
+  let isPdfMode = false;
+  let pdfDoc: any = null;
+  let pdfUrl: string | null = null;
+  let currentPdfScale = 1.0;
+  let fitMode = 'width'; // 'width' | 'page' | 'custom'
+  let totalPdfPages = 0;
+  let currentPdfPageNum = 1;
+  const renderedPages = new Map<number, boolean>(); // pageNum -> boolean
+  const renderingPages = new Set<number>(); // pageNum
+  const renderTasks = new Map<number, any>(); // pageNum -> renderTask
+  let pageObserver: IntersectionObserver | null = null;
+  let scrollSpyObserver: IntersectionObserver | null = null;
+  let basePageWidth = 595.28;
+  let basePageHeight = 841.89;
+
+  // Phase 4 Persistent Reading Progress & Resume State
+  let currentDocumentKey = '';
+  let activeSavedProgress: ReadingProgressRecord | null = null;
+  let progressSaveTimer: any = null;
+  let isInitialResumeCheckDone = false;
 
   // DOM Elements
   const readerShell = document.getElementById('readerShell');
@@ -415,6 +642,115 @@ const resourceJson = JSON.stringify({
   const prevChapterBtn = document.getElementById('prevChapterBtn');
   const nextChapterBtn = document.getElementById('nextChapterBtn');
   const chapterProgressText = document.getElementById('chapterProgressText');
+
+  // Bundle Experience Elements
+  const toggleBundleBtn = document.getElementById('toggleBundleBtn');
+  const bundleDrawer = document.getElementById('bundleDrawer');
+  const closeBundleDrawerBtn = document.getElementById('closeBundleDrawerBtn');
+  const bundleDrawerList = document.getElementById('bundleDrawerList');
+  const bundleExplorerSection = document.getElementById('bundleExplorerSection');
+  const bundleItemsList = document.getElementById('bundleItemsList');
+  const bundleStatusBadge = document.getElementById('bundleStatusBadge');
+  const bundleExplorerTitle = document.getElementById('bundleExplorerTitle');
+  const bundleExplorerDesc = document.getElementById('bundleExplorerDesc');
+
+  // PDF Viewer Specific Elements
+  const pdfControlsGroup = document.getElementById('pdfControlsGroup');
+  const pdfSearchToggleBtn = document.getElementById('pdfSearchToggleBtn');
+  const pdfZoomOutBtn = document.getElementById('pdfZoomOutBtn') as HTMLButtonElement | null;
+  const pdfZoomInBtn = document.getElementById('pdfZoomInBtn') as HTMLButtonElement | null;
+  const pdfZoomLevel = document.getElementById('pdfZoomLevel');
+  const pdfFitWidthBtn = document.getElementById('pdfFitWidthBtn');
+  const pdfFitPageBtn = document.getElementById('pdfFitPageBtn');
+  const pdfPrevPageBtn = document.getElementById('pdfPrevPageBtn') as HTMLButtonElement | null;
+  const pdfNextPageBtn = document.getElementById('pdfNextPageBtn') as HTMLButtonElement | null;
+  const pdfPageInput = document.getElementById('pdfPageInput') as HTMLInputElement | null;
+  const pdfTotalPages = document.getElementById('pdfTotalPages');
+  const fontSwitchGroup = document.getElementById('fontSwitchGroup');
+
+  // PDF In-Document Search Elements
+  const pdfSearchBar = document.getElementById('pdfSearchBar');
+  const pdfSearchInput = document.getElementById('pdfSearchInput') as HTMLInputElement | null;
+  const pdfSearchClearBtn = document.getElementById('pdfSearchClearBtn');
+  const pdfSearchCount = document.getElementById('pdfSearchCount');
+  const pdfSearchPrevBtn = document.getElementById('pdfSearchPrevBtn') as HTMLButtonElement | null;
+  const pdfSearchNextBtn = document.getElementById('pdfSearchNextBtn') as HTMLButtonElement | null;
+  const pdfSearchCloseBtn = document.getElementById('pdfSearchCloseBtn');
+  const pdfSearchMessage = document.getElementById('pdfSearchMessage');
+
+  const pdfViewerStage = document.getElementById('pdfViewerStage');
+  const pdfLoadingBox = document.getElementById('pdfLoadingBox');
+  const pdfLoadingStatus = document.getElementById('pdfLoadingStatus');
+  const pdfErrorBox = document.getElementById('pdfErrorBox');
+  const pdfErrorTitle = document.getElementById('pdfErrorTitle');
+  const pdfErrorMessage = document.getElementById('pdfErrorMessage');
+  const pdfRetryBtn = document.getElementById('pdfRetryBtn');
+  const pdfFallbackBtn = document.getElementById('pdfFallbackBtn');
+  const pdfPagesContainer = document.getElementById('pdfPagesContainer');
+  const chapterFooterNav = document.querySelector('.chapter-footer-nav');
+
+  // Phase 4 Resume Reading Banner Elements
+  const resumePromptBanner = document.getElementById('resumePromptBanner');
+  const resumeContinueBtn = document.getElementById('resumeContinueBtn');
+  const resumeRestartBtn = document.getElementById('resumeRestartBtn');
+  const resumeDismissBtn = document.getElementById('resumeDismissBtn');
+  const resumePromptDesc = document.getElementById('resumePromptDesc');
+  const resumeTargetPage = document.getElementById('resumeTargetPage');
+
+  function hideResumePrompt() {
+    if (resumePromptBanner) {
+      resumePromptBanner.style.display = 'none';
+    }
+  }
+
+  function showResumePrompt(progress: ReadingProgressRecord) {
+    if (!resumePromptBanner) return;
+    if (resumePromptDesc) {
+      const pct = Math.round(progress.readingPercent);
+      resumePromptDesc.textContent = `You were on Page ${progress.currentPage} of ${totalPdfPages} (${pct}% complete).`;
+    }
+    if (resumeTargetPage) {
+      resumeTargetPage.textContent = progress.currentPage.toString();
+    }
+    resumePromptBanner.style.display = 'flex';
+  }
+
+  function scheduleProgressSave(immediate = false) {
+    if (!isPdfMode || totalPdfPages <= 0) return;
+    const pageToPersist = currentPdfPageNum;
+    if (pageToPersist < 1 || pageToPersist > totalPdfPages) return;
+
+    if (progressSaveTimer) {
+      clearTimeout(progressSaveTimer);
+      progressSaveTimer = null;
+    }
+
+    const executeSave = async () => {
+      try {
+        const isFinished = pageToPersist >= totalPdfPages;
+        const res = await saveReadingProgress(
+          {
+            resourceId: RESOURCE.id,
+            documentKey: currentDocumentKey,
+            currentPage: pageToPersist,
+            totalPages: totalPdfPages,
+            isFinished,
+            customerEmail: currentUser?.email,
+          },
+          currentUser
+        );
+        activeSavedProgress = res;
+      } catch (err) {
+        console.warn('Progress save deferred to local storage:', err);
+      }
+    };
+
+    if (immediate) {
+      executeSave();
+    } else {
+      progressSaveTimer = setTimeout(executeSave, 1200);
+    }
+  }
 
   // Theme & Font buttons
   const themeBtns = document.querySelectorAll('.theme-btn');
@@ -435,8 +771,8 @@ const resourceJson = JSON.stringify({
   const gatekeeperClaimSubmit = document.getElementById('gatekeeperClaimSubmit');
   const gatekeeperClaimMsg = document.getElementById('gatekeeperClaimMsg');
 
-  // 1. Dynamic Watermark Generator
-  function renderWatermark(userEmail) {
+  // 1. Dynamic TECHMED Brand Watermark Generator (Official Logo Asset Only - Zero Student PII)
+  function renderWatermark() {
     if (!watermarkCanvas) return;
     const ctx = watermarkCanvas.getContext('2d');
     if (!ctx) return;
@@ -451,25 +787,217 @@ const resourceJson = JSON.stringify({
 
     ctx.clearRect(0, 0, width, height);
 
-    const email = userEmail || 'TECHMED Academic Preview';
-    const dateStr = new Date().toLocaleDateString('en-GB');
-    const stamp = `${email} · TECHMED LICENSED READER · ${dateStr} · UNAUTHORIZED SHARING PROHIBITED`;
+    if (!brandLogo.complete || brandLogo.naturalWidth === 0) return;
 
-    ctx.font = '13px "JetBrains Mono", monospace';
-    ctx.fillStyle = currentTheme === 'light' ? 'rgba(0, 0, 0, 0.045)' : 'rgba(255, 255, 255, 0.045)';
-    ctx.rotate((-25 * Math.PI) / 180);
+    ctx.save();
+    // Subtle branding watermark: opacity 0.048 (light) to 0.058 (dark)
+    ctx.globalAlpha = currentTheme === 'light' ? 0.048 : 0.058;
+    ctx.rotate((-20 * Math.PI) / 180);
 
-    const stepX = 420;
-    const stepY = 160;
+    const logoSize = 130;
+    const stepX = 320;
+    const stepY = 260;
 
-    for (let y = -500; y < height + 800; y += stepY) {
-      for (let x = -800; x < width + 800; x += stepX) {
-        ctx.fillText(stamp, x, y);
+    for (let y = -300; y < height + 600; y += stepY) {
+      for (let x = -400; x < width + 600; x += stepX) {
+        ctx.drawImage(brandLogo, x, y, logoSize, logoSize);
+      }
+    }
+    ctx.restore();
+  }
+
+  // 2. Bundle Experience Setup
+  const SCIENCE_BOOSTERS_BUNDLE = [
+    {
+      id: 'chemistry-booster',
+      title: 'Chemistry Booster System',
+      description: 'The Mole Concept Cure & Ultimate Formula Bank covering stoichiometry, equilibrium, acids/bases, and organic transformations.',
+      fileType: 'PDF Document',
+      readerUrl: '/library/read/chemistry-booster',
+      badge: 'Chemistry',
+    },
+    {
+      id: 'biology-booster',
+      title: 'Biology Booster System',
+      description: 'Rapid recall tables, frequently tested patterns, high-frequency misconceptions and examiner traps across the UTME syllabus.',
+      fileType: 'PDF Document',
+      readerUrl: '/library/read/biology-booster',
+      badge: 'Biology',
+    },
+    {
+      id: 'physics-booster',
+      title: 'Physics Booster System',
+      description: 'Formula banks, calculation shortcuts, and the step-by-step Examiner Traps Playbook.',
+      fileType: 'PDF Document',
+      readerUrl: '/library/read/physics-booster',
+      badge: 'Physics',
+    },
+  ];
+
+  function setupBundleExperience() {
+    const isBundleProduct = RESOURCE.isBundle || RESOURCE.id === 'booster-bundle' || RESOURCE.id === 'all-science-boosters-bundle';
+    const isBoosterConstituent = ['chemistry-booster', 'biology-booster', 'physics-booster'].includes(RESOURCE.id);
+
+    // If viewing a constituent booster item, enable the Bundle Drawer button in topbar
+    if (isBoosterConstituent || isBundleProduct) {
+      if (toggleBundleBtn) toggleBundleBtn.style.display = 'inline-flex';
+      renderBundleDrawerItems();
+    }
+
+    // If viewing the bundle itself, show the Bundle Explorer Card
+    if (isBundleProduct && bundleExplorerSection) {
+      bundleExplorerSection.style.display = 'block';
+      if (readingStage) readingStage.style.display = 'none';
+      if (chapterFooterNav) (chapterFooterNav as HTMLElement).style.display = 'none';
+
+      if (bundleStatusBadge) {
+        bundleStatusBadge.textContent = isEntitled ? 'Active Licensed Bundle' : 'Preview Mode';
+        bundleStatusBadge.className = `bundle-status-badge ${isEntitled ? 'licensed' : 'preview'}`;
+      }
+
+      renderBundleExplorerCards(RESOURCE.bundleItems?.length ? RESOURCE.bundleItems : SCIENCE_BOOSTERS_BUNDLE);
+    }
+  }
+
+  function renderBundleDrawerItems() {
+    if (!bundleDrawerList) return;
+    bundleDrawerList.innerHTML = '';
+
+    SCIENCE_BOOSTERS_BUNDLE.forEach((item) => {
+      const isCurrent = item.id === RESOURCE.id;
+      const li = document.createElement('li');
+      li.className = `chapter-nav-item bundle-item-link ${isCurrent ? 'active' : ''}`;
+      li.innerHTML = `
+        <a href="${item.readerUrl}" class="chapter-nav-btn" style="text-decoration: none; color: inherit; display: block; width: 100%;">
+          <div class="chap-nav-title">
+            <span class="chap-num" style="background: var(--accent); color: #fff; padding: 2px 6px; border-radius: 4px; font-size: 10px; margin-right: 6px;">${item.badge}</span>
+            ${item.title}
+          </div>
+          <div class="chap-nav-meta" style="font-size: 12px; opacity: 0.7; margin-top: 2px;">${item.fileType} ${isCurrent ? '· (Current)' : ''}</div>
+        </a>
+      `;
+      bundleDrawerList.appendChild(li);
+    });
+  }
+
+  function renderBundleExplorerCards(items: any[]) {
+    if (!bundleItemsList) return;
+    bundleItemsList.innerHTML = '';
+
+    items.forEach((item) => {
+      const isLocked = !isEntitled;
+      const card = document.createElement('div');
+      card.className = `bundle-item-card ${isLocked ? 'locked' : 'unlocked'}`;
+      card.innerHTML = `
+        <div class="bundle-item-header">
+          <div class="bundle-type-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: inline-block; vertical-align: middle; margin-right: 4px;">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            ${item.fileType || 'PDF Document'}
+          </div>
+          ${item.badge ? `<span class="bundle-subject-tag">${item.badge}</span>` : ''}
+        </div>
+        <h3 class="bundle-item-title">${item.title}</h3>
+        <p class="bundle-item-desc">${item.description}</p>
+        <div class="bundle-item-footer">
+          <a href="${item.readerUrl}" class="btn-primary bundle-read-action">
+            ${isLocked ? 'Preview Material &rarr;' : 'Open Document in Reader &rarr;'}
+          </a>
+        </div>
+      `;
+      bundleItemsList.appendChild(card);
+    });
+  }
+
+  // 3. In-Memory ZIP Archive Reader for Bundles
+  async function loadAndRenderZipBundle(zipUrl: string) {
+    try {
+      if (pdfViewerStage) pdfViewerStage.style.display = 'block';
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'flex';
+      if (pdfLoadingStatus) pdfLoadingStatus.textContent = 'Extracting bundle archive in memory...';
+
+      const res = await fetch(zipUrl);
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to download ZIP bundle.`);
+      const arrayBuffer = await res.arrayBuffer();
+
+      const archive = await parseZipArchive(arrayBuffer);
+
+      if (bundleExplorerSection) {
+        bundleExplorerSection.style.display = 'block';
+        if (bundleExplorerTitle) bundleExplorerTitle.textContent = `${RESOURCE.title} (ZIP Archive)`;
+        if (bundleExplorerDesc) {
+          bundleExplorerDesc.textContent = `Contains ${archive.entries.length} extracted files. Read any PDF document below directly in the embedded reader:`;
+        }
+        if (bundleItemsList) {
+          bundleItemsList.innerHTML = '';
+          archive.entries.forEach((entry) => {
+            const card = document.createElement('div');
+            card.className = 'bundle-item-card unlocked';
+            card.innerHTML = `
+              <div class="bundle-item-header">
+                <span class="bundle-type-pill">${entry.isPdf ? 'PDF Document' : entry.mimeType}</span>
+                <span class="bundle-subject-tag">${entry.formattedSize}</span>
+              </div>
+              <h3 class="bundle-item-title">${entry.cleanName}</h3>
+              <div class="bundle-item-footer">
+                ${entry.isPdf ? `
+                  <button type="button" class="btn-primary bundle-read-action zip-pdf-extract-btn" data-file-name="${entry.fileName}">
+                    Open PDF in Reader &rarr;
+                  </button>
+                ` : `
+                  <span class="text-muted" style="font-size: 13px;">Supplementary Document</span>
+                `}
+              </div>
+            `;
+            bundleItemsList.appendChild(card);
+          });
+
+          // Bind click to in-memory extraction
+          const extractBtns = bundleItemsList.querySelectorAll('.zip-pdf-extract-btn');
+          extractBtns.forEach((btn) => {
+            btn.addEventListener('click', async () => {
+              const fname = btn.getAttribute('data-file-name');
+              const entry = archive.entries.find((e) => e.fileName === fname);
+              if (entry) {
+                btn.textContent = 'Opening in Reader...';
+                currentDocumentKey = entry.fileName;
+                const blobUrl = await archive.extractPdfUrl(entry);
+                isPdfMode = true;
+                pdfUrl = blobUrl;
+                await loadAndRenderPdf(blobUrl);
+              }
+            });
+          });
+        }
+      }
+
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'none';
+
+      // If the archive has PDFs, automatically render the first PDF into the reader view
+      if (archive.hasPdfs && archive.pdfEntries.length > 0) {
+        const firstPdf = archive.pdfEntries[0];
+        currentDocumentKey = firstPdf.fileName;
+        const blobUrl = await archive.extractPdfUrl(firstPdf);
+        isPdfMode = true;
+        pdfUrl = blobUrl;
+        await loadAndRenderPdf(blobUrl);
+      }
+    } catch (zipErr: any) {
+      console.error('ZIP bundle extraction error:', zipErr);
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'none';
+      if (pdfErrorBox) pdfErrorBox.style.display = 'flex';
+      if (pdfErrorMessage) {
+        pdfErrorMessage.textContent = `Unable to extract bundle archive: ${zipErr?.message || 'Archive error'}`;
       }
     }
   }
 
-  // 2. Initialize Student Session & Entitlement Verification
+  // 4. Initialize Student Session & Entitlement Verification
   async function initAuthAndAccess() {
     currentUser = await getCurrentUser();
     const userEmail = currentUser?.email;
@@ -491,7 +1019,632 @@ const resourceJson = JSON.stringify({
       }
     }
 
-    renderWatermark(userEmail);
+    renderWatermark();
+    setupBundleExperience();
+
+    // Retrieve Secure Original PDF or ZIP Bundle
+    try {
+      const securePdf = await getSecureResourcePdf(RESOURCE.id, currentUser);
+
+      // Handle ZIP bundle archive
+      if (securePdf.isZip && securePdf.zipUrl && securePdf.hasAccess) {
+        await loadAndRenderZipBundle(securePdf.zipUrl);
+        return;
+      }
+
+      // Handle direct PDF document
+      if (securePdf.isPdf && securePdf.pdfUrl && securePdf.hasAccess) {
+        isPdfMode = true;
+        pdfUrl = securePdf.pdfUrl;
+        await loadAndRenderPdf(pdfUrl);
+        return;
+      }
+    } catch (pdfInitErr) {
+      console.warn('PDF reader initialization warning:', pdfInitErr);
+    }
+
+    // If this is a bundle product without direct single PDF, bundle explorer is already rendered
+    if (RESOURCE.isBundle || RESOURCE.id === 'booster-bundle' || RESOURCE.id === 'all-science-boosters-bundle') {
+      return;
+    }
+
+    // Default to HTML Reader fallback
+    switchToHtmlReader();
+  }
+
+  // PDF Viewer Logic — Phase 2 Navigation, Zoom, and Search
+  const ZOOM_LEVELS = [0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 2.50, 3.00];
+
+  function updateZoomDisplay() {
+    if (pdfZoomLevel) {
+      pdfZoomLevel.textContent = `${Math.round(currentPdfScale * 100)}%`;
+    }
+    if (pdfZoomOutBtn) {
+      pdfZoomOutBtn.disabled = currentPdfScale <= 0.50;
+    }
+    if (pdfZoomInBtn) {
+      pdfZoomInBtn.disabled = currentPdfScale >= 3.00;
+    }
+  }
+
+  function zoomIn() {
+    fitMode = 'custom';
+    if (currentPdfScale >= 3.00) return;
+    const next = ZOOM_LEVELS.find((z) => z > currentPdfScale + 0.02) || 3.00;
+    setZoom(Math.min(next, 3.00), 'custom');
+  }
+
+  function zoomOut() {
+    fitMode = 'custom';
+    if (currentPdfScale <= 0.50) return;
+    const prev = [...ZOOM_LEVELS].reverse().find((z) => z < currentPdfScale - 0.02) || 0.50;
+    setZoom(Math.max(prev, 0.50), 'custom');
+  }
+
+  function fitToWidth() {
+    fitMode = 'width';
+    const containerW = Math.max((pdfPagesContainer ? pdfPagesContainer.clientWidth : window.innerWidth) - 32, 280);
+    const target = containerW / basePageWidth;
+    setZoom(Math.min(Math.max(target, 0.50), 3.00), 'width');
+  }
+
+  function fitToPage() {
+    fitMode = 'page';
+    const availableH = Math.max(window.innerHeight - 150, 400);
+    const containerW = Math.max((pdfPagesContainer ? pdfPagesContainer.clientWidth : window.innerWidth) - 32, 280);
+    const target = Math.min(containerW / basePageWidth, availableH / basePageHeight);
+    setZoom(Math.min(Math.max(target, 0.50), 3.00), 'page');
+  }
+
+  function setZoom(newScale: number, mode = 'custom') {
+    if (!pdfDoc) return;
+    fitMode = mode;
+    currentPdfScale = Math.min(Math.max(newScale, 0.50), 3.00);
+
+    // Record reading anchor (current page and its offset from viewport top)
+    const anchorPage = currentPdfPageNum;
+    const anchorEl = document.getElementById(`pdfPageWrapper-${anchorPage}`);
+    const anchorRectBefore = anchorEl ? anchorEl.getBoundingClientRect() : null;
+
+    updateZoomDisplay();
+
+    // Cancel running render tasks
+    renderTasks.forEach((task) => {
+      try { task.cancel(); } catch (e) {}
+    });
+    renderTasks.clear();
+    renderingPages.clear();
+    renderedPages.clear();
+
+    // Resize placeholder frames
+    const wrappers = pdfPagesContainer ? pdfPagesContainer.querySelectorAll('.pdf-page-wrapper') : [];
+    wrappers.forEach((wrap) => {
+      const p = parseInt(wrap.getAttribute('data-page-number') || '1', 10);
+      const skel = document.getElementById(`pdfSkeleton-${p}`);
+      if (skel) skel.style.display = 'flex';
+      (wrap as HTMLElement).style.width = `${Math.floor(basePageWidth * currentPdfScale)}px`;
+      (wrap as HTMLElement).style.minHeight = `${Math.floor(basePageHeight * currentPdfScale)}px`;
+    });
+
+    // Re-render visible pages and highlight layers
+    reRenderVisiblePages();
+    renderAllVisibleHighlights();
+
+    // Maintain sensible reading position
+    if (anchorEl && anchorRectBefore) {
+      const newRect = anchorEl.getBoundingClientRect();
+      const diffY = newRect.top - anchorRectBefore.top;
+      if (Math.abs(diffY) > 5) {
+        window.scrollBy({ top: diffY, behavior: 'instant' });
+      }
+    }
+  }
+
+  function navigateToInputPage() {
+    if (!pdfPageInput) return;
+    const rawVal = pdfPageInput.value.trim();
+    const val = parseInt(rawVal, 10);
+    if (isNaN(val) || val < 1 || val > totalPdfPages) {
+      pdfPageInput.value = currentPdfPageNum.toString();
+      pdfPageInput.classList.add('input-error');
+      setTimeout(() => pdfPageInput.classList.remove('input-error'), 800);
+      return;
+    }
+    scrollToPage(val);
+  }
+
+  function scrollToPage(pageNum: number) {
+    if (pageNum < 1 || pageNum > totalPdfPages) return;
+    currentPdfPageNum = pageNum;
+    if (pdfPageInput && document.activeElement !== pdfPageInput) {
+      pdfPageInput.value = pageNum.toString();
+    }
+    if (pdfPrevPageBtn) pdfPrevPageBtn.disabled = pageNum <= 1;
+    if (pdfNextPageBtn) pdfNextPageBtn.disabled = pageNum >= totalPdfPages;
+
+    const target = document.getElementById(`pdfPageWrapper-${pageNum}`);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    scheduleProgressSave(true);
+  }
+
+  function reRenderVisiblePages() {
+    if (!pdfPagesContainer) return;
+    const wrappers = pdfPagesContainer.querySelectorAll('.pdf-page-wrapper');
+    const windowH = window.innerHeight;
+    wrappers.forEach((wrap) => {
+      const rect = wrap.getBoundingClientRect();
+      if (rect.bottom >= -200 && rect.top <= windowH + 200) {
+        const p = parseInt(wrap.getAttribute('data-page-number') || '1', 10);
+        renderSinglePdfPage(p);
+      }
+    });
+  }
+
+  // --- In-Document PDF Text Search State & Methods ---
+  const pageTextCache = new Map(); // pageNum -> Array<items>
+  let isSearchOpen = false;
+  let currentSearchQuery = '';
+  let searchMatches = []; // Array<{ pageNum: number, rect: number[], charIndex: number, length: number, totalChars: number }>
+  let currentMatchIndex = -1;
+  let isSearching = false;
+
+  async function getPageTextItems(pageNum: number) {
+    if (pageTextCache.has(pageNum)) {
+      return pageTextCache.get(pageNum);
+    }
+    if (!pdfDoc || pageNum < 1 || pageNum > totalPdfPages) return [];
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const tc = await page.getTextContent();
+      pageTextCache.set(pageNum, tc.items);
+      return tc.items;
+    } catch (err) {
+      console.warn(`Error extracting text for page ${pageNum}:`, err);
+      return [];
+    }
+  }
+
+  async function executePdfSearch(query: string) {
+    query = query.trim();
+    currentSearchQuery = query;
+
+    if (!query) {
+      clearSearch();
+      return;
+    }
+
+    if (pdfSearchClearBtn) pdfSearchClearBtn.style.display = 'inline-flex';
+    if (pdfSearchCount) pdfSearchCount.textContent = 'Searching...';
+    if (pdfSearchMessage) {
+      pdfSearchMessage.style.display = 'block';
+      pdfSearchMessage.className = 'pdf-search-status-banner searching';
+      pdfSearchMessage.textContent = 'Searching entire document...';
+    }
+
+    isSearching = true;
+    searchMatches = [];
+    currentMatchIndex = -1;
+
+    try {
+      for (let p = 1; p <= totalPdfPages; p++) {
+        const items = await getPageTextItems(p);
+        for (let i = 0; i < items.length; i++) {
+          const it = items[i];
+          if (!it || !it.str) continue;
+          const lowerStr = it.str.toLowerCase();
+          const lowerQuery = query.toLowerCase();
+          let start = 0;
+          let idx = -1;
+          while ((idx = lowerStr.indexOf(lowerQuery, start)) !== -1) {
+            const rect = [
+              it.transform[4],
+              it.transform[5],
+              it.transform[4] + it.width,
+              it.transform[5] + it.height,
+            ];
+            searchMatches.push({
+              pageNum: p,
+              rect: rect,
+              charIndex: idx,
+              length: query.length,
+              totalChars: it.str.length,
+            });
+            start = idx + query.length;
+          }
+        }
+      }
+
+      isSearching = false;
+
+      if (searchMatches.length === 0) {
+        if (pdfSearchCount) pdfSearchCount.textContent = '0 of 0';
+        if (pdfSearchPrevBtn) pdfSearchPrevBtn.disabled = true;
+        if (pdfSearchNextBtn) pdfSearchNextBtn.disabled = true;
+        if (pdfSearchMessage) {
+          pdfSearchMessage.style.display = 'block';
+          pdfSearchMessage.className = 'pdf-search-status-banner empty';
+          pdfSearchMessage.textContent = `No matches found for "${query}"`;
+        }
+        clearAllHighlightLayers();
+      } else {
+        if (pdfSearchMessage) pdfSearchMessage.style.display = 'none';
+        if (pdfSearchPrevBtn) pdfSearchPrevBtn.disabled = false;
+        if (pdfSearchNextBtn) pdfSearchNextBtn.disabled = false;
+        goToSearchMatch(0);
+      }
+    } catch (searchErr) {
+      console.warn('Search execution error:', searchErr);
+      isSearching = false;
+      if (pdfSearchMessage) {
+        pdfSearchMessage.style.display = 'block';
+        pdfSearchMessage.className = 'pdf-search-status-banner error';
+        pdfSearchMessage.textContent = 'Unable to complete text search.';
+      }
+    }
+  }
+
+  function goToSearchMatch(index: number) {
+    if (searchMatches.length === 0) return;
+    currentMatchIndex = (index + searchMatches.length) % searchMatches.length;
+
+    if (pdfSearchCount) {
+      pdfSearchCount.textContent = `${currentMatchIndex + 1} of ${searchMatches.length}`;
+    }
+
+    const match = searchMatches[currentMatchIndex];
+    scrollToPage(match.pageNum);
+    renderAllVisibleHighlights();
+  }
+
+  async function renderPageHighlights(pageNum: number) {
+    const layer = document.getElementById(`pdfHighlightLayer-${pageNum}`);
+    if (!layer) return;
+    layer.innerHTML = '';
+
+    if (!currentSearchQuery || searchMatches.length === 0 || !pdfDoc) return;
+
+    const pageMatches = searchMatches
+      .map((m, idx) => ({ ...m, globalIndex: idx }))
+      .filter((m) => m.pageNum === pageNum);
+
+    if (pageMatches.length === 0) return;
+
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: currentPdfScale });
+
+      pageMatches.forEach((m) => {
+        const cvt = viewport.convertToViewportRectangle(m.rect);
+        let left = Math.min(cvt[0], cvt[2]);
+        let top = Math.min(cvt[1], cvt[3]);
+        let width = Math.abs(cvt[2] - cvt[0]);
+        let height = Math.abs(cvt[3] - cvt[1]);
+
+        if (m.totalChars > 0) {
+          const charRatio = m.charIndex / m.totalChars;
+          const widthRatio = m.length / m.totalChars;
+          left += width * charRatio;
+          width = Math.max(width * widthRatio, 4);
+        }
+
+        const isCurrent = m.globalIndex === currentMatchIndex;
+        const el = document.createElement('div');
+        el.className = `pdf-highlight-item ${isCurrent ? 'active' : ''}`;
+        el.style.left = `${Math.floor(left)}px`;
+        el.style.top = `${Math.floor(top)}px`;
+        el.style.width = `${Math.ceil(width)}px`;
+        el.style.height = `${Math.ceil(height)}px`;
+        layer.appendChild(el);
+      });
+    } catch (err) {
+      console.warn(`Error rendering highlights on page ${pageNum}:`, err);
+    }
+  }
+
+  function renderAllVisibleHighlights() {
+    if (!pdfPagesContainer) return;
+    const wrappers = pdfPagesContainer.querySelectorAll('.pdf-page-wrapper');
+    const windowH = window.innerHeight;
+    wrappers.forEach((wrap) => {
+      const rect = wrap.getBoundingClientRect();
+      if (rect.bottom >= -350 && rect.top <= windowH + 350) {
+        const p = parseInt(wrap.getAttribute('data-page-number') || '1', 10);
+        renderPageHighlights(p);
+      }
+    });
+  }
+
+  function clearAllHighlightLayers() {
+    if (!pdfPagesContainer) return;
+    const layers = pdfPagesContainer.querySelectorAll('.pdf-highlight-layer');
+    layers.forEach((l) => { l.innerHTML = ''; });
+  }
+
+  function clearSearch() {
+    currentSearchQuery = '';
+    searchMatches = [];
+    currentMatchIndex = -1;
+    if (pdfSearchInput) pdfSearchInput.value = '';
+    if (pdfSearchCount) pdfSearchCount.textContent = '0 of 0';
+    if (pdfSearchClearBtn) pdfSearchClearBtn.style.display = 'none';
+    if (pdfSearchPrevBtn) pdfSearchPrevBtn.disabled = true;
+    if (pdfSearchNextBtn) pdfSearchNextBtn.disabled = true;
+    if (pdfSearchMessage) pdfSearchMessage.style.display = 'none';
+    clearAllHighlightLayers();
+  }
+
+  function toggleSearchBar(open?: boolean) {
+    isSearchOpen = open !== undefined ? open : !isSearchOpen;
+    if (pdfSearchBar) {
+      pdfSearchBar.style.display = isSearchOpen ? 'block' : 'none';
+    }
+    if (pdfSearchToggleBtn) {
+      pdfSearchToggleBtn.classList.toggle('active', isSearchOpen);
+    }
+    if (isSearchOpen) {
+      setTimeout(() => {
+        pdfSearchInput?.focus();
+        pdfSearchInput?.select();
+      }, 50);
+    } else {
+      clearSearch();
+    }
+  }
+
+  async function loadAndRenderPdf(url: string) {
+    try {
+      if (readingStage) readingStage.style.display = 'none';
+      if (chapterFooterNav) (chapterFooterNav as HTMLElement).style.display = 'none';
+      if (fontSwitchGroup) fontSwitchGroup.style.display = 'none';
+      if (toggleOutlineBtn) toggleOutlineBtn.style.display = 'none';
+      if (gatekeeperCard) gatekeeperCard.style.display = 'none';
+
+      if (pdfViewerStage) pdfViewerStage.style.display = 'block';
+      if (pdfControlsGroup) pdfControlsGroup.style.display = 'flex';
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'flex';
+      if (pdfErrorBox) pdfErrorBox.style.display = 'none';
+      if (pdfLoadingStatus) pdfLoadingStatus.textContent = 'Loading official document...';
+
+      pdfDoc = await pdfjsLib.getDocument({ url }).promise;
+      totalPdfPages = pdfDoc.numPages;
+
+      if (pdfTotalPages) pdfTotalPages.textContent = totalPdfPages.toString();
+      if (pdfPageInput) {
+        pdfPageInput.max = totalPdfPages.toString();
+        pdfPageInput.value = '1';
+      }
+      currentPdfPageNum = 1;
+      if (pdfPrevPageBtn) pdfPrevPageBtn.disabled = true;
+      if (pdfNextPageBtn) pdfNextPageBtn.disabled = totalPdfPages <= 1;
+
+      // Determine dimensions from Page 1
+      const p1 = await pdfDoc.getPage(1);
+      const unscaledVp = p1.getViewport({ scale: 1.0 });
+      basePageWidth = unscaledVp.width || 595.28;
+      basePageHeight = unscaledVp.height || 841.89;
+
+      // Initial fit to width
+      fitToWidth();
+
+      // Build placeholders with highlight layers
+      if (pdfPagesContainer) {
+        pdfPagesContainer.innerHTML = '';
+        for (let i = 1; i <= totalPdfPages; i++) {
+          const wrapper = document.createElement('div');
+          wrapper.className = 'pdf-page-wrapper';
+          wrapper.id = `pdfPageWrapper-${i}`;
+          wrapper.setAttribute('data-page-number', i.toString());
+          wrapper.style.width = `${Math.floor(basePageWidth * currentPdfScale)}px`;
+          wrapper.style.minHeight = `${Math.floor(basePageHeight * currentPdfScale)}px`;
+
+          wrapper.innerHTML = `
+            <div class="pdf-page-skeleton" id="pdfSkeleton-${i}">
+              <div class="skeleton-shimmer"></div>
+              <span class="skeleton-label">Loading Page ${i}...</span>
+            </div>
+            <canvas class="pdf-page-canvas" id="pdfCanvas-${i}"></canvas>
+            <div class="pdf-highlight-layer" id="pdfHighlightLayer-${i}"></div>
+          `;
+          pdfPagesContainer.appendChild(wrapper);
+        }
+
+        // Setup IntersectionObserver for lazy page rendering
+        if (pageObserver) pageObserver.disconnect();
+        pageObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const p = parseInt(entry.target.getAttribute('data-page-number') || '1', 10);
+              renderSinglePdfPage(p);
+            }
+          });
+        }, { rootMargin: '350px 0px 350px 0px', threshold: 0.01 });
+
+        const wrappers = pdfPagesContainer.querySelectorAll('.pdf-page-wrapper');
+        wrappers.forEach((w) => pageObserver.observe(w));
+
+        // Setup scroll observer for page counter and editable input synchronization
+        if (scrollSpyObserver) scrollSpyObserver.disconnect();
+        scrollSpyObserver = new IntersectionObserver((entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting && entry.intersectionRatio >= 0.25) {
+              const p = parseInt(entry.target.getAttribute('data-page-number') || '1', 10);
+              if (currentPdfPageNum !== p) {
+                currentPdfPageNum = p;
+                if (pdfPageInput && document.activeElement !== pdfPageInput) {
+                  pdfPageInput.value = p.toString();
+                }
+                if (pdfPrevPageBtn) pdfPrevPageBtn.disabled = p <= 1;
+                if (pdfNextPageBtn) pdfNextPageBtn.disabled = p >= totalPdfPages;
+
+                // Dismiss resume prompt banner if student scrolls on their own
+                if (p > 1) {
+                  hideResumePrompt();
+                }
+
+                // Debounced persistence of actual reading position (anti-race & safe)
+                scheduleProgressSave(false);
+              }
+            }
+          });
+        }, { threshold: [0.25, 0.6] });
+
+        wrappers.forEach((w) => scrollSpyObserver.observe(w));
+      }
+
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'none';
+
+      // Immediately render Page 1
+      renderSinglePdfPage(1);
+
+      // Phase 4: Query saved progress and display resume prompt if previous position exists
+      try {
+        activeSavedProgress = await getReadingProgress(RESOURCE.id, currentDocumentKey, currentUser);
+        if (
+          activeSavedProgress &&
+          activeSavedProgress.currentPage > 1 &&
+          activeSavedProgress.currentPage <= totalPdfPages
+        ) {
+          showResumePrompt(activeSavedProgress);
+        } else {
+          hideResumePrompt();
+        }
+      } catch (resumeErr) {
+        console.warn('Notice loading resume progress:', resumeErr);
+        hideResumePrompt();
+      }
+    } catch (loadErr: any) {
+      console.error('Failed to load PDF document:', loadErr);
+      if (pdfLoadingBox) pdfLoadingBox.style.display = 'none';
+      if (pdfErrorBox) pdfErrorBox.style.display = 'flex';
+      if (pdfErrorMessage) {
+        pdfErrorMessage.textContent = loadErr?.message || 'Could not load the original document.';
+      }
+    }
+  }
+
+  async function renderSinglePdfPage(pageNum: number) {
+    if (!pdfDoc || pageNum < 1 || pageNum > totalPdfPages) return;
+    if (renderedPages.get(pageNum) || renderingPages.has(pageNum)) return;
+
+    renderingPages.add(pageNum);
+
+    try {
+      const page = await pdfDoc.getPage(pageNum);
+      const viewport = page.getViewport({ scale: currentPdfScale });
+      const wrapper = document.getElementById(`pdfPageWrapper-${pageNum}`);
+      const canvas = document.getElementById(`pdfCanvas-${pageNum}`) as HTMLCanvasElement | null;
+      const skeleton = document.getElementById(`pdfSkeleton-${pageNum}`);
+
+      if (!canvas || !wrapper) {
+        renderingPages.delete(pageNum);
+        return;
+      }
+
+      const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+      const displayWidth = Math.floor(viewport.width);
+      const displayHeight = Math.floor(viewport.height);
+
+      canvas.width = Math.floor(viewport.width * dpr);
+      canvas.height = Math.floor(viewport.height * dpr);
+      canvas.style.width = `${displayWidth}px`;
+      canvas.style.height = `${displayHeight}px`;
+
+      wrapper.style.width = `${displayWidth}px`;
+      wrapper.style.minHeight = `${displayHeight}px`;
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        renderingPages.delete(pageNum);
+        return;
+      }
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      if (renderTasks.has(pageNum)) {
+        try {
+          renderTasks.get(pageNum).cancel();
+        } catch (e) {}
+      }
+
+      const renderTask = page.render({
+        canvasContext: ctx,
+        viewport: viewport,
+      });
+      renderTasks.set(pageNum, renderTask);
+
+      await renderTask.promise;
+      renderTasks.delete(pageNum);
+
+      // Draw subtle TECHMED brand logo watermark directly on canvas overlay (Branding only — zero student PII)
+      if (brandLogo.complete && brandLogo.naturalWidth > 0) {
+        ctx.save();
+        ctx.globalAlpha = currentTheme === 'light' ? 0.048 : 0.058;
+        ctx.rotate((-20 * Math.PI) / 180);
+
+        const logoSize = 120;
+        const stepX = 280;
+        const stepY = 240;
+
+        for (let y = -200; y < viewport.height + 400; y += stepY) {
+          for (let x = -300; x < viewport.width + 400; x += stepX) {
+            ctx.drawImage(brandLogo, x, y, logoSize, logoSize);
+          }
+        }
+        ctx.restore();
+      }
+
+      if (skeleton) skeleton.style.display = 'none';
+      renderedPages.set(pageNum, true);
+
+      // Render search highlights for this page if an active query exists
+      renderPageHighlights(pageNum);
+    } catch (renderErr: any) {
+      if (renderErr?.name !== 'RenderingCancelledException') {
+        console.warn(`Error rendering page ${pageNum}:`, renderErr);
+      }
+    } finally {
+      renderingPages.delete(pageNum);
+    }
+  }
+
+  function cleanupPdfResources() {
+    renderTasks.forEach((task) => {
+      try { task.cancel(); } catch (e) {}
+    });
+    renderTasks.clear();
+    renderingPages.clear();
+    renderedPages.clear();
+    pageTextCache.clear();
+    clearSearch();
+
+    if (pageObserver) {
+      pageObserver.disconnect();
+      pageObserver = null;
+    }
+    if (scrollSpyObserver) {
+      scrollSpyObserver.disconnect();
+      scrollSpyObserver = null;
+    }
+    if (pdfDoc && typeof pdfDoc.destroy === 'function') {
+      try { pdfDoc.destroy(); } catch (e) {}
+    }
+    pdfDoc = null;
+  }
+
+  function switchToHtmlReader() {
+    isPdfMode = false;
+    cleanupPdfResources();
+
+    if (pdfViewerStage) pdfViewerStage.style.display = 'none';
+    if (pdfControlsGroup) pdfControlsGroup.style.display = 'none';
+    if (pdfSearchBar) pdfSearchBar.style.display = 'none';
+    if (fontSwitchGroup) fontSwitchGroup.style.display = 'flex';
+    if (toggleOutlineBtn) toggleOutlineBtn.style.display = 'inline-flex';
+    if (readingStage) readingStage.style.display = 'block';
+    if (chapterFooterNav) (chapterFooterNav as HTMLElement).style.display = 'flex';
+
     buildChapterNavigation();
     renderActiveChapter();
   }
@@ -651,6 +1804,18 @@ const resourceJson = JSON.stringify({
   });
   closeDrawerBtn?.addEventListener('click', closeDrawer);
 
+  // Bundle Quick-Switch Drawer Controls
+  function openBundleDrawer() {
+    bundleDrawer?.classList.add('open');
+  }
+  function closeBundleDrawer() {
+    bundleDrawer?.classList.remove('open');
+  }
+  toggleBundleBtn?.addEventListener('click', () => {
+    bundleDrawer?.classList.toggle('open');
+  });
+  closeBundleDrawerBtn?.addEventListener('click', closeBundleDrawer);
+
   // 8. Theme Switcher (Dark, Sepia, Light)
   themeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -661,7 +1826,10 @@ const resourceJson = JSON.stringify({
       readerShell.classList.remove('theme-dark', 'theme-sepia', 'theme-light');
       readerShell.classList.add(`theme-${currentTheme}`);
 
-      renderWatermark(currentUser?.email);
+      renderWatermark();
+      if (isPdfMode) {
+        reRenderVisiblePages();
+      }
     });
   });
 
@@ -802,7 +1970,7 @@ const resourceJson = JSON.stringify({
   function updateNetworkStatus() {
     if (!navigator.onLine) {
       if (offlineNotice) offlineNotice.style.display = 'flex';
-      renderWatermark(currentUser?.email || 'Offline Student');
+      renderWatermark();
     } else {
       if (offlineNotice) offlineNotice.style.display = 'none';
     }
@@ -818,12 +1986,20 @@ const resourceJson = JSON.stringify({
       return;
     }
 
+    // Session Security: Require authenticated session for paid materials before caching
+    if (RESOURCE.status === 'paid' && !currentUser?.id) {
+      alert('Authentication Required: Please sign in to your student account before saving licensed manuals offline.');
+      return;
+    }
+
     saveOfflineBtn.disabled = true;
     saveOfflineText.textContent = 'Saving offline...';
 
     try {
       if ('caches' in window) {
-        const cache = await caches.open('techmed-reader-v3');
+        // Partition cache per authenticated student to prevent cross-account data leakage
+        const cacheName = currentUser?.id ? `techmed-reader-user-${currentUser.id}` : 'techmed-reader-public';
+        const cache = await caches.open(cacheName);
         const res = await fetch(window.location.href);
         if (!res.ok) {
           throw new Error(`Failed to fetch manual: HTTP ${res.status}`);
@@ -846,9 +2022,174 @@ const resourceJson = JSON.stringify({
     }
   });
 
-  // Window resize: re-render watermark
+  // 15. PDF Viewer Controls Listeners (Phase 2 Zoom, Page Navigation, Search & Shortcuts)
+  pdfSearchToggleBtn?.addEventListener('click', () => {
+    toggleSearchBar();
+  });
+
+  pdfSearchCloseBtn?.addEventListener('click', () => {
+    toggleSearchBar(false);
+  });
+
+  pdfSearchClearBtn?.addEventListener('click', () => {
+    clearSearch();
+    pdfSearchInput?.focus();
+  });
+
+  let searchDebounceTimer: any = null;
+  pdfSearchInput?.addEventListener('input', () => {
+    const val = pdfSearchInput?.value || '';
+    if (pdfSearchClearBtn) {
+      pdfSearchClearBtn.style.display = val.length > 0 ? 'inline-flex' : 'none';
+    }
+    clearTimeout(searchDebounceTimer);
+    searchDebounceTimer = setTimeout(() => {
+      executePdfSearch(val);
+    }, 320);
+  });
+
+  pdfSearchInput?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (e.shiftKey) {
+        goToSearchMatch(currentMatchIndex - 1);
+      } else if (currentSearchQuery === (pdfSearchInput?.value.trim() || '') && searchMatches.length > 0) {
+        goToSearchMatch(currentMatchIndex + 1);
+      } else {
+        executePdfSearch(pdfSearchInput?.value || '');
+      }
+    } else if (e.key === 'Escape') {
+      toggleSearchBar(false);
+    }
+  });
+
+  pdfSearchPrevBtn?.addEventListener('click', () => {
+    goToSearchMatch(currentMatchIndex - 1);
+  });
+
+  pdfSearchNextBtn?.addEventListener('click', () => {
+    goToSearchMatch(currentMatchIndex + 1);
+  });
+
+  // Page input direct navigation
+  pdfPageInput?.addEventListener('change', () => {
+    navigateToInputPage();
+  });
+
+  pdfPageInput?.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      navigateToInputPage();
+      pdfPageInput?.blur();
+    }
+  });
+
+  // Zoom Controls Listeners
+  pdfZoomInBtn?.addEventListener('click', () => {
+    zoomIn();
+  });
+
+  pdfZoomOutBtn?.addEventListener('click', () => {
+    zoomOut();
+  });
+
+  pdfFitWidthBtn?.addEventListener('click', () => {
+    fitToWidth();
+  });
+
+  pdfFitPageBtn?.addEventListener('click', () => {
+    fitToPage();
+  });
+
+  pdfPrevPageBtn?.addEventListener('click', () => {
+    scrollToPage(currentPdfPageNum - 1);
+  });
+
+  pdfNextPageBtn?.addEventListener('click', () => {
+    scrollToPage(currentPdfPageNum + 1);
+  });
+
+  pdfRetryBtn?.addEventListener('click', () => {
+    if (pdfUrl) loadAndRenderPdf(pdfUrl);
+  });
+
+  pdfFallbackBtn?.addEventListener('click', () => {
+    switchToHtmlReader();
+  });
+
+  // Global Keyboard Shortcuts for PDF Reading Mode
+  window.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (!isPdfMode) return;
+
+    // Ctrl+F or Cmd+F -> Open PDF search
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'f' || e.key === 'F')) {
+      e.preventDefault();
+      toggleSearchBar(true);
+      return;
+    }
+
+    // Escape -> Close search if open
+    if (e.key === 'Escape' && isSearchOpen) {
+      e.preventDefault();
+      toggleSearchBar(false);
+      return;
+    }
+
+    // Avoid single-key hotkeys when typing in input/textarea
+    const activeEl = document.activeElement;
+    const tagName = (activeEl?.tagName || '').toLowerCase();
+    if (tagName === 'input' || tagName === 'textarea') return;
+
+    if (e.key === '+' || e.key === '=') {
+      e.preventDefault();
+      zoomIn();
+    } else if (e.key === '-' || e.key === '_') {
+      e.preventDefault();
+      zoomOut();
+    } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+      e.preventDefault();
+      scrollToPage(currentPdfPageNum - 1);
+    } else if (e.key === 'ArrowRight' || e.key === 'PageDown') {
+      e.preventDefault();
+      scrollToPage(currentPdfPageNum + 1);
+    }
+  });
+
+  // Window resize: re-render watermark and adjust fit width if in PDF mode
   window.addEventListener('resize', () => {
-    renderWatermark(currentUser?.email);
+    renderWatermark();
+    if (isPdfMode && fitMode === 'width') {
+      fitToWidth();
+    }
+  });
+
+  // Phase 4 Resume Prompt Buttons
+  resumeContinueBtn?.addEventListener('click', () => {
+    hideResumePrompt();
+    if (activeSavedProgress && activeSavedProgress.currentPage > 1) {
+      scrollToPage(activeSavedProgress.currentPage);
+    }
+  });
+
+  resumeRestartBtn?.addEventListener('click', () => {
+    hideResumePrompt();
+    scrollToPage(1);
+    scheduleProgressSave(true);
+  });
+
+  resumeDismissBtn?.addEventListener('click', () => {
+    hideResumePrompt();
+  });
+
+  // Save progress immediately on visibility change or page exit
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+      scheduleProgressSave(true);
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    scheduleProgressSave(true);
   });
 
   // Run on startup
@@ -858,6 +2199,123 @@ const resourceJson = JSON.stringify({
 <style>
   :root {
     --reader-font-size: 17px;
+  }
+
+  /* Resume Reading Prompt Banner (Phase 4) */
+  .resume-prompt-banner {
+    position: sticky;
+    top: 64px;
+    z-index: 95;
+    background: #091e36;
+    border-bottom: 1px solid rgba(56, 189, 248, 0.4);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    animation: slideDown 250ms ease-out;
+  }
+
+  .theme-light .resume-prompt-banner {
+    background: #eff6ff;
+    border-bottom: 1px solid #bfdbfe;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  }
+
+  .theme-sepia .resume-prompt-banner {
+    background: #f4ede0;
+    border-bottom: 1px solid #d4c5b0;
+    box-shadow: 0 4px 12px rgba(44, 37, 30, 0.08);
+  }
+
+  .resume-prompt-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .resume-prompt-icon {
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .theme-light .resume-prompt-icon {
+    color: #0284c7;
+  }
+
+  .resume-prompt-text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .resume-prompt-title {
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: var(--reader-text);
+  }
+
+  .resume-prompt-desc {
+    font-size: 0.78rem;
+    color: var(--reader-text-muted);
+  }
+
+  .resume-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .resume-action-btn {
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    border-radius: var(--radius-sm);
+    white-space: nowrap;
+  }
+
+  .resume-close-btn {
+    background: transparent;
+    border: none;
+    color: var(--reader-text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 4px 8px;
+    border-radius: 4px;
+  }
+
+  .resume-close-btn:hover {
+    color: var(--reader-text);
+  }
+
+  @keyframes slideDown {
+    from {
+      transform: translateY(-100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .resume-prompt-banner {
+      flex-direction: column;
+      align-items: flex-start;
+      padding: 12px 16px;
+    }
+    .resume-prompt-actions {
+      width: 100%;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+    }
   }
 
   /* Progress Bar */
@@ -1708,6 +3166,448 @@ const resourceJson = JSON.stringify({
     line-height: 1.5;
   }
 
+  /* PDF Viewer Mozilla PDF.js Foundation Styles — Phase 2 */
+  .pdf-controls-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-right: 4px;
+  }
+
+  .search-toggle-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .search-toggle-btn.active {
+    background: var(--accent);
+    color: #ffffff;
+    border-color: var(--accent);
+  }
+
+  .zoom-controls {
+    display: inline-flex;
+    align-items: center;
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-md);
+    padding: 2px 4px;
+    gap: 2px;
+  }
+
+  .zoom-btn, .fit-btn {
+    background: transparent;
+    border: none;
+    color: var(--reader-text);
+    padding: 4px 7px;
+    border-radius: 4px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .zoom-btn:hover:not(:disabled), .fit-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .zoom-btn:disabled, .fit-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .zoom-display {
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    padding: 0 4px;
+    min-width: 44px;
+    text-align: center;
+    color: var(--reader-text-muted);
+    font-weight: 600;
+    user-select: none;
+  }
+
+  .pdf-page-controls {
+    display: inline-flex;
+    align-items: center;
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-md);
+    padding: 2px 4px;
+    gap: 2px;
+  }
+
+  .page-nav-arrow {
+    background: transparent;
+    border: none;
+    color: var(--reader-text);
+    padding: 4px 7px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    line-height: 1;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .page-nav-arrow:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .page-nav-arrow:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .page-num-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    color: var(--reader-text-muted);
+    padding: 0 2px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
+  .page-num-input {
+    width: 38px;
+    height: 24px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--reader-border);
+    border-radius: 4px;
+    color: var(--reader-text);
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    padding: 0 2px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    -moz-appearance: textfield;
+  }
+
+  .page-num-input::-webkit-outer-spin-button,
+  .page-num-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  .page-num-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
+    background: rgba(0, 0, 0, 0.35);
+  }
+
+  .page-num-input.input-error {
+    border-color: #ef4444 !important;
+    animation: shake 0.3s ease;
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  .page-sep {
+    opacity: 0.6;
+    font-size: 0.74rem;
+  }
+
+  /* Dedicated PDF In-Document Search Toolbar */
+  .pdf-search-bar {
+    width: 100%;
+    background: var(--reader-surface);
+    border-bottom: 1px solid var(--reader-border);
+    padding: 8px 16px;
+    position: relative;
+    z-index: 80;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+    animation: slide-down 0.15s ease-out;
+  }
+
+  @keyframes slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .pdf-search-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 840px;
+    margin: 0 auto;
+    gap: 12px;
+  }
+
+  .search-input-group {
+    display: flex;
+    align-items: center;
+    flex: 1;
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-md);
+    padding: 4px 10px;
+    gap: 8px;
+    transition: border-color 0.15s ease;
+  }
+
+  .search-input-group:focus-within {
+    border-color: var(--accent);
+  }
+
+  .search-input-group .search-icon {
+    color: var(--reader-text-muted);
+    flex-shrink: 0;
+  }
+
+  .pdf-search-input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    color: var(--reader-text);
+    font-size: 0.86rem;
+    outline: none;
+    min-width: 120px;
+  }
+
+  .pdf-search-input::placeholder {
+    color: var(--reader-text-muted);
+    opacity: 0.7;
+  }
+
+  .search-clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--reader-text-muted);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 0 4px;
+    line-height: 1;
+    border-radius: 3px;
+  }
+
+  .search-clear-btn:hover {
+    color: var(--reader-text);
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .search-actions-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .search-match-count {
+    font-size: 0.76rem;
+    font-family: var(--font-mono);
+    color: var(--reader-text-muted);
+    padding: 0 6px;
+    min-width: 65px;
+    text-align: center;
+    font-weight: 600;
+  }
+
+  .search-nav-btn, .search-close-btn {
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    color: var(--reader-text);
+    border-radius: var(--radius-sm);
+    padding: 4px 9px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: bold;
+    line-height: 1;
+    transition: background 0.15s ease, opacity 0.15s ease;
+  }
+
+  .search-nav-btn:hover:not(:disabled), .search-close-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .search-nav-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  .search-close-btn {
+    font-size: 1.1rem;
+    padding: 2px 8px;
+  }
+
+  .pdf-search-status-banner {
+    max-width: 840px;
+    margin: 6px auto 0;
+    font-size: 0.78rem;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-align: center;
+  }
+
+  .pdf-search-status-banner.searching {
+    color: var(--reader-text-muted);
+  }
+
+  .pdf-search-status-banner.empty {
+    color: #f59e0b;
+    background: rgba(245, 158, 11, 0.1);
+  }
+
+  .pdf-search-status-banner.error {
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.1);
+  }
+
+  /* PDF Viewer Stage */
+  .pdf-viewer-stage {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem 0 4rem;
+  }
+
+  .pdf-state-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 3rem 1.5rem;
+    background: var(--reader-surface);
+    border: 1px solid var(--reader-border);
+    border-radius: var(--radius-lg);
+    max-width: 460px;
+    margin: 2rem auto;
+    gap: 1rem;
+  }
+
+  .pdf-spinner {
+    width: 36px;
+    height: 36px;
+    border: 3px solid rgba(14, 165, 233, 0.2);
+    border-top-color: #0ea5e9;
+    border-radius: 50%;
+    animation: pdf-spin 0.8s linear infinite;
+  }
+
+  @keyframes pdf-spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .pdf-error-icon {
+    font-size: 2.2rem;
+  }
+
+  .pdf-error-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .pdf-pages-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.5rem;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 0 8px;
+  }
+
+  .pdf-page-wrapper {
+    position: relative;
+    background: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.38);
+    border-radius: 4px;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto;
+    transition: width 0.12s ease;
+  }
+
+  .pdf-page-skeleton {
+    position: absolute;
+    inset: 0;
+    background: #0f172a;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1;
+  }
+
+  .skeleton-shimmer {
+    width: 50%;
+    height: 6px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.05), rgba(255,255,255,0.2), rgba(255,255,255,0.05));
+    border-radius: 3px;
+    animation: pdf-shimmer 1.4s infinite;
+  }
+
+  @keyframes pdf-shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+  }
+
+  .skeleton-label {
+    margin-top: 12px;
+    font-size: 0.78rem;
+    color: #94a3b8;
+    font-family: var(--font-mono);
+  }
+
+  .pdf-page-canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+  }
+
+  /* PDF Highlight Layers */
+  .pdf-highlight-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 4;
+  }
+
+  .pdf-highlight-item {
+    position: absolute;
+    background: rgba(250, 204, 21, 0.45);
+    border-radius: 2px;
+    mix-blend-mode: multiply;
+    transition: background 0.15s ease, outline 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .reader-shell.theme-dark .pdf-highlight-item {
+    mix-blend-mode: screen;
+    background: rgba(250, 204, 21, 0.4);
+  }
+
+  .pdf-highlight-item.active {
+    background: rgba(249, 115, 22, 0.75) !important;
+    outline: 2px solid #ea580c;
+    box-shadow: 0 0 10px rgba(234, 88, 12, 0.7);
+    z-index: 6;
+  }
+
   /* Responsive Adjustments */
   @media (max-width: 768px) {
     .reader-topbar {
@@ -1720,7 +3620,7 @@ const resourceJson = JSON.stringify({
       display: none;
     }
     .book-nav-title {
-      max-width: 160px;
+      max-width: 140px;
     }
     .manual-title {
       font-size: 1.5rem;
@@ -1735,5 +3635,247 @@ const resourceJson = JSON.stringify({
     .gatekeeper-claim-form {
       flex-direction: column;
     }
+
+    .fit-btn {
+      display: none;
+    }
+    .pdf-controls-group {
+      gap: 3px;
+    }
+    .zoom-display {
+      min-width: 34px;
+      font-size: 0.7rem;
+      padding: 0 2px;
+    }
+    .page-num-input {
+      width: 32px;
+      height: 22px;
+      font-size: 0.72rem;
+    }
+    .pdf-page-wrapper {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+    }
+    .pdf-search-inner {
+      gap: 6px;
+    }
+    .search-match-count {
+      min-width: 50px;
+      font-size: 0.7rem;
+    }
+    .pdf-search-input {
+      font-size: 0.8rem;
+    }
+  }
+
+  @media (max-width: 520px) {
+    .book-subject-meta {
+      display: none;
+    }
+    .theme-switch .theme-btn[data-theme="sepia"] {
+      display: none;
+    }
+    .book-nav-title {
+      max-width: 110px;
+      font-size: 0.85rem;
+    }
+  }
+
+  @media (max-width: 420px) {
+    .reader-topbar {
+      padding: 0 8px;
+      height: 56px;
+    }
+    .theme-switch {
+      display: none;
+    }
+    .book-nav-title {
+      max-width: 85px;
+      font-size: 0.8rem;
+    }
+    .topbar-left {
+      gap: 4px;
+    }
+    .topbar-right {
+      gap: 3px;
+    }
+    .pdf-controls-group {
+      gap: 2px;
+    }
+    .zoom-btn {
+      padding: 3px 6px;
+      font-size: 0.75rem;
+    }
+    .page-nav-arrow {
+      padding: 3px 6px;
+      font-size: 0.75rem;
+    }
+    .offline-save-btn {
+      padding: 5px 8px;
+    }
+    .reader-shell {
+      overflow-x: hidden;
+    }
+    .pdf-viewer-stage {
+      overflow-x: hidden;
+      padding: 1rem 0 3rem;
+    }
+    .pdf-pages-container {
+      padding: 0 4px;
+    }
+    .pdf-page-wrapper {
+      max-width: calc(100vw - 8px);
+    }
+  }
+
+  @media (max-width: 340px) {
+    .book-nav-title {
+      display: none;
+    }
+  }
+
+  /* Bundle Explorer and Collection Styles */
+  .bundle-explorer-card {
+    background: var(--reader-surface);
+    border: 1px solid var(--reader-border);
+    border-radius: 14px;
+    padding: 28px 24px;
+    margin: 24px 0 32px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  }
+
+  .bundle-badge-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .bundle-pill {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(14, 165, 233, 0.12);
+    color: #38bdf8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 4px 10px;
+    border-radius: 9999px;
+    border: 1px solid rgba(14, 165, 233, 0.25);
+  }
+
+  .bundle-status-badge {
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .bundle-status-badge.licensed {
+    background: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+  }
+
+  .bundle-status-badge.preview {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+  }
+
+  .bundle-heading {
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0 0 8px;
+    color: var(--reader-text);
+  }
+
+  .bundle-desc {
+    color: var(--reader-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin: 0 0 24px;
+  }
+
+  .bundle-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .bundle-item-card {
+    background: var(--reader-box-bg);
+    border: 1px solid var(--reader-border);
+    border-radius: 10px;
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+  }
+
+  .bundle-item-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(14, 165, 233, 0.4);
+  }
+
+  .bundle-item-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+  }
+
+  .bundle-type-pill {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--reader-text-muted);
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .bundle-subject-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: #38bdf8;
+    background: rgba(14, 165, 233, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+  }
+
+  .bundle-item-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--reader-text);
+  }
+
+  .bundle-item-desc {
+    font-size: 0.85rem;
+    color: var(--reader-text-muted);
+    line-height: 1.45;
+    margin: 0 0 16px;
+    flex-grow: 1;
+  }
+
+  .bundle-item-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+  }
+
+  .bundle-read-action {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    text-align: center;
+    font-size: 0.85rem;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .bundle-drawer {
+    z-index: 1000;
   }
 </style>

@@ -309,10 +309,15 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     fetchUserEntitlements,
     verifyAndClaimOrderReference,
     getUserResourceEntitlements,
+    getAllUserReadingProgress,
+    clearUserLocalReadingProgress,
     type UserResourceEntitlementItem,
+    type ReadingProgressRecord,
   } from '/src/lib/supabase.ts';
 
   const supabase = getSupabase();
+
+  let userProgressList: ReadingProgressRecord[] = [];
 
   // DOM Elements
   const loadingSection = document.getElementById('loadingSection');
@@ -507,6 +512,9 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
     // Isolate user sessions: purge user-specific offline data and caches from shared browser
     try {
+      if (currentUser?.id) {
+        clearUserLocalReadingProgress(currentUser.id);
+      }
       localStorage.removeItem('techmed_claimed_entitlements');
       localStorage.removeItem('techmed_dynamic_roster');
       sessionStorage.clear();
@@ -526,6 +534,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     currentUser = null;
     currentEntitlements = [];
     currentUserResources = [];
+    userProgressList = [];
     showAuthView();
   });
 
@@ -561,6 +570,14 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     // Call unified getUserResourceEntitlements for consistent booster bundle inclusions
     const resResult = await getUserResourceEntitlements(user.id, user.email);
     currentUserResources = resResult.items || [];
+
+    // Phase 4: Fetch all reading progress records for this student
+    try {
+      userProgressList = await getAllUserReadingProgress(user);
+    } catch (progErr) {
+      console.warn('Progress loading warning:', progErr);
+      userProgressList = [];
+    }
 
     // Derive account tag authoritatively from verified database entitlements and confirmed orders
     const accountTag = document.querySelector('.account-tag');
@@ -729,6 +746,43 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
             ? 'Cohort Inclusion'
             : 'Free Tool';
 
+        // Phase 4: Find matching student progress
+        const progress = userProgressList.find(
+          (p) =>
+            p.resourceId === item.resourceId ||
+            p.resourceId === item.resourceId.replace('-system', '') ||
+            (item.resourceId.startsWith('cohort-') && p.resourceId === item.resourceId)
+        );
+
+        let progressHtml = '';
+        let buttonLabel = item.actionLabel;
+
+        if (progress && progress.totalPages > 0) {
+          const pct = Math.round(progress.readingPercent);
+          const isDone = progress.isFinished || progress.currentPage >= progress.totalPages;
+          progressHtml = `
+            <div class="book-progress-strip" title="${isDone ? 'Completed manual' : `Reading progress: ${pct}%`}">
+              <div class="progress-bar-track">
+                <div class="progress-bar-fill ${isDone ? 'finished' : ''}" style="width: ${Math.max(pct, isDone ? 100 : 6)}%"></div>
+              </div>
+              <div class="progress-status-row">
+                <span class="progress-page-count">
+                  ${isDone ? '✓ Completed' : `Page ${progress.currentPage} of ${progress.totalPages} (${pct}%)`}
+                </span>
+                <span class="progress-tag ${isDone ? 'finished' : 'active'}">${isDone ? 'Finished' : 'In Progress'}</span>
+              </div>
+            </div>
+          `;
+
+          if (item.actionUrl.includes('/library/read/')) {
+            if (isDone) {
+              buttonLabel = 'Re-read Manual &rarr;';
+            } else if (progress.currentPage > 1) {
+              buttonLabel = `Continue Reading (p. ${progress.currentPage}) &rarr;`;
+            }
+          }
+        }
+
         card.innerHTML = `
           <div class="book-card-top">
             <div class="book-meta-row">
@@ -738,6 +792,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
             </div>
             <h3 class="book-title">${item.title}</h3>
             <p class="book-desc">${item.description}</p>
+            ${progressHtml}
           </div>
           <div class="book-entitlement-badge ${item.grantType}">
             <div class="badge-source">${item.grantLabel}</div>
@@ -745,7 +800,7 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </div>
           <div class="book-card-footer">
             <a href="${item.actionUrl}" class="btn-primary read-btn" ${item.actionUrl.startsWith('http') ? 'target="_blank" rel="noopener"' : ''}>
-              ${item.actionLabel} &rarr;
+              ${buttonLabel}
             </a>
           </div>
         `;
@@ -1357,7 +1412,72 @@ const catalogJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     font-size: 0.86rem;
     line-height: 1.6;
     color: var(--text-light);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
+  }
+
+  /* Book Progress Strip (Phase 4) */
+  .book-progress-strip {
+    margin-top: var(--space-2);
+    margin-bottom: var(--space-4);
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+  }
+
+  :root:not(.dark) .book-progress-strip {
+    background: rgba(0, 0, 0, 0.02);
+  }
+
+  .progress-bar-track {
+    width: 100%;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  :root:not(.dark) .progress-bar-track {
+    background: rgba(0, 0, 0, 0.08);
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 9999px;
+    transition: width 200ms ease;
+  }
+
+  .progress-bar-fill.finished {
+    background: #10b981;
+  }
+
+  .progress-status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    font-size: 0.72rem;
+  }
+
+  .progress-page-count {
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .progress-tag {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 700;
+  }
+
+  .progress-tag.active {
+    color: #38bdf8;
+  }
+
+  .progress-tag.finished {
+    color: #10b981;
   }
 
   .book-entitlement-badge {
