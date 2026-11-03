@@ -31,6 +31,11 @@
           <span id="planSummaryFinalPrice" class="plan-final-price">₦0</span>
         </div>
       </div>
+
+      <div id="planSummaryDiscountRow" class="plan-discount-row" style="display: none;">
+        <span class="plan-discount-label" id="planDiscountLabel">Promotional Discount:</span>
+        <span class="plan-discount-val" id="planDiscountVal">-₦0</span>
+      </div>
     </div>
 
     <!-- Core Duration Selector (Only shown for Core plan) -->
@@ -107,6 +112,42 @@
         <span class="field-hint">Used for live Telegram class access and admissions onboarding.</span>
       </div>
 
+      <!-- Promotional Code Section -->
+      <div class="promo-box" id="promoBox">
+        <div class="promo-header-row">
+          <label for="planPromoInput" class="promo-input-label">Promotional Code</label>
+          <span class="promo-hint-pill">TECHMED30 (30% OFF)</span>
+        </div>
+
+        <!-- Input group (shown when promo is not applied) -->
+        <div class="promo-input-row" id="promoInputRow">
+          <input
+            type="text"
+            id="planPromoInput"
+            placeholder="Enter promo code (e.g. TECHMED30)"
+            class="plan-input promo-input"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          <button type="button" id="applyPromoBtn" class="btn-primary promo-apply-btn">Apply</button>
+        </div>
+
+        <!-- Applied Banner (shown when promo is active) -->
+        <div id="promoAppliedCard" class="promo-applied-card" style="display: none;">
+          <div class="promo-applied-left">
+            <span class="promo-badge-tag">TECHMED30 APPLIED</span>
+            <span class="promo-applied-amount" id="promoAppliedDiscountText">-₦5,400 (30% off)</span>
+            <p class="promo-applied-note" id="promoAppliedExplanation">
+              30% discount applied to standard price (₦18,000), replacing early-bird rate.
+            </p>
+          </div>
+          <button type="button" id="removePromoBtn" class="promo-remove-btn" title="Remove promo code">Remove</button>
+        </div>
+
+        <!-- Promo Error Message -->
+        <div id="promoFeedbackMsg" class="promo-error-msg" style="display: none;" role="alert"></div>
+      </div>
+
       <!-- In-Modal Alert for Gateway Notices -->
       <div id="planAlertBox" class="plan-alert-box" style="display: none;" role="alert"></div>
 
@@ -127,6 +168,7 @@
 <script>
   import { getCurrentUser, SUPABASE_ANON_KEY } from '/src/lib/supabase.ts';
   import { trackEvent } from '/src/lib/analytics.ts';
+  import { validatePromoCode, PROMO_CODE } from '/src/lib/promo.ts';
 
   const modalBackdrop = document.getElementById('planCheckoutModalBackdrop');
   const closeBtn = document.getElementById('closePlanModalBtn');
@@ -136,6 +178,9 @@
   const planSummaryTrackBadge = document.getElementById('planSummaryTrackBadge');
   const planSummaryStrikePrice = document.getElementById('planSummaryStrikePrice');
   const planSummaryFinalPrice = document.getElementById('planSummaryFinalPrice');
+  const planSummaryDiscountRow = document.getElementById('planSummaryDiscountRow');
+  const planDiscountVal = document.getElementById('planDiscountVal');
+
   const coreBillingGroup = document.getElementById('coreBillingGroup');
   const cardEarlybird = document.getElementById('cardEarlybird');
   const cardMonthly = document.getElementById('cardMonthly');
@@ -148,6 +193,16 @@
   const planCustomerEmail = document.getElementById('planCustomerEmail') as HTMLInputElement | null;
   const planCustomerName = document.getElementById('planCustomerName') as HTMLInputElement | null;
   const planCustomerPhone = document.getElementById('planCustomerPhone') as HTMLInputElement | null;
+
+  const promoInputRow = document.getElementById('promoInputRow');
+  const planPromoInput = document.getElementById('planPromoInput') as HTMLInputElement | null;
+  const applyPromoBtn = document.getElementById('applyPromoBtn');
+  const promoAppliedCard = document.getElementById('promoAppliedCard');
+  const promoAppliedDiscountText = document.getElementById('promoAppliedDiscountText');
+  const promoAppliedExplanation = document.getElementById('promoAppliedExplanation');
+  const removePromoBtn = document.getElementById('removePromoBtn');
+  const promoFeedbackMsg = document.getElementById('promoFeedbackMsg');
+
   const planAlertBox = document.getElementById('planAlertBox');
   const planSubmitBtn = document.getElementById('planSubmitBtn') as HTMLButtonElement | null;
   const planSubmitAmount = document.getElementById('planSubmitAmount');
@@ -160,6 +215,7 @@
   let authoritativeOriginalPrice: number | null = 18000;
   let authoritativeTitle = 'TECHMED Core (3-Month Early-Bird)';
   let serverProductId = 'cohort-core-earlybird';
+  let appliedPromoCode: string | null = null;
 
   function isEarlyBirdValid(): boolean {
     return Date.now() <= EARLY_BIRD_DEADLINE;
@@ -167,21 +223,23 @@
 
   function recalculatePlanDetails() {
     const earlyValid = isEarlyBirdValid();
+    let basePrice = 15000;
+    let baseOriginalPrice: number | null = 18000;
 
     if (activePlanId === 'core') {
       if (coreBillingGroup) coreBillingGroup.style.display = 'block';
 
       if (activeDuration === 'monthly') {
         serverProductId = 'cohort-core-monthly';
-        authoritativePrice = 7000;
-        authoritativeOriginalPrice = null;
+        basePrice = 7000;
+        baseOriginalPrice = null;
         authoritativeTitle = 'TECHMED Core (1-Month Subscription)';
         if (cardMonthly) cardMonthly.classList.add('active');
         if (cardEarlybird) cardEarlybird.classList.remove('active');
       } else {
         serverProductId = earlyValid ? 'cohort-core-earlybird' : 'cohort-core-standard';
-        authoritativePrice = earlyValid ? 15000 : 18000;
-        authoritativeOriginalPrice = earlyValid ? 18000 : null;
+        basePrice = earlyValid ? 15000 : 18000;
+        baseOriginalPrice = earlyValid ? 18000 : null;
         authoritativeTitle = earlyValid ? 'TECHMED Core (3-Month Early-Bird)' : 'TECHMED Core (3-Month Standard)';
         if (cardEarlybird) cardEarlybird.classList.add('active');
         if (cardMonthly) cardMonthly.classList.remove('active');
@@ -198,8 +256,8 @@
     } else if (activePlanId === 'mastery') {
       if (coreBillingGroup) coreBillingGroup.style.display = 'none';
       serverProductId = earlyValid ? 'cohort-mastery-earlybird' : 'cohort-mastery-standard';
-      authoritativePrice = earlyValid ? 20000 : 25000;
-      authoritativeOriginalPrice = earlyValid ? 25000 : null;
+      basePrice = earlyValid ? 20000 : 25000;
+      baseOriginalPrice = earlyValid ? 25000 : null;
       authoritativeTitle = earlyValid ? 'TECHMED Mastery (3-Month Early-Bird)' : 'TECHMED Mastery (3-Month Standard)';
 
       if (planSummaryTrackBadge) planSummaryTrackBadge.textContent = 'MASTERY TRACK';
@@ -208,13 +266,56 @@
     } else if (activePlanId === 'ultimate') {
       if (coreBillingGroup) coreBillingGroup.style.display = 'none';
       serverProductId = 'cohort-ultimate';
-      authoritativePrice = 40000;
-      authoritativeOriginalPrice = null;
+      basePrice = 40000;
+      baseOriginalPrice = null;
       authoritativeTitle = 'TECHMED Ultimate (Full Programme)';
 
       if (planSummaryTrackBadge) planSummaryTrackBadge.textContent = 'ULTIMATE TRACK';
       if (planSummaryDelivery) planSummaryDelivery.textContent = 'Full Programme + Bootcamps + Mentorship';
       if (planSummaryDesc) planSummaryDesc.textContent = 'Mastery package plus 3 specialist Bootcamps, 4 Subject Revision Packages, Final Revision classes, and eligibility for Founder Mentorship.';
+    }
+
+    // Apply promo calculation if promo code is active
+    if (appliedPromoCode) {
+      const promoResult = validatePromoCode(appliedPromoCode, serverProductId);
+      if (promoResult.valid && promoResult.finalPrice !== undefined && promoResult.discountAmount !== undefined) {
+        authoritativePrice = promoResult.finalPrice;
+        authoritativeOriginalPrice = promoResult.standardPrice || null;
+
+        if (promoInputRow) promoInputRow.style.display = 'none';
+        if (promoAppliedCard) promoAppliedCard.style.display = 'flex';
+        if (promoAppliedDiscountText) {
+          promoAppliedDiscountText.textContent = `-₦${promoResult.discountAmount.toLocaleString()} (30% off)`;
+        }
+        if (promoAppliedExplanation) {
+          promoAppliedExplanation.textContent = promoResult.discountNote || '';
+        }
+        if (planSummaryDiscountRow) {
+          planSummaryDiscountRow.style.display = 'flex';
+        }
+        if (planDiscountVal) {
+          planDiscountVal.textContent = `-₦${promoResult.discountAmount.toLocaleString()} (${PROMO_CODE} 30% off)`;
+        }
+        if (promoFeedbackMsg) promoFeedbackMsg.style.display = 'none';
+      } else {
+        // Promo no longer valid for this product
+        appliedPromoCode = null;
+        authoritativePrice = basePrice;
+        authoritativeOriginalPrice = baseOriginalPrice;
+        if (promoInputRow) promoInputRow.style.display = 'flex';
+        if (promoAppliedCard) promoAppliedCard.style.display = 'none';
+        if (planSummaryDiscountRow) planSummaryDiscountRow.style.display = 'none';
+        if (promoFeedbackMsg) {
+          promoFeedbackMsg.style.display = 'block';
+          promoFeedbackMsg.textContent = promoResult.error || 'Promo code cannot be applied.';
+        }
+      }
+    } else {
+      authoritativePrice = basePrice;
+      authoritativeOriginalPrice = baseOriginalPrice;
+      if (promoInputRow) promoInputRow.style.display = 'flex';
+      if (promoAppliedCard) promoAppliedCard.style.display = 'none';
+      if (planSummaryDiscountRow) planSummaryDiscountRow.style.display = 'none';
     }
 
     if (planSummaryTitle) planSummaryTitle.textContent = authoritativeTitle;
@@ -230,6 +331,58 @@
       }
     }
   }
+
+  // Handle Promo Code Apply
+  function handleApplyPromo() {
+    const rawVal = planPromoInput?.value || '';
+    if (!rawVal.trim()) {
+      if (promoFeedbackMsg) {
+        promoFeedbackMsg.style.display = 'block';
+        promoFeedbackMsg.textContent = 'Please enter a promotional code.';
+      }
+      return;
+    }
+
+    const res = validatePromoCode(rawVal, serverProductId);
+    if (!res.valid) {
+      if (promoFeedbackMsg) {
+        promoFeedbackMsg.style.display = 'block';
+        promoFeedbackMsg.textContent = res.error || 'Invalid promo code.';
+      }
+      return;
+    }
+
+    appliedPromoCode = res.promoCode || PROMO_CODE;
+    if (promoFeedbackMsg) promoFeedbackMsg.style.display = 'none';
+    recalculatePlanDetails();
+
+    trackEvent('promo_applied', {
+      promoCode: appliedPromoCode,
+      planId: serverProductId,
+      discount: res.discountAmount,
+      finalAmount: res.finalPrice,
+    });
+  }
+
+  applyPromoBtn?.addEventListener('click', handleApplyPromo);
+  planPromoInput?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleApplyPromo();
+    }
+  });
+
+  // Handle Promo Code Remove
+  removePromoBtn?.addEventListener('click', () => {
+    appliedPromoCode = null;
+    if (planPromoInput) planPromoInput.value = '';
+    if (promoFeedbackMsg) promoFeedbackMsg.style.display = 'none';
+    recalculatePlanDetails();
+
+    trackEvent('promo_removed', {
+      planId: serverProductId,
+    });
+  });
 
   // Radio button listeners for Core duration selection
   document.querySelectorAll('input[name="planCoreBilling"]').forEach((radio) => {
@@ -274,6 +427,7 @@
       planId: serverProductId,
       planName: authoritativeTitle,
       amount: authoritativePrice,
+      promoApplied: !!appliedPromoCode,
     });
   }
 
@@ -320,9 +474,10 @@
         planId: serverProductId,
         planName: authoritativeTitle,
         amount: authoritativePrice,
+        promoCode: appliedPromoCode || undefined,
       });
 
-      // Send payment initiation request to backend
+      // Send payment initiation request to backend with promo_code
       const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
         method: 'POST',
         headers: {
@@ -334,6 +489,7 @@
           product_id: serverProductId,
           product_name: authoritativeTitle,
           amount: authoritativePrice, // Note: server validates and enforces authoritative price
+          promo_code: appliedPromoCode || undefined,
           email,
           name: name || undefined,
           phone: phone || undefined,
@@ -347,6 +503,7 @@
         trackEvent('paystack_redirect', {
           reference: data.data.reference,
           amount: authoritativePrice,
+          promoCode: appliedPromoCode || undefined,
         });
         // Redirect directly to hosted Paystack checkout
         window.location.href = data.data.authorization_url;
@@ -560,6 +717,24 @@
     color: var(--accent);
   }
 
+  .plan-discount-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: var(--space-2);
+    font-size: 0.82rem;
+  }
+
+  .plan-discount-label {
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .plan-discount-val {
+    color: #22c55e;
+    font-weight: 800;
+  }
+
   /* Core Billing Selector */
   .plan-billing-group {
     margin-bottom: var(--space-5);
@@ -704,6 +879,130 @@
   .field-hint {
     font-size: 0.72rem;
     color: var(--text-muted);
+  }
+
+  /* Promo Box */
+  .promo-box {
+    background: var(--surface-raised);
+    border: 1px dashed var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .promo-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .promo-input-label {
+    font-size: 0.76rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .promo-hint-pill {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    font-size: 0.65rem;
+    font-weight: 800;
+    padding: 1px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.05em;
+  }
+
+  .promo-input-row {
+    display: flex;
+    gap: 8px;
+  }
+
+  .promo-input {
+    flex: 1;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 8px 10px;
+    font-size: 0.88rem;
+  }
+
+  .promo-apply-btn {
+    padding: 8px 16px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .promo-applied-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    background: rgba(34, 197, 94, 0.08);
+    border: 1px solid rgba(34, 197, 94, 0.35);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+  }
+
+  .promo-applied-left {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .promo-badge-tag {
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #22c55e;
+    letter-spacing: 0.05em;
+  }
+
+  .promo-applied-amount {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .promo-applied-note {
+    font-size: 0.75rem;
+    color: var(--text-light);
+    margin: 2px 0 0;
+    line-height: 1.35;
+  }
+
+  .promo-remove-btn {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 150ms ease;
+  }
+
+  .promo-remove-btn:hover {
+    color: #ef4444;
+    border-color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+  }
+
+  .promo-error-msg {
+    font-size: 0.78rem;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+    border-radius: 4px;
+    padding: 6px 10px;
+    line-height: 1.4;
   }
 
   /* Alert Box */

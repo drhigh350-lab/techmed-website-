@@ -112,7 +112,7 @@ assert(
 
 // Check 9: pay-verify enforces amount mismatch protection
 assert(
-  payVerifyContent.includes('Math.abs(paidAmount - order.amount) > 1') &&
+  (payVerifyContent.includes('isAmountMatch = txData?.amount === expectedKobo') || payVerifyContent.includes('Math.abs(paidAmount - order.amount) > 1')) &&
   payVerifyContent.includes('status: "mismatched"'),
   'pay-verify rejects transactions where paidAmount does not match expected order.amount'
 );

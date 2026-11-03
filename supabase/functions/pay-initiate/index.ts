@@ -55,6 +55,36 @@ function jsonResponse(body: unknown, status = 200) {
 // Early-Bird Deadline: 15 November 2026 23:59:59 UTC
 const EARLY_BIRD_DEADLINE = new Date("2026-11-15T23:59:59Z").getTime();
 
+// TECHMED30 Promotional Campaign
+// 30% discount strictly on original standard prices of UTME 2027 cohort plans (Core, Mastery, Ultimate).
+// Does NOT stack with early-bird discounts.
+const PROMO_CODE = "TECHMED30";
+const PROMO_DISCOUNT_PERCENT = 0.30;
+const PROMO_START_UTC = new Date("2026-11-03T08:00:00Z").getTime();
+const PROMO_EXPIRY_UTC = new Date("2026-11-05T08:00:00Z").getTime();
+
+// Authoritative standard prices for cohort plans (source of truth for 30% discount calculation)
+const COHORT_STANDARD_PRICES: Record<string, { standardPrice: number; name: string }> = {
+  // Core — 3 months: Standard ₦18,000 | 30% discount ₦5,400 | Final promo ₦12,600
+  "cohort-core-standard": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
+  "cohort-core-earlybird": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
+  "cohort-core": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
+  "core": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
+
+  // Core — monthly: Standard ₦7,000 | 30% discount ₦2,100 | Final promo ₦4,900
+  "cohort-core-monthly": { standardPrice: 7000, name: "TECHMED Core (1-Month Subscription)" },
+
+  // Mastery: Standard ₦25,000 | 30% discount ₦7,500 | Final promo ₦17,500
+  "cohort-mastery-standard": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
+  "cohort-mastery-earlybird": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
+  "cohort-mastery": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
+  "mastery": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
+
+  // Ultimate: Standard ₦40,000 | 30% discount ₦12,000 | Final promo ₦28,000
+  "cohort-ultimate": { standardPrice: 40000, name: "TECHMED Ultimate (Full UTME 2027 Access)" },
+  "ultimate": { standardPrice: 40000, name: "TECHMED Ultimate (Full UTME 2027 Access)" },
+};
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -71,6 +101,7 @@ Deno.serve(async (req) => {
     phone?: string;
     university?: string | null;
     callback_url?: string;
+    promo_code?: string | null;
   };
 
   try {
@@ -79,7 +110,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "Invalid JSON body" }, 400);
   }
 
-  const { product_id, email, name, phone, university, callback_url } = body;
+  const { product_id, email, name, phone, university, callback_url, promo_code } = body;
 
   if (!product_id || !email || !email.includes("@")) {
     return jsonResponse({ success: false, message: "A valid product_id and email are required" }, 400);
@@ -95,18 +126,65 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "Please select your target university" }, 400);
   }
 
-  // Validate early-bird server-side (deadline: 15 November 2026 23:59:59 UTC)
   let validatedAmount = product.amount;
-  if (
-    cleanProductId.includes("earlybird") ||
-    cleanProductId === "cohort-core" ||
-    cleanProductId === "cohort-mastery" ||
-    cleanProductId === "core" ||
-    cleanProductId === "mastery"
-  ) {
-    if (Date.now() > EARLY_BIRD_DEADLINE) {
-      if (cleanProductId.includes("core") && !cleanProductId.includes("monthly")) validatedAmount = 18000;
-      if (cleanProductId.includes("mastery")) validatedAmount = 25000;
+  let promoApplied = false;
+  let promoDiscountAmount = 0;
+  let promoStandardPrice = 0;
+
+  if (promo_code !== undefined && promo_code !== null && typeof promo_code === "string" && promo_code.trim().length > 0) {
+    const cleanPromo = promo_code.trim().toUpperCase();
+
+    // 1. Validate promo code match (case-insensitive, trimmed)
+    if (cleanPromo !== PROMO_CODE) {
+      return jsonResponse({
+        success: false,
+        message: "Invalid promo code. Please enter a valid promotional code.",
+      }, 400);
+    }
+
+    // 2. Validate UTC time window (strict 48-hour UTC comparison)
+    const nowUtc = Date.now();
+    if (nowUtc < PROMO_START_UTC) {
+      return jsonResponse({
+        success: false,
+        message: "Promotion has not started yet. The TECHMED30 promotion begins on Tuesday, 3 November 2026 at 08:00 UTC (9:00 AM WAT).",
+      }, 400);
+    }
+
+    if (nowUtc >= PROMO_EXPIRY_UTC) {
+      return jsonResponse({
+        success: false,
+        message: "Promo code has expired. The TECHMED30 48-hour promotional period ended on Thursday, 5 November 2026 at 08:00 UTC (9:00 AM WAT).",
+      }, 400);
+    }
+
+    // 3. Verify product eligibility (cohort plans only; standalone resources are ineligible)
+    const cohortPricing = COHORT_STANDARD_PRICES[cleanProductId];
+    if (!product.isCohort || !cohortPricing) {
+      return jsonResponse({
+        success: false,
+        message: "Promo code TECHMED30 is not applicable to standalone study resources. It is exclusively valid for UTME 2027 Cohort preparation plans (Core, Mastery, and Ultimate).",
+      }, 400);
+    }
+
+    // 4. Calculate 30% discount strictly from original standard price (NON-STACKING with early-bird)
+    promoStandardPrice = cohortPricing.standardPrice;
+    promoDiscountAmount = Math.round(promoStandardPrice * PROMO_DISCOUNT_PERCENT);
+    validatedAmount = promoStandardPrice - promoDiscountAmount;
+    promoApplied = true;
+  } else {
+    // When promo is NOT applied, preserve existing standard and early-bird pricing
+    if (
+      cleanProductId.includes("earlybird") ||
+      cleanProductId === "cohort-core" ||
+      cleanProductId === "cohort-mastery" ||
+      cleanProductId === "core" ||
+      cleanProductId === "mastery"
+    ) {
+      if (Date.now() > EARLY_BIRD_DEADLINE) {
+        if (cleanProductId.includes("core") && !cleanProductId.includes("monthly")) validatedAmount = 18000;
+        if (cleanProductId.includes("mastery")) validatedAmount = 25000;
+      }
     }
   }
 
@@ -140,6 +218,13 @@ Deno.serve(async (req) => {
   // Order must exist in database BEFORE any usable Paystack checkout is generated.
   // If database insertion fails, do NOT proceed to Paystack, and report failure.
   // ---------------------------------------------------------------------------
+  const orderMetadata = {
+    promo_code: promoApplied ? PROMO_CODE : null,
+    discount_amount: promoApplied ? promoDiscountAmount : 0,
+    original_price: promoApplied ? promoStandardPrice : validatedAmount,
+    is_cohort: !!product.isCohort,
+  };
+
   const { error: dbError } = await supabase.from("orders").insert({
     reference,
     product_id: cleanProductId,
@@ -147,8 +232,11 @@ Deno.serve(async (req) => {
     amount: validatedAmount,
     email: email.trim().toLowerCase(),
     customer_name: name ?? "TECHMED Student",
+    phone: phone ?? null,
     university: university ?? null,
     status: "pending",
+    discount_amount: promoApplied ? promoDiscountAmount : 0,
+    metadata: orderMetadata,
   });
 
   if (dbError) {
@@ -194,6 +282,10 @@ Deno.serve(async (req) => {
           phone: phone ?? null,
           university: university ?? null,
           is_cohort: !!product.isCohort,
+          promo_code: promoApplied ? PROMO_CODE : null,
+          discount_amount: promoApplied ? promoDiscountAmount : 0,
+          original_price: promoApplied ? promoStandardPrice : validatedAmount,
+          promo_description: promoApplied ? "TECHMED30 30% Promotional Discount" : null,
         },
       }),
     });
@@ -243,6 +335,9 @@ Deno.serve(async (req) => {
       reference,
       product_name: product.name,
       amount: validatedAmount,
+      promo_code: promoApplied ? PROMO_CODE : null,
+      discount_amount: promoApplied ? promoDiscountAmount : 0,
+      original_price: promoApplied ? promoStandardPrice : null,
     },
   });
 });
