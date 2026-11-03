@@ -102,6 +102,9 @@ Deno.serve(async (req) => {
     university?: string | null;
     callback_url?: string;
     promo_code?: string | null;
+    billing_option?: string | null;
+    duration?: string | null;
+    billing_cycle?: string | null;
   };
 
   try {
@@ -116,7 +119,26 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "A valid product_id and email are required" }, 400);
   }
 
-  const cleanProductId = product_id.trim();
+  let cleanProductId = product_id.trim();
+  const rawDuration = (body.billing_option || body.duration || body.billing_cycle || "").trim().toLowerCase();
+
+  // If a generic Core plan or 3-month alias was submitted but billing_option/duration is monthly,
+  // ensure it reliably resolves to the monthly subscription product.
+  if (
+    (cleanProductId === "core" || cleanProductId === "cohort-core" || cleanProductId === "cohort-core-standard" || cleanProductId === "cohort-core-earlybird") &&
+    (rawDuration === "monthly" || rawDuration === "1month" || rawDuration === "month")
+  ) {
+    cleanProductId = "cohort-core-monthly";
+  }
+
+  // Conversely, if monthly product was submitted but earlybird duration was chosen:
+  if (
+    cleanProductId === "cohort-core-monthly" &&
+    (rawDuration === "earlybird" || rawDuration === "3months" || rawDuration === "upfront")
+  ) {
+    cleanProductId = Date.now() <= EARLY_BIRD_DEADLINE ? "cohort-core-earlybird" : "cohort-core-standard";
+  }
+
   const product = PRODUCTS[cleanProductId];
   if (!product) {
     return jsonResponse({ success: false, message: `Unknown product: "${cleanProductId}"` }, 400);
@@ -223,6 +245,7 @@ Deno.serve(async (req) => {
     discount_amount: promoApplied ? promoDiscountAmount : 0,
     original_price: promoApplied ? promoStandardPrice : validatedAmount,
     is_cohort: !!product.isCohort,
+    billing_option: rawDuration || (cleanProductId.includes("monthly") ? "monthly" : "3months"),
   };
 
   const { error: dbError } = await supabase.from("orders").insert({

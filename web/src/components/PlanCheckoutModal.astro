@@ -384,13 +384,55 @@
     });
   });
 
-  // Radio button listeners for Core duration selection
+  // Dedicated function to switch Core duration and keep UI and state strictly synchronized
+  function selectCoreDuration(duration: 'earlybird' | 'monthly') {
+    activeDuration = duration;
+    const radioEarly = document.querySelector('input[name="planCoreBilling"][value="earlybird"]') as HTMLInputElement | null;
+    const radioMonth = document.querySelector('input[name="planCoreBilling"][value="monthly"]') as HTMLInputElement | null;
+    if (duration === 'monthly') {
+      if (radioMonth) radioMonth.checked = true;
+      if (radioEarly) radioEarly.checked = false;
+      cardMonthly?.classList.add('active');
+      cardEarlybird?.classList.remove('active');
+    } else {
+      if (radioEarly) radioEarly.checked = true;
+      if (radioMonth) radioMonth.checked = false;
+      cardEarlybird?.classList.add('active');
+      cardMonthly?.classList.remove('active');
+    }
+    recalculatePlanDetails();
+    trackEvent('billing_option_selected', {
+      planId: activePlanId,
+      billingOption: activeDuration,
+      productId: serverProductId,
+      amount: authoritativePrice,
+      promoApplied: !!appliedPromoCode,
+    });
+  }
+
+  // Click listeners for billing card labels (handles clicks on card body, text, and pills)
+  cardEarlybird?.addEventListener('click', (e) => {
+    // Avoid double firing if click is on the radio input itself
+    if ((e.target as HTMLElement)?.tagName !== 'INPUT') {
+      e.preventDefault();
+    }
+    selectCoreDuration('earlybird');
+  });
+
+  cardMonthly?.addEventListener('click', (e) => {
+    // Avoid double firing if click is on the radio input itself
+    if ((e.target as HTMLElement)?.tagName !== 'INPUT') {
+      e.preventDefault();
+    }
+    selectCoreDuration('monthly');
+  });
+
+  // Radio button change listeners for Core duration selection
   document.querySelectorAll('input[name="planCoreBilling"]').forEach((radio) => {
     radio.addEventListener('change', (e) => {
       const target = e.target as HTMLInputElement;
-      if (target.checked) {
-        activeDuration = target.value;
-        recalculatePlanDetails();
+      if (target.checked && (target.value === 'monthly' || target.value === 'earlybird')) {
+        selectCoreDuration(target.value as 'earlybird' | 'monthly');
       }
     });
   });
@@ -403,11 +445,8 @@
       activePlanId = 'mastery';
     } else {
       activePlanId = 'core';
-      activeDuration = cleanKey.includes('monthly') ? 'monthly' : 'earlybird';
-      const radioEarly = document.querySelector('input[name="planCoreBilling"][value="earlybird"]') as HTMLInputElement | null;
-      const radioMonth = document.querySelector('input[name="planCoreBilling"][value="monthly"]') as HTMLInputElement | null;
-      if (activeDuration === 'monthly' && radioMonth) radioMonth.checked = true;
-      if (activeDuration === 'earlybird' && radioEarly) radioEarly.checked = true;
+      const initialDuration = cleanKey.includes('monthly') ? 'monthly' : 'earlybird';
+      selectCoreDuration(initialDuration);
     }
 
     recalculatePlanDetails();
@@ -462,6 +501,43 @@
 
     if (planAlertBox) planAlertBox.style.display = 'none';
 
+    // -------------------------------------------------------------------------
+    // CRITICAL FIX: Deterministically synchronize DOM radio state and product ID
+    // Eliminates stale closure variables and ensures monthly Core ALWAYS submits
+    // "cohort-core-monthly" with the authoritative ₦4,900 / ₦7,000 price.
+    // -------------------------------------------------------------------------
+    if (activePlanId === 'core') {
+      const checkedDurationRadio = document.querySelector('input[name="planCoreBilling"]:checked') as HTMLInputElement | null;
+      if (checkedDurationRadio && (checkedDurationRadio.value === 'monthly' || checkedDurationRadio.value === 'earlybird')) {
+        activeDuration = checkedDurationRadio.value as 'earlybird' | 'monthly';
+      }
+    }
+
+    recalculatePlanDetails();
+
+    const earlyValid = isEarlyBirdValid();
+    let resolvedProductId: string;
+    if (activePlanId === 'core') {
+      resolvedProductId = activeDuration === 'monthly'
+        ? 'cohort-core-monthly'
+        : (earlyValid ? 'cohort-core-earlybird' : 'cohort-core-standard');
+    } else if (activePlanId === 'mastery') {
+      resolvedProductId = earlyValid ? 'cohort-mastery-earlybird' : 'cohort-mastery-standard';
+    } else if (activePlanId === 'ultimate') {
+      resolvedProductId = 'cohort-ultimate';
+    } else {
+      resolvedProductId = serverProductId;
+    }
+    serverProductId = resolvedProductId;
+
+    // Verify promo code with the authoritative resolved product ID
+    if (appliedPromoCode) {
+      const promoCheck = validatePromoCode(appliedPromoCode, resolvedProductId);
+      if (promoCheck.valid && promoCheck.finalPrice !== undefined) {
+        authoritativePrice = promoCheck.finalPrice;
+      }
+    }
+
     if (planSubmitBtn) {
       planSubmitBtn.disabled = true;
       planSubmitBtn.innerHTML = '<span>Connecting to Paystack...</span>';
@@ -471,13 +547,21 @@
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
 
       trackEvent('checkout_initiated', {
-        planId: serverProductId,
+        planId: resolvedProductId,
         planName: authoritativeTitle,
         amount: authoritativePrice,
         promoCode: appliedPromoCode || undefined,
+        billingOption: activePlanId === 'core' ? activeDuration : undefined,
       });
 
-      // Send payment initiation request to backend with promo_code
+      console.info('[TECHMED Checkout] Initiating Paystack checkout:', {
+        product_id: resolvedProductId,
+        duration: activeDuration,
+        promo_code: appliedPromoCode || null,
+        amount: authoritativePrice,
+      });
+
+      // Send payment initiation request to backend with verified product_id, duration, and promo_code
       const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
         method: 'POST',
         headers: {
@@ -486,9 +570,11 @@
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
         body: JSON.stringify({
-          product_id: serverProductId,
+          product_id: resolvedProductId,
           product_name: authoritativeTitle,
-          amount: authoritativePrice, // Note: server validates and enforces authoritative price
+          billing_option: activePlanId === 'core' ? activeDuration : undefined,
+          duration: activePlanId === 'core' ? activeDuration : undefined,
+          amount: authoritativePrice, // Note: server independently recalculates authoritative price
           promo_code: appliedPromoCode || undefined,
           email,
           name: name || undefined,

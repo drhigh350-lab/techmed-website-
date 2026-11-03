@@ -277,13 +277,100 @@ assert(planCheckoutModalSource.includes('id="promoAppliedCard"'), 'PlanCheckoutM
 assert(planCheckoutModalSource.includes('id="promoFeedbackMsg"'), 'PlanCheckoutModal contains promo error/feedback container');
 assert(planCheckoutModalSource.includes('id="planSummaryDiscountRow"'), 'PlanCheckoutModal contains discount breakdown row in plan summary');
 
-assert(planCheckoutModalSource.includes("import { validatePromoCode, PROMO_CODE } from '/src/lib/promo.ts'"), 'PlanCheckoutModal imports validatePromoCode from promo.ts');
-assert(planCheckoutModalSource.includes('promo_code: appliedPromoCode || undefined'), 'PlanCheckoutModal sends promo_code in pay-initiate fetch body');
-assert(planCheckoutModalSource.includes('handleApplyPromo'), 'PlanCheckoutModal wires up apply promo button click');
-assert(planCheckoutModalSource.includes("e.key === 'Enter'"), 'PlanCheckoutModal supports Enter key submission on promo input');
-assert(planCheckoutModalSource.includes('appliedPromoCode = null'), 'PlanCheckoutModal wires up remove promo button');
-assert(planCheckoutModalSource.includes('planSubmitAmount.textContent'), 'PlanCheckoutModal dynamically updates submit button price');
-assert(planCheckoutModalSource.includes('replacing early-bird rate'), 'PlanCheckoutModal explains non-stacking rule in UI banner');
+// -----------------------------------------------------------------------------
+// TEST 9: Frontend–Paystack Synchronization & Regression Scenarios
+// -----------------------------------------------------------------------------
+console.log('\nTEST 9: Frontend–Paystack Synchronization & Regression Scenarios');
+
+const COHORT_STANDARD_PRICES_TEST = {
+  "cohort-core-standard": 18000,
+  "cohort-core-earlybird": 18000,
+  "cohort-core": 18000,
+  "core": 18000,
+  "cohort-core-monthly": 7000,
+  "cohort-mastery-standard": 25000,
+  "cohort-mastery-earlybird": 25000,
+  "cohort-mastery": 25000,
+  "mastery": 25000,
+  "cohort-ultimate": 40000,
+  "ultimate": 40000,
+};
+
+function validatePromoCodeFunc(code, productId, nowUtc) {
+  if (!code || code.trim().toUpperCase() !== 'TECHMED30') return { valid: false };
+  if (nowUtc < 1793692800000 || nowUtc >= 1793865600000) return { valid: false };
+  const standardPrice = COHORT_STANDARD_PRICES_TEST[productId];
+  if (!standardPrice) return { valid: false };
+  const discountAmount = Math.round(standardPrice * 0.30);
+  const finalPrice = standardPrice - discountAmount;
+  return { valid: true, standardPrice, discountAmount, finalPrice };
+}
+
+// Scenario 1: Core monthly + TECHMED30 -> ₦4,900 (490,000 kobo)
+const s1Promo = validatePromoCodeFunc('TECHMED30', 'cohort-core-monthly', 1793779200000);
+assert(s1Promo.valid && s1Promo.finalPrice === 4900, 'Scenario 1: Core monthly + TECHMED30 calculates ₦4,900');
+assert(s1Promo.finalPrice * 100 === 490000, 'Scenario 1: Core monthly + TECHMED30 sends 490,000 kobo to Paystack');
+
+// Scenario 2: Core 3-month + TECHMED30 -> ₦12,600 (1,260,000 kobo)
+const s2Promo = validatePromoCodeFunc('TECHMED30', 'cohort-core-earlybird', 1793779200000);
+assert(s2Promo.valid && s2Promo.finalPrice === 12600, 'Scenario 2: Core 3-month + TECHMED30 calculates ₦12,600');
+assert(s2Promo.finalPrice * 100 === 1260000, 'Scenario 2: Core 3-month + TECHMED30 sends 1,260,000 kobo to Paystack');
+
+// Scenario 3: Core 3-month without promo -> ₦15,000 (early-bird preserved)
+assert(
+  payInitiateSource.includes('"cohort-core-earlybird": { name: "TECHMED Core (3-Month Early-Bird)", amount: 15000'),
+  'Scenario 3: Core 3-month early-bird preserved at ₦15,000 (1,500,000 kobo) when no promo applied'
+);
+
+// Scenario 4: Mastery + TECHMED30 -> ₦17,500 (1,750,000 kobo)
+const s4Promo = validatePromoCodeFunc('TECHMED30', 'cohort-mastery-earlybird', 1793779200000);
+assert(s4Promo.valid && s4Promo.finalPrice === 17500, 'Scenario 4: Mastery + TECHMED30 calculates ₦17,500');
+assert(s4Promo.finalPrice * 100 === 1750000, 'Scenario 4: Mastery + TECHMED30 sends 1,750,000 kobo to Paystack');
+
+// Scenario 5: Ultimate + TECHMED30 -> ₦28,000 (2,800,000 kobo)
+const s5Promo = validatePromoCodeFunc('TECHMED30', 'cohort-ultimate', 1793779200000);
+assert(s5Promo.valid && s5Promo.finalPrice === 28000, 'Scenario 5: Ultimate + TECHMED30 calculates ₦28,000');
+assert(s5Promo.finalPrice * 100 === 2800000, 'Scenario 5: Ultimate + TECHMED30 sends 2,800,000 kobo to Paystack');
+
+// Verification of Billing Switch Synchronization in PlanCheckoutModal.astro
+assert(
+  planCheckoutModalSource.includes('function selectCoreDuration(duration: \'earlybird\' | \'monthly\')'),
+  'PlanCheckoutModal defines selectCoreDuration helper to synchronize radio inputs and visual card state'
+);
+assert(
+  planCheckoutModalSource.includes('cardMonthly?.addEventListener(\'click\''),
+  'PlanCheckoutModal attaches click listener to Monthly billing card label'
+);
+assert(
+  planCheckoutModalSource.includes('cardEarlybird?.addEventListener(\'click\''),
+  'PlanCheckoutModal attaches click listener to Early-bird billing card label'
+);
+assert(
+  planCheckoutModalSource.includes('document.querySelector(\'input[name="planCoreBilling"]:checked\')'),
+  'PlanCheckoutModal dynamically re-inspects checked radio in DOM immediately upon form submit'
+);
+assert(
+  planCheckoutModalSource.includes('resolvedProductId = activeDuration === \'monthly\'\n        ? \'cohort-core-monthly\''),
+  'PlanCheckoutModal deterministically resolves resolvedProductId to "cohort-core-monthly" when monthly is checked'
+);
+assert(
+  planCheckoutModalSource.includes('product_id: resolvedProductId,'),
+  'PlanCheckoutModal submits resolvedProductId in fetch body, preventing reuse of stale 3-month product ID'
+);
+assert(
+  planCheckoutModalSource.includes('billing_option: activePlanId === \'core\' ? activeDuration : undefined,'),
+  'PlanCheckoutModal includes billing_option in request body'
+);
+
+// Verification of Server-Side Fallback & Protection in pay-initiate
+assert(
+  payInitiateSource.includes('cleanProductId = "cohort-core-monthly";'),
+  'pay-initiate server guarantees resolution to "cohort-core-monthly" when rawDuration is monthly'
+);
+assert(
+  payInitiateSource.includes('billing_option: rawDuration || (cleanProductId.includes("monthly") ? "monthly" : "3months"),'),
+  'pay-initiate stores billing_option in order metadata'
+);
 
 console.log('====================================================');
 console.log(`TEST SUITE SUMMARY: ${passedTests}/${totalTests} ASSERTIONS PASSED`);

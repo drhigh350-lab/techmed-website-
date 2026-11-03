@@ -399,6 +399,18 @@ const jsonLd = [
         );
       });
     });
+
+    document.querySelectorAll('.coreBillingSelector').forEach((el) => {
+      el.addEventListener('click', () => {
+        const period = el.getAttribute('data-period') || 'earlybird';
+        trackEvent('pricing_billing_toggle_clicked', { plan: 'core', period });
+        window.dispatchEvent(
+          new CustomEvent('open-plan-checkout', {
+            detail: { plan: period === 'monthly' ? 'core-monthly' : 'core' },
+          })
+        );
+      });
+    });
   </script>
 </BaseLayout>
 
