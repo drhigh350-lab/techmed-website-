@@ -1,10 +1,9 @@
 ---
 // TECHMED Unified Guided Resource Checkout Modal
-// Mobile-first, minimal, premium 3-step checkout experience for study resources:
-// Step 1: Review Order (resource title, delivery format, Core 20% discount option, price breakdown)
-// Step 2: Confirm Details (email for license, student name, WhatsApp phone, target university if needed)
-// Step 3: Payment (Paystack secure portal, card & instant bank transfer, duplicate submission prevention)
-// Step 4: Managed via /payment/callback after verified Paystack return
+// Mobile-first, minimal, premium 2-step checkout experience for study resources:
+// Step 1: Order Review (resource title, delivery format, Core 20% discount option, price breakdown, email address)
+// Step 2: Payment (Paystack secure portal, card & instant bank transfer, duplicate submission prevention)
+// Step 3 (Confirmation): Managed via /payment/callback after verified Paystack return
 ---
 
 <div id="checkoutModalBackdrop" class="checkout-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
@@ -18,20 +17,15 @@
       <button type="button" id="closeCheckoutBtn" class="close-btn" aria-label="Close checkout modal">&times;</button>
     </div>
 
-    <!-- Guided Checkout Step Indicator -->
+    <!-- Guided Checkout Step Indicator: 2 Steps -->
     <div class="checkout-stepper" role="navigation" aria-label="Checkout Progress">
       <button type="button" class="step-indicator active" id="resourceStepNav1" data-step="1">
         <span class="step-num">1</span>
-        <span class="step-label">Order</span>
+        <span class="step-label">Order Review</span>
       </button>
       <div class="step-connector" id="resourceConnector1"></div>
       <button type="button" class="step-indicator" id="resourceStepNav2" data-step="2">
         <span class="step-num">2</span>
-        <span class="step-label">Details</span>
-      </button>
-      <div class="step-connector" id="resourceConnector2"></div>
-      <button type="button" class="step-indicator" id="resourceStepNav3" data-step="3">
-        <span class="step-num">3</span>
         <span class="step-label">Payment</span>
       </button>
     </div>
@@ -39,7 +33,7 @@
     <form id="checkoutForm" class="checkout-form" novalidate>
       <div class="checkout-panes-wrap">
         <!-- =============================================================== -->
-        <!-- STEP 1: REVIEW ORDER PANE                                        -->
+        <!-- STEP 1: ORDER REVIEW PANE                                       -->
         <!-- =============================================================== -->
         <div id="resourcePaneStep1" class="checkout-pane active">
           <!-- Resource Summary Box -->
@@ -112,6 +106,27 @@
             </div>
           </div>
 
+          <!-- Target University Selector (shown only when required) -->
+          <div class="form-group" id="universityGroup" style="display: none;">
+            <label for="checkoutUniversity">Target University <span class="required-mark">*</span></label>
+            <select id="checkoutUniversity" class="checkout-select">
+              <option value="">Select your target institution...</option>
+              <option value="UNILAG">University of Lagos (UNILAG)</option>
+              <option value="UI">University of Ibadan (UI)</option>
+              <option value="OAU">Obafemi Awolowo University (OAU)</option>
+              <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+              <option value="UNIBEN">University of Benin (UNIBEN)</option>
+              <option value="ABU">Ahmadu Bello University (ABU)</option>
+              <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+              <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+              <option value="OOU">Olabisi Onabanjo University (OOU)</option>
+              <option value="LASU">Lagos State University (LASU)</option>
+              <option value="RSU">Rivers State University (RSU)</option>
+              <option value="OTHER">Other Nigerian University</option>
+            </select>
+            <span class="hint-text">This study resource is customized for your specific university requirements.</span>
+          </div>
+
           <!-- Itemized Order Breakdown -->
           <div class="order-breakdown-card">
             <h4 class="breakdown-title">Order Summary</h4>
@@ -133,100 +148,43 @@
             </div>
           </div>
 
+          <!-- Email Address Input (Email Only Checkout) -->
+          <div class="form-group checkout-email-group">
+            <label for="checkoutEmail">
+              Email Address for Bookshelf Access <span class="required-mark">*</span>
+            </label>
+            <input
+              type="email"
+              id="checkoutEmail"
+              required
+              placeholder="e.g. candidate@gmail.com"
+              autocomplete="email"
+              class="checkout-input"
+            />
+            <span class="hint-text">Your reading license and payment receipt will be linked to this email.</span>
+          </div>
+
+          <!-- Hidden inputs kept for script compatibility if accessed -->
+          <div id="studentNameGroup" style="display: none;">
+            <input type="text" id="checkoutName" class="checkout-input" />
+          </div>
+          <div id="studentPhoneGroup" style="display: none;">
+            <input type="tel" id="checkoutPhone" class="checkout-input" />
+          </div>
+
           <!-- Step 1 Primary Action -->
           <div class="step-action-bar">
             <button type="button" id="btnResourceToStep2" class="btn-primary step-next-btn">
-              <span>Continue to Student Details &rarr;</span>
-            </button>
-            <span class="step-action-hint">Next: Enter contact details for your access license</span>
-          </div>
-        </div>
-
-        <!-- =============================================================== -->
-        <!-- STEP 2: CONFIRM DETAILS PANE                                    -->
-        <!-- =============================================================== -->
-        <div id="resourcePaneStep2" class="checkout-pane" style="display: none;">
-          <div class="pane-intro">
-            <h3 class="pane-title">Student Information</h3>
-            <p class="pane-subtitle">Your study materials will be immediately unlocked and associated with this email address.</p>
-          </div>
-
-          <div class="form-fields-stack">
-            <div class="form-group">
-              <label for="checkoutEmail">
-                Email Address for Bookshelf Access <span class="required-mark">*</span>
-              </label>
-              <input
-                type="email"
-                id="checkoutEmail"
-                required
-                placeholder="e.g. candidate@gmail.com"
-                autocomplete="email"
-                class="checkout-input"
-              />
-              <span class="hint-text">Your reading license and payment receipt will be linked to this email.</span>
-            </div>
-
-            <div class="form-group" id="studentNameGroup" style="display: none;">
-              <label for="checkoutName">Student Full Name</label>
-              <input
-                type="text"
-                id="checkoutName"
-                placeholder="e.g. Samuel Adebayo"
-                autocomplete="name"
-                class="checkout-input"
-              />
-              <span class="hint-text">Used on your custom watermarked resource copy.</span>
-            </div>
-
-            <div class="form-group" id="studentPhoneGroup" style="display: none;">
-              <label for="checkoutPhone">WhatsApp Phone Number</label>
-              <input
-                type="tel"
-                id="checkoutPhone"
-                placeholder="e.g. 08012345678"
-                autocomplete="tel"
-                class="checkout-input"
-              />
-              <span class="hint-text">Used for study updates and reading progress sync.</span>
-            </div>
-
-            <div class="form-group" id="universityGroup" style="display: none;">
-              <label for="checkoutUniversity">Target University <span class="required-mark">*</span></label>
-              <select id="checkoutUniversity" class="checkout-select">
-                <option value="">Select your target institution...</option>
-                <option value="UNILAG">University of Lagos (UNILAG)</option>
-                <option value="UI">University of Ibadan (UI)</option>
-                <option value="OAU">Obafemi Awolowo University (OAU)</option>
-                <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
-                <option value="UNIBEN">University of Benin (UNIBEN)</option>
-                <option value="ABU">Ahmadu Bello University (ABU)</option>
-                <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
-                <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
-                <option value="OOU">Olabisi Onabanjo University (OOU)</option>
-                <option value="LASU">Lagos State University (LASU)</option>
-                <option value="RSU">Rivers State University (RSU)</option>
-                <option value="OTHER">Other Nigerian University</option>
-              </select>
-              <span class="hint-text">This study resource is customized for your specific university requirements.</span>
-            </div>
-          </div>
-
-          <!-- Step 2 Navigation Actions -->
-          <div class="step-action-bar dual-actions">
-            <button type="button" id="btnResourceBackToStep1" class="btn-secondary step-back-btn">
-              &larr; Back to Order
-            </button>
-            <button type="button" id="btnResourceToStep3" class="btn-primary step-next-btn">
               <span>Continue to Payment &rarr;</span>
             </button>
+            <span class="step-action-hint">Next: Proceed to Paystack secure payment portal</span>
           </div>
         </div>
 
         <!-- =============================================================== -->
-        <!-- STEP 3: PAYMENT PANE                                            -->
+        <!-- STEP 2: PAYMENT PANE                                            -->
         <!-- =============================================================== -->
-        <div id="resourcePaneStep3" class="checkout-pane" style="display: none;">
+        <div id="resourcePaneStep2" class="checkout-pane" style="display: none;">
           <div class="pane-intro">
             <h3 class="pane-title">Complete Payment</h3>
             <p class="pane-subtitle">Review your order and proceed to Paystack secure checkout.</p>
@@ -282,10 +240,10 @@
 
           <div id="checkoutAlert" class="checkout-alert" style="display: none;" role="alert"></div>
 
-          <!-- Step 3 Actions -->
+          <!-- Step 2 Actions -->
           <div class="step-action-bar dual-actions">
-            <button type="button" id="btnResourceBackToStep2" class="btn-secondary step-back-btn">
-              &larr; Back to Details
+            <button type="button" id="btnResourceBackToStep1" class="btn-secondary step-back-btn">
+              &larr; Back to Order
             </button>
             <button type="submit" class="btn-primary pay-btn" id="paystackSubmitBtn">
               <span>Pay <span id="paystackAmountLabel">₦0</span> with Paystack &rarr;</span>
@@ -332,21 +290,16 @@
   const resourceDiscountRow = document.getElementById('resourceDiscountRow');
   const resourceDiscountFigure = document.getElementById('resourceDiscountFigure');
 
-  // Stepper & Panes
-  let currentStep: 1 | 2 | 3 = 1;
+  // Stepper & Panes: 2 Steps
+  let currentStep: 1 | 2 = 1;
   const paneStep1 = document.getElementById('resourcePaneStep1');
   const paneStep2 = document.getElementById('resourcePaneStep2');
-  const paneStep3 = document.getElementById('resourcePaneStep3');
   const stepNav1 = document.getElementById('resourceStepNav1');
   const stepNav2 = document.getElementById('resourceStepNav2');
-  const stepNav3 = document.getElementById('resourceStepNav3');
   const connector1 = document.getElementById('resourceConnector1');
-  const connector2 = document.getElementById('resourceConnector2');
 
   const btnToStep2 = document.getElementById('btnResourceToStep2');
   const btnBackToStep1 = document.getElementById('btnResourceBackToStep1');
-  const btnToStep3 = document.getElementById('btnResourceToStep3');
-  const btnBackToStep2 = document.getElementById('btnResourceBackToStep2');
   const btnEditFromRecap = document.getElementById('btnEditResourceFromRecap');
 
   const recapResourceTitle = document.getElementById('recapResourceTitle');
@@ -372,10 +325,10 @@
     return Date.now() <= EARLY_BIRD_DEADLINE;
   }
 
-  function goToStep(targetStep: 1 | 2 | 3) {
-    if (targetStep === 3) {
+  function goToStep(targetStep: 1 | 2) {
+    if (targetStep === 2) {
       const email = checkoutEmail?.value.trim() || '';
-      if (!email || !email.includes('@')) {
+      if (!email || !email.includes('@') || !email.includes('.')) {
         if (checkoutEmail) {
           checkoutEmail.focus();
           checkoutEmail.classList.add('input-error');
@@ -400,35 +353,32 @@
       }
 
       hideInlineAlert();
-      updateStep3Recap();
+      updateStep2Recap();
     }
 
     currentStep = targetStep;
 
     if (paneStep1) paneStep1.style.display = targetStep === 1 ? 'block' : 'none';
     if (paneStep2) paneStep2.style.display = targetStep === 2 ? 'block' : 'none';
-    if (paneStep3) paneStep3.style.display = targetStep === 3 ? 'block' : 'none';
 
     stepNav1?.classList.toggle('active', targetStep === 1);
     stepNav1?.classList.toggle('completed', targetStep > 1);
     stepNav2?.classList.toggle('active', targetStep === 2);
-    stepNav2?.classList.toggle('completed', targetStep > 2);
-    stepNav3?.classList.toggle('active', targetStep === 3);
 
     connector1?.classList.toggle('active', targetStep >= 2);
-    connector2?.classList.toggle('active', targetStep >= 3);
 
     const cardEl = document.getElementById('checkoutCard');
     if (cardEl) cardEl.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  function updateStep3Recap() {
+  function updateStep2Recap() {
     if (recapResourceTitle) recapResourceTitle.textContent = currentResource?.title || 'Resource';
     if (recapResourceEmail) recapResourceEmail.textContent = checkoutEmail?.value.trim() || 'candidate@gmail.com';
     const isCohort = !!(currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id));
     const isCore = coreDiscountCheckbox?.checked && !isCohort;
     const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
     if (recapResourceFinalPrice) recapResourceFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
+    if (paystackAmountLabel) paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
   }
 
   function showInlineAlert(message: string) {
@@ -447,17 +397,10 @@
 
   btnToStep2?.addEventListener('click', () => goToStep(2));
   btnBackToStep1?.addEventListener('click', () => goToStep(1));
-  btnToStep3?.addEventListener('click', () => goToStep(3));
-  btnBackToStep2?.addEventListener('click', () => goToStep(2));
   btnEditFromRecap?.addEventListener('click', () => goToStep(1));
 
   stepNav1?.addEventListener('click', () => goToStep(1));
-  stepNav2?.addEventListener('click', () => {
-    if (currentStep > 1) goToStep(2);
-  });
-  stepNav3?.addEventListener('click', () => {
-    if (currentStep > 2) goToStep(3);
-  });
+  stepNav2?.addEventListener('click', () => goToStep(2));
 
   function updatePriceDisplay() {
     if (!currentResource) return;
@@ -497,7 +440,7 @@
 
     if (checkoutFinalPrice) checkoutFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
     if (paystackAmountLabel) paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
-    updateStep3Recap();
+    updateStep2Recap();
   }
 
   // Handle billing radio changes inside modal
@@ -551,7 +494,6 @@
     if (checkoutEmail.classList.contains('input-error')) checkoutEmail.classList.remove('input-error');
     updatePriceDisplay();
   });
-  checkoutName?.addEventListener('input', updatePriceDisplay);
   checkoutUniversity?.addEventListener('change', () => {
     if (checkoutUniversity.classList.contains('input-error')) checkoutUniversity.classList.remove('input-error');
     updatePriceDisplay();
@@ -614,9 +556,6 @@
     if (checkoutSubject) checkoutSubject.textContent = currentResource.subject || (isCohort ? 'UTME 2027 Track' : 'Academic');
     if (checkoutFormat) checkoutFormat.textContent = currentResource.deliveryFormat || (isCohort ? 'Live Telegram + CBT Drills' : 'PDF eBook & Reader');
 
-    if (studentNameGroup) studentNameGroup.style.display = isCohort ? 'block' : 'none';
-    if (studentPhoneGroup) studentPhoneGroup.style.display = isCohort ? 'block' : 'none';
-
     const discountSection = document.querySelector('.discount-section') as HTMLElement | null;
     if (discountSection) {
       discountSection.style.display = isCohort ? 'none' : 'block';
@@ -635,9 +574,6 @@
     getCurrentUser().then(user => {
       if (user?.email && checkoutEmail && !checkoutEmail.value) {
         checkoutEmail.value = user.email;
-      }
-      if (user?.user_metadata?.full_name && checkoutName && !checkoutName.value) {
-        checkoutName.value = user.user_metadata.full_name;
       }
       updatePriceDisplay();
     });
@@ -671,20 +607,18 @@
     e.preventDefault();
 
     const email = checkoutEmail?.value.trim() || '';
-    if (!email || !email.includes('@')) {
-      goToStep(2);
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      goToStep(1);
       showInlineAlert('Please enter a valid email address.');
       return;
     }
 
-    const name = checkoutName?.value?.trim() || '';
-    const phone = checkoutPhone?.value?.trim() || '';
     const isCohort = currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id);
 
     const needsUni = universityGroup && universityGroup.style.display !== 'none';
     const uni = checkoutUniversity?.value;
     if (needsUni && !uni) {
-      goToStep(2);
+      goToStep(1);
       showInlineAlert('Please select your target university.');
       return;
     }
@@ -698,19 +632,32 @@
     try {
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
       const isCore = coreDiscountCheckbox?.checked && !isCohort;
-      const chargeAmount = isCore ? Math.round(basePrice * 0.8) : basePrice;
+      const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
 
-      // Normalise product id for cohort or legacy aliases
-      let productId = currentResource.id;
-      if (productId === 'core') productId = isEarlyBirdValid() ? 'cohort-core-earlybird' : 'cohort-core-standard';
-      if (productId === 'mastery') productId = isEarlyBirdValid() ? 'cohort-mastery-earlybird' : 'cohort-mastery-standard';
-      if (productId === 'ultimate') productId = 'cohort-ultimate';
+      const user = await getCurrentUser();
+      const studentName = user?.user_metadata?.full_name || undefined;
 
-      trackEvent('checkout_initiated', {
-        planId: productId,
-        planName: currentResource.title,
-        amount: chargeAmount,
-      });
+      const payload: any = {
+        product_id: currentResource.id,
+        product_name: currentResource.title,
+        amount: finalPrice,
+        email,
+        name: studentName,
+        metadata: {
+          is_core_discount: isCore,
+          original_price: basePrice,
+          delivery_format: currentResource.deliveryFormat || 'digital',
+          target_university: needsUni ? uni : undefined,
+        },
+        callback_url: `${window.location.origin}/payment/callback`,
+      };
+
+      if (isCohort) {
+        payload.billing_option = activeDuration;
+        payload.duration = activeDuration;
+      }
+
+      console.info('[TECHMED Resource Checkout] Initiating Paystack:', payload);
 
       const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
         method: 'POST',
@@ -719,39 +666,46 @@
           'apikey': SUPABASE_ANON_KEY,
           'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
         },
-        body: JSON.stringify({
-          product_id: productId,
-          product_name: currentResource.title,
-          amount: chargeAmount,
-          email,
-          name: name || undefined,
-          phone: phone || undefined,
-          university: uni || null,
-          callback_url: `${window.location.origin}/payment/callback`,
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json();
+
       if (res.ok && data.success && data.data?.authorization_url) {
         trackEvent('paystack_redirect', {
           reference: data.data.reference,
-          amount: chargeAmount,
+          amount: finalPrice,
+          productId: currentResource.id,
         });
         window.location.href = data.data.authorization_url;
       } else {
-        throw new Error(data.message || 'Payment initiation failed.');
+        throw new Error(data.message || 'Payment service is temporarily unreachable.');
       }
     } catch (err: any) {
-      console.warn('Paystack initiate error:', err);
-      showInlineAlert(err.message || 'Unable to connect to Paystack. Please try again.');
+      console.warn('Paystack checkout error:', err);
+
+      const waText = encodeURIComponent(`Hi TECHMED, I had trouble starting payment for ${currentResource?.title || 'study resource'}. My email is ${email}. Please help.`);
+      const waUrl = `https://wa.me/2347044255045?text=${waText}`;
+
+      if (checkoutAlert) {
+        checkoutAlert.style.display = 'block';
+        checkoutAlert.innerHTML = `
+          <strong>Notice:</strong> ${err.message || 'Unable to connect to Paystack.'}
+          <div style="margin-top: 8px;">
+            <a href="${waUrl}" target="_blank" rel="noopener noreferrer" style="color: #09476E; font-weight: 700; text-decoration: underline;">
+              Chat with admissions on WhatsApp &rarr;
+            </a>
+          </div>
+        `;
+      }
+
       if (paystackSubmitBtn) {
         paystackSubmitBtn.disabled = false;
-        paystackSubmitBtn.innerHTML = `<span>Pay ₦${basePrice.toLocaleString()} with Paystack &rarr;</span>`;
+        paystackSubmitBtn.innerHTML = `<span>Pay ₦${(coreDiscountCheckbox?.checked ? Math.round(basePrice * 0.8) : basePrice).toLocaleString()} with Paystack &rarr;</span>`;
       }
     }
   });
 
-  // Global listener for open-checkout events
   window.addEventListener('open-checkout', (e: any) => {
     if (e.detail?.resource) {
       openCheckout(e.detail.resource);
@@ -761,7 +715,7 @@
 
 <style>
   /* ========================================================================= */
-  /* BACKDROP & MODAL DIALOG CONTAINER                                         */
+  /* BACKDROP & CARD CONTAINER                                                 */
   /* ========================================================================= */
   .checkout-backdrop {
     position: fixed;
@@ -782,7 +736,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    max-width: 620px;
+    max-width: 580px;
     width: 100%;
     padding: var(--space-6) var(--space-8);
     box-shadow: 0 24px 64px rgba(1, 39, 72, 0.28);
@@ -811,7 +765,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--color-professional-blue, #09476E);
     text-transform: uppercase;
     display: block;
   }
@@ -839,13 +793,13 @@
     color: var(--text);
   }
 
-  /* Guided Stepper */
+  /* Stepper (2 Steps) */
   .checkout-stepper {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
-    padding: 8px 12px;
+    margin-bottom: var(--space-5);
+    padding: 8px 14px;
     background: var(--surface-raised);
     border-radius: 10px;
     border: 1px solid var(--border);
@@ -858,36 +812,46 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     color: var(--text-muted);
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 600;
     transition: all 180ms ease;
   }
 
   .step-num {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: rgba(152, 176, 196, 0.2);
+    background: rgba(152, 176, 196, 0.25);
     color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     transition: all 180ms ease;
   }
 
   .step-indicator.active {
-    color: var(--text);
-    background: rgba(14, 165, 233, 0.08);
+    color: #012748;
+    background: rgba(9, 71, 110, 0.08);
+  }
+
+  :root:not([data-theme='light']) .step-indicator.active {
+    color: #F8F9FA;
+    background: rgba(152, 176, 196, 0.15);
   }
 
   .step-indicator.active .step-num {
-    background: var(--accent);
-    color: #1a1200;
+    background: #012748;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme='light']) .step-indicator.active .step-num {
+    background: #09476E;
+    color: #ffffff;
   }
 
   .step-indicator.completed {
@@ -895,7 +859,7 @@
   }
 
   .step-indicator.completed .step-num {
-    background: #22c55e;
+    background: #059669;
     color: #ffffff;
   }
 
@@ -903,15 +867,15 @@
     flex: 1;
     height: 2px;
     background: var(--border);
-    margin: 0 6px;
+    margin: 0 10px;
     transition: background 180ms ease;
   }
 
   .step-connector.active {
-    background: #22c55e;
+    background: #059669;
   }
 
-  /* Panes */
+  /* Panes Wrap */
   .checkout-panes-wrap {
     display: flex;
     flex-direction: column;
@@ -927,12 +891,12 @@
   }
 
   .pane-intro {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .pane-title {
     font-size: 1.15rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text);
     margin: 0 0 4px;
   }
@@ -949,38 +913,41 @@
     background: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-5);
+    padding: 14px 16px;
+    margin-bottom: var(--space-4);
   }
 
   .summary-top {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 0.75rem;
+    gap: 6px;
+    font-size: 0.74rem;
+    font-weight: 700;
     color: var(--text-muted);
-    margin-bottom: 6px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
   }
 
   .summary-subject {
-    font-weight: 700;
-    color: var(--accent);
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    color: #09476E;
+  }
+
+  :root:not([data-theme='light']) .summary-subject {
+    color: #98B0C4;
   }
 
   .summary-title {
-    font-size: 1.25rem;
+    font-size: 1.12rem;
     font-weight: 800;
     color: var(--text);
-    margin: 4px 0 6px;
+    margin: 0 0 4px;
   }
 
   .summary-desc {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    line-height: 1.45;
-    margin: 0 0 var(--space-3);
+    margin: 0 0 10px;
+    line-height: 1.4;
   }
 
   .resource-perks-list {
@@ -988,39 +955,42 @@
     flex-direction: column;
     gap: 6px;
     border-top: 1px solid var(--border);
-    padding-top: var(--space-3);
+    padding-top: 10px;
   }
 
   .perk-item {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 8px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--text);
+    line-height: 1.35;
   }
 
   .perk-icon {
-    color: #22c55e;
-    font-weight: 700;
+    color: #059669;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
   }
 
-  /* Modal Billing Selector (Fallback) */
+  /* Billing Selector */
   .modal-billing-selector {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 10px;
-    margin-bottom: var(--space-4);
+    margin-top: 6px;
   }
 
   .modal-billing-card {
     border: 1.5px solid var(--border);
     border-radius: 10px;
     padding: 10px 12px;
-    cursor: pointer;
     background: var(--surface);
+    cursor: pointer;
+    transition: all 150ms ease;
+    display: block;
     position: relative;
-    display: flex;
-    flex-direction: column;
   }
 
   .modal-billing-card input[type="radio"] {
@@ -1029,9 +999,20 @@
     pointer-events: none;
   }
 
+  .modal-billing-card:hover {
+    border-color: #09476E;
+  }
+
   .modal-billing-card.active {
-    border-color: var(--accent);
-    background: rgba(201, 162, 39, 0.06);
+    border-color: #012748;
+    background: rgba(1, 39, 72, 0.04);
+    box-shadow: 0 0 0 1px #012748;
+  }
+
+  :root:not([data-theme='light']) .modal-billing-card.active {
+    border-color: #98B0C4;
+    background: rgba(152, 176, 196, 0.1);
+    box-shadow: 0 0 0 1px #98B0C4;
   }
 
   .card-row-top {
@@ -1048,11 +1029,11 @@
   }
 
   .card-badge {
-    background: var(--accent);
-    color: #1a1200;
     font-size: 0.65rem;
     font-weight: 800;
-    padding: 1px 6px;
+    color: #C9A227;
+    background: rgba(201, 162, 39, 0.15);
+    padding: 2px 6px;
     border-radius: 4px;
     text-transform: uppercase;
   }
@@ -1061,6 +1042,7 @@
     display: flex;
     align-items: baseline;
     gap: 6px;
+    margin-bottom: 2px;
   }
 
   .card-strike {
@@ -1072,38 +1054,40 @@
   .card-final {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--text);
+    color: #012748;
+  }
+
+  :root:not([data-theme='light']) .card-final {
+    color: #F8F9FA;
+  }
+
+  .card-period {
+    font-size: 0.75rem;
+    color: var(--text-muted);
   }
 
   .card-note {
     font-size: 0.7rem;
     color: var(--text-muted);
-    margin-top: 4px;
+    display: block;
   }
 
-  /* Core Discount Checkbox */
+  /* Discount Section */
   .discount-section {
     background: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: var(--space-5);
+    padding: 10px 14px;
+    margin-bottom: var(--space-4);
   }
 
   .discount-checkbox-label {
     display: flex;
     align-items: center;
     gap: 10px;
+    font-size: 0.85rem;
     cursor: pointer;
-    font-size: 0.88rem;
     color: var(--text);
-  }
-
-  .discount-checkbox-label input[type="checkbox"] {
-    accent-color: var(--accent);
-    width: 17px;
-    height: 17px;
-    cursor: pointer;
   }
 
   .discount-details {
@@ -1114,9 +1098,9 @@
 
   .discount-note {
     font-size: 0.78rem;
-    color: #22c55e;
-    margin: 0;
+    color: #059669;
     font-weight: 600;
+    margin: 0;
   }
 
   /* Order Breakdown Card */
@@ -1125,11 +1109,11 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px 16px;
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .breakdown-title {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1152,7 +1136,7 @@
   }
 
   .discount-line {
-    color: #22c55e;
+    color: #059669;
   }
 
   .discount-val {
@@ -1188,25 +1172,24 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Final price: prominent Deep Navy, dark and readable on white/light backgrounds */
   .final-price {
     font-size: 1.35rem;
     font-weight: 900;
-    color: var(--accent);
+    color: #012748;
     font-variant-numeric: tabular-nums;
   }
 
-  /* Form Fields */
-  .form-fields-stack {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+  :root:not([data-theme='light']) .final-price {
+    color: #F8F9FA;
   }
 
+  /* Form Inputs (Email Only) */
   .form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    margin-bottom: var(--space-4);
   }
 
   .form-group label {
@@ -1234,8 +1217,8 @@
   .checkout-input:focus,
   .checkout-select:focus {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+    border-color: #09476E;
+    box-shadow: 0 0 0 3px rgba(9, 71, 110, 0.15);
   }
 
   .checkout-input.input-error,
@@ -1250,7 +1233,7 @@
     line-height: 1.4;
   }
 
-  /* Payment Step */
+  /* Payment Step Recap */
   .payment-recap-box {
     background: var(--surface-raised);
     border: 1px solid var(--border);
@@ -1276,8 +1259,8 @@
   .recap-edit-btn {
     background: transparent;
     border: none;
-    color: var(--accent);
-    font-size: 0.78rem;
+    color: #09476E;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     text-decoration: underline;
@@ -1294,7 +1277,7 @@
   }
 
   .recap-email {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
   }
 
@@ -1315,8 +1298,12 @@
   .recap-price-amount {
     font-size: 1.25rem;
     font-weight: 900;
-    color: var(--accent);
+    color: #012748;
     font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-theme='light']) .recap-price-amount {
+    color: #F8F9FA;
   }
 
   .gateway-card {
@@ -1324,7 +1311,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .gateway-header {
@@ -1335,8 +1322,8 @@
   }
 
   .paystack-pill {
-    background: rgba(9, 71, 110, 0.15);
-    color: var(--color-professional-blue);
+    background: rgba(9, 71, 110, 0.12);
+    color: #09476E;
     font-size: 0.72rem;
     font-weight: 800;
     padding: 3px 8px;
@@ -1346,13 +1333,14 @@
   }
 
   :root:not([data-theme='light']) .paystack-pill {
-    color: var(--color-soft-blue);
+    color: #98B0C4;
+    background: rgba(152, 176, 196, 0.15);
   }
 
   .gateway-ssl {
     font-size: 0.72rem;
-    color: #22c55e;
-    font-weight: 600;
+    color: #059669;
+    font-weight: 700;
   }
 
   .gateway-desc {
@@ -1423,23 +1411,55 @@
     gap: 12px;
   }
 
-  .step-next-btn,
-  .pay-btn {
+  /* Active, prominent Deep Navy primary buttons (replaces grey-looking buttons) */
+  .btn-primary.step-next-btn,
+  .btn-primary.pay-btn {
     width: 100%;
-    padding: 12px 20px;
+    padding: 13px 20px;
     font-size: 1rem;
     font-weight: 700;
     border-radius: 10px;
     cursor: pointer;
+    background: #012748 !important;
+    color: #ffffff !important;
+    border: 1px solid #012748 !important;
+    box-shadow: 0 4px 14px rgba(1, 39, 72, 0.22) !important;
+    transition: all 180ms ease !important;
+    text-align: center;
   }
 
-  .step-back-btn {
-    padding: 12px 18px;
+  .btn-primary.step-next-btn:hover,
+  .btn-primary.pay-btn:hover {
+    background: #09476E !important;
+    border-color: #09476E !important;
+    box-shadow: 0 6px 18px rgba(9, 71, 110, 0.3) !important;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary.step-next-btn:disabled,
+  .btn-primary.pay-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary.step-back-btn {
+    padding: 13px 18px;
     font-size: 0.92rem;
     font-weight: 600;
     border-radius: 10px;
     white-space: nowrap;
     cursor: pointer;
+    background: #ffffff;
+    color: #012748;
+    border: 1.5px solid #98B0C4;
+    transition: all 180ms ease;
+  }
+
+  .btn-secondary.step-back-btn:hover {
+    background: #F8F9FA;
+    border-color: #09476E;
+    color: #09476E;
   }
 
   .step-action-hint {
@@ -1448,22 +1468,21 @@
     text-align: center;
   }
 
+  .checkout-alert {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: var(--space-4);
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
   .security-note {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-align: center;
     margin-top: 10px;
-  }
-
-  /* Alert */
-  .checkout-alert {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: var(--space-4);
-    font-size: 0.85rem;
-    color: var(--text);
   }
 
   /* ========================================================================= */
@@ -1500,18 +1519,18 @@
 
     .checkout-stepper {
       margin-bottom: 14px;
-      padding: 6px 8px;
+      padding: 6px 10px;
     }
 
     .step-indicator {
-      padding: 4px 6px;
-      font-size: 0.75rem;
+      padding: 4px 8px;
+      font-size: 0.78rem;
     }
 
     .step-num {
-      width: 18px;
-      height: 18px;
-      font-size: 0.7rem;
+      width: 20px;
+      height: 20px;
+      font-size: 0.72rem;
     }
 
     .modal-billing-selector {
@@ -1529,7 +1548,7 @@
       width: 100%;
       text-align: center;
       justify-content: center;
-      padding: 12px 16px;
+      padding: 13px 16px;
     }
   }
 </style>

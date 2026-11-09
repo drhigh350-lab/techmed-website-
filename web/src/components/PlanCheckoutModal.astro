@@ -1,10 +1,9 @@
 ---
 // TECHMED Unified Guided Plan Checkout Modal
-// Mobile-first, minimal, premium 3-step checkout experience:
-// Step 1: Review Order (plan selection, duration option, promo code, price breakdown)
-// Step 2: Confirm Details (email, student name, WhatsApp phone, pre-filled for logged-in students)
-// Step 3: Payment (Paystack secure portal, card & bank transfer, duplicate submission prevention)
-// Step 4: Managed via /payment/callback after verified Paystack return
+// Mobile-first, minimal, premium 2-step checkout experience:
+// Step 1: Order Review (plan selection, duration option, promo code, price breakdown, email address)
+// Step 2: Payment (Paystack secure portal, card & bank transfer, duplicate submission prevention)
+// Step 3 (Confirmation): Managed via /payment/callback after verified Paystack return
 ---
 
 <div id="planCheckoutModalBackdrop" class="plan-modal-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="planModalHeaderTitle">
@@ -18,20 +17,15 @@
       <button type="button" id="closePlanModalBtn" class="plan-close-btn" aria-label="Close checkout">&times;</button>
     </div>
 
-    <!-- Guided Checkout Step Indicator -->
+    <!-- Guided Checkout Step Indicator: 2 Steps -->
     <div class="checkout-stepper" role="navigation" aria-label="Checkout Progress">
       <button type="button" class="step-indicator active" id="planStepNav1" data-step="1">
         <span class="step-num">1</span>
-        <span class="step-label">Order</span>
+        <span class="step-label">Order Review</span>
       </button>
       <div class="step-connector" id="planConnector1"></div>
       <button type="button" class="step-indicator" id="planStepNav2" data-step="2">
         <span class="step-num">2</span>
-        <span class="step-label">Details</span>
-      </button>
-      <div class="step-connector" id="planConnector2"></div>
-      <button type="button" class="step-indicator" id="planStepNav3" data-step="3">
-        <span class="step-num">3</span>
         <span class="step-label">Payment</span>
       </button>
     </div>
@@ -39,7 +33,7 @@
     <form id="planCheckoutForm" class="plan-checkout-form" novalidate>
       <div class="checkout-panes-wrap">
         <!-- =============================================================== -->
-        <!-- STEP 1: REVIEW ORDER PANE                                        -->
+        <!-- STEP 1: ORDER REVIEW PANE                                       -->
         <!-- =============================================================== -->
         <div id="planPaneStep1" class="checkout-pane active">
           <!-- Selected Plan Summary Card -->
@@ -103,11 +97,10 @@
             </div>
           </div>
 
-          <!-- Promotional Code Section -->
+          <!-- Promotional Code Section (Without permanent promotional banner) -->
           <div class="promo-box" id="promoBox">
             <div class="promo-header-row">
               <label for="planPromoInput" class="promo-input-label">Have a promo code?</label>
-              <span class="promo-hint-pill">TECHMED30 (30% OFF)</span>
             </div>
 
             <!-- Input group (shown when promo is not applied) -->
@@ -115,7 +108,7 @@
               <input
                 type="text"
                 id="planPromoInput"
-                placeholder="Enter promo code (e.g. TECHMED30)"
+                placeholder="Enter promo code"
                 class="plan-input promo-input"
                 autocomplete="off"
                 spellcheck="false"
@@ -126,16 +119,14 @@
             <!-- Applied Banner (shown when promo is active) -->
             <div id="promoAppliedCard" class="promo-applied-card" style="display: none;">
               <div class="promo-applied-left">
-                <span class="promo-badge-tag">TECHMED30 APPLIED</span>
-                <span class="promo-applied-amount" id="promoAppliedDiscountText">-₦5,400 (30% off)</span>
-                <p class="promo-applied-note" id="promoAppliedExplanation">
-                  30% discount applied to standard price (₦18,000), replacing early-bird rate.
-                </p>
+                <span class="promo-badge-tag">PROMO APPLIED</span>
+                <span class="promo-applied-amount" id="promoAppliedDiscountText">-₦0</span>
+                <p class="promo-applied-note" id="promoAppliedExplanation"></p>
               </div>
               <button type="button" id="removePromoBtn" class="promo-remove-btn" title="Remove promo code">Remove</button>
             </div>
 
-            <!-- Promo Error Message -->
+            <!-- Promo Error / Feedback Message -->
             <div id="promoFeedbackMsg" class="promo-error-msg" style="display: none;" role="alert"></div>
           </div>
 
@@ -143,7 +134,7 @@
           <div class="order-breakdown-card">
             <h4 class="breakdown-title">Order Summary</h4>
             <div class="breakdown-line">
-              <span class="breakdown-label">Plan Price:</span>
+              <span class="breakdown-label">Standard Price:</span>
               <span class="breakdown-figure" id="breakdownBasePrice">₦15,000</span>
             </div>
             <div id="planSummaryDiscountRow" class="breakdown-line discount-line" style="display: none;">
@@ -160,24 +151,7 @@
             </div>
           </div>
 
-          <!-- Step 1 Primary Action -->
-          <div class="step-action-bar">
-            <button type="button" id="btnToStep2" class="btn-primary step-next-btn">
-              <span>Continue to Student Details &rarr;</span>
-            </button>
-            <span class="step-action-hint">Next: Enter contact details for Telegram onboarding</span>
-          </div>
-        </div>
-
-        <!-- =============================================================== -->
-        <!-- STEP 2: CONFIRM DETAILS PANE                                    -->
-        <!-- =============================================================== -->
-        <div id="planPaneStep2" class="checkout-pane" style="display: none;">
-          <div class="pane-intro">
-            <h3 class="pane-title">Student Information</h3>
-            <p class="pane-subtitle">Enter your contact details. Your enrolment license and receipt will be associated with this email.</p>
-          </div>
-
+          <!-- Email Address Input (Email Only Checkout) -->
           <div class="form-fields-stack">
             <div class="form-field">
               <label for="planCustomerEmail">
@@ -191,52 +165,26 @@
                 autocomplete="email"
                 class="plan-input"
               />
-              <span class="field-hint">Required for payment receipt and your student dashboard login.</span>
-            </div>
-
-            <div class="form-field">
-              <label for="planCustomerName">Student Full Name</label>
-              <input
-                type="text"
-                id="planCustomerName"
-                placeholder="e.g. Samuel Adebayo"
-                autocomplete="name"
-                class="plan-input"
-              />
-              <span class="field-hint">Used for your official cohort attendance and certificate.</span>
-            </div>
-
-            <div class="form-field">
-              <label for="planCustomerPhone">WhatsApp Phone Number</label>
-              <input
-                type="tel"
-                id="planCustomerPhone"
-                placeholder="e.g. 08012345678"
-                autocomplete="tel"
-                class="plan-input"
-              />
-              <span class="field-hint">Used for live Telegram class access and cohort onboarding.</span>
+              <span class="field-hint">Your enrolment receipt and student dashboard access will be delivered to this email.</span>
             </div>
           </div>
 
-          <!-- Step 2 Navigation Actions -->
-          <div class="step-action-bar dual-actions">
-            <button type="button" id="btnBackToStep1" class="btn-secondary step-back-btn">
-              &larr; Back to Order
-            </button>
-            <button type="button" id="btnToStep3" class="btn-primary step-next-btn">
+          <!-- Step 1 Primary Action -->
+          <div class="step-action-bar">
+            <button type="button" id="btnToStep2" class="btn-primary step-next-btn">
               <span>Continue to Payment &rarr;</span>
             </button>
+            <span class="step-action-hint">Next: Proceed to Paystack secure payment portal</span>
           </div>
         </div>
 
         <!-- =============================================================== -->
-        <!-- STEP 3: PAYMENT PANE                                            -->
+        <!-- STEP 2: PAYMENT PANE                                            -->
         <!-- =============================================================== -->
-        <div id="planPaneStep3" class="checkout-pane" style="display: none;">
+        <div id="planPaneStep2" class="checkout-pane" style="display: none;">
           <div class="pane-intro">
             <h3 class="pane-title">Complete Payment</h3>
-            <p class="pane-subtitle">Review your transaction and proceed to Paystack secure checkout.</p>
+            <p class="pane-subtitle">Review your order and proceed to Paystack secure checkout.</p>
           </div>
 
           <!-- Compact Order Recap Card -->
@@ -290,10 +238,10 @@
           <!-- In-Modal Alert for Gateway Notices -->
           <div id="planAlertBox" class="plan-alert-box" style="display: none;" role="alert"></div>
 
-          <!-- Step 3 Actions -->
+          <!-- Step 2 Actions -->
           <div class="step-action-bar dual-actions">
-            <button type="button" id="btnBackToStep2" class="btn-secondary step-back-btn">
-              &larr; Back to Details
+            <button type="button" id="btnBackToStep1" class="btn-secondary step-back-btn">
+              &larr; Back to Order
             </button>
             <button type="submit" id="planSubmitBtn" class="btn-primary plan-pay-btn">
               <span>Pay <span id="planSubmitAmount">₦0</span> with Paystack &rarr;</span>
@@ -354,21 +302,16 @@
   const planSubmitBtn = document.getElementById('planSubmitBtn') as HTMLButtonElement | null;
   const planSubmitAmount = document.getElementById('planSubmitAmount');
 
-  // Guided Checkout Stepper & Panes
-  let currentStep: 1 | 2 | 3 = 1;
+  // Guided 2-Step Checkout Stepper & Panes
+  let currentStep: 1 | 2 = 1;
   const paneStep1 = document.getElementById('planPaneStep1');
   const paneStep2 = document.getElementById('planPaneStep2');
-  const paneStep3 = document.getElementById('planPaneStep3');
   const stepNav1 = document.getElementById('planStepNav1');
   const stepNav2 = document.getElementById('planStepNav2');
-  const stepNav3 = document.getElementById('planStepNav3');
   const connector1 = document.getElementById('planConnector1');
-  const connector2 = document.getElementById('planConnector2');
 
   const btnToStep2 = document.getElementById('btnToStep2');
   const btnBackToStep1 = document.getElementById('btnBackToStep1');
-  const btnToStep3 = document.getElementById('btnToStep3');
-  const btnBackToStep2 = document.getElementById('btnBackToStep2');
   const btnEditFromRecap = document.getElementById('btnEditFromRecap');
 
   const recapPlanTitle = document.getElementById('recapPlanTitle');
@@ -389,15 +332,12 @@
     return Date.now() <= EARLY_BIRD_DEADLINE;
   }
 
-  // Stepper Transition Engine
-  function goToStep(targetStep: 1 | 2 | 3) {
-    if (targetStep === 2 && currentStep === 1) {
-      // Moving to Step 2: ensure plan details are recalculated
-      recalculatePlanDetails();
-    } else if (targetStep === 3) {
-      // Validate email before advancing to Step 3
+  // 2-Step Stepper Transition Engine
+  function goToStep(targetStep: 1 | 2) {
+    if (targetStep === 2) {
+      // Validate email before advancing to Payment step
       const email = planCustomerEmail?.value.trim() || '';
-      if (!email || !email.includes('@')) {
+      if (!email || !email.includes('@') || !email.includes('.')) {
         if (planCustomerEmail) {
           planCustomerEmail.focus();
           planCustomerEmail.classList.add('input-error');
@@ -408,7 +348,8 @@
         if (planCustomerEmail) planCustomerEmail.classList.remove('input-error');
         hideInlineAlert();
       }
-      updateStep3Recap();
+      recalculatePlanDetails();
+      updateStep2Recap();
     }
 
     currentStep = targetStep;
@@ -416,17 +357,13 @@
     // Panes visibility
     if (paneStep1) paneStep1.style.display = targetStep === 1 ? 'block' : 'none';
     if (paneStep2) paneStep2.style.display = targetStep === 2 ? 'block' : 'none';
-    if (paneStep3) paneStep3.style.display = targetStep === 3 ? 'block' : 'none';
 
     // Stepper header classes
     stepNav1?.classList.toggle('active', targetStep === 1);
     stepNav1?.classList.toggle('completed', targetStep > 1);
     stepNav2?.classList.toggle('active', targetStep === 2);
-    stepNav2?.classList.toggle('completed', targetStep > 2);
-    stepNav3?.classList.toggle('active', targetStep === 3);
 
     connector1?.classList.toggle('active', targetStep >= 2);
-    connector2?.classList.toggle('active', targetStep >= 3);
 
     // Scroll card to top smoothly
     const cardEl = document.querySelector('.plan-modal-card');
@@ -439,7 +376,7 @@
     });
   }
 
-  function updateStep3Recap() {
+  function updateStep2Recap() {
     if (recapPlanTitle) recapPlanTitle.textContent = authoritativeTitle;
     if (recapCustomerEmail) recapCustomerEmail.textContent = planCustomerEmail?.value.trim() || 'candidate@gmail.com';
     if (recapFinalPrice) recapFinalPrice.textContent = `₦${authoritativePrice.toLocaleString()}`;
@@ -461,18 +398,11 @@
 
   btnToStep2?.addEventListener('click', () => goToStep(2));
   btnBackToStep1?.addEventListener('click', () => goToStep(1));
-  btnToStep3?.addEventListener('click', () => goToStep(3));
-  btnBackToStep2?.addEventListener('click', () => goToStep(2));
   btnEditFromRecap?.addEventListener('click', () => goToStep(1));
 
-  // Stepper Header Click Navigation (allow going back to previous steps)
+  // Stepper Header Click Navigation (allow switching between steps)
   stepNav1?.addEventListener('click', () => goToStep(1));
-  stepNav2?.addEventListener('click', () => {
-    if (currentStep > 1) goToStep(2);
-  });
-  stepNav3?.addEventListener('click', () => {
-    if (currentStep > 2) goToStep(3);
-  });
+  stepNav2?.addEventListener('click', () => goToStep(2));
 
   function recalculatePlanDetails() {
     const earlyValid = isEarlyBirdValid();
@@ -588,7 +518,7 @@
       }
     }
 
-    updateStep3Recap();
+    updateStep2Recap();
   }
 
   // Handle Promo Code Apply
@@ -716,9 +646,6 @@
       if (user?.email && planCustomerEmail && !planCustomerEmail.value) {
         planCustomerEmail.value = user.email;
       }
-      if (user?.user_metadata?.full_name && planCustomerName && !planCustomerName.value) {
-        planCustomerName.value = user.user_metadata.full_name;
-      }
     });
 
     if (modalBackdrop) modalBackdrop.style.display = 'flex';
@@ -749,20 +676,15 @@
     e.preventDefault();
 
     const email = planCustomerEmail?.value.trim() || '';
-    if (!email || !email.includes('@')) {
-      goToStep(2);
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      goToStep(1);
       showInlineAlert('Please enter a valid email address to receive your payment confirmation.');
       return;
     }
 
-    const name = planCustomerName?.value.trim() || '';
-    const phone = planCustomerPhone?.value.trim() || '';
-
     hideInlineAlert();
 
-    // -------------------------------------------------------------------------
     // Synchronize DOM radio state and product ID
-    // -------------------------------------------------------------------------
     if (activePlanId === 'core') {
       const checkedDurationRadio = document.querySelector('input[name="planCoreBilling"]:checked') as HTMLInputElement | null;
       if (checkedDurationRadio && (checkedDurationRadio.value === 'monthly' || checkedDurationRadio.value === 'earlybird')) {
@@ -818,7 +740,7 @@
         amount: authoritativePrice,
       });
 
-      // Send payment initiation request to backend with verified product_id, duration, and promo_code
+      // Send payment initiation request to backend (only email and product details needed)
       const res = await fetch(`${SUPABASE_FN_BASE}/pay-initiate`, {
         method: 'POST',
         headers: {
@@ -834,8 +756,6 @@
           amount: authoritativePrice,
           promo_code: appliedPromoCode || undefined,
           email,
-          name: name || undefined,
-          phone: phone || undefined,
           callback_url: `${window.location.origin}/payment/callback`,
         }),
       });
@@ -932,7 +852,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 16px;
-    max-width: 620px;
+    max-width: 580px;
     width: 100%;
     padding: var(--space-6) var(--space-8);
     box-shadow: 0 24px 64px rgba(1, 39, 72, 0.28);
@@ -961,7 +881,7 @@
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: var(--color-professional-blue, #09476E);
     text-transform: uppercase;
     display: block;
   }
@@ -989,13 +909,13 @@
     color: var(--text);
   }
 
-  /* Guided Checkout Stepper */
+  /* Guided Checkout Stepper (2 Steps) */
   .checkout-stepper {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
-    padding: 8px 12px;
+    margin-bottom: var(--space-5);
+    padding: 8px 14px;
     background: var(--surface-raised);
     border-radius: 10px;
     border: 1px solid var(--border);
@@ -1008,36 +928,46 @@
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 6px 10px;
+    padding: 6px 12px;
     border-radius: 6px;
     color: var(--text-muted);
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 600;
     transition: all 180ms ease;
   }
 
   .step-num {
-    width: 22px;
-    height: 22px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    background: rgba(152, 176, 196, 0.2);
+    background: rgba(152, 176, 196, 0.25);
     color: var(--text-muted);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.78rem;
+    font-weight: 800;
     transition: all 180ms ease;
   }
 
   .step-indicator.active {
-    color: var(--text);
-    background: rgba(14, 165, 233, 0.08);
+    color: #012748;
+    background: rgba(9, 71, 110, 0.08);
+  }
+
+  :root:not([data-theme='light']) .step-indicator.active {
+    color: #F8F9FA;
+    background: rgba(152, 176, 196, 0.15);
   }
 
   .step-indicator.active .step-num {
-    background: var(--accent);
-    color: #1a1200;
+    background: #012748;
+    color: #ffffff;
+  }
+
+  :root:not([data-theme='light']) .step-indicator.active .step-num {
+    background: #09476E;
+    color: #ffffff;
   }
 
   .step-indicator.completed {
@@ -1045,7 +975,7 @@
   }
 
   .step-indicator.completed .step-num {
-    background: #22c55e;
+    background: #059669;
     color: #ffffff;
   }
 
@@ -1053,12 +983,12 @@
     flex: 1;
     height: 2px;
     background: var(--border);
-    margin: 0 6px;
+    margin: 0 10px;
     transition: background 180ms ease;
   }
 
   .step-connector.active {
-    background: #22c55e;
+    background: #059669;
   }
 
   /* Panes Wrap */
@@ -1077,12 +1007,12 @@
   }
 
   .pane-intro {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .pane-title {
     font-size: 1.15rem;
-    font-weight: 700;
+    font-weight: 800;
     color: var(--text);
     margin: 0 0 4px;
   }
@@ -1099,49 +1029,51 @@
     background: var(--surface-raised);
     border: 1px solid var(--border);
     border-radius: 12px;
-    padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-5);
+    padding: 14px 16px;
+    margin-bottom: var(--space-4);
   }
 
   .plan-summary-top {
     display: flex;
     align-items: center;
-    gap: 8px;
+    justify-content: space-between;
     margin-bottom: 6px;
-    flex-wrap: wrap;
   }
 
   .plan-track-badge {
-    background: rgba(14, 165, 233, 0.15);
-    color: var(--accent);
-    font-size: 0.7rem;
-    font-weight: 700;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.05em;
+    color: #012748;
+    background: rgba(1, 39, 72, 0.08);
     padding: 2px 8px;
     border-radius: 4px;
-    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  :root:not([data-theme='light']) .plan-track-badge {
+    color: #98B0C4;
+    background: rgba(152, 176, 196, 0.15);
   }
 
   .plan-delivery-badge {
-    background: rgba(152, 176, 196, 0.15);
-    color: var(--text-muted);
-    font-size: 0.7rem;
+    font-size: 0.74rem;
     font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 4px;
+    color: var(--text-muted);
   }
 
   .plan-summary-name {
-    font-size: 1.25rem;
+    font-size: 1.12rem;
     font-weight: 800;
     color: var(--text);
-    margin: 4px 0 6px;
+    margin: 0 0 4px;
   }
 
   .plan-summary-desc {
-    font-size: 0.88rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    line-height: 1.45;
-    margin: 0 0 var(--space-3);
+    line-height: 1.4;
+    margin: 0 0 10px;
   }
 
   .plan-highlights-list {
@@ -1149,53 +1081,53 @@
     flex-direction: column;
     gap: 6px;
     border-top: 1px solid var(--border);
-    padding-top: var(--space-3);
+    padding-top: 10px;
   }
 
   .highlight-item {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     gap: 8px;
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     color: var(--text);
+    line-height: 1.35;
   }
 
   .check-icon {
-    color: #22c55e;
-    font-weight: 700;
+    color: #059669;
+    font-weight: 800;
+    font-size: 0.85rem;
+    flex-shrink: 0;
   }
 
-  /* Core Duration Billing Cards */
+  /* Core Billing Group */
   .plan-billing-group {
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .billing-group-label {
     display: block;
     font-size: 0.82rem;
     font-weight: 700;
-    color: var(--text-muted);
+    color: var(--text);
     margin-bottom: 8px;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
   }
 
   .billing-cards-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3);
+    gap: 10px;
   }
 
   .billing-card {
+    position: relative;
     border: 1.5px solid var(--border);
     border-radius: 10px;
-    padding: 12px 14px;
-    cursor: pointer;
+    padding: 10px 12px;
     background: var(--surface);
+    cursor: pointer;
     transition: all 150ms ease;
-    display: flex;
-    flex-direction: column;
-    position: relative;
+    display: block;
   }
 
   .billing-card input[type="radio"] {
@@ -1205,35 +1137,40 @@
   }
 
   .billing-card:hover {
-    border-color: var(--color-soft-blue);
+    border-color: #09476E;
   }
 
   .billing-card.active {
-    border-color: var(--accent);
-    background: rgba(201, 162, 39, 0.06);
-    box-shadow: 0 0 0 1px var(--accent);
+    border-color: #012748;
+    background: rgba(1, 39, 72, 0.04);
+    box-shadow: 0 0 0 1px #012748;
+  }
+
+  :root:not([data-theme='light']) .billing-card.active {
+    border-color: #98B0C4;
+    background: rgba(152, 176, 196, 0.1);
+    box-shadow: 0 0 0 1px #98B0C4;
   }
 
   .billing-card-title-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 6px;
     margin-bottom: 4px;
   }
 
   .billing-title {
-    font-size: 0.88rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--text);
   }
 
   .billing-badge {
-    background: var(--accent);
-    color: #1a1200;
     font-size: 0.65rem;
     font-weight: 800;
-    padding: 1px 6px;
+    color: #C9A227;
+    background: rgba(201, 162, 39, 0.15);
+    padding: 2px 6px;
     border-radius: 4px;
     text-transform: uppercase;
   }
@@ -1242,19 +1179,23 @@
     display: flex;
     align-items: baseline;
     gap: 6px;
+    margin-bottom: 2px;
   }
 
   .billing-strike {
-    font-size: 0.8rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     text-decoration: line-through;
   }
 
   .billing-final {
-    font-size: 1.1rem;
+    font-size: 1.05rem;
     font-weight: 800;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
+    color: #012748;
+  }
+
+  :root:not([data-theme='light']) .billing-final {
+    color: #F8F9FA;
   }
 
   .billing-period {
@@ -1263,37 +1204,28 @@
   }
 
   .billing-deadline {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
-    margin-top: 4px;
+    display: block;
   }
 
   /* Promo Box */
   .promo-box {
     background: var(--surface-raised);
-    border: 1px dashed var(--border);
+    border: 1px solid var(--border);
     border-radius: 10px;
     padding: 12px 14px;
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .promo-header-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-bottom: 8px;
   }
 
   .promo-input-label {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--text);
-  }
-
-  .promo-hint-pill {
-    font-size: 0.7rem;
-    font-weight: 700;
-    color: var(--accent);
   }
 
   .promo-input-row {
@@ -1303,45 +1235,51 @@
 
   .promo-input {
     flex: 1;
-    font-family: var(--font-mono, monospace);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    padding: 8px 12px;
+    font-size: 0.88rem;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    background: var(--bg);
+    color: var(--text);
   }
 
   .promo-apply-btn {
-    padding: 8px 16px;
-    font-size: 0.85rem;
-    font-weight: 700;
-    white-space: nowrap;
-    border-radius: 8px;
+    padding: 8px 16px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    border-radius: 8px !important;
+    background: #012748 !important;
+    color: #ffffff !important;
+    border: none !important;
+    cursor: pointer;
   }
 
   .promo-applied-card {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(34, 197, 94, 0.1);
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(5, 150, 105, 0.08);
+    border: 1px solid rgba(5, 150, 105, 0.25);
     border-radius: 8px;
-    padding: 10px 12px;
+    padding: 8px 12px;
   }
 
   .promo-badge-tag {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     font-weight: 800;
-    color: #22c55e;
+    color: #059669;
     letter-spacing: 0.05em;
+    display: block;
   }
 
   .promo-applied-amount {
     font-size: 0.95rem;
     font-weight: 800;
-    color: #22c55e;
-    margin-left: 8px;
+    color: #059669;
   }
 
   .promo-applied-note {
-    font-size: 0.75rem;
+    font-size: 0.74rem;
     color: var(--text-muted);
     margin: 2px 0 0;
   }
@@ -1373,11 +1311,11 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 14px 16px;
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .breakdown-title {
-    font-size: 0.82rem;
+    font-size: 0.8rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -1400,7 +1338,7 @@
   }
 
   .discount-line {
-    color: #22c55e;
+    color: #059669;
   }
 
   .discount-val {
@@ -1436,19 +1374,24 @@
     font-variant-numeric: tabular-nums;
   }
 
+  /* Price text: prominent Deep Navy, dark and readable on white/light backgrounds */
   .plan-final-price {
     font-size: 1.35rem;
     font-weight: 900;
-    color: var(--accent);
+    color: #012748;
     font-variant-numeric: tabular-nums;
   }
 
-  /* Form Fields */
+  :root:not([data-theme='light']) .plan-final-price {
+    color: #F8F9FA;
+  }
+
+  /* Form Fields (Email Only) */
   .form-fields-stack {
     display: flex;
     flex-direction: column;
-    gap: var(--space-4);
-    margin-bottom: var(--space-6);
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
   }
 
   .form-field {
@@ -1480,8 +1423,8 @@
 
   .plan-input:focus {
     outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+    border-color: #09476E;
+    box-shadow: 0 0 0 3px rgba(9, 71, 110, 0.15);
   }
 
   .plan-input.input-error {
@@ -1521,8 +1464,8 @@
   .recap-edit-btn {
     background: transparent;
     border: none;
-    color: var(--accent);
-    font-size: 0.78rem;
+    color: #09476E;
+    font-size: 0.8rem;
     font-weight: 700;
     cursor: pointer;
     text-decoration: underline;
@@ -1539,7 +1482,7 @@
   }
 
   .recap-email {
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     color: var(--text-muted);
   }
 
@@ -1560,8 +1503,12 @@
   .recap-price-amount {
     font-size: 1.25rem;
     font-weight: 900;
-    color: var(--accent);
+    color: #012748;
     font-variant-numeric: tabular-nums;
+  }
+
+  :root:not([data-theme='light']) .recap-price-amount {
+    color: #F8F9FA;
   }
 
   .gateway-card {
@@ -1569,7 +1516,7 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: var(--space-4) var(--space-5);
-    margin-bottom: var(--space-5);
+    margin-bottom: var(--space-4);
   }
 
   .gateway-header {
@@ -1580,8 +1527,8 @@
   }
 
   .paystack-pill {
-    background: rgba(9, 71, 110, 0.15);
-    color: var(--color-professional-blue);
+    background: rgba(9, 71, 110, 0.12);
+    color: #09476E;
     font-size: 0.72rem;
     font-weight: 800;
     padding: 3px 8px;
@@ -1591,13 +1538,14 @@
   }
 
   :root:not([data-theme='light']) .paystack-pill {
-    color: var(--color-soft-blue);
+    color: #98B0C4;
+    background: rgba(152, 176, 196, 0.15);
   }
 
   .gateway-ssl {
     font-size: 0.72rem;
-    color: #22c55e;
-    font-weight: 600;
+    color: #059669;
+    font-weight: 700;
   }
 
   .gateway-desc {
@@ -1668,23 +1616,55 @@
     gap: 12px;
   }
 
-  .step-next-btn,
-  .plan-pay-btn {
+  /* Active, prominent Deep Navy primary buttons (replaces grey-looking buttons) */
+  .btn-primary.step-next-btn,
+  .btn-primary.plan-pay-btn {
     width: 100%;
-    padding: 12px 20px;
+    padding: 13px 20px;
     font-size: 1rem;
     font-weight: 700;
     border-radius: 10px;
     cursor: pointer;
+    background: #012748 !important;
+    color: #ffffff !important;
+    border: 1px solid #012748 !important;
+    box-shadow: 0 4px 14px rgba(1, 39, 72, 0.22) !important;
+    transition: all 180ms ease !important;
+    text-align: center;
   }
 
-  .step-back-btn {
-    padding: 12px 18px;
+  .btn-primary.step-next-btn:hover,
+  .btn-primary.plan-pay-btn:hover {
+    background: #09476E !important;
+    border-color: #09476E !important;
+    box-shadow: 0 6px 18px rgba(9, 71, 110, 0.3) !important;
+    transform: translateY(-1px);
+  }
+
+  .btn-primary.step-next-btn:disabled,
+  .btn-primary.plan-pay-btn:disabled {
+    opacity: 0.75;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary.step-back-btn {
+    padding: 13px 18px;
     font-size: 0.92rem;
     font-weight: 600;
     border-radius: 10px;
     white-space: nowrap;
     cursor: pointer;
+    background: #ffffff;
+    color: #012748;
+    border: 1.5px solid #98B0C4;
+    transition: all 180ms ease;
+  }
+
+  .btn-secondary.step-back-btn:hover {
+    background: #F8F9FA;
+    border-color: #09476E;
+    color: #09476E;
   }
 
   .step-action-hint {
@@ -1771,18 +1751,18 @@
 
     .checkout-stepper {
       margin-bottom: 14px;
-      padding: 6px 8px;
+      padding: 6px 10px;
     }
 
     .step-indicator {
-      padding: 4px 6px;
-      font-size: 0.75rem;
+      padding: 4px 8px;
+      font-size: 0.78rem;
     }
 
     .step-num {
-      width: 18px;
-      height: 18px;
-      font-size: 0.7rem;
+      width: 20px;
+      height: 20px;
+      font-size: 0.72rem;
     }
 
     .billing-cards-grid {
@@ -1800,7 +1780,7 @@
       width: 100%;
       text-align: center;
       justify-content: center;
-      padding: 12px 16px;
+      padding: 13px 16px;
     }
   }
 </style>

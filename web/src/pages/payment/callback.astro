@@ -28,11 +28,12 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 >
   <div class="callback-container">
     <div class="callback-card" id="callbackCard">
-      <!-- Guided Step 4 Progress Indicator -->
+      <!-- Confirmation Badge -->
       <div class="callback-step-indicator">
-        <span class="step-badge">STEP 4 OF 4</span>
-        <span class="step-text">Payment Verification &amp; Activation</span>
+        <span class="step-badge">CONFIRMATION</span>
+        <span class="step-text">Payment Verification &amp; Access</span>
       </div>
+
       <!-- State 1: Verifying Spinner -->
       <div id="loadingState" class="state-block">
         <div class="spinner-wrap">
@@ -57,9 +58,9 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </svg>
         </div>
         <p class="state-eyebrow success">TRANSACTION CONFIRMED</p>
-        <h1 class="state-title" id="successHeading">Payment Confirmed!</h1>
+        <h1 class="state-title" id="successHeading">Payment Successful</h1>
         <p class="state-desc" id="successDesc">
-          Your payment has been verified and your purchase is active. Welcome to TECHMED!
+          Your payment has been verified and your enrolment is active. Access your student dashboard to start preparing.
         </p>
 
         <div class="receipt-box">
@@ -199,13 +200,13 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           </form>
         </div>
 
-        <!-- Direct Access Links -->
+        <!-- Direct Access & WhatsApp Support Links -->
         <div class="action-buttons-group">
-          <a id="openReaderBtn" href="/library" class="btn-primary action-btn">
-            Open Student Library &amp; Bookshelf &rarr;
+          <a id="openReaderBtn" href="/dashboard" class="btn-primary action-btn">
+            Access Student Dashboard &rarr;
           </a>
-          <a id="successWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
-            Join Student WhatsApp Community
+          <a id="successWhatsAppBtn" href="https://wa.me/2347044255045" target="_blank" rel="noopener" class="btn-secondary action-btn whatsapp-btn">
+            Need help? Chat with us on WhatsApp
           </a>
         </div>
       </div>
@@ -221,15 +222,15 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
         <p class="state-eyebrow warning">TRANSACTION PROCESSING</p>
         <h1 class="state-title">Payment Settlement in Progress</h1>
         <p class="state-desc">
-          Your bank or Paystack is still processing the transfer. If you were debited, your reference is recorded and your enrolment will activate automatically as soon as settlement completes.
+          Your bank or Paystack is processing the transfer. If you were debited, your reference is recorded and your enrolment will activate automatically as soon as settlement completes.
         </p>
 
         <div class="pending-actions">
           <button type="button" id="recheckBtn" class="btn-primary action-btn">
             Check Payment Status Again
           </button>
-          <a id="pendingWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
-            Notify Admissions Desk on WhatsApp
+          <a id="pendingWhatsAppBtn" href="https://wa.me/2347044255045" target="_blank" rel="noopener" class="btn-secondary action-btn whatsapp-btn">
+            Need help? Chat with us on WhatsApp
           </a>
           <a href="/pricing" class="text-link">Return to Pricing</a>
         </div>
@@ -254,8 +255,8 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
           <a href="/pricing" id="retryPricingBtn" class="btn-primary action-btn">
             Try Again on Pricing Page
           </a>
-          <a id="errorWhatsAppBtn" href="#" target="_blank" rel="noopener" class="btn-secondary action-btn">
-            Message Support on WhatsApp
+          <a id="errorWhatsAppBtn" href="https://wa.me/2347044255045" target="_blank" rel="noopener" class="btn-secondary action-btn whatsapp-btn">
+            Need help? Chat with us on WhatsApp
           </a>
           <a href="/library" class="text-link">Open Student Library</a>
         </div>
@@ -299,7 +300,6 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   const confirmedAmount = document.getElementById('confirmedAmount');
   const confirmedRef = document.getElementById('confirmedRef');
   const confirmedTime = document.getElementById('confirmedTime');
-  const successDesc = document.getElementById('successDesc');
   const openReaderBtn = document.getElementById('openReaderBtn') as HTMLAnchorElement | null;
   const successWhatsAppBtn = document.getElementById('successWhatsAppBtn') as HTMLAnchorElement | null;
 
@@ -471,11 +471,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     if (openReaderBtn) {
       if (isCohort) {
         openReaderBtn.href = '/dashboard';
-        openReaderBtn.textContent = 'Enter Student Dashboard →';
-        if (successWhatsAppBtn) {
-          successWhatsAppBtn.href = 'https://chat.whatsapp.com/HKR7lb7mRoA5wivQLjUhUc?s=cl&p=a&mlu=4&ilr=4&iam=2';
-          successWhatsAppBtn.textContent = 'Join Student Brainstorming Group';
-        }
+        openReaderBtn.textContent = 'Access Student Dashboard →';
       } else {
         const readerId = matchedCatalog?.id || order.product_id;
         openReaderBtn.href = `/library/read/${readerId}`;
@@ -575,8 +571,8 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
       if (postPaymentStatus) {
         postPaymentStatus.style.display = 'block';
-        postPaymentStatus.style.color = '#22c55e';
-        postPaymentStatus.innerHTML = 'Account created successfully! Redirecting to your dashboard... <a href="/dashboard" style="color:#22c55e;font-weight:700;text-decoration:underline;">Click here if not redirected &rarr;</a>';
+        postPaymentStatus.style.color = '#059669';
+        postPaymentStatus.innerHTML = 'Account created successfully! Redirecting to your dashboard... <a href="/dashboard" style="color:#059669;font-weight:700;text-decoration:underline;">Click here if not redirected &rarr;</a>';
         setTimeout(() => {
           window.location.href = '/dashboard';
         }, 1500);
@@ -640,13 +636,17 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .step-badge {
-    background: var(--accent);
-    color: #1a1200;
+    background: #012748;
+    color: #ffffff;
     font-size: 0.65rem;
     font-weight: 800;
     letter-spacing: 0.06em;
     padding: 2px 7px;
     border-radius: 9999px;
+  }
+
+  :root:not([data-theme='light']) .step-badge {
+    background: #09476E;
   }
 
   .step-text {
@@ -671,8 +671,8 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   .spinner {
     width: 44px;
     height: 44px;
-    border: 3px solid rgba(255, 255, 255, 0.1);
-    border-top-color: var(--accent);
+    border: 3px solid rgba(1, 39, 72, 0.15);
+    border-top-color: #012748;
     border-radius: 50%;
     margin: 0 auto;
     animation: spin 800ms linear infinite;
@@ -692,11 +692,11 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .state-eyebrow.success {
-    color: #22c55e;
+    color: #059669;
   }
 
   .state-eyebrow.warning {
-    color: #eab308;
+    color: #d97706;
   }
 
   .state-eyebrow.danger {
@@ -708,11 +708,12 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     font-weight: 800;
     margin: 0 0 var(--space-3);
     line-height: 1.25;
+    color: var(--text);
   }
 
   .state-desc {
     font-size: 0.95rem;
-    color: var(--text-light);
+    color: var(--text-muted);
     line-height: 1.6;
     margin: 0 0 var(--space-6);
   }
@@ -724,16 +725,20 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     background: var(--surface-raised);
     border: 1px solid var(--border);
     padding: 6px 14px;
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     font-size: 0.8rem;
     color: var(--text-muted);
   }
 
   .ref-code {
     font-family: 'JetBrains Mono', monospace;
-    color: var(--accent);
-    font-weight: 600;
+    color: #012748;
+    font-weight: 700;
     word-break: break-all;
+  }
+
+  :root:not([data-theme='light']) .ref-code {
+    color: #F8F9FA;
   }
 
   .status-icon {
@@ -747,15 +752,15 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .success-icon {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(5, 150, 105, 0.12);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.3);
   }
 
   .pending-icon {
-    background: rgba(234, 179, 8, 0.12);
-    color: #eab308;
-    border: 1px solid rgba(234, 179, 8, 0.3);
+    background: rgba(217, 119, 6, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(217, 119, 6, 0.3);
   }
 
   .error-icon {
@@ -767,7 +772,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   .receipt-box {
     background: var(--surface-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 12px;
     padding: var(--space-5);
     margin-bottom: var(--space-6);
     text-align: left;
@@ -777,9 +782,9 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 7px 0;
-    font-size: 0.85rem;
-    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 0;
+    font-size: 0.88rem;
+    border-bottom: 1px solid var(--border);
   }
 
   .receipt-row:last-child {
@@ -791,25 +796,29 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .receipt-val {
-    font-weight: 500;
+    font-weight: 600;
     color: var(--text);
   }
 
   .receipt-val.highlight {
-    font-weight: 700;
-    color: var(--accent);
+    font-weight: 800;
+    color: #012748;
+  }
+
+  :root:not([data-theme='light']) .receipt-val.highlight {
+    color: #F8F9FA;
   }
 
   .receipt-val.mono {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
   }
 
   /* Account setup box */
   .account-setup-box {
-    background: rgba(3, 105, 161, 0.08);
-    border: 1px solid rgba(14, 165, 233, 0.25);
-    border-radius: var(--radius-sm);
+    background: rgba(9, 71, 110, 0.05);
+    border: 1px solid rgba(9, 71, 110, 0.2);
+    border-radius: 12px;
     padding: var(--space-5);
     margin-bottom: var(--space-6);
     text-align: left;
@@ -817,23 +826,27 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
 
   .setup-badge {
     font-size: 0.7rem;
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0.08em;
-    color: var(--accent);
+    color: #09476E;
     text-transform: uppercase;
     margin-bottom: 6px;
   }
 
+  :root:not([data-theme='light']) .setup-badge {
+    color: #98B0C4;
+  }
+
   .setup-title {
     font-size: 1.1rem;
-    font-weight: 700;
+    font-weight: 800;
     margin: 0 0 6px;
     color: var(--text);
   }
 
   .setup-desc {
     font-size: 0.85rem;
-    color: var(--text-light);
+    color: var(--text-muted);
     line-height: 1.5;
     margin: 0 0 14px;
   }
@@ -851,23 +864,23 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .form-field label {
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: var(--text);
   }
 
   .setup-input {
     width: 100%;
     padding: 10px 12px;
     background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
     color: var(--text);
     font-size: 0.9rem;
   }
 
   .setup-status {
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     line-height: 1.4;
     margin-top: 6px;
   }
@@ -877,25 +890,63 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   .error-actions {
     display: flex;
     flex-direction: column;
-    gap: var(--space-3);
+    gap: 10px;
   }
 
-  .action-btn {
+  /* Active, prominent Deep Navy primary action buttons */
+  .btn-primary.action-btn {
     width: 100%;
-    padding: 12px;
-    font-size: 0.95rem;
-    font-weight: 600;
-    border-radius: var(--radius-sm);
+    padding: 13px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    border-radius: 10px;
     text-align: center;
     text-decoration: none;
     display: inline-block;
+    background: #012748 !important;
+    color: #ffffff !important;
+    border: 1px solid #012748 !important;
+    box-shadow: 0 4px 14px rgba(1, 39, 72, 0.22) !important;
+    transition: all 180ms ease !important;
+    cursor: pointer;
+  }
+
+  .btn-primary.action-btn:hover {
+    background: #09476E !important;
+    border-color: #09476E !important;
+    box-shadow: 0 6px 18px rgba(9, 71, 110, 0.3) !important;
+    transform: translateY(-1px);
+  }
+
+  /* WhatsApp button styling */
+  .btn-secondary.action-btn.whatsapp-btn {
+    width: 100%;
+    padding: 13px 20px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    border-radius: 10px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    background: #ffffff;
+    color: #012748;
+    border: 1.5px solid #98B0C4;
+    transition: all 180ms ease;
+  }
+
+  .btn-secondary.action-btn.whatsapp-btn:hover {
+    background: #F8F9FA;
+    border-color: #09476E;
+    color: #09476E;
+    transform: translateY(-1px);
   }
 
   .text-link {
     font-size: 0.85rem;
     color: var(--text-muted);
     text-decoration: underline;
-    margin-top: var(--space-2);
+    margin-top: 4px;
+    display: inline-block;
   }
 
   /* Password Input Wrap & Show/Hide Toggle */
@@ -921,7 +972,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     padding: 6px;
     cursor: pointer;
     color: var(--text-muted);
-    border-radius: var(--radius-sm);
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -933,9 +984,9 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .password-checklist-card {
-    background: rgba(14, 165, 233, 0.04);
+    background: rgba(9, 71, 110, 0.04);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+    border-radius: 8px;
     padding: 10px 12px;
     margin-top: 6px;
   }
@@ -967,9 +1018,9 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .checklist-count-badge.all-satisfied {
-    background: rgba(34, 197, 94, 0.15);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(5, 150, 105, 0.15);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.3);
   }
 
   .checklist-list {
@@ -1020,8 +1071,8 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
   }
 
   .checklist-item.satisfied .item-status-icon {
-    background: #22c55e;
-    border-color: #22c55e;
+    background: #059669;
+    border-color: #059669;
     color: #ffffff;
   }
 
@@ -1040,19 +1091,19 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     font-size: 0.78rem;
     font-weight: 600;
     padding: 4px 8px;
-    border-radius: var(--radius-sm);
+    border-radius: 6px;
     margin-top: 4px;
   }
 
   .match-indicator.matched {
-    background: rgba(34, 197, 94, 0.12);
-    color: #22c55e;
-    border: 1px solid rgba(34, 197, 94, 0.3);
+    background: rgba(5, 150, 105, 0.12);
+    color: #059669;
+    border: 1px solid rgba(5, 150, 105, 0.3);
   }
 
   .match-indicator.mismatched {
     background: rgba(220, 38, 38, 0.1);
-    color: #f87171;
+    color: #ef4444;
     border: 1px solid rgba(220, 38, 38, 0.25);
   }
 </style>
