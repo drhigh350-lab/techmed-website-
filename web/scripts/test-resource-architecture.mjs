@@ -64,23 +64,44 @@ const libraryIndexPath = path.resolve('web/src/pages/library/index.astro');
 const astroConfigPath = path.resolve('web/astro.config.mjs');
 const redirectsPath = path.resolve('web/public/_redirects');
 
-test('astro.config.mjs has /library to /resources redirect configured', () => {
+test('astro.config.mjs has /library to /resources/ redirect configured', () => {
   const astroConfig = fs.readFileSync(astroConfigPath, 'utf8');
-  assert(astroConfig.includes("'/library': '/resources'") || astroConfig.includes('"@library": "/resources"') || astroConfig.includes("'/library/': '/resources'"),
-         'astro.config.mjs must redirect /library to /resources');
+  assert(astroConfig.includes("'/library': '/resources/'") || astroConfig.includes("'/library': '/resources'"),
+         'astro.config.mjs must redirect /library to /resources/');
 });
 
-test('public/_redirects has 301 rule for Cloudflare Pages', () => {
+test('public/_redirects has exactly ONE rule for /library pointing to /resources/', () => {
   assert(fs.existsSync(redirectsPath), 'public/_redirects must exist');
   const redirects = fs.readFileSync(redirectsPath, 'utf8');
-  assert(redirects.includes('/library /resources 301'), 'Must have 301 redirect for /library');
-  assert(redirects.includes('/library/ /resources 301'), 'Must have 301 redirect for /library/');
+  const lines = redirects.split('\n').map(l => l.trim()).filter(Boolean);
+  const libRules = lines.filter(l => l.startsWith('/library ') || l.startsWith('/library\t'));
+  assert.strictEqual(libRules.length, 1, `Expected exactly 1 rule for /library, found ${libRules.length}`);
+  assert(libRules[0].includes('/resources/'), 'Rule for /library must point to /resources/');
+  assert(libRules[0].includes('301'), 'Rule for /library must be 301 status');
+});
+
+test('public/_redirects has exactly ONE rule for /utme-2027/builders/join', () => {
+  const redirects = fs.readFileSync(redirectsPath, 'utf8');
+  const lines = redirects.split('\n').map(l => l.trim()).filter(Boolean);
+  const joinRules = lines.filter(l => l.startsWith('/utme-2027/builders/join'));
+  assert.strictEqual(joinRules.length, 1, `Expected exactly 1 rule for /utme-2027/builders/join, found ${joinRules.length}`);
+  assert(joinRules[0].includes('/utme-2027/builders'), 'Rule must point to /utme-2027/builders');
+  assert(joinRules[0].includes('301'), 'Rule must be 301 status');
+});
+
+test('public/_redirects contains no duplicate source rules', () => {
+  const redirects = fs.readFileSync(redirectsPath, 'utf8');
+  const lines = redirects.split('\n').map(l => l.trim()).filter(Boolean);
+  const sources = lines.map(l => l.split(/\s+/)[0]);
+  const uniqueSources = new Set(sources);
+  assert.strictEqual(sources.length, uniqueSources.size, 'No duplicate source paths allowed in _redirects');
 });
 
 test('library/index.astro redirects immediately with 301 status', () => {
   const libraryIndex = fs.readFileSync(libraryIndexPath, 'utf8');
-  assert(libraryIndex.includes("Astro.redirect('/resources', 301)"), 'Must call Astro.redirect("/resources", 301)');
-  assert(libraryIndex.includes('content="0;url=/resources"'), 'HTML meta refresh fallback must redirect to /resources');
+  assert(libraryIndex.includes("Astro.redirect('/resources', 301)") || libraryIndex.includes("Astro.redirect('/resources/', 301)"),
+         'Must call Astro.redirect("/resources", 301)');
+  assert(libraryIndex.includes('url=/resources'), 'HTML meta refresh fallback must redirect to /resources');
 });
 
 // 3. PRESERVE DEDICATED READER ROUTE (/library/read/[id])
@@ -174,6 +195,47 @@ test('Dashboard, callback, admin, and supabase have no bare /library links', () 
     const hasBareLibrary = /href=["':]\s*['"]\/library['"]/i.test(content);
     assert(!hasBareLibrary, `${relPath} still contains bare /library reference`);
   }
+});
+
+// 7. BUILD OUTPUT REDIRECTS VALIDATION
+console.log('\n--- Suite 7: Build Output _redirects Validation ---');
+
+const distRedirectsPath = path.resolve('dist/_redirects');
+const webDistRedirectsPath = path.resolve('web/dist/_redirects');
+
+test('dist/_redirects exists and contains zero duplicate rules', () => {
+  const targetPath = fs.existsSync(distRedirectsPath) ? distRedirectsPath : webDistRedirectsPath;
+  assert(fs.existsSync(targetPath), `Build output _redirects must exist at ${targetPath}`);
+  const content = fs.readFileSync(targetPath, 'utf8');
+  const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+  const sources = lines.map(l => l.split(/\s+/)[0]);
+  const uniqueSources = new Set(sources);
+  assert.strictEqual(sources.length, uniqueSources.size, `No duplicate rules in build output: ${sources.join(', ')}`);
+});
+
+test('build output contains exactly ONE rule for /library pointing to /resources/', () => {
+  const targetPath = fs.existsSync(distRedirectsPath) ? distRedirectsPath : webDistRedirectsPath;
+  const content = fs.readFileSync(targetPath, 'utf8');
+  const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+  const libRules = lines.filter(l => l.startsWith('/library ') || l.startsWith('/library\t'));
+  assert.strictEqual(libRules.length, 1, `Expected exactly 1 rule for /library in build output, found ${libRules.length}`);
+  assert(libRules[0].includes('/resources/'), 'Build output /library must point to /resources/');
+});
+
+test('build output contains exactly ONE rule for /utme-2027/builders/join pointing to /utme-2027/builders', () => {
+  const targetPath = fs.existsSync(distRedirectsPath) ? distRedirectsPath : webDistRedirectsPath;
+  const content = fs.readFileSync(targetPath, 'utf8');
+  const lines = content.split('\n').map(l => l.trim()).filter(Boolean);
+  const joinRules = lines.filter(l => l.startsWith('/utme-2027/builders/join'));
+  assert.strictEqual(joinRules.length, 1, `Expected exactly 1 rule for /utme-2027/builders/join in build output, found ${joinRules.length}`);
+  assert(joinRules[0].includes('/utme-2027/builders'), 'Build output /utme-2027/builders/join must point to /utme-2027/builders');
+});
+
+test('build output preserves /library/read routes and does not wildcard-redirect /library/*', () => {
+  const targetPath = fs.existsSync(distRedirectsPath) ? distRedirectsPath : webDistRedirectsPath;
+  const content = fs.readFileSync(targetPath, 'utf8');
+  assert(!content.includes('/library/*'), 'Must not have wildcard redirect for /library/*');
+  assert(!content.includes('/library/read/*'), 'Must not have wildcard redirect for /library/read/*');
 });
 
 console.log(`\n==============================================`);

@@ -35,6 +35,6 @@ export default defineConfig({
     // has to click through a second page to reach it.
     '/utme-2027/builders/join': '/utme-2027/builders',
     // Retire redundant /library landing page; unify discovery & bookshelf at /resources
-    '/library': '/resources',
+    '/library': '/resources/',
   },
 });
