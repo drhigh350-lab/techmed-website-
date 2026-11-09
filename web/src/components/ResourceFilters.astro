@@ -168,6 +168,52 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
 
           ownedResourceIds = ids;
 
+          // Update card DOM action buttons and prices to reflect actual access & tier discounts
+          itemWrappers.forEach((wrapper) => {
+            const resId = wrapper.getAttribute('data-resource-id') || '';
+            const slug = wrapper.getAttribute('data-slug') || '';
+            const status = wrapper.getAttribute('data-status') || '';
+            const isOwned = Boolean((resId && ids.has(resId)) || (slug && ids.has(slug)));
+
+            if (status === 'paid') {
+              const actionStack = wrapper.querySelector('.paid-action-stack');
+              const priceVal = wrapper.querySelector('.price-val');
+              const previewLink = wrapper.querySelector('.reader-preview-link');
+
+              if (isOwned) {
+                // PART 3 & PART 4: Accessible resources show "Read Now →", not "Unlock"
+                if (actionStack) {
+                  actionStack.innerHTML = `
+                    <a class="btn-primary" href="/library/read/${resId}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
+                      Read Now &rarr;
+                    </a>
+                  `;
+                }
+                if (previewLink) {
+                  (previewLink as HTMLElement).style.display = 'none';
+                }
+                if (priceVal) {
+                  priceVal.textContent = res.hasMasteryPlan || res.hasUltimatePlan
+                    ? 'Included in Plan'
+                    : 'Unlocked';
+                }
+              } else if (res.hasCorePlan) {
+                // PART 1 & 2: Core students receive automatic 20% discount on standalone resources
+                const buyBtn = wrapper.querySelector('.buy-trigger-btn') as HTMLElement | null;
+                if (buyBtn && priceVal) {
+                  const itemData = res.items.find(i => i.id === resId || i.slug === slug);
+                  const originalPrice = itemData?.priceNgn || 0;
+                  if (originalPrice > 0) {
+                    const discount = Math.round(originalPrice * 0.20);
+                    const discountedPrice = originalPrice - discount;
+                    priceVal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em; margin-right: 4px;">₦${originalPrice.toLocaleString()}</span>₦${discountedPrice.toLocaleString()}`;
+                    buyBtn.textContent = `Unlock · ₦${discountedPrice.toLocaleString()}`;
+                  }
+                }
+              }
+            }
+          });
+
           // Update bookshelf count badge
           if (bookshelfBadge) {
             let userOwnedCount = 0;

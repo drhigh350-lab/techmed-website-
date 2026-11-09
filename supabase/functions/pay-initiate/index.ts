@@ -139,6 +139,12 @@ Deno.serve(async (req) => {
     cleanProductId = Date.now() <= EARLY_BIRD_DEADLINE ? "cohort-core-earlybird" : "cohort-core-standard";
   }
 
+  // Standalone resource aliases
+  if (cleanProductId === "chemistry-booster-system") cleanProductId = "chemistry-booster";
+  if (cleanProductId === "biology-booster-system") cleanProductId = "biology-booster";
+  if (cleanProductId === "physics-booster-system") cleanProductId = "physics-booster";
+  if (cleanProductId === "all-science-boosters-bundle" || cleanProductId === "all-boosters-bundle") cleanProductId = "booster-bundle";
+
   const product = PRODUCTS[cleanProductId];
   if (!product) {
     return jsonResponse({ success: false, message: `Unknown product: "${cleanProductId}"` }, 400);
@@ -148,10 +154,33 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "Please select your target university" }, 400);
   }
 
+  const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
+  if (!paystackSecret) {
+    console.error("PAYSTACK_SECRET_KEY is not set in Edge Function secrets");
+    return jsonResponse({
+      success: false,
+      message: "Online payment gateway is undergoing maintenance. Please contact our admissions desk on WhatsApp (07044255045) for assistance.",
+    }, 500);
+  }
+
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !supabaseServiceKey) {
+    console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured");
+    return jsonResponse({
+      success: false,
+      message: "Database service configuration error. Please contact admissions on WhatsApp.",
+    }, 500);
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   let validatedAmount = product.amount;
   let promoApplied = false;
   let promoDiscountAmount = 0;
   let promoStandardPrice = 0;
+  let coreDiscountApplied = false;
+  let coreDiscountAmount = 0;
 
   if (promo_code !== undefined && promo_code !== null && typeof promo_code === "string" && promo_code.trim().length > 0) {
     const cleanPromo = promo_code.trim().toUpperCase();
@@ -194,8 +223,104 @@ Deno.serve(async (req) => {
     promoDiscountAmount = Math.round(promoStandardPrice * PROMO_DISCOUNT_PERCENT);
     validatedAmount = promoStandardPrice - promoDiscountAmount;
     promoApplied = true;
+  } else if (!product.isCohort) {
+    // -------------------------------------------------------------------------
+    // AUTOMATIC 20% CORE DISCOUNT (STANDALONE RESOURCES ONLY)
+    // Server-side authoritative validation: queries verified entitlements & paid orders.
+    // Mastery & Ultimate students already have resource access and do not receive Core discount.
+    // -------------------------------------------------------------------------
+    const cleanEmail = email.trim().toLowerCase();
+    try {
+      const { data: userEntitlements } = await supabase
+        .from("entitlements")
+        .select("resource_id, plan_id, is_active, expires_at")
+        .eq("customer_email", cleanEmail)
+        .eq("is_active", true);
+
+      const hasMasteryOrUltimate = (userEntitlements || []).some((e: any) => {
+        const resId = (e.resource_id || "").toLowerCase();
+        const planId = (e.plan_id || "").toLowerCase();
+        const match = resId.includes("mastery") || planId.includes("mastery") || resId.includes("ultimate") || planId.includes("ultimate");
+        if (!match) return false;
+        if (e.expires_at) {
+          const exp = new Date(e.expires_at).getTime();
+          if (exp <= Date.now()) return false;
+        }
+        return true;
+      });
+
+      // Part 4 & 6: If student already has access via Mastery/Ultimate, gracefully inform them without charging
+      if (hasMasteryOrUltimate) {
+        return jsonResponse({
+          success: false,
+          already_owned: true,
+          message: "You already have full access to this resource through your TECHMED plan.",
+        }, 400);
+      }
+
+      // Check if student already individually purchased this resource
+      const alreadyPurchased = (userEntitlements || []).some((e: any) => {
+        const resId = (e.resource_id || "").toLowerCase();
+        if (resId === cleanProductId) return true;
+        if (cleanProductId === "booster-bundle" && resId.includes("booster-bundle")) return true;
+        if (cleanProductId.includes("booster") && resId === "booster-bundle") return true;
+        return false;
+      });
+
+      if (alreadyPurchased) {
+        return jsonResponse({
+          success: false,
+          already_owned: true,
+          message: "You already own and have full access to this resource in your library.",
+        }, 400);
+      }
+
+      if (!hasMasteryOrUltimate) {
+        const hasCoreEntitlement = (userEntitlements || []).some((e: any) => {
+          const resId = (e.resource_id || "").toLowerCase();
+          const planId = (e.plan_id || "").toLowerCase();
+          const match = resId.includes("core") || planId.includes("core");
+          if (!match) return false;
+          if (e.expires_at) {
+            const exp = new Date(e.expires_at).getTime();
+            if (exp <= Date.now()) return false;
+          }
+          return true;
+        });
+
+        let hasCoreOrder = false;
+        if (!hasCoreEntitlement) {
+          const { data: coreOrders } = await supabase
+            .from("orders")
+            .select("product_id, status, created_at")
+            .eq("email", cleanEmail)
+            .eq("status", "paid")
+            .order("created_at", { ascending: false })
+            .limit(10);
+
+          hasCoreOrder = (coreOrders || []).some((o: any) => {
+            const pid = (o.product_id || "").toLowerCase();
+            if (!pid.includes("core")) return false;
+            if (pid.includes("monthly")) {
+              const orderTime = new Date(o.created_at).getTime();
+              const thirtyTwoDaysMs = 32 * 24 * 60 * 60 * 1000;
+              if (Date.now() - orderTime > thirtyTwoDaysMs) return false;
+            }
+            return true;
+          });
+        }
+
+        if (hasCoreEntitlement || hasCoreOrder) {
+          coreDiscountApplied = true;
+          coreDiscountAmount = Math.round(product.amount * 0.20);
+          validatedAmount = product.amount - coreDiscountAmount;
+        }
+      }
+    } catch (err) {
+      console.warn("Core plan entitlement lookup notice in pay-initiate:", err);
+    }
   } else {
-    // When promo is NOT applied, preserve existing standard and early-bird pricing
+    // When promo is NOT applied, preserve existing standard and early-bird cohort pricing
     if (
       cleanProductId.includes("earlybird") ||
       cleanProductId === "cohort-core" ||
@@ -210,27 +335,6 @@ Deno.serve(async (req) => {
     }
   }
 
-  const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
-  if (!paystackSecret) {
-    console.error("PAYSTACK_SECRET_KEY is not set in Edge Function secrets");
-    return jsonResponse({
-      success: false,
-      message: "Online payment gateway is undergoing maintenance. Please contact our admissions desk on WhatsApp (07044255045) for assistance.",
-    }, 500);
-  }
-
-  const supabaseUrl = Deno.env.get("SUPABASE_URL");
-  const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!supabaseUrl || !supabaseServiceKey) {
-    console.error("SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY is not configured");
-    return jsonResponse({
-      success: false,
-      message: "Database service configuration error. Please contact admissions on WhatsApp.",
-    }, 500);
-  }
-
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
   // Paystack requires amount in kobo (naira x 100)
   const amountKobo = validatedAmount * 100;
   const reference = `techmed_${cleanProductId.replace(/-/g, '_')}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
@@ -240,10 +344,14 @@ Deno.serve(async (req) => {
   // Order must exist in database BEFORE any usable Paystack checkout is generated.
   // If database insertion fails, do NOT proceed to Paystack, and report failure.
   // ---------------------------------------------------------------------------
+  const totalDiscount = promoApplied ? promoDiscountAmount : (coreDiscountApplied ? coreDiscountAmount : 0);
+  const originalPrice = promoApplied ? promoStandardPrice : (coreDiscountApplied ? product.amount : validatedAmount);
+
   const orderMetadata = {
     promo_code: promoApplied ? PROMO_CODE : null,
-    discount_amount: promoApplied ? promoDiscountAmount : 0,
-    original_price: promoApplied ? promoStandardPrice : validatedAmount,
+    discount_amount: totalDiscount,
+    original_price: originalPrice,
+    is_core_discount: coreDiscountApplied,
     is_cohort: !!product.isCohort,
     billing_option: rawDuration || (cleanProductId.includes("monthly") ? "monthly" : "3months"),
   };
@@ -258,7 +366,7 @@ Deno.serve(async (req) => {
     phone: phone ?? null,
     university: university ?? null,
     status: "pending",
-    discount_amount: promoApplied ? promoDiscountAmount : 0,
+    discount_amount: totalDiscount,
     metadata: orderMetadata,
   });
 
@@ -306,9 +414,12 @@ Deno.serve(async (req) => {
           university: university ?? null,
           is_cohort: !!product.isCohort,
           promo_code: promoApplied ? PROMO_CODE : null,
-          discount_amount: promoApplied ? promoDiscountAmount : 0,
-          original_price: promoApplied ? promoStandardPrice : validatedAmount,
-          promo_description: promoApplied ? "TECHMED30 30% Promotional Discount" : null,
+          discount_amount: totalDiscount,
+          original_price: originalPrice,
+          is_core_discount: coreDiscountApplied,
+          promo_description: promoApplied
+            ? "TECHMED30 30% Promotional Discount"
+            : (coreDiscountApplied ? "TECHMED Core 20% Discount" : null),
         },
       }),
     });
@@ -359,8 +470,9 @@ Deno.serve(async (req) => {
       product_name: product.name,
       amount: validatedAmount,
       promo_code: promoApplied ? PROMO_CODE : null,
-      discount_amount: promoApplied ? promoDiscountAmount : 0,
-      original_price: promoApplied ? promoStandardPrice : null,
+      is_core_discount: coreDiscountApplied,
+      discount_amount: totalDiscount,
+      original_price: (promoApplied || coreDiscountApplied) ? originalPrice : null,
     },
   });
 });

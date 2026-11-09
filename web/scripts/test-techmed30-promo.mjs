@@ -256,6 +256,7 @@ assert(
   'pay-initiate writes validated discounted amount into orders.amount'
 );
 assert(
+  payInitiateSource.includes('discount_amount: totalDiscount,') ||
   payInitiateSource.includes('discount_amount: promoApplied ? promoDiscountAmount : 0,'),
   'pay-initiate writes promo discount amount into orders table'
 );

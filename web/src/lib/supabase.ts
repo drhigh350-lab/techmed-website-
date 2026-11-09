@@ -395,11 +395,16 @@ export async function hasActiveResourceAccess(
   resourceId: string,
   user?: { id?: string; email?: string } | null
 ): Promise<boolean> {
+  const cleanId = (resourceId || '').toLowerCase().trim();
+
   // Free resources and study tools are open to all candidates without restriction
   if (
-    resourceId === 'admission-intelligence-guide-2026' ||
-    resourceId === 'free-quiz-practice' ||
-    resourceId === 'kairo'
+    cleanId === 'admission-intelligence-guide-2026' ||
+    cleanId === 'techmed-admission-intelligence-guide-2026' ||
+    cleanId === 'admission-guide' ||
+    cleanId === 'free-quiz-practice' ||
+    cleanId === 'kairo' ||
+    cleanId === 'test-sample-short'
   ) {
     return true;
   }
@@ -410,83 +415,111 @@ export async function hasActiveResourceAccess(
   }
 
   const { entitlements } = await fetchUserEntitlements(user.id, user.email);
-  const now = new Date();
+  const now = Date.now();
 
-  return entitlements.some(e => {
-    const matchesId =
-      e.resourceId === resourceId ||
-      e.resourceId === resourceId.replace('-system', '') ||
-      (resourceId === 'post-utme-brainstorming-hub' && e.resourceId === 'post-utme-pq') ||
-      (resourceId === 'post-utme-pq' && e.resourceId === 'post-utme-brainstorming-hub');
-
-    // Bundled inclusions: Mastery includes Chemistry, Biology, and Physics boosters
-    const isMasteryCohort =
-      e.resourceId?.toLowerCase().startsWith('cohort-mastery') ||
-      e.resourceId?.toLowerCase() === 'mastery' ||
-      e.planId?.toLowerCase().startsWith('cohort-mastery') ||
-      e.resourceId?.toLowerCase().includes('mastery') ||
-      e.planId?.toLowerCase().includes('mastery');
-
-    const isUltimateCohort =
-      e.resourceId?.toLowerCase().startsWith('cohort-ultimate') ||
-      e.resourceId?.toLowerCase() === 'ultimate' ||
-      e.planId?.toLowerCase().startsWith('cohort-ultimate') ||
-      e.resourceId?.toLowerCase().includes('ultimate') ||
-      e.planId?.toLowerCase().includes('ultimate');
-
-    // Direct standalone booster bundle entitlement
-    const isBoosterBundleEntitled =
-      e.resourceId?.toLowerCase() === 'booster-bundle' ||
-      e.resourceId?.toLowerCase() === 'all-boosters-bundle' ||
-      e.planId?.toLowerCase() === 'booster-bundle';
-
-    const isBoosterItem =
-      resourceId === 'chemistry-booster' ||
-      resourceId === 'biology-booster' ||
-      resourceId === 'physics-booster';
-
-    // Booster item access via bundle or cohort
-    const isBundledBoosterAccess =
-      isBoosterItem && (isBoosterBundleEntitled || isMasteryCohort || isUltimateCohort);
-
-    // Booster bundle parent access (direct or via cohort)
-    const isBoosterBundleAccess =
-      (resourceId === 'booster-bundle' || resourceId === 'all-boosters-bundle') &&
-      (isBoosterBundleEntitled || isMasteryCohort || isUltimateCohort);
-
-    const isMasteryBooster = isBundledBoosterAccess || isBoosterBundleAccess;
-
-    // Ultimate includes Post-UTME Brainstorming Hub in addition to all 3 boosters
-    const isUltimateResource =
-      (resourceId === 'post-utme-brainstorming-hub' || resourceId === 'post-utme-pq') &&
-      isUltimateCohort;
-
-    if (!matchesId && !isMasteryBooster && !isUltimateResource) return false;
+  // Check if student has active Mastery or Ultimate cohort plan (via entitlements)
+  const isMasteryCohort = entitlements.some(e => {
     if (!e.isActive) return false;
+    if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
+    const r = (e.resourceId || '').toLowerCase();
+    const p = (e.planId || '').toLowerCase();
+    return r.includes('mastery') || p.includes('mastery');
+  });
 
-    const isCohortEnrolment = isMasteryCohort || isUltimateCohort || e.resourceId?.toLowerCase().includes('cohort') || e.planId?.toLowerCase().includes('cohort');
+  const isUltimateCohort = entitlements.some(e => {
+    if (!e.isActive) return false;
+    if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
+    const r = (e.resourceId || '').toLowerCase();
+    const p = (e.planId || '').toLowerCase();
+    return r.includes('ultimate') || p.includes('ultimate');
+  });
 
-    // Check starts_at: cannot access resource before its designated activation date
-    // Note: For booster materials bundled in cohort plans or bundles, students have immediate book access
-    if (e.startsAt && !isMasteryBooster && !isUltimateResource && !isCohortEnrolment) {
-      const starts = new Date(e.startsAt);
-      if (starts.getTime() > now.getTime()) {
-        return false;
-      }
+  // PART 3: All published resources covered by the TECHMED resource offering
+  // must be accessible to Mastery and Ultimate students without additional payment!
+  if (isMasteryCohort || isUltimateCohort) {
+    return true;
+  }
+
+  // Direct individual purchase check in entitlements
+  const hasDirectEntitlement = entitlements.some(e => {
+    if (!e.isActive) return false;
+    const resId = (e.resourceId || '').toLowerCase();
+    const planId = (e.planId || '').toLowerCase();
+
+    const matchesId =
+      resId === cleanId ||
+      resId === cleanId.replace('-system', '') ||
+      (cleanId === 'post-utme-brainstorming-hub' && resId === 'post-utme-pq') ||
+      (cleanId === 'post-utme-pq' && resId === 'post-utme-brainstorming-hub') ||
+      (cleanId === 'booster-bundle' && (resId === 'booster-bundle' || resId === 'all-science-boosters-bundle')) ||
+      (cleanId.includes('booster') && (resId === 'booster-bundle' || resId === 'all-science-boosters-bundle' || planId === 'booster-bundle'));
+
+    if (!matchesId) return false;
+
+    // Check starts_at: cannot access resource before designated activation
+    if (e.startsAt) {
+      const starts = new Date(e.startsAt).getTime();
+      if (!isNaN(starts) && starts > now) return false;
     }
 
-    // Check expires_at: cannot access resource after its expiration date
-    // Boosters in Mastery, Ultimate & Standalone Bundles have permanent lifetime access
-    if (e.expiresAt && !isMasteryBooster && !isUltimateResource) {
-      const expires = new Date(e.expiresAt);
-      if (expires.getTime() <= now.getTime()) {
-        return false;
-      }
+    // Check expires_at (null = lifetime access for purchased standalone resources)
+    if (e.expiresAt) {
+      const expires = new Date(e.expiresAt).getTime();
+      if (!isNaN(expires) && expires <= now) return false;
     }
 
-    if (!e.expiresAt) return true; // Lifetime access
     return true;
   });
+
+  if (hasDirectEntitlement) {
+    return true;
+  }
+
+  // Paid orders fallback in case database entitlements sync is in flight
+  try {
+    const supabase = getSupabase();
+    const cleanEmail = user.email ? user.email.trim().toLowerCase() : undefined;
+    let orderQuery = supabase
+      .from('orders')
+      .select('product_id, product_name, status')
+      .eq('status', 'paid');
+
+    if (user.id && cleanEmail) {
+      orderQuery = orderQuery.or(`user_id.eq.${user.id},email.ilike.${cleanEmail}`);
+    } else if (user.id) {
+      orderQuery = orderQuery.eq('user_id', user.id);
+    } else if (cleanEmail) {
+      orderQuery = orderQuery.ilike('email', cleanEmail);
+    }
+
+    const { data: orders } = await orderQuery;
+    if (orders && orders.length > 0) {
+      const hasOrderMasteryOrUltimate = orders.some((o: any) => {
+        const pid = (o.product_id || '').toLowerCase();
+        const pname = (o.product_name || '').toLowerCase();
+        return pid.includes('mastery') || pid.includes('ultimate') || pname.includes('mastery') || pname.includes('ultimate');
+      });
+      if (hasOrderMasteryOrUltimate) {
+        return true;
+      }
+
+      const hasDirectOrder = orders.some((o: any) => {
+        const pid = (o.product_id || '').toLowerCase();
+        return pid === cleanId ||
+          pid === cleanId.replace('-system', '') ||
+          (cleanId === 'post-utme-brainstorming-hub' && pid === 'post-utme-pq') ||
+          (cleanId === 'post-utme-pq' && pid === 'post-utme-brainstorming-hub') ||
+          (cleanId.includes('booster') && (pid === 'booster-bundle' || pid === 'all-science-boosters-bundle'));
+      });
+      if (hasDirectOrder) {
+        return true;
+      }
+    }
+  } catch {
+    // Non-fatal fallback
+  }
+
+  return false;
 }
 
 export interface SecurePdfResult {
@@ -1214,6 +1247,189 @@ export interface UserResourceEntitlementItem {
   priceNgn?: number;
 }
 
+export interface StudentPlanInfo {
+  tier: 'free' | 'core' | 'mastery' | 'ultimate';
+  name: string;
+  isCore: boolean;
+  isMastery: boolean;
+  isUltimate: boolean;
+  hasCohort: boolean;
+  isActive: boolean;
+  expiresAt: string | null;
+}
+
+export async function getStudentPlan(
+  userId?: string,
+  userEmail?: string
+): Promise<StudentPlanInfo> {
+  const defaultFree: StudentPlanInfo = {
+    tier: 'free',
+    name: 'Free',
+    isCore: false,
+    isMastery: false,
+    isUltimate: false,
+    hasCohort: false,
+    isActive: true,
+    expiresAt: null,
+  };
+
+  if (!userId && !userEmail) {
+    return defaultFree;
+  }
+
+  try {
+    const { entitlements } = await fetchUserEntitlements(userId, userEmail);
+    const now = Date.now();
+
+    // Check active entitlements
+    const activeCohortEntitlements = (entitlements || []).filter(e => {
+      if (!e.isActive) return false;
+      if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
+      const r = (e.resourceId || '').toLowerCase();
+      const p = (e.planId || '').toLowerCase();
+      return r.includes('cohort') || r.includes('core') || r.includes('mastery') || r.includes('ultimate') ||
+             p.includes('cohort') || p.includes('core') || p.includes('mastery') || p.includes('ultimate');
+    });
+
+    const ultimateEnt = activeCohortEntitlements.find(e => {
+      const r = (e.resourceId || '').toLowerCase();
+      const p = (e.planId || '').toLowerCase();
+      return r.includes('ultimate') || p.includes('ultimate');
+    });
+    if (ultimateEnt) {
+      return {
+        tier: 'ultimate',
+        name: 'TECHMED Ultimate',
+        isCore: false,
+        isMastery: false,
+        isUltimate: true,
+        hasCohort: true,
+        isActive: true,
+        expiresAt: ultimateEnt.expiresAt || null,
+      };
+    }
+
+    const masteryEnt = activeCohortEntitlements.find(e => {
+      const r = (e.resourceId || '').toLowerCase();
+      const p = (e.planId || '').toLowerCase();
+      return r.includes('mastery') || p.includes('mastery');
+    });
+    if (masteryEnt) {
+      return {
+        tier: 'mastery',
+        name: 'TECHMED Mastery',
+        isCore: false,
+        isMastery: true,
+        isUltimate: false,
+        hasCohort: true,
+        isActive: true,
+        expiresAt: masteryEnt.expiresAt || null,
+      };
+    }
+
+    const coreEnt = activeCohortEntitlements.find(e => {
+      const r = (e.resourceId || '').toLowerCase();
+      const p = (e.planId || '').toLowerCase();
+      return r.includes('core') || p.includes('core');
+    });
+    if (coreEnt) {
+      return {
+        tier: 'core',
+        name: 'TECHMED Core',
+        isCore: true,
+        isMastery: false,
+        isUltimate: false,
+        hasCohort: true,
+        isActive: true,
+        expiresAt: coreEnt.expiresAt || null,
+      };
+    }
+
+    // Fallback: check orders table
+    const supabase = getSupabase();
+    const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : undefined;
+    let orderQuery = supabase
+      .from('orders')
+      .select('product_id, product_name, status, created_at')
+      .eq('status', 'paid')
+      .order('created_at', { ascending: false });
+
+    if (userId && cleanEmail) {
+      orderQuery = orderQuery.or(`user_id.eq.${userId},email.ilike.${cleanEmail}`);
+    } else if (userId) {
+      orderQuery = orderQuery.eq('user_id', userId);
+    } else if (cleanEmail) {
+      orderQuery = orderQuery.ilike('email', cleanEmail);
+    }
+
+    const { data: paidOrders } = await orderQuery;
+    if (paidOrders && paidOrders.length > 0) {
+      const hasUltimate = paidOrders.some((o: any) => {
+        const pid = (o.product_id || '').toLowerCase();
+        const pname = (o.product_name || '').toLowerCase();
+        return pid.includes('ultimate') || pname.includes('ultimate');
+      });
+      if (hasUltimate) {
+        return {
+          tier: 'ultimate',
+          name: 'TECHMED Ultimate',
+          isCore: false,
+          isMastery: false,
+          isUltimate: true,
+          hasCohort: true,
+          isActive: true,
+          expiresAt: null,
+        };
+      }
+
+      const hasMastery = paidOrders.some((o: any) => {
+        const pid = (o.product_id || '').toLowerCase();
+        const pname = (o.product_name || '').toLowerCase();
+        return pid.includes('mastery') || pname.includes('mastery');
+      });
+      if (hasMastery) {
+        return {
+          tier: 'mastery',
+          name: 'TECHMED Mastery',
+          isCore: false,
+          isMastery: true,
+          isUltimate: false,
+          hasCohort: true,
+          isActive: true,
+          expiresAt: null,
+        };
+      }
+
+      const hasCore = paidOrders.some((o: any) => {
+        const pid = (o.product_id || '').toLowerCase();
+        const pname = (o.product_name || '').toLowerCase();
+        if (!pid.includes('core') && !pname.includes('core')) return false;
+        if (pid.includes('monthly')) {
+          const orderTime = new Date(o.created_at).getTime();
+          if (Date.now() - orderTime > 32 * 24 * 60 * 60 * 1000) return false;
+        }
+        return true;
+      });
+      if (hasCore) {
+        return {
+          tier: 'core',
+          name: 'TECHMED Core',
+          isCore: true,
+          isMastery: false,
+          isUltimate: false,
+          hasCohort: true,
+          isActive: true,
+          expiresAt: null,
+        };
+      }
+    }
+
+    return defaultFree;
+  } catch {
+    return defaultFree;
+  }
+}
+
 /**
  * Get comprehensive resource & entitlement items for a student.
  * Authoritatively inspects active database entitlements.
@@ -1227,6 +1443,10 @@ export async function getUserResourceEntitlements(
   items: UserResourceEntitlementItem[];
   ownedCount: number;
   unownedCount: number;
+  hasCorePlan: boolean;
+  hasMasteryPlan: boolean;
+  hasUltimatePlan: boolean;
+  userPlan: 'free' | 'core' | 'mastery' | 'ultimate';
 }> {
   let entitlements: StudentEntitlement[] = [];
   if (userId || userEmail) {
@@ -1243,7 +1463,7 @@ export async function getUserResourceEntitlements(
       const cleanEmail = userEmail ? userEmail.trim().toLowerCase() : undefined;
       let orderQuery = supabase
         .from('orders')
-        .select('product_id, product_name, status, total_amount, amount')
+        .select('product_id, product_name, status, total_amount, amount, created_at')
         .eq('status', 'paid');
 
       if (userId && cleanEmail) {
@@ -1275,13 +1495,48 @@ export async function getUserResourceEntitlements(
     return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
   };
 
+  const isCoreMatch = (s?: string | null) => {
+    if (!s) return false;
+    const v = s.toLowerCase();
+    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || v.includes('core');
+  };
+
   const hasMasteryCohort =
-    entitlements.some(e => e.isActive && (isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId))) ||
+    entitlements.some(e => {
+      if (!e.isActive) return false;
+      if (e.expiresAt && new Date(e.expiresAt).getTime() <= nowUtc) return false;
+      return isMasteryMatch(e.resourceId) || isMasteryMatch(e.planId);
+    }) ||
     paidOrders.some(o => isMasteryMatch(o.product_id) || (typeof o.product_name === 'string' && isMasteryMatch(o.product_name)));
 
   const hasUltimateCohort =
-    entitlements.some(e => e.isActive && (isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId))) ||
+    entitlements.some(e => {
+      if (!e.isActive) return false;
+      if (e.expiresAt && new Date(e.expiresAt).getTime() <= nowUtc) return false;
+      return isUltimateMatch(e.resourceId) || isUltimateMatch(e.planId);
+    }) ||
     paidOrders.some(o => isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name)));
+
+  const hasCoreCohort =
+    entitlements.some(e => {
+      if (!e.isActive) return false;
+      if (e.expiresAt && new Date(e.expiresAt).getTime() <= nowUtc) return false;
+      return isCoreMatch(e.resourceId) || isCoreMatch(e.planId);
+    }) ||
+    paidOrders.some(o => {
+      if (!isCoreMatch(o.product_id) && !(typeof o.product_name === 'string' && isCoreMatch(o.product_name))) return false;
+      const pid = (o.product_id || '').toLowerCase();
+      if (pid.includes('monthly')) {
+        const orderTime = new Date(o.created_at).getTime();
+        if (nowUtc - orderTime > 32 * 24 * 60 * 60 * 1000) return false;
+      }
+      return true;
+    });
+
+  const hasCorePlan = hasCoreCohort && !hasMasteryCohort && !hasUltimateCohort;
+  const userPlan: 'free' | 'core' | 'mastery' | 'ultimate' = hasUltimateCohort
+    ? 'ultimate'
+    : (hasMasteryCohort ? 'mastery' : (hasCoreCohort ? 'core' : 'free'));
 
   const CATALOGUE_DEFINITIONS = [
     {
@@ -1308,6 +1563,17 @@ export async function getUserResourceEntitlements(
       actionLabel: 'Start Practice',
     },
     {
+      id: 'kairo',
+      slug: 'kairo',
+      title: 'Kairo Student Intelligence Platform',
+      category: 'Digital Tools',
+      subject: 'General',
+      type: 'Platform Tool',
+      status: 'free' as const,
+      externalUrl: 'https://kairo.techmed.ng',
+      actionLabel: 'Access Tool',
+    },
+    {
       id: 'chemistry-booster',
       slug: 'chemistry-booster-system',
       title: 'Chemistry Booster System',
@@ -1318,7 +1584,7 @@ export async function getUserResourceEntitlements(
       priceNgn: 5000,
       readerUrl: '/library/read/chemistry-booster',
       storeUrl: '/resources/chemistry-booster-system',
-      actionLabel: 'Open in Reader',
+      actionLabel: 'Read Now',
     },
     {
       id: 'biology-booster',
@@ -1331,7 +1597,7 @@ export async function getUserResourceEntitlements(
       priceNgn: 3000,
       readerUrl: '/library/read/biology-booster',
       storeUrl: '/resources/biology-booster-system',
-      actionLabel: 'Open in Reader',
+      actionLabel: 'Read Now',
     },
     {
       id: 'physics-booster',
@@ -1344,7 +1610,7 @@ export async function getUserResourceEntitlements(
       priceNgn: 3000,
       readerUrl: '/library/read/physics-booster',
       storeUrl: '/resources/physics-booster-system',
-      actionLabel: 'Open in Reader',
+      actionLabel: 'Read Now',
     },
     {
       id: 'booster-bundle',
@@ -1357,7 +1623,7 @@ export async function getUserResourceEntitlements(
       priceNgn: 9000,
       readerUrl: '/library/read/booster-bundle',
       storeUrl: '/resources/all-science-boosters-bundle',
-      actionLabel: 'Open Bundle in Reader',
+      actionLabel: 'Read Now',
     },
     {
       id: 'post-utme-brainstorming-hub',
@@ -1370,7 +1636,20 @@ export async function getUserResourceEntitlements(
       priceNgn: 3000,
       readerUrl: '/library/read/post-utme-brainstorming-hub',
       storeUrl: '/resources/post-utme-brainstorming-hub',
-      actionLabel: 'Open in Reader',
+      actionLabel: 'Read Now',
+    },
+    {
+      id: 'university-research-file',
+      slug: 'university-research-file',
+      title: 'Detailed University Research File',
+      category: 'Admission',
+      subject: 'Admission',
+      type: 'Guide',
+      status: 'paid' as const,
+      priceNgn: 1000,
+      readerUrl: '/library/read/university-research-file',
+      storeUrl: '/resources/university-research-file',
+      actionLabel: 'Read Now',
     },
     {
       id: 'cohort-core',
@@ -1427,7 +1706,22 @@ export async function getUserResourceEntitlements(
       };
     }
 
-    // 2. Paid items: match against active entitlements or confirmed paid orders
+    // 2. PART 3: For Mastery and Ultimate students, all published study resources
+    // are included without additional payment!
+    if (def.category !== 'Cohort' && (hasMasteryCohort || hasUltimateCohort)) {
+      return {
+        ...def,
+        isOwned: true,
+        purchaseStatus: 'plan_inclusion',
+        purchaseStatusLabel: hasUltimateCohort ? 'Included in Ultimate Track' : 'Included in Mastery Track',
+        accessStatus: 'active_lifetime',
+        accessStatusLabel: 'Included in Plan',
+        grantSource: 'plan_inclusion',
+        actionLabel: 'Read Now',
+      };
+    }
+
+    // 3. Paid items: match against active entitlements or confirmed paid orders
     const matchingEntitlement = entitlements.find((e) => {
       if (!e.isActive) return false;
       if (def.id === 'cohort-core') {
@@ -1442,6 +1736,14 @@ export async function getUserResourceEntitlements(
       if (def.id === 'post-utme-brainstorming-hub') {
         return e.resourceId === 'post-utme-brainstorming-hub' || e.resourceId === 'post-utme-pq';
       }
+      if (def.id === 'booster-bundle') {
+        return e.resourceId === 'booster-bundle' || e.resourceId === 'all-science-boosters-bundle' || e.planId === 'booster-bundle';
+      }
+      if (def.id === 'chemistry-booster' || def.id === 'biology-booster' || def.id === 'physics-booster') {
+        if (e.resourceId === 'booster-bundle' || e.resourceId === 'all-science-boosters-bundle' || e.planId === 'booster-bundle') {
+          return true;
+        }
+      }
       return e.resourceId === def.id || e.resourceId === def.slug;
     });
 
@@ -1455,16 +1757,16 @@ export async function getUserResourceEntitlements(
       if (def.id === 'cohort-ultimate') {
         return isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name));
       }
+      if (def.id === 'post-utme-brainstorming-hub') {
+        return o.product_id === 'post-utme-brainstorming-hub' || o.product_id === 'post-utme-pq';
+      }
+      if (def.id === 'chemistry-booster' || def.id === 'biology-booster' || def.id === 'physics-booster') {
+        if (o.product_id === 'booster-bundle' || o.product_id === 'all-science-boosters-bundle') {
+          return true;
+        }
+      }
       return o.product_id === def.id || o.product_id === def.slug;
     });
-
-    // Check cohort inclusions for science boosters and Post-UTME hub
-    const isBundledInMastery =
-      (def.id === 'chemistry-booster' || def.id === 'biology-booster' || def.id === 'physics-booster') &&
-      (hasMasteryCohort || hasUltimateCohort);
-
-    const isBundledInUltimate =
-      (def.id === 'post-utme-brainstorming-hub') && hasUltimateCohort;
 
     if (matchingEntitlement) {
       let accessStatus: UserResourceEntitlementItem['accessStatus'] = 'active_lifetime';
@@ -1514,7 +1816,7 @@ export async function getUserResourceEntitlements(
         grantSource: matchingEntitlement.grantSource,
         startsAt: matchingEntitlement.startsAt,
         expiresAt: matchingEntitlement.expiresAt,
-        actionLabel: def.actionLabel || 'Open Reader',
+        actionLabel: def.category === 'Cohort' ? (def.actionLabel || 'View Class Hub') : 'Read Now',
       };
     }
 
@@ -1530,34 +1832,7 @@ export async function getUserResourceEntitlements(
         grantSource: 'purchase',
         startsAt: null,
         expiresAt: isCohort ? '2027-05-31' : null,
-        actionLabel: def.actionLabel || (isCohort ? 'Open Bookshelf' : 'Open in Reader'),
-      };
-    }
-
-    // Handled via plan inclusion if not individual row
-    if (isBundledInMastery) {
-      return {
-        ...def,
-        isOwned: true,
-        purchaseStatus: 'plan_inclusion',
-        purchaseStatusLabel: hasUltimateCohort ? 'Included in Ultimate Track' : 'Included in Mastery Track',
-        accessStatus: 'active_lifetime',
-        accessStatusLabel: 'Permanent Lifetime Access',
-        grantSource: 'plan_inclusion',
-        actionLabel: 'Open in Reader',
-      };
-    }
-
-    if (isBundledInUltimate) {
-      return {
-        ...def,
-        isOwned: true,
-        purchaseStatus: 'plan_inclusion',
-        purchaseStatusLabel: 'Included in Ultimate Track',
-        accessStatus: 'active_lifetime',
-        accessStatusLabel: 'Permanent Lifetime Access',
-        grantSource: 'plan_inclusion',
-        actionLabel: 'Open in Reader',
+        actionLabel: isCohort ? (def.actionLabel || 'Open Bookshelf') : 'Read Now',
       };
     }
 
@@ -1576,7 +1851,7 @@ export async function getUserResourceEntitlements(
   const ownedCount = items.filter(i => i.isOwned && i.status === 'paid').length;
   const unownedCount = items.filter(i => !i.isOwned && i.status === 'paid').length;
 
-  return { items, ownedCount, unownedCount };
+  return { items, ownedCount, unownedCount, hasCorePlan, hasMasteryPlan: hasMasteryCohort, hasUltimatePlan: hasUltimateCohort, userPlan };
 }
 
 // ==============================================================================

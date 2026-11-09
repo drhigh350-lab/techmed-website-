@@ -93,16 +93,25 @@
             </div>
           </div>
 
-          <!-- Core Student 20% Discount Accordion -->
-          <div class="discount-section">
-            <label class="discount-checkbox-label">
-              <input type="checkbox" id="coreDiscountCheckbox" />
-              <span>I am enrolled in the <strong>TECHMED Core</strong> plan (20% discount)</span>
-            </label>
-            <div id="discountDetails" class="discount-details" style="display: none;">
-              <p class="discount-note">
-                ✓ 20% discount applied for active Core student. Enrolment will be verified upon activation.
-              </p>
+          <!-- Already Unlocked / Included in Plan Banner -->
+          <div id="alreadyUnlockedBanner" class="already-unlocked-banner" style="display: none;">
+            <div class="already-unlocked-card">
+              <span class="unlocked-icon">🎉</span>
+              <div class="unlocked-copy">
+                <h4 id="alreadyUnlockedTitle">Already included in your plan</h4>
+                <p id="alreadyUnlockedMsg">You already have access to this resource through your plan. No purchase is required.</p>
+              </div>
+              <a id="alreadyUnlockedBtn" href="/resources" class="btn-primary unlocked-read-btn">
+                Read Now &rarr;
+              </a>
+            </div>
+          </div>
+
+          <!-- Automatic Core Student 20% Discount Banner -->
+          <div id="coreDiscountBadgeWrap" class="core-discount-badge-wrap" style="display: none;">
+            <div class="core-discount-badge">
+              <span class="badge-icon">✓</span>
+              <span class="badge-text"><strong>TECHMED Core discount applied</strong> (20% off standalone resources)</span>
             </div>
           </div>
 
@@ -128,14 +137,14 @@
           </div>
 
           <!-- Itemized Order Breakdown -->
-          <div class="order-breakdown-card">
+          <div class="order-breakdown-card" id="orderBreakdownCard">
             <h4 class="breakdown-title">Order Summary</h4>
             <div class="breakdown-line">
               <span class="breakdown-label">Standard Price:</span>
               <span class="breakdown-figure" id="resourceBaseFigure">₦0</span>
             </div>
             <div class="breakdown-line discount-line" id="resourceDiscountRow" style="display: none;">
-              <span class="breakdown-label">Core Student Discount (20%):</span>
+              <span class="breakdown-label">TECHMED Core discount (20%):</span>
               <span class="breakdown-figure discount-val" id="resourceDiscountFigure">-₦0</span>
             </div>
             <div class="breakdown-divider"></div>
@@ -145,6 +154,9 @@
                 <span id="checkoutOriginalPrice" class="original-price" style="display: none;">₦0</span>
                 <span id="checkoutFinalPrice" class="final-price">₦0</span>
               </div>
+            </div>
+            <div id="coreDiscountConfirmationText" class="core-discount-confirm-line" style="display: none;">
+              ✓ TECHMED Core discount applied
             </div>
           </div>
 
@@ -260,7 +272,7 @@
 </div>
 
 <script>
-  import { getCurrentUser, SUPABASE_ANON_KEY } from '/src/lib/supabase.ts';
+  import { getCurrentUser, getStudentPlan, hasActiveResourceAccess, SUPABASE_ANON_KEY } from '/src/lib/supabase.ts';
   import { trackEvent } from '/src/lib/analytics.ts';
 
   const modalBackdrop = document.getElementById('checkoutModalBackdrop');
@@ -272,8 +284,16 @@
   const checkoutItemDesc = document.getElementById('checkoutItemDesc');
   const checkoutOriginalPrice = document.getElementById('checkoutOriginalPrice');
   const checkoutFinalPrice = document.getElementById('checkoutFinalPrice');
-  const coreDiscountCheckbox = document.getElementById('coreDiscountCheckbox') as HTMLInputElement | null;
-  const discountDetails = document.getElementById('discountDetails');
+  const coreDiscountBadgeWrap = document.getElementById('coreDiscountBadgeWrap');
+  const coreDiscountConfirmationText = document.getElementById('coreDiscountConfirmationText');
+  const alreadyUnlockedBanner = document.getElementById('alreadyUnlockedBanner');
+  const alreadyUnlockedTitle = document.getElementById('alreadyUnlockedTitle');
+  const alreadyUnlockedMsg = document.getElementById('alreadyUnlockedMsg');
+  const alreadyUnlockedBtn = document.getElementById('alreadyUnlockedBtn') as HTMLAnchorElement | null;
+  const orderBreakdownCard = document.getElementById('orderBreakdownCard');
+  const checkoutEmailGroup = document.querySelector('.checkout-email-group') as HTMLElement | null;
+  const stepActionBar1 = document.querySelector('#resourcePaneStep1 .step-action-bar') as HTMLElement | null;
+
   const checkoutEmail = document.getElementById('checkoutEmail') as HTMLInputElement | null;
   const checkoutName = document.getElementById('checkoutName') as HTMLInputElement | null;
   const checkoutPhone = document.getElementById('checkoutPhone') as HTMLInputElement | null;
@@ -371,20 +391,33 @@
     if (cardEl) cardEl.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  let currentStudentPlan = {
+    tier: 'free',
+    name: 'Free',
+    isCore: false,
+    isMastery: false,
+    isUltimate: false,
+  };
+  let isAlreadyAccessible = false;
+
   function updateStep2Recap() {
-    if (recapResourceTitle) recapResourceTitle.textContent = currentResource?.title || 'Resource';
-    if (recapResourceEmail) recapResourceEmail.textContent = checkoutEmail?.value.trim() || 'candidate@gmail.com';
-    const isCohort = !!(currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id));
-    const isCore = coreDiscountCheckbox?.checked && !isCohort;
-    const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
+    if (!currentResource) return;
+    const isCohort = !!(currentResource.isCohort || currentResource.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource.id));
+    const isCoreEligible = currentStudentPlan.isCore && !isCohort && !currentStudentPlan.isMastery && !currentStudentPlan.isUltimate;
+    const discountAmount = isCoreEligible ? Math.round(basePrice * 0.20) : 0;
+    const finalPrice = isCoreEligible ? (basePrice - discountAmount) : basePrice;
+
+    if (recapResourceTitle) recapResourceTitle.textContent = currentResource.title || '';
+    if (recapResourceEmail) recapResourceEmail.textContent = checkoutEmail?.value.trim() || '—';
     if (recapResourceFinalPrice) recapResourceFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
     if (paystackAmountLabel) paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
   }
 
-  function showInlineAlert(message: string) {
+  function showInlineAlert(htmlMsg: string) {
     if (checkoutAlert) {
+      checkoutAlert.innerHTML = htmlMsg;
       checkoutAlert.style.display = 'block';
-      checkoutAlert.innerHTML = `<strong>Attention:</strong> ${message}`;
+      checkoutAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
@@ -405,16 +438,19 @@
   function updatePriceDisplay() {
     if (!currentResource) return;
     const isCohort = !!(currentResource.isCohort || currentResource.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource.id));
-    const isCore = coreDiscountCheckbox?.checked && !isCohort;
-    const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
-    const discountAmount = isCore ? (basePrice - finalPrice) : 0;
+
+    // Part 1 & 2: Automatic 20% discount applies strictly to Core students on standalone resources
+    // Mastery & Ultimate do NOT receive Core discount (already included in plan)
+    const isCoreEligible = currentStudentPlan.isCore && !isCohort && !currentStudentPlan.isMastery && !currentStudentPlan.isUltimate;
+    const discountAmount = isCoreEligible ? Math.round(basePrice * 0.20) : 0;
+    const finalPrice = isCoreEligible ? (basePrice - discountAmount) : basePrice;
 
     if (resourceBaseFigure) {
       resourceBaseFigure.textContent = `₦${basePrice.toLocaleString()}`;
     }
 
     if (resourceDiscountRow && resourceDiscountFigure) {
-      if (isCore && discountAmount > 0) {
+      if (isCoreEligible && discountAmount > 0) {
         resourceDiscountRow.style.display = 'flex';
         resourceDiscountFigure.textContent = `-₦${discountAmount.toLocaleString()}`;
       } else {
@@ -422,12 +458,20 @@
       }
     }
 
+    if (coreDiscountBadgeWrap) {
+      coreDiscountBadgeWrap.style.display = isCoreEligible ? 'block' : 'none';
+    }
+
+    if (coreDiscountConfirmationText) {
+      coreDiscountConfirmationText.style.display = isCoreEligible ? 'block' : 'none';
+    }
+
     if (currentResource.originalPrice && currentResource.originalPrice > finalPrice) {
       if (checkoutOriginalPrice) {
         checkoutOriginalPrice.style.display = 'inline';
         checkoutOriginalPrice.textContent = `₦${currentResource.originalPrice.toLocaleString()}`;
       }
-    } else if (isCore && basePrice > 0) {
+    } else if (isCoreEligible && basePrice > finalPrice) {
       if (checkoutOriginalPrice) {
         checkoutOriginalPrice.style.display = 'inline';
         checkoutOriginalPrice.textContent = `₦${basePrice.toLocaleString()}`;
@@ -483,17 +527,83 @@
   }
   setupBillingRadioListeners();
 
-  coreDiscountCheckbox?.addEventListener('change', () => {
-    if (discountDetails) {
-      discountDetails.style.display = coreDiscountCheckbox.checked ? 'block' : 'none';
+  // Debounced email check for entitlement & automatic Core discount detection
+  let emailDebounceTimer: any = null;
+
+  async function evaluateStudentAccess(emailToCheck?: string) {
+    if (!currentResource) return;
+    const isCohort = !!(currentResource.isCohort || currentResource.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource.id));
+
+    try {
+      const user = await getCurrentUser();
+      const targetEmail = (emailToCheck || checkoutEmail?.value || user?.email || '').trim().toLowerCase();
+      const targetId = user?.id;
+
+      if (!targetEmail && !targetId) {
+        currentStudentPlan = { tier: 'free', name: 'Free', isCore: false, isMastery: false, isUltimate: false };
+        isAlreadyAccessible = false;
+        renderOwnershipState(false);
+        updatePriceDisplay();
+        return;
+      }
+
+      const planInfo = await getStudentPlan(targetId, targetEmail);
+      currentStudentPlan = planInfo;
+
+      if (!isCohort) {
+        const hasAccess = await hasActiveResourceAccess(currentResource.id, { id: targetId, email: targetEmail });
+        isAlreadyAccessible = hasAccess;
+        renderOwnershipState(hasAccess);
+      } else {
+        isAlreadyAccessible = false;
+        renderOwnershipState(false);
+      }
+
+      updatePriceDisplay();
+    } catch (err) {
+      console.warn('Entitlement check notice:', err);
     }
-    updatePriceDisplay();
-  });
+  }
+
+  function renderOwnershipState(hasAccess: boolean) {
+    const isCohort = !!(currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id));
+
+    if (hasAccess && !isCohort) {
+      if (alreadyUnlockedBanner) alreadyUnlockedBanner.style.display = 'block';
+      if (alreadyUnlockedTitle) {
+        alreadyUnlockedTitle.textContent = currentStudentPlan.isMastery || currentStudentPlan.isUltimate
+          ? `Included in your ${currentStudentPlan.name} plan`
+          : 'Already in your personal library';
+      }
+      if (alreadyUnlockedMsg) {
+        alreadyUnlockedMsg.textContent = currentStudentPlan.isMastery || currentStudentPlan.isUltimate
+          ? `Full access to "${currentResource.title}" is already included in your ${currentStudentPlan.name} plan. You do not need to purchase it separately.`
+          : `You already own full permanent access to "${currentResource.title}". You can read it directly now.`;
+      }
+      if (alreadyUnlockedBtn) {
+        alreadyUnlockedBtn.href = `/library/read/${currentResource.id}`;
+      }
+
+      if (orderBreakdownCard) orderBreakdownCard.style.display = 'none';
+      if (coreDiscountBadgeWrap) coreDiscountBadgeWrap.style.display = 'none';
+      if (checkoutEmailGroup) checkoutEmailGroup.style.display = 'none';
+      if (stepActionBar1) stepActionBar1.style.display = 'none';
+    } else {
+      if (alreadyUnlockedBanner) alreadyUnlockedBanner.style.display = 'none';
+      if (orderBreakdownCard) orderBreakdownCard.style.display = 'block';
+      if (checkoutEmailGroup) checkoutEmailGroup.style.display = 'block';
+      if (stepActionBar1) stepActionBar1.style.display = 'flex';
+    }
+  }
 
   checkoutEmail?.addEventListener('input', () => {
     if (checkoutEmail.classList.contains('input-error')) checkoutEmail.classList.remove('input-error');
-    updatePriceDisplay();
+    clearTimeout(emailDebounceTimer);
+    emailDebounceTimer = setTimeout(() => {
+      evaluateStudentAccess(checkoutEmail.value);
+    }, 300);
   });
+
   checkoutUniversity?.addEventListener('change', () => {
     if (checkoutUniversity.classList.contains('input-error')) checkoutUniversity.classList.remove('input-error');
     updatePriceDisplay();
@@ -556,28 +666,21 @@
     if (checkoutSubject) checkoutSubject.textContent = currentResource.subject || (isCohort ? 'UTME 2027 Track' : 'Academic');
     if (checkoutFormat) checkoutFormat.textContent = currentResource.deliveryFormat || (isCohort ? 'Live Telegram + CBT Drills' : 'PDF eBook & Reader');
 
-    const discountSection = document.querySelector('.discount-section') as HTMLElement | null;
-    if (discountSection) {
-      discountSection.style.display = isCohort ? 'none' : 'block';
-    }
-
     const needsUni = resource.id === 'research-file' || resource.id === 'university-research-file' || resource.id === 'post-utme-pq' || resource.id === 'post-utme-brainstorming-hub';
     if (universityGroup) universityGroup.style.display = needsUni ? 'block' : 'none';
     if (checkoutUniversity) checkoutUniversity.required = needsUni;
 
-    if (coreDiscountCheckbox) coreDiscountCheckbox.checked = false;
-    if (discountDetails) discountDetails.style.display = 'none';
-
     goToStep(1);
 
-    // Prefill user email if signed in
+    // Prefill user email if signed in & evaluate student plan automatically
     getCurrentUser().then(user => {
       if (user?.email && checkoutEmail && !checkoutEmail.value) {
         checkoutEmail.value = user.email;
       }
-      updatePriceDisplay();
+      evaluateStudentAccess();
     });
 
+    evaluateStudentAccess();
     updatePriceDisplay();
     hideInlineAlert();
     if (modalBackdrop) modalBackdrop.style.display = 'flex';
@@ -615,6 +718,12 @@
 
     const isCohort = currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id);
 
+    // Double check if resource is already owned
+    if (isAlreadyAccessible && !isCohort) {
+      showInlineAlert(`You already have access to this resource. <a href="/library/read/${currentResource.id}" style="color: #09476E; font-weight: bold; text-decoration: underline; margin-left: 6px;">Open in Reader &rarr;</a>`);
+      return;
+    }
+
     const needsUni = universityGroup && universityGroup.style.display !== 'none';
     const uni = checkoutUniversity?.value;
     if (needsUni && !uni) {
@@ -631,8 +740,8 @@
 
     try {
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
-      const isCore = coreDiscountCheckbox?.checked && !isCohort;
-      const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
+      const isCoreEligible = currentStudentPlan.isCore && !isCohort && !currentStudentPlan.isMastery && !currentStudentPlan.isUltimate;
+      const finalPrice = isCoreEligible ? Math.round(basePrice * 0.8) : basePrice;
 
       const user = await getCurrentUser();
       const studentName = user?.user_metadata?.full_name || undefined;
@@ -644,7 +753,7 @@
         email,
         name: studentName,
         metadata: {
-          is_core_discount: isCore,
+          is_core_discount: isCoreEligible,
           original_price: basePrice,
           delivery_format: currentResource.deliveryFormat || 'digital',
           target_university: needsUni ? uni : undefined,
@@ -674,10 +783,19 @@
       if (res.ok && data.success && data.data?.authorization_url) {
         trackEvent('paystack_redirect', {
           reference: data.data.reference,
-          amount: finalPrice,
+          amount: data.data.amount || finalPrice,
           productId: currentResource.id,
         });
         window.location.href = data.data.authorization_url;
+      } else if (data.already_owned) {
+        // Handled gracefully server-side: student already has access
+        renderOwnershipState(true);
+        goToStep(1);
+        showInlineAlert(`✓ ${data.message} <a href="/library/read/${currentResource.id}" style="color: #09476E; font-weight: bold; text-decoration: underline; margin-left: 6px;">Read Now &rarr;</a>`);
+        if (paystackSubmitBtn) {
+          paystackSubmitBtn.disabled = false;
+          paystackSubmitBtn.innerHTML = `<span>Pay ${paystackAmountLabel?.textContent || ''} with Paystack &rarr;</span>`;
+        }
       } else {
         throw new Error(data.message || 'Payment service is temporarily unreachable.');
       }
@@ -701,7 +819,7 @@
 
       if (paystackSubmitBtn) {
         paystackSubmitBtn.disabled = false;
-        paystackSubmitBtn.innerHTML = `<span>Pay ₦${(coreDiscountCheckbox?.checked ? Math.round(basePrice * 0.8) : basePrice).toLocaleString()} with Paystack &rarr;</span>`;
+        paystackSubmitBtn.innerHTML = `<span>Pay ${paystackAmountLabel?.textContent || ''} with Paystack &rarr;</span>`;
       }
     }
   });
@@ -1072,35 +1190,108 @@
     display: block;
   }
 
-  /* Discount Section */
-  .discount-section {
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
+  /* Automatic Core Discount Badge */
+  .core-discount-badge-wrap {
     margin-bottom: var(--space-4);
   }
 
-  .discount-checkbox-label {
+  .core-discount-badge {
     display: flex;
     align-items: center;
     gap: 10px;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.35);
+    border-radius: 10px;
+    padding: 10px 14px;
+    color: #065f46;
     font-size: 0.85rem;
-    cursor: pointer;
-    color: var(--text);
   }
 
-  .discount-details {
-    margin-top: 8px;
+  :root:not([data-theme='light']) .core-discount-badge {
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+  }
+
+  .core-discount-badge .badge-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #059669;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 800;
+    flex-shrink: 0;
+  }
+
+  .core-discount-confirm-line {
+    margin-top: 10px;
     padding-top: 8px;
-    border-top: 1px solid var(--border);
+    border-top: 1px dashed var(--border);
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #059669;
+    text-align: right;
   }
 
-  .discount-note {
-    font-size: 0.78rem;
-    color: #059669;
-    font-weight: 600;
+  /* Already Unlocked Banner */
+  .already-unlocked-banner {
+    margin-bottom: var(--space-4);
+  }
+
+  .already-unlocked-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 12px;
+    padding: 24px 18px;
+    background: rgba(9, 71, 110, 0.06);
+    border: 1.5px solid #09476E;
+    border-radius: 12px;
+  }
+
+  :root:not([data-theme='light']) .already-unlocked-card {
+    background: rgba(152, 176, 196, 0.1);
+    border-color: #98B0C4;
+  }
+
+  .unlocked-icon {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .unlocked-copy h4 {
+    margin: 0 0 4px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #012748;
+  }
+
+  :root:not([data-theme='light']) .unlocked-copy h4 {
+    color: #F8F9FA;
+  }
+
+  .unlocked-copy p {
     margin: 0;
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  .unlocked-read-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 24px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-decoration: none;
+    border-radius: 8px;
   }
 
   /* Order Breakdown Card */

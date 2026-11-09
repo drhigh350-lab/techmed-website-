@@ -24,7 +24,7 @@ const primaryHref = resource.accessUrl ?? resource.externalUrl;
 const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.accessUrl?.startsWith('http'));
 ---
 
-<article class="detail">
+<article class="detail" data-resource-id={resource.id} data-resource-price={resource.price || 0} data-status={resource.status}>
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/resources">Resources</a>
     <span aria-hidden="true">/</span>
@@ -430,3 +430,61 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     }
   }
 </style>
+
+<script>
+  import { getCurrentUser, getStudentPlan, hasActiveResourceAccess } from '/src/lib/supabase.ts';
+
+  async function checkDetailAccess() {
+    const article = document.querySelector('.detail');
+    if (!article) return;
+    const resourceId = article.getAttribute('data-resource-id');
+    const status = article.getAttribute('data-status');
+    const price = Number(article.getAttribute('data-resource-price')) || 0;
+
+    if (!resourceId || status === 'free') return;
+
+    try {
+      const user = await getCurrentUser();
+      if (!user) return;
+
+      const [hasAccess, planInfo] = await Promise.all([
+        hasActiveResourceAccess(resourceId, user),
+        getStudentPlan(user.id, user.email),
+      ]);
+
+      const buyBtn = document.querySelector('.detail-buy-btn') as HTMLElement | null;
+      const priceBadge = document.querySelector('.price-badge') as HTMLElement | null;
+      const previewBtn = document.querySelector('.cta-row .btn-secondary') as HTMLElement | null;
+      const waLink = document.querySelector('.whatsapp-alt-link') as HTMLElement | null;
+
+      if (hasAccess) {
+        if (buyBtn) {
+          const readLink = document.createElement('a');
+          readLink.className = 'btn-primary';
+          readLink.href = `/library/read/${resourceId}`;
+          readLink.innerHTML = 'Read Now &rarr;';
+          buyBtn.replaceWith(readLink);
+        }
+        if (previewBtn) previewBtn.style.display = 'none';
+        if (waLink) waLink.style.display = 'none';
+        if (priceBadge) {
+          priceBadge.textContent = planInfo.isMastery || planInfo.isUltimate ? 'Included in Plan' : 'Unlocked · Full Access';
+          priceBadge.classList.add('free');
+        }
+      } else if (planInfo.isCore && price > 0) {
+        const discount = Math.round(price * 0.20);
+        const finalPrice = price - discount;
+        if (priceBadge) {
+          priceBadge.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; margin-right: 4px;">₦${price.toLocaleString()}</span> ₦${finalPrice.toLocaleString()} (Core 20% off)`;
+        }
+        if (buyBtn) {
+          buyBtn.innerHTML = `Unlock with 20% Core Discount · ₦${finalPrice.toLocaleString()}`;
+        }
+      }
+    } catch (err) {
+      console.warn('Resource detail access check notice:', err);
+    }
+  }
+
+  checkDetailAccess();
+</script>
