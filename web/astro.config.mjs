@@ -34,5 +34,7 @@ export default defineConfig({
     // link) was folded into /utme-2027/builders itself, so a student never
     // has to click through a second page to reach it.
     '/utme-2027/builders/join': '/utme-2027/builders',
+    // Retire redundant /library landing page; unify discovery & bookshelf at /resources
+    '/library': '/resources',
   },
 });

@@ -212,12 +212,17 @@ assert(callbackCode.includes('postpayChecklistCard'), 'callback.astro contains p
 assert(callbackCode.includes('postPaymentPasswordConfirm'), 'callback.astro contains postPaymentPasswordConfirm');
 assert(callbackCode.includes('initPasswordChecklist'), 'callback.astro wires initPasswordChecklist');
 
-// D. library/index.astro
+// D. library/index.astro (Retired in Turn 9/10 to 301 redirect to /resources)
 const libraryCode = readFileSync(resolve('web/src/pages/library/index.astro'), 'utf-8');
-assert(libraryCode.includes('libChecklistCard'), 'library/index.astro contains libChecklistCard');
-assert(libraryCode.includes('signUpPasswordConfirm'), 'library/index.astro contains signUpPasswordConfirm');
-assert(libraryCode.includes('initPasswordChecklist'), 'library/index.astro wires initPasswordChecklist');
-assert(libraryCode.includes('getFriendlyAuthErrorMessage'), 'library/index.astro maps friendly auth errors');
+const isRetiredRedirect = libraryCode.includes("Astro.redirect('/resources', 301)") || libraryCode.includes('content="0;url=/resources"');
+if (isRetiredRedirect) {
+  assert(isRetiredRedirect, 'library/index.astro is retired and permanently redirects to /resources');
+} else {
+  assert(libraryCode.includes('libChecklistCard'), 'library/index.astro contains libChecklistCard');
+  assert(libraryCode.includes('signUpPasswordConfirm'), 'library/index.astro contains signUpPasswordConfirm');
+  assert(libraryCode.includes('initPasswordChecklist'), 'library/index.astro wires initPasswordChecklist');
+  assert(libraryCode.includes('getFriendlyAuthErrorMessage'), 'library/index.astro maps friendly auth errors');
+}
 
 // 10. Live Supabase Auth Policy Parity Test
 console.log('\n📋 Test Group 10: Live Supabase Auth Policy Parity Test');

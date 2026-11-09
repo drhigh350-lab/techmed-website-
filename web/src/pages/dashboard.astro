@@ -583,7 +583,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         <section class="dashboard-card quick-access-card dashboard-view-section" data-section-view="resources">
           <h2 class="card-title">Study Tools &amp; Quick Links</h2>
           <div class="quick-tools-grid">
-            <a href="/library" class="tool-card">
+            <a href="/resources?view=bookshelf" class="tool-card">
               <div class="tool-icon">
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
               </div>
@@ -740,7 +740,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         </div>
         <div class="card-action-wrap">
           ${item.isOwned ? `
-            <a href="${item.readerUrl || item.externalUrl || '/library'}" class="btn-primary resource-action-btn" ${item.externalUrl ? 'target="_blank" rel="noopener"' : ''}>
+            <a href="${item.readerUrl || item.externalUrl || '/resources?view=bookshelf'}" class="btn-primary resource-action-btn" ${item.externalUrl ? 'target="_blank" rel="noopener"' : ''}>
               ${item.actionLabel} &rarr;
             </a>
           ` : `

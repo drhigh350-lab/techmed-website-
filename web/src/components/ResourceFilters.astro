@@ -1,23 +1,54 @@
 ---
-// Enhanced client-side filtering and live search for the resource catalogue.
-// High-speed vanilla JS without heavy framework hydration overhead.
+// Simplified client-side filtering: "All Resources" and "My Bookshelf" with Subject filter and live search.
+// Unifies resource discovery and personal bookshelf at /resources/.
 interface Props {
-  categories?: string[];
   gridSelector?: string;
 }
 
 const { gridSelector = '#resource-grid' } = Astro.props;
 
 const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 'General'];
-const ACCESS_OPTIONS = [
-  { id: 'all', label: 'All Resources' },
-  { id: 'paid', label: 'Standalone Boosters' },
-  { id: 'free', label: 'Free Guides & Tools' },
-  { id: 'mastery', label: 'Mastery / Ultimate Inclusions' },
-];
 ---
 
 <div class="catalogue-controls" data-grid={gridSelector}>
+  <!-- Primary View Tabs: All Resources vs My Bookshelf -->
+  <div class="primary-view-wrap">
+    <div class="view-tabs" role="tablist" aria-label="Resource View" id="viewFilterGroup">
+      <button
+        type="button"
+        class="view-tab-btn active"
+        id="tabAllResources"
+        data-view="all"
+        role="tab"
+        aria-selected="true"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+        <span>All Resources</span>
+      </button>
+
+      <button
+        type="button"
+        class="view-tab-btn"
+        id="tabMyBookshelf"
+        data-view="bookshelf"
+        role="tab"
+        aria-selected="false"
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>My Bookshelf</span>
+        <span class="bookshelf-badge" id="bookshelfCountBadge" style="display: none;">0</span>
+      </button>
+    </div>
+  </div>
+
   <!-- Search input bar -->
   <div class="search-bar">
     <div class="search-input-wrap">
@@ -39,7 +70,7 @@ const ACCESS_OPTIONS = [
     </div>
   </div>
 
-  <!-- Filter rows -->
+  <!-- Subject Filter Row -->
   <div class="filter-sections">
     <div class="filter-group">
       <span class="group-label">Subject:</span>
@@ -57,23 +88,6 @@ const ACCESS_OPTIONS = [
         ))}
       </div>
     </div>
-
-    <div class="filter-group">
-      <span class="group-label">Access:</span>
-      <div class="segment-group" role="tablist" aria-label="Filter by access tier" id="accessFilterGroup">
-        {ACCESS_OPTIONS.map((opt, i) => (
-          <button
-            type="button"
-            class:list={['segment-btn', { active: i === 0 }]}
-            data-access={opt.id}
-            role="tab"
-            aria-selected={i === 0 ? 'true' : 'false'}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-    </div>
   </div>
 
   <!-- Status / Results Summary -->
@@ -86,101 +100,227 @@ const ACCESS_OPTIONS = [
 </div>
 
 <script>
-  (function initCatalogueFilters() {
+  import { getCurrentUser, getUserResourceEntitlements } from '/src/lib/supabase.ts';
+
+  (function initUnifiedResourceFilters() {
     const root = document.querySelector('.catalogue-controls');
     if (!root) return;
 
     const gridSelector = root.getAttribute('data-grid') || '#resource-grid';
-    const grid = document.querySelector(gridSelector);
+    const grid = document.querySelector(gridSelector) as HTMLElement | null;
     if (!grid) return;
 
     const searchInput = root.querySelector('#resourceSearchInput') as HTMLInputElement | null;
     const clearBtn = root.querySelector('#clearSearchBtn') as HTMLButtonElement | null;
+    const viewBtns = root.querySelectorAll('#viewFilterGroup .view-tab-btn');
     const subjectBtns = root.querySelectorAll('#subjectFilterGroup .segment-btn');
-    const accessBtns = root.querySelectorAll('#accessFilterGroup .segment-btn');
     const counterEl = root.querySelector('#resultsCounter');
     const resetBtn = root.querySelector('#resetFiltersBtn') as HTMLButtonElement | null;
+    const bookshelfBadge = root.querySelector('#bookshelfCountBadge') as HTMLElement | null;
+
     const emptyState = document.querySelector('[data-empty-state]') as HTMLElement | null;
+    const authPrompt = document.getElementById('bookshelfAuthPrompt') as HTMLElement | null;
+    const emptyBookshelf = document.getElementById('emptyBookshelfState') as HTMLElement | null;
+    const browseAllFromBookshelfBtn = document.getElementById('browseAllFromBookshelfBtn');
 
-    const cards = Array.from(grid.querySelectorAll('.resource-card')) as HTMLElement[];
-    const totalCount = cards.length;
+    // Each item wrapper is in grid
+    const itemWrappers = Array.from(grid.querySelectorAll('.grid-item')) as HTMLElement[];
+    const totalCount = itemWrappers.length;
 
-    let currentSearch = '';
+    let currentView: 'all' | 'bookshelf' = 'all';
     let currentSubject = 'All';
-    let currentAccess = 'all';
+    let currentSearch = '';
+
+    let currentUser: any = null;
+    let authChecked = false;
+    let ownedResourceIds: Set<string> | null = null;
+
+    // Check user auth state and prefetch entitlements
+    async function loadAuthAndEntitlements() {
+      try {
+        currentUser = await getCurrentUser();
+        authChecked = true;
+
+        if (currentUser) {
+          const res = await getUserResourceEntitlements(currentUser.id, currentUser.email);
+          const ids = new Set<string>();
+
+          // Add free items and owned items
+          res.items.forEach((item) => {
+            if (item.isOwned || item.status === 'free') {
+              ids.add(item.id);
+              if (item.slug) ids.add(item.slug);
+            }
+          });
+
+          // Check claimed local entitlements
+          try {
+            const raw = localStorage.getItem('techmed_claimed_entitlements');
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              if (Array.isArray(parsed)) {
+                parsed.forEach((e: any) => {
+                  if (e.resourceId) ids.add(e.resourceId);
+                });
+              }
+            }
+          } catch {}
+
+          ownedResourceIds = ids;
+
+          // Update bookshelf count badge
+          if (bookshelfBadge) {
+            let userOwnedCount = 0;
+            itemWrappers.forEach((wrapper) => {
+              const resId = wrapper.getAttribute('data-resource-id') || '';
+              const slug = wrapper.getAttribute('data-slug') || '';
+              const status = wrapper.getAttribute('data-status') || '';
+              if (status === 'free' || (resId && ids.has(resId)) || (slug && ids.has(slug))) {
+                userOwnedCount++;
+              }
+            });
+            bookshelfBadge.textContent = String(userOwnedCount);
+            bookshelfBadge.style.display = 'inline-block';
+          }
+        }
+      } catch (err) {
+        console.warn('Auth/entitlement load notice:', err);
+        authChecked = true;
+      }
+
+      applyFilters();
+    }
 
     function applyFilters() {
       const searchTerms = currentSearch.toLowerCase().trim();
+
+      // If My Bookshelf is selected and user is not signed in
+      if (currentView === 'bookshelf') {
+        if (!authChecked) {
+          // Still loading auth, wait
+          return;
+        }
+
+        if (!currentUser) {
+          // Prompt unauthenticated visitor to log in
+          grid.style.display = 'none';
+          if (emptyState) emptyState.style.display = 'none';
+          if (emptyBookshelf) emptyBookshelf.style.display = 'none';
+          if (authPrompt) authPrompt.style.display = 'block';
+          if (counterEl) counterEl.textContent = 'Sign in to access your student bookshelf';
+          if (resetBtn) resetBtn.style.display = 'none';
+          return;
+        }
+      }
+
+      // Hide auth prompt if logged in or on All Resources
+      if (authPrompt) authPrompt.style.display = 'none';
+
       let matchCount = 0;
+      let bookshelfTotal = 0;
 
-      cards.forEach((card) => {
-        const text = (card.textContent || '').toLowerCase();
-        const subjectAttr = (card.getAttribute('data-subject') || '').toLowerCase();
-        const statusAttr = (card.getAttribute('data-status') || '').toLowerCase();
-        const incNote = card.querySelector('.inclusion-note');
-        const hasMasteryInclusion = Boolean(incNote && incNote.textContent?.toLowerCase().includes('mastery'));
+      itemWrappers.forEach((wrapper) => {
+        const text = (wrapper.textContent || '').toLowerCase();
+        const subjectAttr = (wrapper.getAttribute('data-subject') || '').toLowerCase();
+        const statusAttr = (wrapper.getAttribute('data-status') || '').toLowerCase();
+        const resId = wrapper.getAttribute('data-resource-id') || '';
+        const slug = wrapper.getAttribute('data-slug') || '';
 
-        // 1. Search filter
+        // Check if item belongs in student bookshelf
+        const isFree = statusAttr === 'free';
+        const isOwned = Boolean(ownedResourceIds && (ownedResourceIds.has(resId) || ownedResourceIds.has(slug)));
+        const inBookshelf = isFree || isOwned;
+
+        if (inBookshelf) bookshelfTotal++;
+
+        // 1. View check
+        const matchesView = currentView === 'all' || inBookshelf;
+
+        // 2. Search check
         const matchesSearch = !searchTerms || text.includes(searchTerms);
 
-        // 2. Subject filter
+        // 3. Subject check
         const matchesSubject =
           currentSubject === 'All' ||
           subjectAttr.includes(currentSubject.toLowerCase()) ||
           text.includes(currentSubject.toLowerCase());
 
-        // 3. Access filter
-        let matchesAccess = true;
-        if (currentAccess === 'paid') {
-          matchesAccess = statusAttr === 'paid';
-        } else if (currentAccess === 'free') {
-          matchesAccess = statusAttr === 'free';
-        } else if (currentAccess === 'mastery') {
-          matchesAccess = hasMasteryInclusion;
-        }
-
-        const isVisible = matchesSearch && matchesSubject && matchesAccess;
-
-        // The card's parent container might be a grid-item wrapper
-        const wrapper = card.parentElement && card.parentElement.classList.contains('grid-item')
-          ? card.parentElement
-          : card;
-
+        const isVisible = matchesView && matchesSearch && matchesSubject;
         wrapper.style.display = isVisible ? '' : 'none';
+
         if (isVisible) matchCount++;
       });
 
-      // Update counter
-      if (counterEl) {
-        if (currentSearch || currentSubject !== 'All' || currentAccess !== 'all') {
-          counterEl.textContent = `Showing ${matchCount} of ${totalCount} resources`;
+      // Update grid visibility
+      if (matchCount > 0) {
+        grid.style.display = '';
+        if (emptyState) emptyState.style.display = 'none';
+        if (emptyBookshelf) emptyBookshelf.style.display = 'none';
+      } else {
+        grid.style.display = 'none';
+        if (currentView === 'bookshelf' && bookshelfTotal === 0 && !currentSearch && currentSubject === 'All') {
+          if (emptyBookshelf) emptyBookshelf.style.display = 'block';
+          if (emptyState) emptyState.style.display = 'none';
         } else {
-          counterEl.textContent = `Showing all ${totalCount} resources`;
+          if (emptyState) emptyState.style.display = 'block';
+          if (emptyBookshelf) emptyBookshelf.style.display = 'none';
         }
       }
 
-      // Update clear/reset button affordances
-      const isFiltered = Boolean(currentSearch || currentSubject !== 'All' || currentAccess !== 'all');
+      // Update summary counter
+      if (counterEl) {
+        if (currentView === 'bookshelf') {
+          if (currentSearch || currentSubject !== 'All') {
+            counterEl.textContent = `Showing ${matchCount} of ${bookshelfTotal} resources in your bookshelf`;
+          } else {
+            counterEl.textContent = `Showing all ${bookshelfTotal} resources in your bookshelf`;
+          }
+        } else {
+          if (currentSearch || currentSubject !== 'All') {
+            counterEl.textContent = `Showing ${matchCount} of ${totalCount} resources`;
+          } else {
+            counterEl.textContent = `Showing all ${totalCount} resources`;
+          }
+        }
+      }
+
+      const isFiltered = Boolean(currentSearch || currentSubject !== 'All');
       if (resetBtn) resetBtn.style.display = isFiltered ? 'inline-block' : 'none';
       if (clearBtn) clearBtn.style.display = currentSearch ? 'inline-block' : 'none';
-
-      // Empty state
-      if (emptyState) {
-        emptyState.style.display = matchCount === 0 ? 'block' : 'none';
-      }
     }
 
-    // Search events
-    searchInput?.addEventListener('input', () => {
-      currentSearch = searchInput.value;
+    // View tab switching
+    function setView(view: 'all' | 'bookshelf') {
+      currentView = view;
+      viewBtns.forEach((btn) => {
+        const isTarget = btn.getAttribute('data-view') === view;
+        btn.classList.toggle('active', isTarget);
+        btn.setAttribute('aria-selected', isTarget ? 'true' : 'false');
+      });
+
+      // Update URL hash/query without reload
+      try {
+        const url = new URL(window.location.href);
+        if (view === 'bookshelf') {
+          url.searchParams.set('view', 'bookshelf');
+        } else {
+          url.searchParams.delete('view');
+        }
+        window.history.replaceState({}, '', url.toString());
+      } catch {}
+
       applyFilters();
+    }
+
+    viewBtns.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const targetView = (btn.getAttribute('data-view') || 'all') as 'all' | 'bookshelf';
+        setView(targetView);
+      });
     });
 
-    clearBtn?.addEventListener('click', () => {
-      if (searchInput) searchInput.value = '';
-      currentSearch = '';
-      applyFilters();
-      searchInput?.focus();
+    browseAllFromBookshelfBtn?.addEventListener('click', () => {
+      setView('all');
     });
 
     // Subject buttons
@@ -197,21 +337,20 @@ const ACCESS_OPTIONS = [
       });
     });
 
-    // Access buttons
-    accessBtns.forEach((btn) => {
-      btn.addEventListener('click', () => {
-        accessBtns.forEach((b) => {
-          b.classList.remove('active');
-          b.setAttribute('aria-selected', 'false');
-        });
-        btn.classList.add('active');
-        btn.setAttribute('aria-selected', 'true');
-        currentAccess = btn.getAttribute('data-access') || 'all';
-        applyFilters();
-      });
+    // Search events
+    searchInput?.addEventListener('input', () => {
+      currentSearch = searchInput.value;
+      applyFilters();
     });
 
-    // Reset button
+    clearBtn?.addEventListener('click', () => {
+      if (searchInput) searchInput.value = '';
+      currentSearch = '';
+      applyFilters();
+      searchInput?.focus();
+    });
+
+    // Reset filters
     resetBtn?.addEventListener('click', () => {
       if (searchInput) searchInput.value = '';
       currentSearch = '';
@@ -222,28 +361,92 @@ const ACCESS_OPTIONS = [
       });
       currentSubject = 'All';
 
-      accessBtns.forEach((b, i) => {
-        b.classList.toggle('active', i === 0);
-        b.setAttribute('aria-selected', i === 0 ? 'true' : 'false');
-      });
-      currentAccess = 'all';
-
       applyFilters();
     });
 
-    // Initial check
-    applyFilters();
+    // Handle initial URL param e.g. /resources?view=bookshelf or #bookshelf
+    const initialParams = new URLSearchParams(window.location.search);
+    if (initialParams.get('view') === 'bookshelf' || window.location.hash === '#bookshelf') {
+      setView('bookshelf');
+    }
+
+    // Run auth check & initial hydration
+    loadAuthAndEntitlements();
   })();
 </script>
 
 <style>
   .catalogue-controls {
-    margin-bottom: var(--space-10);
+    margin-bottom: var(--space-8);
     display: flex;
     flex-direction: column;
-    gap: var(--space-5);
+    gap: var(--space-4);
   }
 
+  /* Primary View Tabs (All Resources vs My Bookshelf) */
+  .primary-view-wrap {
+    display: flex;
+    justify-content: flex-start;
+  }
+
+  .view-tabs {
+    display: inline-flex;
+    background: var(--surface-raised);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 5px;
+    gap: 6px;
+    box-shadow: 0 2px 8px rgba(1, 39, 72, 0.06);
+  }
+
+  .view-tab-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 10px 22px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 180ms ease;
+    white-space: nowrap;
+  }
+
+  .view-tab-btn:hover {
+    color: var(--text);
+  }
+
+  /* Deep Navy active state */
+  .view-tab-btn.active {
+    background: #012748 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(1, 39, 72, 0.22);
+  }
+
+  :root:not([data-theme='light']) .view-tab-btn.active {
+    background: #09476E !important;
+    color: #ffffff !important;
+  }
+
+  .bookshelf-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #ffffff;
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 9999px;
+  }
+
+  .view-tab-btn:not(.active) .bookshelf-badge {
+    background: rgba(152, 176, 196, 0.2);
+    color: var(--text-muted);
+  }
+
+  /* Search input */
   .search-bar {
     width: 100%;
   }
@@ -253,14 +456,14 @@ const ACCESS_OPTIONS = [
     display: flex;
     align-items: center;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius-md);
     transition: border-color 150ms ease, box-shadow 150ms ease;
   }
 
   .search-input-wrap:focus-within {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.15);
+    border-color: #09476E;
+    box-shadow: 0 0 0 3px rgba(9, 71, 110, 0.15);
   }
 
   .search-icon {
@@ -300,6 +503,7 @@ const ACCESS_OPTIONS = [
     color: var(--text);
   }
 
+  /* Filter rows */
   .filter-sections {
     display: flex;
     flex-direction: column;
@@ -316,11 +520,11 @@ const ACCESS_OPTIONS = [
   .group-label {
     font-family: var(--font-display);
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--text-muted);
-    min-width: 70px;
+    min-width: 65px;
   }
 
   .segment-group {
@@ -332,12 +536,12 @@ const ACCESS_OPTIONS = [
   .segment-btn {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 0.8rem;
+    font-size: 0.82rem;
     color: var(--text-light);
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 7px 14px;
+    padding: 7px 15px;
     cursor: pointer;
     transition: all 150ms ease;
     white-space: nowrap;
@@ -348,15 +552,28 @@ const ACCESS_OPTIONS = [
   }
 
   .segment-btn:hover {
-    color: var(--text);
-    border-color: var(--accent);
+    color: #012748;
+    border-color: #09476E;
   }
 
+  :root:not([data-theme='light']) .segment-btn:hover {
+    color: #F8F9FA;
+    border-color: #98B0C4;
+  }
+
+  /* Deep Navy active state for subject filters */
   .segment-btn.active {
-    color: #1a0a00;
-    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
-    border-color: transparent;
+    color: #ffffff !important;
+    background: #012748 !important;
+    border-color: #012748 !important;
     font-weight: 700;
+    box-shadow: 0 2px 8px rgba(1, 39, 72, 0.2);
+  }
+
+  :root:not([data-theme='light']) .segment-btn.active {
+    background: #09476E !important;
+    border-color: #09476E !important;
+    color: #ffffff !important;
   }
 
   .filter-summary {
@@ -365,17 +582,18 @@ const ACCESS_OPTIONS = [
     justify-content: space-between;
     padding-top: var(--space-2);
     border-top: 1px solid var(--border);
-    font-size: 0.82rem;
+    font-size: 0.85rem;
   }
 
   .counter-text {
     color: var(--text-muted);
+    font-weight: 500;
   }
 
   .reset-btn {
     background: none;
     border: none;
-    color: var(--accent-text);
+    color: #09476E;
     font-family: var(--font-display);
     font-size: 0.82rem;
     font-weight: 700;
@@ -384,11 +602,30 @@ const ACCESS_OPTIONS = [
     text-decoration: underline;
   }
 
+  :root:not([data-theme='light']) .reset-btn {
+    color: #98B0C4;
+  }
+
   .reset-btn:hover {
-    color: var(--text);
+    color: #012748;
   }
 
   @media (max-width: 680px) {
+    .primary-view-wrap {
+      width: 100%;
+    }
+
+    .view-tabs {
+      width: 100%;
+    }
+
+    .view-tab-btn {
+      flex: 1;
+      justify-content: center;
+      padding: 10px 14px;
+      font-size: 0.82rem;
+    }
+
     .filter-group {
       flex-direction: column;
       align-items: flex-start;
