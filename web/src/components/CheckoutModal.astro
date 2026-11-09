@@ -1,153 +1,303 @@
 ---
-// TECHMED Unified Resource Checkout Modal
-// Supports server-validated Paystack transaction initiation and direct bank transfer.
+// TECHMED Unified Guided Resource Checkout Modal
+// Mobile-first, minimal, premium 3-step checkout experience for study resources:
+// Step 1: Review Order (resource title, delivery format, Core 20% discount option, price breakdown)
+// Step 2: Confirm Details (email for license, student name, WhatsApp phone, target university if needed)
+// Step 3: Payment (Paystack secure portal, card & instant bank transfer, duplicate submission prevention)
+// Step 4: Managed via /payment/callback after verified Paystack return
 ---
 
 <div id="checkoutModalBackdrop" class="checkout-backdrop" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
   <div class="checkout-card" id="checkoutCard">
+    <!-- Top Header & Close Button -->
     <div class="checkout-header">
-      <div class="header-left">
-        <span class="header-eyebrow">SECURE CHECKOUT</span>
-        <h2 id="checkoutTitle">Unlock Study Resource</h2>
+      <div class="header-titles">
+        <span class="header-eyebrow">TECHMED RESOURCE CHECKOUT</span>
+        <h2 id="checkoutTitle" class="checkout-modal-title">Unlock Study Resource</h2>
       </div>
       <button type="button" id="closeCheckoutBtn" class="close-btn" aria-label="Close checkout modal">&times;</button>
     </div>
 
-    <div class="checkout-body">
-      <!-- Item Summary Box -->
-      <div class="item-summary-box">
-        <div class="summary-top">
-          <span id="checkoutSubject" class="summary-subject">Academic</span>
-          <span class="sep">·</span>
-          <span id="checkoutFormat" class="summary-format">PDF eBook &amp; Reader</span>
-        </div>
-        <h3 id="checkoutItemTitle" class="summary-title">Resource Title</h3>
-        <p id="checkoutItemDesc" class="summary-desc">Resource description</p>
+    <!-- Guided Checkout Step Indicator -->
+    <div class="checkout-stepper" role="navigation" aria-label="Checkout Progress">
+      <button type="button" class="step-indicator active" id="resourceStepNav1" data-step="1">
+        <span class="step-num">1</span>
+        <span class="step-label">Order</span>
+      </button>
+      <div class="step-connector" id="resourceConnector1"></div>
+      <button type="button" class="step-indicator" id="resourceStepNav2" data-step="2">
+        <span class="step-num">2</span>
+        <span class="step-label">Details</span>
+      </button>
+      <div class="step-connector" id="resourceConnector2"></div>
+      <button type="button" class="step-indicator" id="resourceStepNav3" data-step="3">
+        <span class="step-num">3</span>
+        <span class="step-label">Payment</span>
+      </button>
+    </div>
 
-        <div class="price-line-row">
-          <span class="price-label">Price:</span>
-          <div class="price-figures">
-            <span id="checkoutOriginalPrice" class="original-price" style="display: none;">₦0</span>
-            <span id="checkoutFinalPrice" class="final-price">₦0</span>
+    <form id="checkoutForm" class="checkout-form" novalidate>
+      <div class="checkout-panes-wrap">
+        <!-- =============================================================== -->
+        <!-- STEP 1: REVIEW ORDER PANE                                        -->
+        <!-- =============================================================== -->
+        <div id="resourcePaneStep1" class="checkout-pane active">
+          <!-- Resource Summary Box -->
+          <div class="item-summary-box">
+            <div class="summary-top">
+              <span id="checkoutSubject" class="summary-subject">Academic</span>
+              <span class="sep">·</span>
+              <span id="checkoutFormat" class="summary-format">PDF eBook &amp; Reader</span>
+            </div>
+            <h3 id="checkoutItemTitle" class="summary-title">Resource Title</h3>
+            <p id="checkoutItemDesc" class="summary-desc">Resource description</p>
+
+            <div class="resource-perks-list">
+              <div class="perk-item">
+                <span class="perk-icon" aria-hidden="true">✓</span>
+                <span>Instant bookshelf activation &amp; interactive PDF reader</span>
+              </div>
+              <div class="perk-item">
+                <span class="perk-icon" aria-hidden="true">✓</span>
+                <span>Permanent personal student copy with custom watermark</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Plan Billing Option Selector (for Core plan fallback) -->
+          <div class="form-group" id="planBillingOptionsGroup" style="display: none;">
+            <label class="billing-select-label">Choose billing option:</label>
+            <div class="modal-billing-selector">
+              <label class="modal-billing-card active" id="modalCardEarlybird">
+                <input type="radio" name="modalBillingChoice" value="earlybird" checked />
+                <div class="card-inner">
+                  <div class="card-row-top">
+                    <span class="card-title">3 Months Upfront</span>
+                    <span class="card-badge" id="modalEarlybirdBadge">Early-bird</span>
+                  </div>
+                  <div class="card-price-row">
+                    <span class="card-strike" id="modalCardStrike">₦18,000</span>
+                    <span class="card-final" id="modalCardFinal">₦15,000</span>
+                  </div>
+                  <span class="card-note" id="modalCardNote">Valid through 15 November 2026</span>
+                </div>
+              </label>
+
+              <label class="modal-billing-card" id="modalCardMonthly">
+                <input type="radio" name="modalBillingChoice" value="monthly" />
+                <div class="card-inner">
+                  <div class="card-row-top">
+                    <span class="card-title">Monthly Subscription</span>
+                  </div>
+                  <div class="card-price-row">
+                    <span class="card-final">₦7,000</span>
+                    <span class="card-period">/ month</span>
+                  </div>
+                  <span class="card-note">Pay per month to maintain active access</span>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Core Student 20% Discount Accordion -->
+          <div class="discount-section">
+            <label class="discount-checkbox-label">
+              <input type="checkbox" id="coreDiscountCheckbox" />
+              <span>I am enrolled in the <strong>TECHMED Core</strong> plan (20% discount)</span>
+            </label>
+            <div id="discountDetails" class="discount-details" style="display: none;">
+              <p class="discount-note">
+                ✓ 20% discount applied for active Core student. Enrolment will be verified upon activation.
+              </p>
+            </div>
+          </div>
+
+          <!-- Itemized Order Breakdown -->
+          <div class="order-breakdown-card">
+            <h4 class="breakdown-title">Order Summary</h4>
+            <div class="breakdown-line">
+              <span class="breakdown-label">Standard Price:</span>
+              <span class="breakdown-figure" id="resourceBaseFigure">₦0</span>
+            </div>
+            <div class="breakdown-line discount-line" id="resourceDiscountRow" style="display: none;">
+              <span class="breakdown-label">Core Student Discount (20%):</span>
+              <span class="breakdown-figure discount-val" id="resourceDiscountFigure">-₦0</span>
+            </div>
+            <div class="breakdown-divider"></div>
+            <div class="breakdown-line total-line">
+              <span class="total-label">Total Payable:</span>
+              <div class="total-figures">
+                <span id="checkoutOriginalPrice" class="original-price" style="display: none;">₦0</span>
+                <span id="checkoutFinalPrice" class="final-price">₦0</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 1 Primary Action -->
+          <div class="step-action-bar">
+            <button type="button" id="btnResourceToStep2" class="btn-primary step-next-btn">
+              <span>Continue to Student Details &rarr;</span>
+            </button>
+            <span class="step-action-hint">Next: Enter contact details for your access license</span>
           </div>
         </div>
-      </div>
 
-      <!-- Core Student 20% Discount Accordion -->
-      <div class="discount-section">
-        <label class="discount-checkbox-label">
-          <input type="checkbox" id="coreDiscountCheckbox" />
-          <span>I am currently enrolled in the <strong>TECHMED Core</strong> plan (20% discount)</span>
-        </label>
-        <div id="discountDetails" class="discount-details" style="display: none;">
-          <p class="discount-note">
-            ✓ 20% discount applied for active Core student. Enrolment will be verified upon activation.
-          </p>
-        </div>
-      </div>
+        <!-- =============================================================== -->
+        <!-- STEP 2: CONFIRM DETAILS PANE                                    -->
+        <!-- =============================================================== -->
+        <div id="resourcePaneStep2" class="checkout-pane" style="display: none;">
+          <div class="pane-intro">
+            <h3 class="pane-title">Student Information</h3>
+            <p class="pane-subtitle">Your study materials will be immediately unlocked and associated with this email address.</p>
+          </div>
 
-      <!-- Customer Details Form -->
-      <form id="checkoutForm" class="checkout-form">
-        <!-- Billing Option Selector for Plans with multiple cycles (e.g. Core) -->
-        <div class="form-group" id="planBillingOptionsGroup" style="display: none;">
-          <label class="billing-select-label">Choose billing option:</label>
-          <div class="modal-billing-selector">
-            <label class="modal-billing-card active" id="modalCardEarlybird">
-              <input type="radio" name="modalBillingChoice" value="earlybird" checked />
-              <div class="card-inner">
-                <div class="card-row-top">
-                  <span class="card-title">3 Months Upfront</span>
-                  <span class="card-badge" id="modalEarlybirdBadge">Early-bird</span>
-                </div>
-                <div class="card-price-row">
-                  <span class="card-strike" id="modalCardStrike">₦18,000</span>
-                  <span class="card-final" id="modalCardFinal">₦15,000</span>
-                </div>
-                <span class="card-note" id="modalCardNote">Valid through 15 November 2026</span>
-              </div>
-            </label>
+          <div class="form-fields-stack">
+            <div class="form-group">
+              <label for="checkoutEmail">
+                Email Address for Bookshelf Access <span class="required-mark">*</span>
+              </label>
+              <input
+                type="email"
+                id="checkoutEmail"
+                required
+                placeholder="e.g. candidate@gmail.com"
+                autocomplete="email"
+                class="checkout-input"
+              />
+              <span class="hint-text">Your reading license and payment receipt will be linked to this email.</span>
+            </div>
 
-            <label class="modal-billing-card" id="modalCardMonthly">
-              <input type="radio" name="modalBillingChoice" value="monthly" />
-              <div class="card-inner">
-                <div class="card-row-top">
-                  <span class="card-title">Monthly Subscription</span>
-                </div>
-                <div class="card-price-row">
-                  <span class="card-final">₦7,000</span>
-                  <span class="card-period">/ month</span>
-                </div>
-                <span class="card-note">Pay per month to maintain active Telegram & CBT access</span>
-              </div>
-            </label>
+            <div class="form-group" id="studentNameGroup" style="display: none;">
+              <label for="checkoutName">Student Full Name</label>
+              <input
+                type="text"
+                id="checkoutName"
+                placeholder="e.g. Samuel Adebayo"
+                autocomplete="name"
+                class="checkout-input"
+              />
+              <span class="hint-text">Used on your custom watermarked resource copy.</span>
+            </div>
+
+            <div class="form-group" id="studentPhoneGroup" style="display: none;">
+              <label for="checkoutPhone">WhatsApp Phone Number</label>
+              <input
+                type="tel"
+                id="checkoutPhone"
+                placeholder="e.g. 08012345678"
+                autocomplete="tel"
+                class="checkout-input"
+              />
+              <span class="hint-text">Used for study updates and reading progress sync.</span>
+            </div>
+
+            <div class="form-group" id="universityGroup" style="display: none;">
+              <label for="checkoutUniversity">Target University <span class="required-mark">*</span></label>
+              <select id="checkoutUniversity" class="checkout-select">
+                <option value="">Select your target institution...</option>
+                <option value="UNILAG">University of Lagos (UNILAG)</option>
+                <option value="UI">University of Ibadan (UI)</option>
+                <option value="OAU">Obafemi Awolowo University (OAU)</option>
+                <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
+                <option value="UNIBEN">University of Benin (UNIBEN)</option>
+                <option value="ABU">Ahmadu Bello University (ABU)</option>
+                <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
+                <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
+                <option value="OOU">Olabisi Onabanjo University (OOU)</option>
+                <option value="LASU">Lagos State University (LASU)</option>
+                <option value="RSU">Rivers State University (RSU)</option>
+                <option value="OTHER">Other Nigerian University</option>
+              </select>
+              <span class="hint-text">This study resource is customized for your specific university requirements.</span>
+            </div>
+          </div>
+
+          <!-- Step 2 Navigation Actions -->
+          <div class="step-action-bar dual-actions">
+            <button type="button" id="btnResourceBackToStep1" class="btn-secondary step-back-btn">
+              &larr; Back to Order
+            </button>
+            <button type="button" id="btnResourceToStep3" class="btn-primary step-next-btn">
+              <span>Continue to Payment &rarr;</span>
+            </button>
           </div>
         </div>
 
-        <div class="form-group" id="studentNameGroup" style="display: none;">
-          <label for="checkoutName">Student Full Name</label>
-          <input
-            type="text"
-            id="checkoutName"
-            placeholder="e.g. Samuel Adebayo"
-            autocomplete="name"
-          />
-        </div>
+        <!-- =============================================================== -->
+        <!-- STEP 3: PAYMENT PANE                                            -->
+        <!-- =============================================================== -->
+        <div id="resourcePaneStep3" class="checkout-pane" style="display: none;">
+          <div class="pane-intro">
+            <h3 class="pane-title">Complete Payment</h3>
+            <p class="pane-subtitle">Review your order and proceed to Paystack secure checkout.</p>
+          </div>
 
-        <div class="form-group">
-          <label for="checkoutEmail">Email address for receipt &amp; bookshelf access</label>
-          <input
-            type="email"
-            id="checkoutEmail"
-            required
-            placeholder="e.g. candidate@gmail.com"
-            autocomplete="email"
-          />
-          <span class="hint-text">Your access license will be linked to this email.</span>
-        </div>
+          <!-- Compact Order Recap Card -->
+          <div class="payment-recap-box">
+            <div class="recap-header">
+              <span class="recap-badge">ORDER RECAP</span>
+              <button type="button" id="btnEditResourceFromRecap" class="recap-edit-btn">Change</button>
+            </div>
+            <div class="recap-details">
+              <div class="recap-title" id="recapResourceTitle">Resource Title</div>
+              <div class="recap-email" id="recapResourceEmail">candidate@gmail.com</div>
+            </div>
+            <div class="recap-price-row">
+              <span class="recap-price-label">Amount Payable:</span>
+              <span class="recap-price-amount" id="recapResourceFinalPrice">₦0</span>
+            </div>
+          </div>
 
-        <div class="form-group" id="studentPhoneGroup" style="display: none;">
-          <label for="checkoutPhone">WhatsApp Phone Number</label>
-          <input
-            type="tel"
-            id="checkoutPhone"
-            placeholder="e.g. 08012345678"
-            autocomplete="tel"
-          />
-          <span class="hint-text">Used for cohort onboarding and Telegram/WhatsApp group access.</span>
-        </div>
+          <!-- Paystack Gateway Presentation Card -->
+          <div class="gateway-card">
+            <div class="gateway-header">
+              <div class="gateway-brand">
+                <span class="paystack-pill">Paystack Verified</span>
+                <span class="gateway-ssl">256-Bit SSL Secured</span>
+              </div>
+            </div>
+            <p class="gateway-desc">
+              Complete your payment via Paystack's official portal using:
+            </p>
+            <div class="payment-methods-grid">
+              <div class="method-tag">💳 Debit Card (Mastercard / Visa / Verve)</div>
+              <div class="method-tag">🏦 Bank Transfer (Instant Automated Match)</div>
+              <div class="method-tag">📱 USSD &amp; Mobile Money</div>
+            </div>
+            <div class="gateway-steps-list">
+              <div class="gateway-step-item">
+                <span class="step-dot">1</span>
+                <span>Select <strong>Card</strong> or <strong>Bank Transfer</strong> on Paystack.</span>
+              </div>
+              <div class="gateway-step-item">
+                <span class="step-dot">2</span>
+                <span>Complete the transaction securely.</span>
+              </div>
+              <div class="gateway-step-item">
+                <span class="step-dot">3</span>
+                <span>Access unlocks in your TECHMED Bookshelf immediately.</span>
+              </div>
+            </div>
+          </div>
 
-        <div class="form-group" id="universityGroup" style="display: none;">
-          <label for="checkoutUniversity">Target University (Required for this resource)</label>
-          <select id="checkoutUniversity">
-            <option value="">Select your target institution...</option>
-            <option value="UNILAG">University of Lagos (UNILAG)</option>
-            <option value="UI">University of Ibadan (UI)</option>
-            <option value="OAU">Obafemi Awolowo University (OAU)</option>
-            <option value="UNN">University of Nigeria, Nsukka (UNN)</option>
-            <option value="UNIBEN">University of Benin (UNIBEN)</option>
-            <option value="ABU">Ahmadu Bello University (ABU)</option>
-            <option value="FUTA">Federal University of Technology, Akure (FUTA)</option>
-            <option value="UNILORIN">University of Ilorin (UNILORIN)</option>
-            <option value="OOU">Olabisi Onabanjo University (OOU)</option>
-            <option value="LASU">Lagos State University (LASU)</option>
-            <option value="RSU">Rivers State University (RSU)</option>
-            <option value="OTHER">Other Nigerian University</option>
-          </select>
-        </div>
+          <div id="checkoutAlert" class="checkout-alert" style="display: none;" role="alert"></div>
 
-        <div id="checkoutAlert" class="checkout-alert" style="display: none;" role="alert"></div>
+          <!-- Step 3 Actions -->
+          <div class="step-action-bar dual-actions">
+            <button type="button" id="btnResourceBackToStep2" class="btn-secondary step-back-btn">
+              &larr; Back to Details
+            </button>
+            <button type="submit" class="btn-primary pay-btn" id="paystackSubmitBtn">
+              <span>Pay <span id="paystackAmountLabel">₦0</span> with Paystack &rarr;</span>
+            </button>
+          </div>
 
-        <!-- Paystack Direct Checkout (Sole Payment Route) -->
-        <div id="paystackPane" class="channel-pane">
-          <button type="submit" class="btn-primary pay-btn" id="paystackSubmitBtn">
-            <span>Pay <span id="paystackAmountLabel">₦0</span> with Paystack &rarr;</span>
-          </button>
           <p class="security-note">
             🔒 Secured by Paystack 256-bit encryption. Card, Bank Transfer, USSD &amp; Mobile Money supported.
           </p>
         </div>
-      </form>
-    </div>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -164,22 +314,46 @@
   const checkoutItemDesc = document.getElementById('checkoutItemDesc');
   const checkoutOriginalPrice = document.getElementById('checkoutOriginalPrice');
   const checkoutFinalPrice = document.getElementById('checkoutFinalPrice');
-  const coreDiscountCheckbox = document.getElementById('coreDiscountCheckbox');
+  const coreDiscountCheckbox = document.getElementById('coreDiscountCheckbox') as HTMLInputElement | null;
   const discountDetails = document.getElementById('discountDetails');
-  const checkoutEmail = document.getElementById('checkoutEmail');
-  const checkoutName = document.getElementById('checkoutName');
-  const checkoutPhone = document.getElementById('checkoutPhone');
+  const checkoutEmail = document.getElementById('checkoutEmail') as HTMLInputElement | null;
+  const checkoutName = document.getElementById('checkoutName') as HTMLInputElement | null;
+  const checkoutPhone = document.getElementById('checkoutPhone') as HTMLInputElement | null;
   const studentNameGroup = document.getElementById('studentNameGroup');
   const studentPhoneGroup = document.getElementById('studentPhoneGroup');
   const universityGroup = document.getElementById('universityGroup');
-  const checkoutUniversity = document.getElementById('checkoutUniversity');
+  const checkoutUniversity = document.getElementById('checkoutUniversity') as HTMLSelectElement | null;
   const checkoutAlert = document.getElementById('checkoutAlert');
   const checkoutForm = document.getElementById('checkoutForm');
-  const paystackPane = document.getElementById('paystackPane');
-  const paystackSubmitBtn = document.getElementById('paystackSubmitBtn');
+  const paystackSubmitBtn = document.getElementById('paystackSubmitBtn') as HTMLButtonElement | null;
   const paystackAmountLabel = document.getElementById('paystackAmountLabel');
 
-  // Plan billing selector elements
+  const resourceBaseFigure = document.getElementById('resourceBaseFigure');
+  const resourceDiscountRow = document.getElementById('resourceDiscountRow');
+  const resourceDiscountFigure = document.getElementById('resourceDiscountFigure');
+
+  // Stepper & Panes
+  let currentStep: 1 | 2 | 3 = 1;
+  const paneStep1 = document.getElementById('resourcePaneStep1');
+  const paneStep2 = document.getElementById('resourcePaneStep2');
+  const paneStep3 = document.getElementById('resourcePaneStep3');
+  const stepNav1 = document.getElementById('resourceStepNav1');
+  const stepNav2 = document.getElementById('resourceStepNav2');
+  const stepNav3 = document.getElementById('resourceStepNav3');
+  const connector1 = document.getElementById('resourceConnector1');
+  const connector2 = document.getElementById('resourceConnector2');
+
+  const btnToStep2 = document.getElementById('btnResourceToStep2');
+  const btnBackToStep1 = document.getElementById('btnResourceBackToStep1');
+  const btnToStep3 = document.getElementById('btnResourceToStep3');
+  const btnBackToStep2 = document.getElementById('btnResourceBackToStep2');
+  const btnEditFromRecap = document.getElementById('btnEditResourceFromRecap');
+
+  const recapResourceTitle = document.getElementById('recapResourceTitle');
+  const recapResourceEmail = document.getElementById('recapResourceEmail');
+  const recapResourceFinalPrice = document.getElementById('recapResourceFinalPrice');
+
+  // Plan billing selector elements (for fallback)
   const planBillingOptionsGroup = document.getElementById('planBillingOptionsGroup');
   const modalCardEarlybird = document.getElementById('modalCardEarlybird');
   const modalCardMonthly = document.getElementById('modalCardMonthly');
@@ -190,7 +364,7 @@
 
   const EARLY_BIRD_DEADLINE = new Date('2026-11-15T23:59:59Z').getTime();
 
-  let currentResource = null;
+  let currentResource: any = null;
   let basePrice = 0;
   let activeDuration = 'earlybird'; // 'earlybird' | 'monthly'
 
@@ -198,24 +372,132 @@
     return Date.now() <= EARLY_BIRD_DEADLINE;
   }
 
+  function goToStep(targetStep: 1 | 2 | 3) {
+    if (targetStep === 3) {
+      const email = checkoutEmail?.value.trim() || '';
+      if (!email || !email.includes('@')) {
+        if (checkoutEmail) {
+          checkoutEmail.focus();
+          checkoutEmail.classList.add('input-error');
+        }
+        showInlineAlert('Please enter a valid email address to proceed.');
+        return;
+      } else {
+        if (checkoutEmail) checkoutEmail.classList.remove('input-error');
+      }
+
+      const needsUni = universityGroup && universityGroup.style.display !== 'none';
+      const uni = checkoutUniversity?.value;
+      if (needsUni && !uni) {
+        if (checkoutUniversity) {
+          checkoutUniversity.focus();
+          checkoutUniversity.classList.add('input-error');
+        }
+        showInlineAlert('Please select your target university.');
+        return;
+      } else {
+        if (checkoutUniversity) checkoutUniversity.classList.remove('input-error');
+      }
+
+      hideInlineAlert();
+      updateStep3Recap();
+    }
+
+    currentStep = targetStep;
+
+    if (paneStep1) paneStep1.style.display = targetStep === 1 ? 'block' : 'none';
+    if (paneStep2) paneStep2.style.display = targetStep === 2 ? 'block' : 'none';
+    if (paneStep3) paneStep3.style.display = targetStep === 3 ? 'block' : 'none';
+
+    stepNav1?.classList.toggle('active', targetStep === 1);
+    stepNav1?.classList.toggle('completed', targetStep > 1);
+    stepNav2?.classList.toggle('active', targetStep === 2);
+    stepNav2?.classList.toggle('completed', targetStep > 2);
+    stepNav3?.classList.toggle('active', targetStep === 3);
+
+    connector1?.classList.toggle('active', targetStep >= 2);
+    connector2?.classList.toggle('active', targetStep >= 3);
+
+    const cardEl = document.getElementById('checkoutCard');
+    if (cardEl) cardEl.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function updateStep3Recap() {
+    if (recapResourceTitle) recapResourceTitle.textContent = currentResource?.title || 'Resource';
+    if (recapResourceEmail) recapResourceEmail.textContent = checkoutEmail?.value.trim() || 'candidate@gmail.com';
+    const isCohort = !!(currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id));
+    const isCore = coreDiscountCheckbox?.checked && !isCohort;
+    const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
+    if (recapResourceFinalPrice) recapResourceFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
+  }
+
+  function showInlineAlert(message: string) {
+    if (checkoutAlert) {
+      checkoutAlert.style.display = 'block';
+      checkoutAlert.innerHTML = `<strong>Attention:</strong> ${message}`;
+    }
+  }
+
+  function hideInlineAlert() {
+    if (checkoutAlert) {
+      checkoutAlert.style.display = 'none';
+      checkoutAlert.innerHTML = '';
+    }
+  }
+
+  btnToStep2?.addEventListener('click', () => goToStep(2));
+  btnBackToStep1?.addEventListener('click', () => goToStep(1));
+  btnToStep3?.addEventListener('click', () => goToStep(3));
+  btnBackToStep2?.addEventListener('click', () => goToStep(2));
+  btnEditFromRecap?.addEventListener('click', () => goToStep(1));
+
+  stepNav1?.addEventListener('click', () => goToStep(1));
+  stepNav2?.addEventListener('click', () => {
+    if (currentStep > 1) goToStep(2);
+  });
+  stepNav3?.addEventListener('click', () => {
+    if (currentStep > 2) goToStep(3);
+  });
+
   function updatePriceDisplay() {
     if (!currentResource) return;
     const isCohort = !!(currentResource.isCohort || currentResource.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource.id));
     const isCore = coreDiscountCheckbox?.checked && !isCohort;
     const finalPrice = isCore ? Math.round(basePrice * 0.8) : basePrice;
+    const discountAmount = isCore ? (basePrice - finalPrice) : 0;
 
-    if (currentResource.originalPrice && currentResource.originalPrice > finalPrice) {
-      checkoutOriginalPrice.style.display = 'inline';
-      checkoutOriginalPrice.textContent = `₦${currentResource.originalPrice.toLocaleString()}`;
-    } else if (isCore && basePrice > 0) {
-      checkoutOriginalPrice.style.display = 'inline';
-      checkoutOriginalPrice.textContent = `₦${basePrice.toLocaleString()}`;
-    } else {
-      checkoutOriginalPrice.style.display = 'none';
+    if (resourceBaseFigure) {
+      resourceBaseFigure.textContent = `₦${basePrice.toLocaleString()}`;
     }
 
-    checkoutFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
-    paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
+    if (resourceDiscountRow && resourceDiscountFigure) {
+      if (isCore && discountAmount > 0) {
+        resourceDiscountRow.style.display = 'flex';
+        resourceDiscountFigure.textContent = `-₦${discountAmount.toLocaleString()}`;
+      } else {
+        resourceDiscountRow.style.display = 'none';
+      }
+    }
+
+    if (currentResource.originalPrice && currentResource.originalPrice > finalPrice) {
+      if (checkoutOriginalPrice) {
+        checkoutOriginalPrice.style.display = 'inline';
+        checkoutOriginalPrice.textContent = `₦${currentResource.originalPrice.toLocaleString()}`;
+      }
+    } else if (isCore && basePrice > 0) {
+      if (checkoutOriginalPrice) {
+        checkoutOriginalPrice.style.display = 'inline';
+        checkoutOriginalPrice.textContent = `₦${basePrice.toLocaleString()}`;
+      }
+    } else {
+      if (checkoutOriginalPrice) {
+        checkoutOriginalPrice.style.display = 'none';
+      }
+    }
+
+    if (checkoutFinalPrice) checkoutFinalPrice.textContent = `₦${finalPrice.toLocaleString()}`;
+    if (paystackAmountLabel) paystackAmountLabel.textContent = `₦${finalPrice.toLocaleString()}`;
+    updateStep3Recap();
   }
 
   // Handle billing radio changes inside modal
@@ -223,8 +505,9 @@
     const radios = document.querySelectorAll('input[name="modalBillingChoice"]');
     radios.forEach((r) => {
       r.addEventListener('change', () => {
-        if (!r.checked) return;
-        activeDuration = r.value;
+        const input = r as HTMLInputElement;
+        if (!input.checked) return;
+        activeDuration = input.value;
         const earlyValid = isEarlyBirdValid();
 
         if (activeDuration === 'monthly') {
@@ -245,7 +528,7 @@
           basePrice = currentResource.price;
         }
 
-        checkoutItemTitle.textContent = currentResource.title;
+        if (checkoutItemTitle) checkoutItemTitle.textContent = currentResource.title;
         updatePriceDisplay();
         trackEvent('billing_option_selected', {
           planId: 'core',
@@ -258,32 +541,39 @@
   setupBillingRadioListeners();
 
   coreDiscountCheckbox?.addEventListener('change', () => {
-    discountDetails.style.display = coreDiscountCheckbox.checked ? 'block' : 'none';
+    if (discountDetails) {
+      discountDetails.style.display = coreDiscountCheckbox.checked ? 'block' : 'none';
+    }
     updatePriceDisplay();
   });
 
-  checkoutEmail?.addEventListener('input', updatePriceDisplay);
+  checkoutEmail?.addEventListener('input', () => {
+    if (checkoutEmail.classList.contains('input-error')) checkoutEmail.classList.remove('input-error');
+    updatePriceDisplay();
+  });
   checkoutName?.addEventListener('input', updatePriceDisplay);
-  checkoutUniversity?.addEventListener('change', updatePriceDisplay);
+  checkoutUniversity?.addEventListener('change', () => {
+    if (checkoutUniversity.classList.contains('input-error')) checkoutUniversity.classList.remove('input-error');
+    updatePriceDisplay();
+  });
 
-  function openCheckout(resource) {
+  export function openCheckout(resource: any) {
     currentResource = { ...resource };
     const earlyValid = isEarlyBirdValid();
     const isCohort = !!(resource.isCohort || resource.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(resource.id));
 
     // Normalise Core plan selection with duration options
     if (resource.id === 'core' || resource.id === 'cohort-core' || resource.id === 'cohort-core-earlybird' || resource.id === 'cohort-core-monthly') {
-      planBillingOptionsGroup.style.display = 'block';
+      if (planBillingOptionsGroup) planBillingOptionsGroup.style.display = 'block';
       activeDuration = resource.initialDuration === 'monthly' || resource.id === 'cohort-core-monthly' ? 'monthly' : 'earlybird';
 
-      // Configure radio labels for early-bird vs standard
       if (modalEarlybirdBadge) modalEarlybirdBadge.style.display = earlyValid ? 'inline' : 'none';
       if (modalCardStrike) modalCardStrike.style.display = earlyValid ? 'inline' : 'none';
       if (modalCardFinal) modalCardFinal.textContent = earlyValid ? '₦15,000' : '₦18,000';
       if (modalCardNote) modalCardNote.textContent = earlyValid ? 'Valid through 15 November 2026' : '3 months upfront preparation';
 
-      const radioEarly = document.querySelector('input[name="modalBillingChoice"][value="earlybird"]');
-      const radioMonth = document.querySelector('input[name="modalBillingChoice"][value="monthly"]');
+      const radioEarly = document.querySelector('input[name="modalBillingChoice"][value="earlybird"]') as HTMLInputElement | null;
+      const radioMonth = document.querySelector('input[name="modalBillingChoice"][value="monthly"]') as HTMLInputElement | null;
 
       if (activeDuration === 'monthly') {
         if (radioMonth) radioMonth.checked = true;
@@ -303,9 +593,8 @@
         currentResource.originalPrice = earlyValid ? 18000 : null;
       }
     } else {
-      planBillingOptionsGroup.style.display = 'none';
+      if (planBillingOptionsGroup) planBillingOptionsGroup.style.display = 'none';
 
-      // Mastery early-bird vs standard
       if (resource.id === 'mastery' || resource.id === 'cohort-mastery') {
         currentResource.id = earlyValid ? 'cohort-mastery-earlybird' : 'cohort-mastery-standard';
         currentResource.title = earlyValid ? 'TECHMED Mastery (3-Month Early-Bird)' : 'TECHMED Mastery (3-Month Standard)';
@@ -320,43 +609,43 @@
     }
 
     basePrice = currentResource.price || 0;
-    checkoutItemTitle.textContent = currentResource.title;
-    checkoutItemDesc.textContent = currentResource.description || '';
-    checkoutSubject.textContent = currentResource.subject || (isCohort ? 'UTME 2027 Track' : 'Academic');
-    checkoutFormat.textContent = currentResource.deliveryFormat || (isCohort ? 'Live Telegram + CBT Drills' : 'PDF eBook & Reader');
+    if (checkoutItemTitle) checkoutItemTitle.textContent = currentResource.title;
+    if (checkoutItemDesc) checkoutItemDesc.textContent = currentResource.description || '';
+    if (checkoutSubject) checkoutSubject.textContent = currentResource.subject || (isCohort ? 'UTME 2027 Track' : 'Academic');
+    if (checkoutFormat) checkoutFormat.textContent = currentResource.deliveryFormat || (isCohort ? 'Live Telegram + CBT Drills' : 'PDF eBook & Reader');
 
     if (studentNameGroup) studentNameGroup.style.display = isCohort ? 'block' : 'none';
     if (studentPhoneGroup) studentPhoneGroup.style.display = isCohort ? 'block' : 'none';
 
-    const discountSection = document.querySelector('.discount-section');
+    const discountSection = document.querySelector('.discount-section') as HTMLElement | null;
     if (discountSection) {
       discountSection.style.display = isCohort ? 'none' : 'block';
     }
 
     const needsUni = resource.id === 'research-file' || resource.id === 'university-research-file' || resource.id === 'post-utme-pq' || resource.id === 'post-utme-brainstorming-hub';
-    universityGroup.style.display = needsUni ? 'block' : 'none';
-    if (needsUni) {
-      checkoutUniversity.required = true;
-    } else {
-      checkoutUniversity.required = false;
-    }
+    if (universityGroup) universityGroup.style.display = needsUni ? 'block' : 'none';
+    if (checkoutUniversity) checkoutUniversity.required = needsUni;
 
-    coreDiscountCheckbox.checked = false;
-    discountDetails.style.display = 'none';
+    if (coreDiscountCheckbox) coreDiscountCheckbox.checked = false;
+    if (discountDetails) discountDetails.style.display = 'none';
+
+    goToStep(1);
 
     // Prefill user email if signed in
     getCurrentUser().then(user => {
-      if (user?.email && checkoutEmail) {
+      if (user?.email && checkoutEmail && !checkoutEmail.value) {
         checkoutEmail.value = user.email;
+      }
+      if (user?.user_metadata?.full_name && checkoutName && !checkoutName.value) {
+        checkoutName.value = user.user_metadata.full_name;
       }
       updatePriceDisplay();
     });
 
     updatePriceDisplay();
-    checkoutAlert.style.display = 'none';
-    modalBackdrop.style.display = 'flex';
+    hideInlineAlert();
+    if (modalBackdrop) modalBackdrop.style.display = 'flex';
 
-    // Track analytics funnel start
     trackEvent('plan_selected', {
       planId: currentResource.id,
       planName: currentResource.title,
@@ -364,8 +653,8 @@
     });
   }
 
-  function closeCheckout() {
-    modalBackdrop.style.display = 'none';
+  export function closeCheckout() {
+    if (modalBackdrop) modalBackdrop.style.display = 'none';
     trackEvent('checkout_abandoned', {
       planId: currentResource?.id,
       amount: basePrice,
@@ -381,10 +670,10 @@
   checkoutForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const email = checkoutEmail.value.trim();
+    const email = checkoutEmail?.value.trim() || '';
     if (!email || !email.includes('@')) {
-      checkoutAlert.style.display = 'block';
-      checkoutAlert.textContent = 'Please enter a valid email address.';
+      goToStep(2);
+      showInlineAlert('Please enter a valid email address.');
       return;
     }
 
@@ -392,21 +681,23 @@
     const phone = checkoutPhone?.value?.trim() || '';
     const isCohort = currentResource?.isCohort || currentResource?.id?.startsWith('cohort-') || ['core', 'mastery', 'ultimate'].includes(currentResource?.id);
 
-    const needsUni = universityGroup.style.display !== 'none';
-    const uni = checkoutUniversity.value;
+    const needsUni = universityGroup && universityGroup.style.display !== 'none';
+    const uni = checkoutUniversity?.value;
     if (needsUni && !uni) {
-      checkoutAlert.style.display = 'block';
-      checkoutAlert.textContent = 'Please select your target university.';
+      goToStep(2);
+      showInlineAlert('Please select your target university.');
       return;
     }
 
-    checkoutAlert.style.display = 'none';
-    paystackSubmitBtn.disabled = true;
-    paystackSubmitBtn.innerHTML = '<span>Connecting to Paystack...</span>';
+    hideInlineAlert();
+    if (paystackSubmitBtn) {
+      paystackSubmitBtn.disabled = true;
+      paystackSubmitBtn.innerHTML = '<span>Connecting to Paystack...</span>';
+    }
 
     try {
       const SUPABASE_FN_BASE = 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1';
-      const isCore = coreDiscountCheckbox.checked && !isCohort;
+      const isCore = coreDiscountCheckbox?.checked && !isCohort;
       const chargeAmount = isCore ? Math.round(basePrice * 0.8) : basePrice;
 
       // Normalise product id for cohort or legacy aliases
@@ -436,6 +727,7 @@
           name: name || undefined,
           phone: phone || undefined,
           university: uni || null,
+          callback_url: `${window.location.origin}/payment/callback`,
         }),
       });
 
@@ -450,47 +742,17 @@
         throw new Error(data.message || 'Payment initiation failed.');
       }
     } catch (err: any) {
-      console.warn('Paystack initiate failed:', err);
-      const isCore = coreDiscountCheckbox.checked && !isCohort;
-      const chargeAmount = isCore ? Math.round(basePrice * 0.8) : basePrice;
-      const waUrl = currentResource.whatsappUrl || `https://wa.me/2347044255045?text=${encodeURIComponent(`Hi TECHMED, I had trouble starting online payment for ${currentResource.title} (₦${chargeAmount.toLocaleString()}). My email is ${email}. Please assist me with enrolment.`)}`;
-
-      trackEvent('paystack_init_failed', {
-        planId: currentResource?.id,
-        error: err?.message,
-      });
-
-      checkoutAlert.style.display = 'block';
-      checkoutAlert.innerHTML = `
-        <div style="margin-bottom: 6px;"><strong>Payment Gateway Notice:</strong> ${err.message || 'Could not initiate online payment.'}</div>
-        <div style="font-size:0.82rem; margin-bottom: 8px; color: var(--text-light);">
-          Selected: <strong>${currentResource.title} (₦${chargeAmount.toLocaleString()})</strong>. You can retry online payment or contact our admissions desk on WhatsApp for assistance:
-        </div>
-        <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-          <button type="button" id="alertRetryBtn" class="btn-primary" style="padding: 6px 14px; font-size: 0.82rem; border-radius: 4px; font-weight: 600; cursor: pointer;">
-            Try Again
-          </button>
-          <a href="${waUrl}" target="_blank" rel="noopener noreferrer" class="btn-secondary" style="display:inline-block; padding: 6px 14px; font-size: 0.82rem; text-decoration: none; border-radius: 4px; font-weight: 600;">
-            Contact Admissions on WhatsApp &rarr;
-          </a>
-        </div>
-      `;
-
-      // Allow clicking "Try Again" to clear notice and retry
-      const alertRetryBtn = document.getElementById('alertRetryBtn');
-      alertRetryBtn?.addEventListener('click', () => {
-        checkoutAlert.style.display = 'none';
+      console.warn('Paystack initiate error:', err);
+      showInlineAlert(err.message || 'Unable to connect to Paystack. Please try again.');
+      if (paystackSubmitBtn) {
         paystackSubmitBtn.disabled = false;
-        paystackSubmitBtn.focus();
-      });
-
-      paystackSubmitBtn.disabled = false;
-      paystackSubmitBtn.innerHTML = `<span>Pay ${paystackAmountLabel.textContent} with Paystack &rarr;</span>`;
+        paystackSubmitBtn.innerHTML = `<span>Pay ₦${basePrice.toLocaleString()} with Paystack &rarr;</span>`;
+      }
     }
   });
 
-  // Global Event Listener to open modal from any card or detail page
-  window.addEventListener('open-checkout', (e) => {
+  // Global listener for open-checkout events
+  window.addEventListener('open-checkout', (e: any) => {
     if (e.detail?.resource) {
       openCheckout(e.detail.resource);
     }
@@ -498,244 +760,311 @@
 </script>
 
 <style>
+  /* ========================================================================= */
+  /* BACKDROP & MODAL DIALOG CONTAINER                                         */
+  /* ========================================================================= */
   .checkout-backdrop {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    backdrop-filter: blur(6px);
+    background: rgba(1, 39, 72, 0.75);
+    backdrop-filter: blur(8px);
     display: flex;
     align-items: center;
     justify-content: center;
     padding: var(--space-4);
-    z-index: 2000;
+    z-index: 2500;
   }
 
   .checkout-card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    max-width: 500px;
+    border-radius: 16px;
+    max-width: 620px;
     width: 100%;
-    padding: var(--space-8);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
-    max-height: 90vh;
+    padding: var(--space-6) var(--space-8);
+    box-shadow: 0 24px 64px rgba(1, 39, 72, 0.28);
+    max-height: 92vh;
     overflow-y: auto;
+    position: relative;
+    animation: modalSlideUp 200ms ease;
   }
 
+  @keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Header */
   .checkout-header {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
+    padding-bottom: var(--space-3);
+    border-bottom: 1px solid var(--border);
   }
 
   .header-eyebrow {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: 0.72rem;
+    font-weight: 800;
     letter-spacing: 0.08em;
     color: var(--accent);
     text-transform: uppercase;
     display: block;
-    margin-bottom: 2px;
   }
 
-  .checkout-header h2 {
+  .checkout-modal-title {
     font-size: 1.35rem;
     font-weight: 800;
-    margin: 0;
+    color: var(--text);
+    margin: 2px 0 0;
+    line-height: 1.25;
   }
 
   .close-btn {
-    background: none;
+    background: transparent;
     border: none;
-    font-size: 1.6rem;
+    font-size: 1.8rem;
+    line-height: 1;
     color: var(--text-muted);
     cursor: pointer;
-    line-height: 1;
+    padding: 0 4px;
+    transition: color 150ms ease;
   }
 
-  /* Summary Box */
+  .close-btn:hover {
+    color: var(--text);
+  }
+
+  /* Guided Stepper */
+  .checkout-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--space-6);
+    padding: 8px 12px;
+    background: var(--surface-raised);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+
+  .step-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 180ms ease;
+  }
+
+  .step-num {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(152, 176, 196, 0.2);
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 180ms ease;
+  }
+
+  .step-indicator.active {
+    color: var(--text);
+    background: rgba(14, 165, 233, 0.08);
+  }
+
+  .step-indicator.active .step-num {
+    background: var(--accent);
+    color: #1a1200;
+  }
+
+  .step-indicator.completed {
+    color: var(--text);
+  }
+
+  .step-indicator.completed .step-num {
+    background: #22c55e;
+    color: #ffffff;
+  }
+
+  .step-connector {
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    margin: 0 6px;
+    transition: background 180ms ease;
+  }
+
+  .step-connector.active {
+    background: #22c55e;
+  }
+
+  /* Panes */
+  .checkout-panes-wrap {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .checkout-pane {
+    animation: fadeInPane 180ms ease;
+  }
+
+  @keyframes fadeInPane {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .pane-intro {
+    margin-bottom: var(--space-5);
+  }
+
+  .pane-title {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0 0 4px;
+  }
+
+  .pane-subtitle {
+    font-size: 0.88rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.45;
+  }
+
+  /* Item Summary Box */
   .item-summary-box {
     background: var(--surface-raised);
     border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: var(--space-5);
+    border-radius: 12px;
+    padding: var(--space-4) var(--space-5);
     margin-bottom: var(--space-5);
   }
 
   .summary-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
     font-size: 0.75rem;
     color: var(--text-muted);
-    margin-bottom: var(--space-1);
+    margin-bottom: 6px;
   }
 
   .summary-subject {
+    font-weight: 700;
     color: var(--accent);
-    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
   }
 
   .summary-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    margin: 0 0 var(--space-2);
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--text);
+    margin: 4px 0 6px;
   }
 
   .summary-desc {
-    font-size: 0.85rem;
-    color: var(--text-light);
-    line-height: 1.5;
-    margin: 0 0 var(--space-4);
-  }
-
-  .price-line-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: var(--space-3);
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  .price-label {
-    font-size: 0.85rem;
+    font-size: 0.88rem;
     color: var(--text-muted);
+    line-height: 1.45;
+    margin: 0 0 var(--space-3);
   }
 
-  .price-figures {
-    display: flex;
-    align-items: baseline;
-    gap: var(--space-2);
-  }
-
-  .original-price {
-    font-size: 0.9rem;
-    color: var(--text-muted);
-    text-decoration: line-through;
-  }
-
-  .final-price {
-    font-size: 1.4rem;
-    font-weight: 800;
-    color: var(--accent);
-  }
-
-  /* Discount Section */
-  .discount-section {
-    background: rgba(234, 179, 8, 0.05);
-    border: 1px solid rgba(234, 179, 8, 0.2);
-    border-radius: var(--radius-sm);
-    padding: var(--space-4);
-    margin-bottom: var(--space-6);
-  }
-
-  .discount-checkbox-label {
-    display: flex;
-    align-items: flex-start;
-    gap: var(--space-3);
-    font-size: 0.85rem;
-    color: var(--text);
-    cursor: pointer;
-  }
-
-  .discount-checkbox-label input {
-    margin-top: 2px;
-  }
-
-  .discount-details {
-    margin-top: var(--space-2);
-    padding-top: var(--space-2);
-    border-top: 1px dashed rgba(234, 179, 8, 0.2);
-  }
-
-  .discount-note {
-    font-size: 0.8rem;
-    color: var(--accent);
-    margin: 0;
-  }
-
-  /* Form Elements */
-  .billing-select-label {
-    font-size: 0.85rem;
-    font-weight: 700;
-    color: var(--text);
-    margin-bottom: 6px;
-    display: block;
-  }
-
-  .modal-billing-selector {
+  .resource-perks-list {
     display: flex;
     flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid var(--border);
+    padding-top: var(--space-3);
+  }
+
+  .perk-item {
+    display: flex;
+    align-items: baseline;
     gap: 8px;
+    font-size: 0.82rem;
+    color: var(--text);
+  }
+
+  .perk-icon {
+    color: #22c55e;
+    font-weight: 700;
+  }
+
+  /* Modal Billing Selector (Fallback) */
+  .modal-billing-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
     margin-bottom: var(--space-4);
   }
 
   .modal-billing-card {
-    display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    background: var(--surface-raised);
     border: 1.5px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 12px 14px;
+    border-radius: 10px;
+    padding: 10px 12px;
     cursor: pointer;
-    transition: all 150ms ease;
+    background: var(--surface);
+    position: relative;
+    display: flex;
+    flex-direction: column;
   }
 
-  .modal-billing-card:hover {
-    border-color: var(--accent);
+  .modal-billing-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
   }
 
   .modal-billing-card.active {
     border-color: var(--accent);
-    background: rgba(201, 162, 39, 0.08);
-  }
-
-  .modal-billing-card input[type="radio"] {
-    margin-top: 3px;
-    accent-color: var(--accent);
-  }
-
-  .card-inner {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    background: rgba(201, 162, 39, 0.06);
   }
 
   .card-row-top {
     display: flex;
     align-items: center;
     justify-content: space-between;
+    margin-bottom: 4px;
   }
 
   .card-title {
-    font-size: 0.9rem;
+    font-size: 0.82rem;
     font-weight: 700;
     color: var(--text);
   }
 
   .card-badge {
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
     background: var(--accent);
     color: #1a1200;
+    font-size: 0.65rem;
+    font-weight: 800;
     padding: 1px 6px;
     border-radius: 4px;
-    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
 
   .card-price-row {
     display: flex;
     align-items: baseline;
-    gap: 8px;
-    margin-top: 2px;
+    gap: 6px;
   }
 
   .card-strike {
-    font-size: 0.82rem;
+    font-size: 0.78rem;
     color: var(--text-muted);
     text-decoration: line-through;
   }
@@ -743,73 +1072,464 @@
   .card-final {
     font-size: 1.05rem;
     font-weight: 800;
-    color: var(--accent);
-  }
-
-  .card-period {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    color: var(--text);
   }
 
   .card-note {
-    font-size: 0.75rem;
-    color: var(--text-light);
-    margin-top: 2px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  /* Core Discount Checkbox */
+  .discount-section {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: var(--space-5);
+  }
+
+  .discount-checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    font-size: 0.88rem;
+    color: var(--text);
+  }
+
+  .discount-checkbox-label input[type="checkbox"] {
+    accent-color: var(--accent);
+    width: 17px;
+    height: 17px;
+    cursor: pointer;
+  }
+
+  .discount-details {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--border);
+  }
+
+  .discount-note {
+    font-size: 0.78rem;
+    color: #22c55e;
+    margin: 0;
+    font-weight: 600;
+  }
+
+  /* Order Breakdown Card */
+  .order-breakdown-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: var(--space-5);
+  }
+
+  .breakdown-title {
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+
+  .breakdown-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.88rem;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .breakdown-figure {
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+  }
+
+  .discount-line {
+    color: #22c55e;
+  }
+
+  .discount-val {
+    font-weight: 700;
+  }
+
+  .breakdown-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+  }
+
+  .total-line {
+    font-size: 1.15rem;
+    font-weight: 800;
+    margin-bottom: 0;
+  }
+
+  .total-label {
+    color: var(--text);
+  }
+
+  .total-figures {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .original-price {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    text-decoration: line-through;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .final-price {
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Form Fields */
+  .form-fields-stack {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
-    gap: var(--space-2);
-    margin-bottom: var(--space-4);
-    text-align: left;
+    gap: 6px;
   }
 
   .form-group label {
     font-size: 0.85rem;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text);
   }
 
-  .form-group input,
-  .form-group select {
-    background: var(--surface-raised);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
+  .required-mark {
+    color: #ef4444;
+  }
+
+  .checkout-input,
+  .checkout-select {
+    width: 100%;
     padding: 10px 14px;
-    font-size: 0.9rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
     color: var(--text);
-    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+  }
+
+  .checkout-input:focus,
+  .checkout-select:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.2);
+  }
+
+  .checkout-input.input-error,
+  .checkout-select.input-error {
+    border-color: #ef4444;
+    box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
   }
 
   .hint-text {
     font-size: 0.75rem;
     color: var(--text-muted);
+    line-height: 1.4;
   }
 
-  .checkout-alert {
-    background: rgba(239, 68, 68, 0.1);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-    color: #ef4444;
-    padding: 8px 12px;
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
+  /* Payment Step */
+  .payment-recap-box {
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
     margin-bottom: var(--space-4);
   }
 
+  .recap-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .recap-badge {
+    font-size: 0.7rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 0.05em;
+  }
+
+  .recap-edit-btn {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .recap-details {
+    margin-bottom: 8px;
+  }
+
+  .recap-title {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .recap-email {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .recap-price-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+  }
+
+  .recap-price-label {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .recap-price-amount {
+    font-size: 1.25rem;
+    font-weight: 900;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .gateway-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: var(--space-4) var(--space-5);
+    margin-bottom: var(--space-5);
+  }
+
+  .gateway-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .paystack-pill {
+    background: rgba(9, 71, 110, 0.15);
+    color: var(--color-professional-blue);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  :root:not([data-theme='light']) .paystack-pill {
+    color: var(--color-soft-blue);
+  }
+
+  .gateway-ssl {
+    font-size: 0.72rem;
+    color: #22c55e;
+    font-weight: 600;
+  }
+
+  .gateway-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+    line-height: 1.45;
+  }
+
+  .payment-methods-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .method-tag {
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 8px;
+    color: var(--text);
+  }
+
+  .gateway-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-top: 1px solid var(--border);
+    padding-top: 10px;
+  }
+
+  .gateway-step-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .step-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--text);
+    flex-shrink: 0;
+  }
+
+  /* Step Action Bars */
+  .step-action-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: var(--space-4);
+  }
+
+  .step-action-bar.dual-actions {
+    flex-direction: row;
+    gap: 12px;
+  }
+
+  .step-next-btn,
   .pay-btn {
     width: 100%;
-    padding: 12px;
-    font-size: 0.95rem;
+    padding: 12px 20px;
+    font-size: 1rem;
     font-weight: 700;
-    border-radius: var(--radius-sm);
+    border-radius: 10px;
     cursor: pointer;
+  }
+
+  .step-back-btn {
+    padding: 12px 18px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border-radius: 10px;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .step-action-hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-align: center;
   }
 
   .security-note {
     font-size: 0.75rem;
     color: var(--text-muted);
     text-align: center;
-    margin-top: var(--space-2);
+    margin-top: 10px;
+  }
+
+  /* Alert */
+  .checkout-alert {
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: var(--space-4);
+    font-size: 0.85rem;
+    color: var(--text);
+  }
+
+  /* ========================================================================= */
+  /* MOBILE-FIRST FULL-SCREEN VIEWPORT OPTIMIZATIONS (< 640px)                */
+  /* ========================================================================= */
+  @media (max-width: 640px) {
+    .checkout-backdrop {
+      padding: 0;
+      align-items: stretch;
+      background: var(--bg);
+    }
+
+    .checkout-card {
+      max-width: 100vw;
+      width: 100vw;
+      height: 100vh;
+      max-height: 100dvh;
+      border-radius: 0;
+      border: none;
+      padding: 14px 16px 24px;
+      display: flex;
+      flex-direction: column;
+      box-shadow: none;
+    }
+
+    .checkout-header {
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+    }
+
+    .checkout-modal-title {
+      font-size: 1.15rem;
+    }
+
+    .checkout-stepper {
+      margin-bottom: 14px;
+      padding: 6px 8px;
+    }
+
+    .step-indicator {
+      padding: 4px 6px;
+      font-size: 0.75rem;
+    }
+
+    .step-num {
+      width: 18px;
+      height: 18px;
+      font-size: 0.7rem;
+    }
+
+    .modal-billing-selector {
+      grid-template-columns: 1fr;
+    }
+
+    .step-action-bar.dual-actions {
+      flex-direction: column-reverse;
+      gap: 8px;
+    }
+
+    .step-back-btn,
+    .step-next-btn,
+    .pay-btn {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
+      padding: 12px 16px;
+    }
   }
 </style>

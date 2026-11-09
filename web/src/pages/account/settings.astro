@@ -71,16 +71,125 @@ const description = 'Manage your TECHMED account security, email, password recov
 
           <!-- Card 2: Security & Password -->
           <section class="settings-card security-card">
-            <h2 class="card-heading">Security & Password</h2>
+            <h2 class="card-heading">Security &amp; Password</h2>
             <p class="card-desc">
-              To update your password, request a secure reset email. You'll receive a link valid for 1 hour to set a new password.
+              Update your account password directly or request a secure email reset link.
             </p>
 
-            <div class="action-box">
-              <button type="button" class="btn-primary reset-pass-btn" id="requestResetBtn">
-                <span>Send Password Reset Email</span>
+            <!-- Direct Password Change Form -->
+            <form id="changePasswordForm" class="password-change-form" novalidate>
+              <div class="settings-form-group">
+                <label for="settingsNewPassword">New Password</label>
+                <div class="password-input-wrap">
+                  <input
+                    type="password"
+                    id="settingsNewPassword"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Enter your new password"
+                    class="form-input password-input"
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle-btn"
+                    id="toggleSettingsNewPassBtn"
+                    aria-label="Show password"
+                    title="Show password"
+                  >
+                    <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  </button>
+                </div>
+
+                <!-- Password Checklist -->
+                <div class="password-checklist-card" id="settingsChecklistCard">
+                  <div class="checklist-header">
+                    <span class="checklist-title">Password Requirements:</span>
+                    <span class="checklist-count-badge" id="settingsChecklistBadge">0 of 5 satisfied</span>
+                  </div>
+                  <ul class="checklist-list" role="list">
+                    <li class="checklist-item" id="set-req-length">
+                      <span class="item-status-icon" aria-hidden="true">
+                        <span class="dot-indicator"></span>
+                        <svg class="check-indicator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      <span class="item-label">At least 8 characters</span>
+                    </li>
+                    <li class="checklist-item" id="set-req-upper">
+                      <span class="item-status-icon" aria-hidden="true">
+                        <span class="dot-indicator"></span>
+                        <svg class="check-indicator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      <span class="item-label">At least one uppercase letter (A–Z)</span>
+                    </li>
+                    <li class="checklist-item" id="set-req-lower">
+                      <span class="item-status-icon" aria-hidden="true">
+                        <span class="dot-indicator"></span>
+                        <svg class="check-indicator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      <span class="item-label">At least one lowercase letter (a–z)</span>
+                    </li>
+                    <li class="checklist-item" id="set-req-number">
+                      <span class="item-status-icon" aria-hidden="true">
+                        <span class="dot-indicator"></span>
+                        <svg class="check-indicator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      <span class="item-label">At least one number (0–9)</span>
+                    </li>
+                    <li class="checklist-item" id="set-req-special">
+                      <span class="item-status-icon" aria-hidden="true">
+                        <span class="dot-indicator"></span>
+                        <svg class="check-indicator" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      </span>
+                      <span class="item-label">At least one special character (e.g. @, #, $, !)</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+
+              <!-- Password Confirmation -->
+              <div class="settings-form-group">
+                <label for="settingsNewPasswordConfirm">Confirm New Password</label>
+                <div class="password-input-wrap">
+                  <input
+                    type="password"
+                    id="settingsNewPasswordConfirm"
+                    required
+                    autocomplete="new-password"
+                    placeholder="Re-enter your new password"
+                    class="form-input password-input"
+                  />
+                  <button
+                    type="button"
+                    class="password-toggle-btn"
+                    id="toggleSettingsConfirmBtn"
+                    aria-label="Show confirm password"
+                    title="Show password"
+                  >
+                    <svg class="eye-icon eye-show" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <svg class="eye-icon eye-hide" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" y1="2" x2="22" y2="22"/></svg>
+                  </button>
+                </div>
+                <div class="match-indicator" id="settingsMatchStatus" style="display: none;">
+                  <span class="match-icon-badge" id="settingsMatchIcon"></span>
+                  <span class="match-label" id="settingsMatchLabel"></span>
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary update-pass-btn" id="savePasswordBtn">
+                <span>Update Password</span>
               </button>
-              <span class="action-hint">A reset link will be sent to your registered email address.</span>
+            </form>
+
+            <div class="reset-email-divider">
+              <span>OR</span>
+            </div>
+
+            <div class="action-box">
+              <button type="button" class="btn-secondary reset-pass-btn" id="requestResetBtn">
+                <span>Send Password Reset Email Link</span>
+              </button>
+              <span class="action-hint">A reset link valid for 1 hour will be sent to your registered email address.</span>
             </div>
           </section>
 
@@ -134,6 +243,12 @@ const description = 'Manage your TECHMED account security, email, password recov
 
 <script>
   import { getSupabase, fetchUserProfile, checkIsVerifiedStudent } from '../../lib/supabase';
+  import {
+    initPasswordChecklist,
+    validatePassword,
+    validatePasswordMatch,
+    getFriendlyAuthErrorMessage,
+  } from '../../lib/password-validator';
 
   const supabase = getSupabase();
 
@@ -153,6 +268,17 @@ const description = 'Manage your TECHMED account security, email, password recov
   const displayTelegram = document.getElementById('displayTelegram');
   const displayParent = document.getElementById('displayParent');
 
+  const changePasswordForm = document.getElementById('changePasswordForm') as HTMLFormElement | null;
+  const settingsNewPassword = document.getElementById('settingsNewPassword') as HTMLInputElement | null;
+  const settingsNewPasswordConfirm = document.getElementById('settingsNewPasswordConfirm') as HTMLInputElement | null;
+  const settingsChecklistBadge = document.getElementById('settingsChecklistBadge');
+  const settingsMatchStatus = document.getElementById('settingsMatchStatus');
+  const settingsMatchIcon = document.getElementById('settingsMatchIcon');
+  const settingsMatchLabel = document.getElementById('settingsMatchLabel');
+  const toggleSettingsNewPassBtn = document.getElementById('toggleSettingsNewPassBtn');
+  const toggleSettingsConfirmBtn = document.getElementById('toggleSettingsConfirmBtn');
+  const savePasswordBtn = document.getElementById('savePasswordBtn') as HTMLButtonElement | null;
+
   const requestResetBtn = document.getElementById('requestResetBtn');
   const settingsSignOutBtn = document.getElementById('settingsSignOutBtn');
 
@@ -163,12 +289,107 @@ const description = 'Manage your TECHMED account security, email, password recov
     settingsAlert.textContent = msg;
     settingsAlert.className = `settings-alert ${type}`;
     settingsAlert.style.display = 'block';
+    settingsAlert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
   function hideAlert() {
     if (!settingsAlert) return;
     settingsAlert.style.display = 'none';
   }
+
+  // Initialize Real-Time Password Checklist & Confirmation
+  initPasswordChecklist({
+    passwordInput: settingsNewPassword,
+    prefix: 'set-req-',
+    badgeEl: settingsChecklistBadge,
+    confirmInput: settingsNewPasswordConfirm,
+    matchStatusEl: settingsMatchStatus,
+    matchIconEl: settingsMatchIcon,
+    matchLabelEl: settingsMatchLabel,
+    togglePasswordBtn: toggleSettingsNewPassBtn,
+    toggleConfirmBtn: toggleSettingsConfirmBtn,
+  });
+
+  // Handle Direct Password Update
+  changePasswordForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+
+    const newPass = settingsNewPassword?.value || '';
+    const confirmPass = settingsNewPasswordConfirm?.value || '';
+
+    const validation = validatePassword(newPass);
+    if (!validation.isValid) {
+      showAlert(`Please satisfy all 5 password requirements in the checklist below. Missing: ${validation.missingLabels.join('; ')}.`);
+      settingsNewPassword?.focus();
+      return;
+    }
+
+    const matchCheck = validatePasswordMatch(newPass, confirmPass);
+    if (!matchCheck.isMatch) {
+      showAlert('Passwords do not match. Please ensure both fields match exactly.');
+      settingsNewPasswordConfirm?.focus();
+      return;
+    }
+
+    if (savePasswordBtn) {
+      savePasswordBtn.disabled = true;
+      savePasswordBtn.textContent = 'Updating password...';
+    }
+
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPass });
+
+      if (error) {
+        showAlert(getFriendlyAuthErrorMessage(error.message));
+      } else {
+        showAlert('Your password has been updated successfully!', 'success');
+        if (settingsNewPassword) settingsNewPassword.value = '';
+        if (settingsNewPasswordConfirm) settingsNewPasswordConfirm.value = '';
+        if (settingsMatchStatus) settingsMatchStatus.style.display = 'none';
+        const res = validatePassword('');
+        const badge = document.getElementById('settingsChecklistBadge');
+        if (badge) badge.textContent = `0 of ${res.totalCount} satisfied`;
+        res.rules.forEach(r => {
+          document.getElementById(`set-req-${r.id}`)?.classList.remove('satisfied');
+        });
+      }
+    } catch (err: any) {
+      showAlert(getFriendlyAuthErrorMessage(err.message));
+    } finally {
+      if (savePasswordBtn) {
+        savePasswordBtn.disabled = false;
+        savePasswordBtn.textContent = 'Update Password';
+      }
+    }
+  });
+
+  // Request password reset email
+  requestResetBtn?.addEventListener('click', async () => {
+    if (!currentUserEmail) return;
+    hideAlert();
+
+    const originalText = requestResetBtn.innerHTML;
+    requestResetBtn.innerHTML = '<span>Sending...</span>';
+    (requestResetBtn as HTMLButtonElement).disabled = true;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(currentUserEmail, {
+        redirectTo: `${window.location.origin}/login?tab=new-password`,
+      });
+
+      if (error) {
+        showAlert(getFriendlyAuthErrorMessage(error.message));
+      } else {
+        showAlert(`Password reset link dispatched to ${currentUserEmail}. Please check your inbox.`, 'success');
+      }
+    } catch (err: any) {
+      showAlert(getFriendlyAuthErrorMessage(err.message));
+    } finally {
+      requestResetBtn.innerHTML = originalText;
+      (requestResetBtn as HTMLButtonElement).disabled = false;
+    }
+  });
 
   async function loadSettings() {
     const { data } = await supabase.auth.getSession();
@@ -586,5 +807,243 @@ const description = 'Manage your TECHMED account security, email, password recov
   .btn-danger:hover {
     background: rgba(239, 68, 68, 0.22);
     color: #fca5a5;
+  }
+
+  /* Password Change Form in Settings */
+  .password-change-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+  }
+
+  .settings-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .settings-form-group label {
+    font-family: var(--font-display);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text);
+  }
+
+  .password-input-wrap {
+    position: relative;
+    display: flex;
+    align-items: center;
+    width: 100%;
+  }
+
+  .password-input {
+    width: 100%;
+    padding-right: 44px;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 0.92rem;
+    color: var(--text);
+  }
+
+  .password-toggle-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: none;
+    padding: 6px;
+    cursor: pointer;
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: color 150ms ease, background 150ms ease;
+  }
+
+  .password-toggle-btn:hover {
+    color: var(--text);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  :root[data-theme='light'] .password-toggle-btn:hover,
+  html[data-theme='light'] .password-toggle-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+  }
+
+  .password-checklist-card {
+    background: rgba(14, 165, 233, 0.04);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 6px;
+  }
+
+  :root[data-theme='light'] .password-checklist-card,
+  html[data-theme='light'] .password-checklist-card {
+    background: #f8fafc;
+    border-color: #e2e8f0;
+  }
+
+  .checklist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .checklist-title {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .checklist-count-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    background: rgba(152, 176, 196, 0.15);
+    color: var(--text-muted);
+    transition: all 180ms ease;
+  }
+
+  .checklist-count-badge.all-satisfied {
+    background: rgba(34, 197, 94, 0.15);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .checklist-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: color 150ms ease;
+  }
+
+  .checklist-item.satisfied {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .item-status-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 17px;
+    height: 17px;
+    border-radius: 50%;
+    border: 1.5px solid var(--text-muted);
+    flex-shrink: 0;
+    transition: all 180ms ease;
+  }
+
+  .dot-indicator {
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--text-muted);
+    display: block;
+  }
+
+  .check-indicator {
+    display: none;
+  }
+
+  .checklist-item.satisfied .item-status-icon {
+    background: #22c55e;
+    border-color: #22c55e;
+    color: #ffffff;
+    box-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+  }
+
+  .checklist-item.satisfied .dot-indicator {
+    display: none;
+  }
+
+  .checklist-item.satisfied .check-indicator {
+    display: block;
+  }
+
+  .match-indicator {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: var(--radius-sm);
+    margin-top: 4px;
+    transition: all 150ms ease;
+  }
+
+  .match-indicator.matched {
+    background: rgba(34, 197, 94, 0.12);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.3);
+  }
+
+  .match-indicator.mismatched {
+    background: rgba(220, 38, 38, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(220, 38, 38, 0.25);
+  }
+
+  .update-pass-btn {
+    padding: 10px 18px;
+    font-family: var(--font-display);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #1a0a00;
+    background: linear-gradient(135deg, var(--accent), var(--accent-deep));
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    align-self: flex-start;
+  }
+
+  .update-pass-btn:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+
+  .reset-email-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: var(--space-4) 0 var(--space-2);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+  }
+
+  .reset-email-divider::before,
+  .reset-email-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .reset-email-divider span {
+    padding: 0 10px;
   }
 </style>
