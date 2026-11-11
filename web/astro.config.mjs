@@ -58,5 +58,7 @@ export default defineConfig({
     '/utme-2027/builders/join': '/utme-2027/builders',
     // Retire redundant /library landing page; unify discovery & bookshelf at /resources
     '/library': '/resources/',
+    // Old placeholder slug for the Organic Chemistry e-book.
+    '/resources/organic-chemistry-mastery-manual': '/resources/organic-chemistry-mastery',
   },
 });

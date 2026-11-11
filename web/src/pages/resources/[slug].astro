@@ -29,7 +29,11 @@ const currencyCode = resource.currency ?? 'NGN';
 // The canonical resource image doubles as the social-share image — falls
 // back to BaseLayout's own default (the TECHMED logo) when no primaryImage
 // has been uploaded yet, so OG/Twitter cards are never broken.
-const ogImage = resource.primaryImage;
+const ogImage = resource.ogImage ?? resource.primaryImage;
+const imageUrl = resource.primaryImage ? new URL(resource.primaryImage, Astro.site).toString() : undefined;
+const pageTitle = resource.book
+  ? `${resource.title} (${resource.book.edition}) — JAMB, WAEC & NECO E-book | TECHMED`
+  : `${resource.title} | TECHMED Resources`;
 
 const jsonLd = [
   {
@@ -41,13 +45,41 @@ const jsonLd = [
       { '@type': 'ListItem', position: 3, name: resource.title, item: pageUrl },
     ],
   },
-  resource.status === 'paid'
+  resource.book
+    ? {
+        '@context': 'https://schema.org',
+        '@type': ['Book', 'Product'],
+        name: resource.title,
+        ...(resource.tagline ? { alternativeHeadline: resource.tagline } : {}),
+        description: resource.description,
+        ...(imageUrl ? { image: imageUrl } : {}),
+        bookFormat: 'https://schema.org/EBook',
+        bookEdition: resource.book.edition,
+        inLanguage: 'en',
+        ...(resource.book.series ? { isPartOf: { '@type': 'BookSeries', name: resource.book.series } } : {}),
+        author: { '@type': 'Organization', name: resource.book.author ?? 'TECHMED', url: Astro.site?.toString() },
+        publisher: { '@type': 'Organization', name: 'TECHMED', url: Astro.site?.toString() },
+        audience: { '@type': 'EducationalAudience', educationalRole: 'student' },
+        brand: { '@type': 'Brand', name: 'TECHMED' },
+        ...(resource.price
+          ? {
+              offers: {
+                '@type': 'Offer',
+                priceCurrency: currencyCode,
+                price: resource.price,
+                availability: 'https://schema.org/InStock',
+                url: pageUrl,
+              },
+            }
+          : {}),
+      }
+    : resource.status === 'paid'
     ? {
         '@context': 'https://schema.org',
         '@type': 'Product',
         name: resource.title,
         description: resource.description,
-        ...(resource.primaryImage ? { image: resource.primaryImage } : {}),
+        ...(imageUrl ? { image: imageUrl } : {}),
         offers: {
           '@type': 'Offer',
           priceCurrency: currencyCode,
@@ -67,7 +99,7 @@ const jsonLd = [
 ---
 
 <BaseLayout
-  title={`${resource.title} | TECHMED Resources`}
+  title={pageTitle}
   description={resource.description}
   jsonLd={jsonLd}
   ogImage={ogImage}

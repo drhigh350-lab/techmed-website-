@@ -30,13 +30,30 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
 
   <header class="header reveal">
     {resource.primaryImage ? (
-      <img class="hero-image" src={resource.primaryImage} alt="" loading="eager" decoding="async" />
+      <img
+        class:list={['hero-image', { 'book-cover': Boolean(resource.book) }]}
+        src={resource.primaryImage}
+        alt={resource.book ? `${resource.title} ${resource.book.edition} e-book cover — ${resource.book.series ?? 'TECHMED'}` : `${resource.title} cover`}
+        loading="eager"
+        decoding="async"
+      />
     ) : (
       <div class="hero-icon" set:html={resourceIcon(resource)} />
     )}
     <p class="meta">{resource.category} · {resource.type}</p>
     <h1>{resource.title}</h1>
+    {resource.tagline && <p class="tagline">{resource.tagline}</p>}
     <p class="description">{resource.description}</p>
+    {resource.book && (
+      <ul class="book-facts" aria-label="Book details">
+        {resource.book.series && <li>{resource.book.series}</li>}
+        <li>{resource.book.edition}</li>
+        {resource.book.chapters && <li>{resource.book.chapters} chapters</li>}
+        {resource.book.pages && <li>{resource.book.pages} pages</li>}
+        <li>For JAMB UTME · WAEC · NECO</li>
+        <li>Read online in the TECHMED Library</li>
+      </ul>
+    )}
 
     <div class="cta-row">
       <span class:list={['price-badge', resource.status]}>
@@ -444,6 +461,37 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     margin-right: 8px;
     font-weight: 500;
     opacity: 0.6;
+  }
+  .hero-image.book-cover {
+    width: min(220px, 60vw);
+    height: auto;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 10px 30px rgba(1, 39, 72, 0.25);
+  }
+  .tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--accent);
+    margin: 0 0 var(--space-3, 12px);
+  }
+  .book-facts {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-4, 16px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .book-facts li {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
   }
 </style>
 
