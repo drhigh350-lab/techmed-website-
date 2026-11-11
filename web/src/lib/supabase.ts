@@ -391,7 +391,51 @@ export async function verifyAndClaimOrderReference(
 }
 
 
+/**
+ * Can this student open this resource? Asks the database (has_resource_access),
+ * which applies the single TECHMED access rule: purchases, plan and bundle
+ * inclusions (lifetime), admin grants, scholarships and trials. Identity
+ * comes from the signed-in session, never from the browser.
+ * Falls back to the older client-side check only if the RPC is unreachable.
+ */
 export async function hasActiveResourceAccess(
+  resourceId: string,
+  user?: { id?: string; email?: string } | null
+): Promise<boolean> {
+  const cleanId = (resourceId || '').toLowerCase().trim();
+  if (FREE_RESOURCE_IDS.has(cleanId)) return true;
+  if (!user?.id && !user?.email) return false;
+  try {
+    const { data, error } = await getSupabase().rpc('has_resource_access', { p_resource_id: cleanId });
+    if (!error && typeof data === 'boolean') return data;
+    if (error) console.warn('has_resource_access unavailable, using fallback:', error.message);
+  } catch (err) {
+    console.warn('has_resource_access failed, using fallback:', err);
+  }
+  return legacyHasActiveResourceAccess(cleanId, user);
+}
+
+const FREE_RESOURCE_IDS = new Set([
+  'admission-intelligence-guide-2026',
+  'techmed-admission-intelligence-guide-2026',
+  'admission-guide',
+  'free-quiz-practice',
+  'kairo',
+  'test-sample-short',
+]);
+
+/** Resource ids the signed-in student can open (server-computed). */
+export async function getMyLibraryIds(): Promise<string[] | null> {
+  try {
+    const { data, error } = await getSupabase().rpc('my_library');
+    if (error || !Array.isArray(data)) return null;
+    return data.map((row: { resource_id: string }) => row.resource_id);
+  } catch {
+    return null;
+  }
+}
+
+async function legacyHasActiveResourceAccess(
   resourceId: string,
   user?: { id?: string; email?: string } | null
 ): Promise<boolean> {
