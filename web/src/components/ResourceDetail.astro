@@ -535,14 +535,14 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
           priceBadge.textContent = planInfo.isMastery || planInfo.isUltimate ? 'Included in Plan' : 'Unlocked · Full Access';
           priceBadge.classList.add('free');
         }
-      } else if (planInfo.isCore && price > 0) {
+      } else if ((planInfo.isCore || planInfo.isMastery || planInfo.isUltimate) && price > 0) {
         const discount = Math.round(price * 0.20);
         const finalPrice = price - discount;
         if (priceBadge) {
-          priceBadge.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; margin-right: 4px;">₦${price.toLocaleString()}</span> ₦${finalPrice.toLocaleString()} (Core 20% off)`;
+          priceBadge.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; margin-right: 4px;">₦${price.toLocaleString()}</span> ₦${finalPrice.toLocaleString()} (TECHMED student 20% off)`;
         }
         if (buyBtn) {
-          buyBtn.innerHTML = `Unlock with 20% Core Discount · ₦${finalPrice.toLocaleString()}`;
+          buyBtn.innerHTML = `Unlock with 20% Student Discount · ₦${finalPrice.toLocaleString()}`;
         }
       }
     } catch (err) {
