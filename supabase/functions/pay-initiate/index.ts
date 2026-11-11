@@ -1,14 +1,31 @@
 // supabase/functions/pay-initiate/index.ts
-// Validates product and price against server-side authoritative list,
+// Validates product and price against the server-side catalogue,
 // creates and confirms a pending order record FIRST in the database,
-// initializes transaction with Paystack, and returns the checkout URL.
+// initializes the transaction with Paystack, and returns the checkout URL.
 // If order creation fails, checkout initialization is never reported as successful.
+//
+// Nov 2026 update (built on the deployed v36, not the older repo copy):
+// - Standalone resources and bundles take their price from public.products
+//   (the authoritative catalogue); PRODUCTS below is only a fallback.
+// - Think Smart Series e-books (organic-chemistry-mastery, mole-concept-cure).
+// - TECHMED plan discount: 20% off standalone resources for students with an
+//   active Core, Mastery or Ultimate plan ("Everything in Core" includes it).
+// - Students who already own a resource (purchase, plan, bundle or admin
+//   grant) are told so instead of being charged. Ownership is checked per
+//   resource with resource_access_for(), so Mastery/Ultimate students can
+//   still buy items their plan does NOT include.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
-// Source of truth for product names and prices in naira.
-// Authoritative prices for science boosters, university files, and UTME 2027 cohort plans.
-const PRODUCTS: Record<string, { name: string; amount: number; requiresUniversity: boolean; isCohort?: boolean }> = {
+type CatalogueItem = { name: string; amount: number; requiresUniversity: boolean; isCohort?: boolean };
+
+// Fallback names/prices. Cohort plans are priced here (early-bird logic below);
+// resources/bundles prefer public.products.
+const PRODUCTS: Record<string, CatalogueItem> = {
+  // Think Smart Series e-books (₦5,000 standard, ₦3,000 early bird; no end date set)
+  "organic-chemistry-mastery": { name: "Organic Chemistry Mastery", amount: 3000, requiresUniversity: false },
+  "mole-concept-cure": { name: "The Mole Concept Cure", amount: 3000, requiresUniversity: false },
+
   // Standalone Science Boosters
   "chemistry-booster": { name: "Chemistry Booster System", amount: 5000, requiresUniversity: false },
   "biology-booster": { name: "Biology Booster System", amount: 3000, requiresUniversity: false },
@@ -39,6 +56,16 @@ const PRODUCTS: Record<string, { name: string; amount: number; requiresUniversit
   "ultimate": { name: "TECHMED Ultimate (Full UTME 2027 Access)", amount: 40000, requiresUniversity: false, isCohort: true },
 };
 
+// Frontend slugs that differ from catalogue ids.
+const PRODUCT_ALIASES: Record<string, string> = {
+  "chemistry-booster-system": "chemistry-booster",
+  "biology-booster-system": "biology-booster",
+  "physics-booster-system": "physics-booster",
+  "all-science-boosters-bundle": "booster-bundle",
+};
+
+const PLAN_DISCOUNT_PERCENT = 0.20;
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -52,7 +79,7 @@ function jsonResponse(body: unknown, status = 200) {
   });
 }
 
-// Early-Bird Deadline: 15 November 2026 23:59:59 UTC
+// Early-Bird Deadline (cohort plans): 15 November 2026 23:59:59 UTC
 const EARLY_BIRD_DEADLINE = new Date("2026-11-15T23:59:59Z").getTime();
 
 // TECHMED30 Promotional Campaign
@@ -63,24 +90,16 @@ const PROMO_DISCOUNT_PERCENT = 0.30;
 const PROMO_START_UTC = new Date("2026-11-03T08:00:00Z").getTime();
 const PROMO_EXPIRY_UTC = new Date("2026-11-05T08:00:00Z").getTime();
 
-// Authoritative standard prices for cohort plans (source of truth for 30% discount calculation)
 const COHORT_STANDARD_PRICES: Record<string, { standardPrice: number; name: string }> = {
-  // Core — 3 months: Standard ₦18,000 | 30% discount ₦5,400 | Final promo ₦12,600
   "cohort-core-standard": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
   "cohort-core-earlybird": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
   "cohort-core": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
   "core": { standardPrice: 18000, name: "TECHMED Core (3-Month Upfront)" },
-
-  // Core — monthly: Standard ₦7,000 | 30% discount ₦2,100 | Final promo ₦4,900
   "cohort-core-monthly": { standardPrice: 7000, name: "TECHMED Core (1-Month Subscription)" },
-
-  // Mastery: Standard ₦25,000 | 30% discount ₦7,500 | Final promo ₦17,500
   "cohort-mastery-standard": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
   "cohort-mastery-earlybird": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
   "cohort-mastery": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
   "mastery": { standardPrice: 25000, name: "TECHMED Mastery (3-Month Upfront)" },
-
-  // Ultimate: Standard ₦40,000 | 30% discount ₦12,000 | Final promo ₦28,000
   "cohort-ultimate": { standardPrice: 40000, name: "TECHMED Ultimate (Full UTME 2027 Access)" },
   "ultimate": { standardPrice: 40000, name: "TECHMED Ultimate (Full UTME 2027 Access)" },
 };
@@ -119,11 +138,11 @@ Deno.serve(async (req) => {
     return jsonResponse({ success: false, message: "A valid product_id and email are required" }, 400);
   }
 
+  const cleanEmail = email.trim().toLowerCase();
   let cleanProductId = product_id.trim();
+  cleanProductId = PRODUCT_ALIASES[cleanProductId] ?? cleanProductId;
   const rawDuration = (body.billing_option || body.duration || body.billing_cycle || "").trim().toLowerCase();
 
-  // If a generic Core plan or 3-month alias was submitted but billing_option/duration is monthly,
-  // ensure it reliably resolves to the monthly subscription product.
   if (
     (cleanProductId === "core" || cleanProductId === "cohort-core" || cleanProductId === "cohort-core-standard" || cleanProductId === "cohort-core-earlybird") &&
     (rawDuration === "monthly" || rawDuration === "1month" || rawDuration === "month")
@@ -131,27 +150,11 @@ Deno.serve(async (req) => {
     cleanProductId = "cohort-core-monthly";
   }
 
-  // Conversely, if monthly product was submitted but earlybird duration was chosen:
   if (
     cleanProductId === "cohort-core-monthly" &&
     (rawDuration === "earlybird" || rawDuration === "3months" || rawDuration === "upfront")
   ) {
     cleanProductId = Date.now() <= EARLY_BIRD_DEADLINE ? "cohort-core-earlybird" : "cohort-core-standard";
-  }
-
-  // Standalone resource aliases
-  if (cleanProductId === "chemistry-booster-system") cleanProductId = "chemistry-booster";
-  if (cleanProductId === "biology-booster-system") cleanProductId = "biology-booster";
-  if (cleanProductId === "physics-booster-system") cleanProductId = "physics-booster";
-  if (cleanProductId === "all-science-boosters-bundle" || cleanProductId === "all-boosters-bundle") cleanProductId = "booster-bundle";
-
-  const product = PRODUCTS[cleanProductId];
-  if (!product) {
-    return jsonResponse({ success: false, message: `Unknown product: "${cleanProductId}"` }, 400);
-  }
-
-  if (product.requiresUniversity && !university) {
-    return jsonResponse({ success: false, message: "Please select your target university" }, 400);
   }
 
   const paystackSecret = Deno.env.get("PAYSTACK_SECRET_KEY");
@@ -175,25 +178,48 @@ Deno.serve(async (req) => {
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+  // Resolve product: cohort plans from PRODUCTS; resources/bundles from public.products.
+  let product: CatalogueItem | undefined = PRODUCTS[cleanProductId];
+  if (!product?.isCohort) {
+    const { data: row, error: rowErr } = await supabase
+      .from("products")
+      .select("id, title, price_ngn, product_type, requires_university, is_active")
+      .eq("id", cleanProductId)
+      .maybeSingle();
+    if (rowErr) console.warn("Catalogue lookup failed; using fallback list:", rowErr.message);
+    if (row && row.is_active && (row.product_type === "resource" || row.product_type === "bundle") && Number(row.price_ngn) > 0) {
+      product = {
+        name: row.title,
+        amount: Number(row.price_ngn),
+        requiresUniversity: !!row.requires_university,
+      };
+    } else if (row && !row.is_active) {
+      return jsonResponse({ success: false, message: "This resource is not currently available for purchase." }, 400);
+    }
+  }
+
+  if (!product) {
+    return jsonResponse({ success: false, message: `Unknown product: "${cleanProductId}"` }, 400);
+  }
+
+  if (product.requiresUniversity && !university) {
+    return jsonResponse({ success: false, message: "Please select your target university" }, 400);
+  }
+
   let validatedAmount = product.amount;
   let promoApplied = false;
   let promoDiscountAmount = 0;
   let promoStandardPrice = 0;
-  let coreDiscountApplied = false;
-  let coreDiscountAmount = 0;
+  let planDiscountApplied = false;
+  let planDiscountAmount = 0;
 
   if (promo_code !== undefined && promo_code !== null && typeof promo_code === "string" && promo_code.trim().length > 0) {
     const cleanPromo = promo_code.trim().toUpperCase();
 
-    // 1. Validate promo code match (case-insensitive, trimmed)
     if (cleanPromo !== PROMO_CODE) {
-      return jsonResponse({
-        success: false,
-        message: "Invalid promo code. Please enter a valid promotional code.",
-      }, 400);
+      return jsonResponse({ success: false, message: "Invalid promo code. Please enter a valid promotional code." }, 400);
     }
 
-    // 2. Validate UTC time window (strict 48-hour UTC comparison)
     const nowUtc = Date.now();
     if (nowUtc < PROMO_START_UTC) {
       return jsonResponse({
@@ -209,7 +235,6 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // 3. Verify product eligibility (cohort plans only; standalone resources are ineligible)
     const cohortPricing = COHORT_STANDARD_PRICES[cleanProductId];
     if (!product.isCohort || !cohortPricing) {
       return jsonResponse({
@@ -218,109 +243,12 @@ Deno.serve(async (req) => {
       }, 400);
     }
 
-    // 4. Calculate 30% discount strictly from original standard price (NON-STACKING with early-bird)
     promoStandardPrice = cohortPricing.standardPrice;
     promoDiscountAmount = Math.round(promoStandardPrice * PROMO_DISCOUNT_PERCENT);
     validatedAmount = promoStandardPrice - promoDiscountAmount;
     promoApplied = true;
-  } else if (!product.isCohort) {
-    // -------------------------------------------------------------------------
-    // AUTOMATIC 20% CORE DISCOUNT (STANDALONE RESOURCES ONLY)
-    // Server-side authoritative validation: queries verified entitlements & paid orders.
-    // Mastery & Ultimate students already have resource access and do not receive Core discount.
-    // -------------------------------------------------------------------------
-    const cleanEmail = email.trim().toLowerCase();
-    try {
-      const { data: userEntitlements } = await supabase
-        .from("entitlements")
-        .select("resource_id, plan_id, is_active, expires_at")
-        .eq("customer_email", cleanEmail)
-        .eq("is_active", true);
-
-      const hasMasteryOrUltimate = (userEntitlements || []).some((e: any) => {
-        const resId = (e.resource_id || "").toLowerCase();
-        const planId = (e.plan_id || "").toLowerCase();
-        const match = resId.includes("mastery") || planId.includes("mastery") || resId.includes("ultimate") || planId.includes("ultimate");
-        if (!match) return false;
-        if (e.expires_at) {
-          const exp = new Date(e.expires_at).getTime();
-          if (exp <= Date.now()) return false;
-        }
-        return true;
-      });
-
-      // Part 4 & 6: If student already has access via Mastery/Ultimate, gracefully inform them without charging
-      if (hasMasteryOrUltimate) {
-        return jsonResponse({
-          success: false,
-          already_owned: true,
-          message: "You already have full access to this resource through your TECHMED plan.",
-        }, 400);
-      }
-
-      // Check if student already individually purchased this resource
-      const alreadyPurchased = (userEntitlements || []).some((e: any) => {
-        const resId = (e.resource_id || "").toLowerCase();
-        if (resId === cleanProductId) return true;
-        if (cleanProductId === "booster-bundle" && resId.includes("booster-bundle")) return true;
-        if (cleanProductId.includes("booster") && resId === "booster-bundle") return true;
-        return false;
-      });
-
-      if (alreadyPurchased) {
-        return jsonResponse({
-          success: false,
-          already_owned: true,
-          message: "You already own and have full access to this resource in your library.",
-        }, 400);
-      }
-
-      if (!hasMasteryOrUltimate) {
-        const hasCoreEntitlement = (userEntitlements || []).some((e: any) => {
-          const resId = (e.resource_id || "").toLowerCase();
-          const planId = (e.plan_id || "").toLowerCase();
-          const match = resId.includes("core") || planId.includes("core");
-          if (!match) return false;
-          if (e.expires_at) {
-            const exp = new Date(e.expires_at).getTime();
-            if (exp <= Date.now()) return false;
-          }
-          return true;
-        });
-
-        let hasCoreOrder = false;
-        if (!hasCoreEntitlement) {
-          const { data: coreOrders } = await supabase
-            .from("orders")
-            .select("product_id, status, created_at")
-            .eq("email", cleanEmail)
-            .eq("status", "paid")
-            .order("created_at", { ascending: false })
-            .limit(10);
-
-          hasCoreOrder = (coreOrders || []).some((o: any) => {
-            const pid = (o.product_id || "").toLowerCase();
-            if (!pid.includes("core")) return false;
-            if (pid.includes("monthly")) {
-              const orderTime = new Date(o.created_at).getTime();
-              const thirtyTwoDaysMs = 32 * 24 * 60 * 60 * 1000;
-              if (Date.now() - orderTime > thirtyTwoDaysMs) return false;
-            }
-            return true;
-          });
-        }
-
-        if (hasCoreEntitlement || hasCoreOrder) {
-          coreDiscountApplied = true;
-          coreDiscountAmount = Math.round(product.amount * 0.20);
-          validatedAmount = product.amount - coreDiscountAmount;
-        }
-      }
-    } catch (err) {
-      console.warn("Core plan entitlement lookup notice in pay-initiate:", err);
-    }
-  } else {
-    // When promo is NOT applied, preserve existing standard and early-bird cohort pricing
+  } else if (product.isCohort) {
+    // Preserve existing standard and early-bird cohort pricing
     if (
       cleanProductId.includes("earlybird") ||
       cleanProductId === "cohort-core" ||
@@ -333,41 +261,61 @@ Deno.serve(async (req) => {
         if (cleanProductId.includes("mastery")) validatedAmount = 25000;
       }
     }
+  } else {
+    // ---------------------------------------------------------------------
+    // STANDALONE RESOURCE / BUNDLE: ownership check + TECHMED plan discount.
+    // The order email is the beneficiary, so eligibility follows that email.
+    // ---------------------------------------------------------------------
+    try {
+      const { data: owns, error: ownsErr } = await supabase.rpc("resource_access_for", {
+        p_user_id: null,
+        p_email: cleanEmail,
+        p_resource_id: cleanProductId,
+      });
+      if (ownsErr) {
+        console.warn("Ownership check unavailable:", ownsErr.message);
+      } else if (owns === true) {
+        return jsonResponse({
+          success: false,
+          already_owned: true,
+          message: "You already have access to this resource. Open it from your TECHMED library.",
+        }, 400);
+      }
+
+      const nowIso = new Date().toISOString();
+      const { data: plans, error: plansErr } = await supabase
+        .from("entitlements")
+        .select("resource_id, expires_at")
+        .eq("customer_email", cleanEmail)
+        .in("resource_id", ["cohort-core", "cohort-mastery", "cohort-ultimate"])
+        .eq("is_active", true)
+        .is("revoked_at", null)
+        .or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+      if (plansErr) console.warn("Plan lookup failed:", plansErr.message);
+
+      if ((plans ?? []).length > 0) {
+        planDiscountApplied = true;
+        planDiscountAmount = Math.round(product.amount * PLAN_DISCOUNT_PERCENT);
+        validatedAmount = product.amount - planDiscountAmount;
+      }
+    } catch (err) {
+      console.warn("Standalone eligibility checks failed (charging standard price):", err);
+    }
   }
 
-  // Paystack requires amount in kobo (naira x 100)
   const amountKobo = validatedAmount * 100;
-  const reference = `techmed_${cleanProductId.replace(/-/g, '_')}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+  const reference = `techmed_${cleanProductId.replace(/-/g, "_")}_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
-  // ---------------------------------------------------------------------------
   // STEP 1: CREATE AND CONFIRM PENDING ORDER IN DATABASE FIRST
-  // Order must exist in database BEFORE any usable Paystack checkout is generated.
-  // If database insertion fails, do NOT proceed to Paystack, and report failure.
-  // ---------------------------------------------------------------------------
-  const totalDiscount = promoApplied ? promoDiscountAmount : (coreDiscountApplied ? coreDiscountAmount : 0);
-  const originalPrice = promoApplied ? promoStandardPrice : (coreDiscountApplied ? product.amount : validatedAmount);
-
-  const orderMetadata = {
-    promo_code: promoApplied ? PROMO_CODE : null,
-    discount_amount: totalDiscount,
-    original_price: originalPrice,
-    is_core_discount: coreDiscountApplied,
-    is_cohort: !!product.isCohort,
-    billing_option: rawDuration || (cleanProductId.includes("monthly") ? "monthly" : "3months"),
-  };
-
   const { error: dbError } = await supabase.from("orders").insert({
     reference,
     product_id: cleanProductId,
     product_name: product.name,
     amount: validatedAmount,
-    email: email.trim().toLowerCase(),
+    email: cleanEmail,
     customer_name: name ?? "TECHMED Student",
-    phone: phone ?? null,
     university: university ?? null,
     status: "pending",
-    discount_amount: totalDiscount,
-    metadata: orderMetadata,
   });
 
   if (dbError) {
@@ -378,11 +326,7 @@ Deno.serve(async (req) => {
     }, 500);
   }
 
-  // ---------------------------------------------------------------------------
   // STEP 2: INITIALIZE TRANSACTION WITH PAYSTACK
-  // If initialization fails or throws, safely mark the pending order as "failed"
-  // so an unbacked pending record is not left open.
-  // ---------------------------------------------------------------------------
   const siteUrl = Deno.env.get("SITE_URL") ?? "https://techmedng.com";
   const defaultCallback = product.isCohort
     ? `${siteUrl}/payment/callback?reference=${reference}`
@@ -391,6 +335,9 @@ Deno.serve(async (req) => {
   const resolvedCallback = callback_url
     ? (callback_url.includes("?") ? `${callback_url}&reference=${reference}` : `${callback_url}?reference=${reference}`)
     : defaultCallback;
+
+  const totalDiscount = promoApplied ? promoDiscountAmount : planDiscountAmount;
+  const originalPrice = promoApplied ? promoStandardPrice : product.amount;
 
   let paystackData: { authorization_url?: string; access_code?: string; reference?: string };
 
@@ -402,7 +349,7 @@ Deno.serve(async (req) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         amount: amountKobo,
         reference,
         callback_url: resolvedCallback,
@@ -414,12 +361,12 @@ Deno.serve(async (req) => {
           university: university ?? null,
           is_cohort: !!product.isCohort,
           promo_code: promoApplied ? PROMO_CODE : null,
+          is_core_discount: planDiscountApplied,
           discount_amount: totalDiscount,
           original_price: originalPrice,
-          is_core_discount: coreDiscountApplied,
           promo_description: promoApplied
             ? "TECHMED30 30% Promotional Discount"
-            : (coreDiscountApplied ? "TECHMED Core 20% Discount" : null),
+            : planDiscountApplied ? "TECHMED plan student 20% e-book discount" : null,
         },
       }),
     });
@@ -428,7 +375,6 @@ Deno.serve(async (req) => {
 
     if (!paystackRes.ok || !paystackJson.status || !paystackJson.data?.authorization_url) {
       console.error("Paystack initialize rejected:", paystackJson, "reference:", reference);
-      // Safely update the pending order so it does not remain pending indefinitely
       await supabase.from("orders").update({
         status: "failed",
         rejection_reason: paystackJson.message ?? "Paystack initialization failed",
@@ -436,16 +382,12 @@ Deno.serve(async (req) => {
         updated_at: new Date().toISOString(),
       }).eq("reference", reference);
 
-      return jsonResponse({
-        success: false,
-        message: paystackJson.message ?? "Could not initiate payment session.",
-      }, 502);
+      return jsonResponse({ success: false, message: paystackJson.message ?? "Could not initiate payment session." }, 502);
     }
 
     paystackData = paystackJson.data;
   } catch (err) {
     console.error("Paystack network/request exception:", err, "reference:", reference);
-    // Safely update the pending order on network error
     await supabase.from("orders").update({
       status: "failed",
       rejection_reason: "Network error reaching Paystack gateway",
@@ -458,10 +400,7 @@ Deno.serve(async (req) => {
     }, 502);
   }
 
-  // ---------------------------------------------------------------------------
   // STEP 3: RETURN CONFIRMED AUTHORIZATION URL
-  // Only reached when BOTH the order is saved in the database AND Paystack initialized.
-  // ---------------------------------------------------------------------------
   return jsonResponse({
     success: true,
     data: {
@@ -470,9 +409,9 @@ Deno.serve(async (req) => {
       product_name: product.name,
       amount: validatedAmount,
       promo_code: promoApplied ? PROMO_CODE : null,
-      is_core_discount: coreDiscountApplied,
+      is_core_discount: planDiscountApplied,
       discount_amount: totalDiscount,
-      original_price: (promoApplied || coreDiscountApplied) ? originalPrice : null,
+      original_price: totalDiscount > 0 ? originalPrice : null,
     },
   });
 });

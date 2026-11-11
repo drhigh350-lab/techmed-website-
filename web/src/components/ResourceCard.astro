@@ -11,7 +11,7 @@
 // component just needs height: 100% + flex so the footer lands at the
 // same baseline regardless of description length.
 import type { Resource } from '../lib/resources';
-import { resourceIcon } from '../lib/resources';
+import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview } from '../lib/resources';
 
 interface Props {
   title?: string;
@@ -25,14 +25,10 @@ interface Props {
 
 const { title, description, tag, comingSoon = false, href, resource } = Astro.props;
 
-const currencySymbol = resource?.currency === 'NGN' ? '₦' : (resource?.currency ?? '');
-const priceLabel = resource
-  ? resource.status === 'free'
-    ? 'FREE'
-    : resource.price
-      ? `${currencySymbol}${resource.price.toLocaleString()}`
-      : 'Price coming soon'
-  : '';
+const price = resource ? priceDisplay(resource) : undefined;
+const priceLabel = price?.label ?? '';
+const canBuy = resource ? isPurchasable(resource) : false;
+const showPreview = resource ? resource.status === 'paid' && hasReaderPreview(resource) : false;
 
 const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
 const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
@@ -43,8 +39,13 @@ const icon = resource ? resourceIcon(resource) : undefined;
   <div class:list={['resource-card', 'reveal', { featured: resource.featured }]} data-subject={resource.subject || 'General'} data-status={resource.status}>
     <a href={`/resources/${resource.slug}`} class="card-top">
       {resource.primaryImage ? (
-        <div class="thumb">
-          <img src={resource.primaryImage} alt={resource.title} loading="lazy" decoding="async" />
+        <div class:list={['thumb', { 'book-thumb': Boolean(resource.book) }]}>
+          <img
+            src={resource.primaryImage}
+            alt={resource.book ? `${resource.title} e-book cover` : resource.title}
+            loading="lazy"
+            decoding="async"
+          />
           {resource.featured && <span class="featured-indicator">Featured</span>}
         </div>
       ) : (
@@ -88,8 +89,11 @@ const icon = resource ? resourceIcon(resource) : undefined;
     </a>
     <div class="card-footer">
       <div class="price-wrap">
-        <span class="price-val">{priceLabel}</span>
-        {resource.status === 'paid' && resource.isAvailableStandalone && (
+        <span class="price-val">
+          {price?.compareAt && <s class="price-was">{price.compareAt}</s>}
+          {priceLabel}
+        </span>
+        {canBuy && (
           <span class="standalone-note">Open to all students</span>
         )}
       </div>
@@ -109,27 +113,38 @@ const icon = resource ? resourceIcon(resource) : undefined;
         )}
         {resource.status === 'paid' && (
           <div class="paid-action-stack">
-            <button
-              type="button"
-              class="btn-primary buy-trigger-btn"
-              data-resource={JSON.stringify({
-                id: resource.id,
-                slug: resource.slug,
-                title: resource.title,
-                price: resource.price,
-                currency: resource.currency || 'NGN',
-                subject: resource.subject || resource.category,
-                deliveryFormat: resource.deliveryFormat || 'PDF eBook',
-                description: resource.description,
-                whatsappUrl: resource.whatsappUrl,
-              })}
-              onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
-            >
-              Unlock · {priceLabel}
-            </button>
-            <a class="reader-preview-link" href={`/library/read/${resource.id}`}>
-              Read Free Preview &rarr;
-            </a>
+            {canBuy ? (
+              <button
+                type="button"
+                class="btn-primary buy-trigger-btn"
+                data-resource={JSON.stringify({
+                  id: resource.id,
+                  slug: resource.slug,
+                  title: resource.title,
+                  price: resource.price,
+                  compareAtPrice: resource.compareAtPrice,
+                  currency: resource.currency || 'NGN',
+                  subject: resource.subject || resource.category,
+                  deliveryFormat: resource.deliveryFormat || 'PDF eBook',
+                  description: resource.description,
+                  whatsappUrl: resource.whatsappUrl,
+                })}
+                onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
+              >
+                Unlock · {priceLabel}
+              </button>
+            ) : resource.whatsappUrl ? (
+              <a class="btn-primary" href={resource.whatsappUrl} target="_blank" rel="noopener">
+                {resource.actionLabel}
+              </a>
+            ) : (
+              <a class="btn-primary" href={`/resources/${resource.slug}`}>View Details</a>
+            )}
+            {showPreview && (
+              <a class="reader-preview-link" href={resource.previewPdfUrl ? `/library/read/${resource.id}/?preview=1` : `/library/read/${resource.id}`}>
+                Read Free Preview &rarr;
+              </a>
+            )}
           </div>
         )}
       </div>
@@ -199,6 +214,15 @@ const icon = resource ? resourceIcon(resource) : undefined;
     width: 100%;
     height: 100%;
     object-fit: cover;
+  }
+
+  .thumb.book-thumb {
+    background: linear-gradient(135deg, #012748, #09476e);
+    padding: 10px 0;
+  }
+
+  .thumb.book-thumb img {
+    object-fit: contain;
   }
 
   .thumb .featured-badge.overlay {
@@ -426,5 +450,11 @@ const icon = resource ? resourceIcon(resource) : undefined;
   .reader-preview-link:hover {
     text-decoration: underline;
     opacity: 0.85;
+  }
+  .price-was {
+    margin-right: 6px;
+    font-weight: 500;
+    opacity: 0.6;
+    font-size: 0.85em;
   }
 </style>

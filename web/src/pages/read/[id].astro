@@ -24,6 +24,7 @@ const { id } = Astro.params;
 <head>
   <meta charset="UTF-8">
   <title>Opening TECHMED Reader...</title>
+  <meta name="robots" content="noindex, nofollow" />
   <meta http-equiv="refresh" content={`0;url=/library/read/${id}`} />
   <script define:vars={{ targetUrl: `/library/read/${id}` }}>
     window.location.replace(targetUrl);

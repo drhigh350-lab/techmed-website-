@@ -57,7 +57,7 @@ export interface ClassroomLink {
 
 export const PROGRAMME_META = {
   title: 'UTME 2027 Paid Classes',
-  officialDates: '30 November 2026 – UTME Examination Date',
+  officialDates: 'From 30 November 2026 until the UTME 2027 examination',
   intensiveLectureDates: '30 November 2026 – 21 February 2027 (12 Weeks Core)',
   dailyHours: '4 Hours Daily (Two 2-Hour Live Sessions, Monday to Saturday)',
   breakDuration: '10-Minute Break between sessions',

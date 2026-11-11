@@ -3,7 +3,7 @@
 // resource plus a small set of related resources (same category) for
 // internal linking — real records only, never invented "related" items.
 import type { Resource } from '../lib/resources';
-import { resourceIcon } from '../lib/resources';
+import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview } from '../lib/resources';
 
 interface Props {
   resource: Resource;
@@ -12,13 +12,10 @@ interface Props {
 
 const { resource, related = [] } = Astro.props;
 
-const currencySymbol = resource.currency === 'NGN' ? '₦' : (resource.currency ?? '');
-const priceLabel =
-  resource.status === 'free'
-    ? 'FREE'
-    : resource.price
-      ? `${currencySymbol}${resource.price.toLocaleString()}`
-      : 'Price coming soon';
+const price = priceDisplay(resource);
+const priceLabel = price.label;
+const canBuy = isPurchasable(resource);
+const showPreview = resource.status === 'paid' && hasReaderPreview(resource);
 
 const primaryHref = resource.accessUrl ?? resource.externalUrl;
 const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.accessUrl?.startsWith('http'));
@@ -33,16 +30,36 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
 
   <header class="header reveal">
     {resource.primaryImage ? (
-      <img class="hero-image" src={resource.primaryImage} alt="" loading="eager" decoding="async" />
+      <img
+        class:list={['hero-image', { 'book-cover': Boolean(resource.book) }]}
+        src={resource.primaryImage}
+        alt={resource.book ? `${resource.title} ${resource.book.edition} e-book cover — ${resource.book.series ?? 'TECHMED'}` : `${resource.title} cover`}
+        loading="eager"
+        decoding="async"
+      />
     ) : (
       <div class="hero-icon" set:html={resourceIcon(resource)} />
     )}
     <p class="meta">{resource.category} · {resource.type}</p>
     <h1>{resource.title}</h1>
+    {resource.tagline && <p class="tagline">{resource.tagline}</p>}
     <p class="description">{resource.description}</p>
+    {resource.book && (
+      <ul class="book-facts" aria-label="Book details">
+        {resource.book.series && <li>{resource.book.series}</li>}
+        <li>{resource.book.edition}</li>
+        {resource.book.chapters && <li>{resource.book.chapters} chapters</li>}
+        {resource.book.pages && <li>{resource.book.pages} pages</li>}
+        <li>For JAMB UTME · WAEC · NECO</li>
+        <li>Read online in the TECHMED Library</li>
+      </ul>
+    )}
 
     <div class="cta-row">
-      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+      <span class:list={['price-badge', resource.status]}>
+        {price.compareAt && <s class="price-was">{price.compareAt}</s>}
+        <span class="price-now">{priceLabel}</span>
+      </span>
 
       {resource.status === 'free' && (
         <>
@@ -64,34 +81,45 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
 
       {resource.status === 'paid' && (
         <>
-          <button
-            type="button"
-            class="btn-primary detail-buy-btn"
-            data-resource={JSON.stringify({
-              id: resource.id,
-              slug: resource.slug,
-              title: resource.title,
-              price: resource.price,
-              currency: resource.currency || 'NGN',
-              subject: resource.subject || resource.category,
-              deliveryFormat: resource.deliveryFormat || 'PDF eBook',
-              description: resource.description,
-              whatsappUrl: resource.whatsappUrl,
-            })}
-            onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
-          >
-            Unlock with Paystack / Transfer
-          </button>
+          {canBuy ? (
+            <button
+              type="button"
+              class="btn-primary detail-buy-btn"
+              data-resource={JSON.stringify({
+                id: resource.id,
+                slug: resource.slug,
+                title: resource.title,
+                price: resource.price,
+                compareAtPrice: resource.compareAtPrice,
+                currency: resource.currency || 'NGN',
+                subject: resource.subject || resource.category,
+                deliveryFormat: resource.deliveryFormat || 'PDF eBook',
+                description: resource.description,
+                whatsappUrl: resource.whatsappUrl,
+              })}
+              onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
+            >
+              Unlock with Paystack / Transfer
+            </button>
+          ) : resource.whatsappUrl ? (
+            <a class="btn-primary" href={resource.whatsappUrl} target="_blank" rel="noopener">
+              {resource.actionLabel}
+            </a>
+          ) : null}
 
-          <a class="btn-secondary" href={`/library/read/${resource.id}`}>
-            Read Free Preview &rarr;
-          </a>
+          {showPreview && (
+            <a class="btn-secondary" href={resource.previewPdfUrl ? `/library/read/${resource.id}/?preview=1` : `/library/read/${resource.id}`}>
+              Read Free Preview &rarr;
+            </a>
+          )}
 
-          {resource.whatsappUrl && (
+          {canBuy && resource.whatsappUrl && (
             <a class="whatsapp-alt-link" href={resource.whatsappUrl} target="_blank" rel="noopener">
               Or order on WhatsApp &rarr;
             </a>
           )}
+        </>
+      )}
         </>
       )}
     </div>
@@ -429,6 +457,42 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
       text-align: center;
     }
   }
+  .price-was {
+    margin-right: 8px;
+    font-weight: 500;
+    opacity: 0.6;
+  }
+  .hero-image.book-cover {
+    width: min(220px, 60vw);
+    height: auto;
+    aspect-ratio: 2 / 3;
+    object-fit: cover;
+    border-radius: var(--radius-md, 8px);
+    box-shadow: 0 10px 30px rgba(1, 39, 72, 0.25);
+  }
+  .tagline {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-style: italic;
+    color: var(--accent);
+    margin: 0 0 var(--space-3, 12px);
+  }
+  .book-facts {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 var(--space-4, 16px);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .book-facts li {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
 </style>
 
 <script>
@@ -471,14 +535,14 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
           priceBadge.textContent = planInfo.isMastery || planInfo.isUltimate ? 'Included in Plan' : 'Unlocked · Full Access';
           priceBadge.classList.add('free');
         }
-      } else if (planInfo.isCore && price > 0) {
+      } else if ((planInfo.isCore || planInfo.isMastery || planInfo.isUltimate) && price > 0) {
         const discount = Math.round(price * 0.20);
         const finalPrice = price - discount;
         if (priceBadge) {
-          priceBadge.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; margin-right: 4px;">₦${price.toLocaleString()}</span> ₦${finalPrice.toLocaleString()} (Core 20% off)`;
+          priceBadge.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; margin-right: 4px;">₦${price.toLocaleString()}</span> ₦${finalPrice.toLocaleString()} (TECHMED student 20% off)`;
         }
         if (buyBtn) {
-          buyBtn.innerHTML = `Unlock with 20% Core Discount · ₦${finalPrice.toLocaleString()}`;
+          buyBtn.innerHTML = `Unlock with 20% Student Discount · ₦${finalPrice.toLocaleString()}`;
         }
       }
     } catch (err) {

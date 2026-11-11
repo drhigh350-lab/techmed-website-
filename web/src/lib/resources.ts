@@ -62,6 +62,8 @@ export interface Resource {
   status: ResourceStatus;
   /** Naira amount. Omitted entirely (not zero) when pricing isn't public yet. */
   price?: number;
+  /** Original/standard price shown crossed out next to `price` (e.g. early-bird offers). */
+  compareAtPrice?: number;
   currency?: string;
   /** Display order, lower first — same convention as the faqItem schema's `order` field. */
   order?: number;
@@ -92,6 +94,28 @@ export interface Resource {
   deliveryFormat?: 'PDF eBook' | 'Interactive Web' | 'Quiz Platform' | 'Platform Tool';
   sampleExcerpt?: string;
   isAvailableStandalone?: boolean;
+  /** Code-managed entries are always listed, even when Sanity is the live
+   * source (Sanity entries with the same slug win). Used for products whose
+   * pages must exist regardless of CMS state. */
+  codeManaged?: boolean;
+  /** False until the free sample excerpt is uploaded; hides "Read Free Preview". */
+  previewReady?: boolean;
+  /** Public free-preview PDF (a short excerpt), opened in the reader in preview mode. */
+  previewPdfUrl?: string;
+  /** Listed but not yet on sale (e.g. the book file isn't ready). */
+  comingSoon?: boolean;
+  /** 1200×630 social-share image (falls back to primaryImage). */
+  ogImage?: string;
+  /** Short subtitle / tagline shown under the title. */
+  tagline?: string;
+  /** Book facts for the detail page and Book structured data. */
+  book?: {
+    series?: string;
+    edition: string;
+    pages?: string;
+    chapters?: number;
+    author?: string;
+  };
   isBundle?: boolean;
   bundleItemIds?: string[];
   bundleItems?: {
@@ -466,32 +490,99 @@ export const FALLBACK_RESOURCES: Resource[] = [
   },
   {
     id: 'organic-chemistry-mastery',
-    slug: 'organic-chemistry-mastery-manual',
-    title: 'Organic Chemistry Mastery Manual',
+    slug: 'organic-chemistry-mastery',
+    codeManaged: true,
+    previewReady: false,
+    comingSoon: true,
+    title: 'Organic Chemistry Mastery',
+    tagline: 'Understand the Structures. Master the Reactions. Conquer the Questions.',
     description:
-      'Systematic reaction pathways, IUPAC naming, isomerism, and functional group transformations essential for scoring 85+ in JAMB Chemistry.',
+      'The complete TECHMED guide to organic chemistry for JAMB UTME, WAEC and NECO — 19 chapters, 1,000+ questions including 600+ real past questions, 200+ custom figures and a full reaction map.',
     category: 'Academic',
     subject: 'Chemistry',
     type: 'Guide',
     status: 'paid',
-    order: 10,
+    order: 2.6,
+    price: 3000,
+    compareAtPrice: 5000,
     currency: 'NGN',
     thumbnail: ICONS.flask,
-    tags: ['Chemistry', 'Mastery Included', 'Manual'],
-    actionLabel: 'Included in Mastery',
+    primaryImage: '/images/resources/organic-chemistry-mastery-cover-600.jpg',
+    ogImage: '/images/resources/organic-chemistry-mastery-og.jpg',
+    featured: true,
+    tags: ['Chemistry', 'Organic Chemistry', 'Think Smart Series', 'Mastery Included'],
+    actionLabel: 'Unlock E-book',
     deliveryFormat: 'PDF eBook',
-    isAvailableStandalone: false,
+    isAvailableStandalone: true,
+    book: {
+      series: 'Think Smart Series',
+      edition: 'First Edition 2027',
+      pages: 'About 460',
+      chapters: 19,
+      author: 'TECHMED',
+    },
     inclusions: {
+      core: '20% off for active TECHMED Core students',
       mastery: true,
       ultimate: true,
-      note: 'Delivered directly to enrolled Mastery & Ultimate students on or before 30 November 2026.',
+      note: 'Included in Mastery and Ultimate. Read online in the TECHMED Library.',
     },
     whatsIncluded: [
-      'Step-by-step IUPAC nomenclature framework',
-      'Reactions matrix for alkanes, alkenes, alkynes, benzene, alcohols, alkanoic acids and esters',
-      'Past JAMB trick questions on isomerism',
+      '19 chapters across 4 parts (about 460 pages)',
+      '1,000+ questions: 600+ real JAMB, WAEC and NECO past questions, about 180 worked examples and 285 chapter practice questions',
+      '200+ custom figures, a full reaction map and a chemical-tests summary',
+      'Corrections to wrong answer keys that circulate for popular past questions',
     ],
-    whoItsFor: 'Mastery and Ultimate candidates targeting distinction in Chemistry calculations and theory.',
+    whoItsFor:
+      'JAMB UTME, WAEC and NECO candidates who want to understand organic structures and reactions properly — and answer exam questions on them accurately.',
+  },
+  {
+    id: 'mole-concept-cure',
+    slug: 'mole-concept-cure',
+    codeManaged: true,
+    previewReady: true,
+    previewPdfUrl: '/previews/mole-concept-cure-free-preview.pdf',
+    title: 'The Mole Concept Cure',
+    tagline: 'Understand the Mole. Master the Calculations. Conquer the Questions.',
+    description:
+      'A complete guide to chemical calculations, stoichiometry and the mole concept for JAMB UTME, WAEC and NECO — 10 chapters, 600+ questions including 300+ real past questions, and the TECHMED five-step method.',
+    category: 'Academic',
+    subject: 'Chemistry',
+    type: 'Guide',
+    status: 'paid',
+    order: 2.7,
+    price: 3000,
+    compareAtPrice: 5000,
+    currency: 'NGN',
+    thumbnail: ICONS.flask,
+    primaryImage: '/images/resources/mole-concept-cure-cover-600.jpg',
+    ogImage: '/images/resources/mole-concept-cure-og.jpg',
+    featured: true,
+    tags: ['Chemistry', 'Mole Concept', 'Stoichiometry', 'Think Smart Series', 'Mastery Included'],
+    actionLabel: 'Unlock E-book',
+    deliveryFormat: 'PDF eBook',
+    isAvailableStandalone: true,
+    book: {
+      series: 'Think Smart Series',
+      edition: 'Second Edition 2027',
+      pages: '211',
+      chapters: 10,
+      author: 'TECHMED',
+    },
+    inclusions: {
+      core: '20% off for active TECHMED Core students',
+      mastery: true,
+      ultimate: true,
+      note: 'Included in Mastery and Ultimate. Read online in the TECHMED Library.',
+    },
+    whatsIncluded: [
+      '10 chapters (about 230 pages)',
+      '600+ questions: 300+ real past questions, 100+ worked examples and a 102-question bank',
+      'A Question-Pattern Library of the ways examiners set mole-concept questions',
+      'The TECHMED five-step method for solving any chemical calculation',
+    ],
+    whoItsFor:
+      'Candidates who find chemical calculations confusing and want a dependable method for mole, mass, volume, particle and concentration questions in JAMB, WAEC and NECO.',
   },
   {
     id: 'physics-mechanics-electricity',
@@ -603,6 +694,7 @@ const RESOURCE_QUERY = `*[_type == "resource" && !(_id in path("drafts.**"))] {
   type,
   status,
   price,
+  compareAtPrice,
   currency,
   order,
   featured,
@@ -635,7 +727,70 @@ function byOrder(a: Resource, b: Resource): number {
 // no resources published yet or is unreachable.
 export async function getResources(): Promise<Resource[]> {
   const resources = await fetchSanity<Resource[]>(RESOURCE_QUERY, FALLBACK_RESOURCES);
-  return [...resources].sort(byOrder);
+  // Code-managed products are always listed; a Sanity entry with the same
+  // slug takes over its copy (so editors can refine wording in Sanity).
+  const slugs = new Set(resources.map((r) => r.slug));
+  const merged = [
+    ...resources.map((r) => {
+      const code = FALLBACK_RESOURCES.find((f) => f.codeManaged && f.slug === r.slug);
+      return code ? { ...code, ...stripEmpty(r), id: code.id } : r;
+    }),
+    ...FALLBACK_RESOURCES.filter((f) => f.codeManaged && !slugs.has(f.slug)),
+  ];
+  return merged.sort(byOrder);
+}
+
+function stripEmpty<T extends object>(obj: T): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([, v]) => v !== null && v !== undefined && !(Array.isArray(v) && v.length === 0)),
+  ) as Partial<T>;
+}
+
+export function formatNaira(amount: number): string {
+  return `₦${amount.toLocaleString('en-NG')}`;
+}
+
+/**
+ * Can a student buy this resource on its own right now? Only when it is a
+ * paid, standalone product with a real, published price. Resources without a
+ * price (e.g. Operation 100 before registration opens) are never shown with
+ * an "Unlock" button.
+ */
+export function isPurchasable(resource: Resource): boolean {
+  return (
+    resource.status === 'paid' &&
+    !resource.comingSoon &&
+    typeof resource.price === 'number' &&
+    resource.price > 0 &&
+    resource.isAvailableStandalone !== false
+  );
+}
+
+/** Only e-books open in the in-site reader, so only they get a "Read Free Preview" link. */
+export function hasReaderPreview(resource: Resource): boolean {
+  return resource.deliveryFormat === 'PDF eBook' && resource.previewReady !== false;
+}
+
+export interface PriceDisplay {
+  /** Main label, e.g. "FREE", "₦3,000", "Included in Ultimate", "Opening soon". */
+  label: string;
+  /** Crossed-out original price, when an offer price is active. */
+  compareAt?: string;
+}
+
+export function priceDisplay(resource: Resource): PriceDisplay {
+  if (resource.status === 'free') return { label: 'FREE' };
+  if (resource.comingSoon) return { label: 'Coming soon' };
+  if (typeof resource.price === 'number' && resource.price > 0) {
+    const hasOffer = typeof resource.compareAtPrice === 'number' && resource.compareAtPrice > resource.price;
+    return {
+      label: formatNaira(resource.price),
+      compareAt: hasOffer ? formatNaira(resource.compareAtPrice as number) : undefined,
+    };
+  }
+  if (resource.inclusions?.ultimate && !resource.inclusions?.mastery) return { label: 'Included in Ultimate' };
+  if (resource.inclusions?.mastery) return { label: 'Included in Mastery' };
+  return { label: 'Opening soon' };
 }
 
 export function getResourceBySlug(resources: Resource[], slug: string): Resource | undefined {
