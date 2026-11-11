@@ -6,6 +6,7 @@ import FeaturedResource from '../components/FeaturedResource.astro';
 import ResourceFilters from '../components/ResourceFilters.astro';
 import QuizCard from '../components/QuizCard.astro';
 import CheckoutModal from '../components/CheckoutModal.astro';
+import MyLibrary from '../components/MyLibrary.astro';
 import { getResources, getFeaturedResource, getQuizResources, resourceIcon } from '../lib/resources';
 
 const resources = await getResources();
@@ -69,6 +70,8 @@ const jsonLd = [
       </div>
     </div>
   </section>
+
+  <MyLibrary resources={resources} />
 
   {featured && <FeaturedResource resource={featured} />}
 

@@ -1,171 +1,163 @@
-// TECHMED Study Reader & Bookshelf Service Worker (Offline PWA)
-// Enables persistent offline reading for authorized assets on mobile and desktop devices.
+// TECHMED service worker — makes the library and reader open without data.
+//
+// What it caches (all public, non-personal files):
+//   - pages: network-first, falling back to the last copy (so /resources and
+//     /library/read/<book> open offline after being visited once)
+//   - build assets (/_astro/*, /pdfjs/*, fonts, images): cache-first
+// What it NEVER caches: Supabase APIs/functions (the books themselves are
+// stored encrypted in IndexedDB by the reader, not here), auth, payments,
+// admin pages, or URLs carrying tokens.
 
-const STATIC_CACHE = 'techmed-static-v3';
-const READER_CACHE = 'techmed-reader-v3';
+const VERSION = 'v4';
+const STATIC_CACHE = `techmed-static-${VERSION}`;
+const PAGES_CACHE = `techmed-pages-${VERSION}`;
 
-// Explicit Public Precache Allowlist (FREE & PUBLIC SHELL ASSETS ONLY)
-// Note: Never precache paid booster systems anonymously to protect premium study materials.
-const PRECACHE_URLS = [
-  '/',
-  '/library',
-  '/resources',
-  '/manifest.json',
-  '/favicon.png',
-  '/library/read/admission-intelligence-guide-2026',
-];
+const PRECACHE_URLS = ['/resources/', '/manifest.json', '/favicon.png', '/pdfjs/pdf.worker.min.mjs', '/images/logo.png'];
 
-// Sensitive Routes & Endpoints that must NEVER be cached by the service worker
-function isRestrictedEndpoint(url) {
+function isRestricted(url) {
   const path = url.pathname.toLowerCase();
   const search = url.search.toLowerCase();
-
-  // Administrative portals & operations
   if (path.startsWith('/library/admin') || path.startsWith('/admin')) return true;
-
-  // Authentication & session exchange
   if (path.includes('/auth/') || path.includes('/oauth/')) return true;
-
-  // Payment webhooks & callback handlers
-  if (path.startsWith('/payment/callback') || path.includes('/pay-initiate') || path.includes('/pay-verify')) return true;
-
-  // Supabase REST, RPC, Auth, and Functions endpoints
-  if (path.includes('/rest/v1') || path.includes('/auth/v1') || path.includes('/functions/v1')) return true;
-
-  // URLs containing sensitive tokens or credentials in query parameters
-  if (
-    search.includes('access_token=') ||
-    search.includes('refresh_token=') ||
-    search.includes('token=') ||
-    search.includes('code=')
-  ) {
-    return true;
-  }
-
+  if (path.startsWith('/payment/') || path.startsWith('/login') || path.startsWith('/account')) return true;
+  if (path.includes('/rest/v1') || path.includes('/auth/v1') || path.includes('/functions/v1') || path.includes('/storage/v1')) return true;
+  if (/(access_token|refresh_token|token|code)=/.test(search)) return true;
   return false;
 }
 
-// Install: Precache public shell & authorized free learning assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((cache) => {
-      return Promise.all(
-        PRECACHE_URLS.map((url) =>
-          cache.add(url).catch((err) =>
-            console.warn('[SW] Skipped precaching url:', url, err)
-          )
-        )
-      );
-    }).then(() => self.skipWaiting())
+    caches
+      .open(STATIC_CACHE)
+      .then((cache) => Promise.all(PRECACHE_URLS.map((u) => cache.add(u).catch(() => {}))))
+      .then(() => self.skipWaiting()),
   );
 });
 
-// Activate: Clean up older cache versions
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys
-          .filter((key) => key !== STATIC_CACHE && key !== READER_CACHE)
-          .map((key) => caches.delete(key))
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== STATIC_CACHE && k !== PAGES_CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim()),
   );
 });
 
-// Fetch Strategy:
-// 1. Never intercept restricted endpoints (admin, auth, payments, Supabase APIs).
-// 2. Navigation / Reader requests: Network-first with fallback to cached copy.
-// 3. Static public assets: Cache-first with network fallback.
+function offlinePage() {
+  return new Response(
+    '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline — TECHMED</title>' +
+      '<style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#012748;color:#f8f9fa;font-family:system-ui,sans-serif;text-align:center;padding:24px}a{color:#c9a227;font-weight:700}</style></head>' +
+      '<body><div><h2>You are offline</h2><p>Books you saved on this phone are in <a href="/resources/#my-library">My Library</a>.</p></div></body></html>',
+    { headers: { 'Content-Type': 'text/html; charset=utf-8' } },
+  );
+}
+
 self.addEventListener('fetch', (event) => {
   const req = event.request;
+  if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Skip non-GET requests or external API calls (e.g. Supabase, Paystack, Google Analytics)
-  if (req.method !== 'GET') return;
-  if (url.origin !== self.location.origin) return;
+  const sameOrigin = url.origin === self.location.origin;
+  const isFont = url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com';
+  if (!sameOrigin && !isFont) return;
+  if (sameOrigin && isRestricted(url)) return;
 
-  // Block caching on restricted/sensitive endpoints
-  if (isRestrictedEndpoint(url)) {
-    return; // Pass through to network directly without caching
-  }
+  const isPage = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
 
-  const isReaderRoute = url.pathname.startsWith('/library/read') || url.pathname.startsWith('/read');
-  const isNavigation = req.mode === 'navigate' || req.headers.get('accept')?.includes('text/html');
-
-  if (isReaderRoute || isNavigation) {
-    // Network-First with background cache update for authorized responses
+  if (isPage) {
     event.respondWith(
       fetch(req)
-        .then((networkRes) => {
-          // Only cache successful 200 responses for non-restricted routes
-          if (networkRes && networkRes.status === 200 && !isRestrictedEndpoint(url)) {
-            const clone = networkRes.clone();
-            const targetCache = isReaderRoute ? READER_CACHE : STATIC_CACHE;
-            caches.open(targetCache).then((cache) => cache.put(req, clone));
+        .then((res) => {
+          if (res && res.status === 200 && res.type === 'basic') {
+            const copy = res.clone();
+            caches.open(PAGES_CACHE).then((c) => c.put(url.pathname, copy));
           }
-          return networkRes;
+          return res;
         })
         .catch(async () => {
-          // Network failed: Try reader cache then static cache
-          const cachedReader = await caches.match(req);
-          if (cachedReader) return cachedReader;
-
-          // If navigation to library, return cached library shell
-          if (isNavigation) {
-            const cachedLib = await caches.match('/library');
-            if (cachedLib) return cachedLib;
-          }
-
-          return new Response(
-            `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Offline — TECHMED</title><style>body{background:#030d17;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;padding:20px;text-align:center;}a{color:#eab308;}</style></head><body><div><h2>You are offline</h2><p>You can read any previously saved study manuals from your <a href="/library">Bookshelf</a>.</p></div></body></html>`,
-            { headers: { 'Content-Type': 'text/html' } }
+          const path = url.pathname;
+          const alt = path.endsWith('/') ? path.slice(0, -1) : `${path}/`;
+          return (
+            (await caches.match(path, { ignoreSearch: true })) ||
+            (await caches.match(alt, { ignoreSearch: true })) ||
+            (path.startsWith('/library') || path.startsWith('/resources') ? await caches.match('/resources/') : null) ||
+            offlinePage()
           );
-        })
+        }),
     );
     return;
   }
 
-  // Cache-First for static assets (images, css, js)
+  // Build assets, images, fonts, pdf.js worker: cache-first.
   event.respondWith(
-    caches.match(req).then((cachedRes) => {
-      if (cachedRes) return cachedRes;
-
-      return fetch(req).then((networkRes) => {
-        if (networkRes && networkRes.status === 200 && !isRestrictedEndpoint(url)) {
-          const clone = networkRes.clone();
-          caches.open(STATIC_CACHE).then((cache) => cache.put(req, clone));
-        }
-        return networkRes;
-      });
-    })
+    caches.match(req).then(
+      (hit) =>
+        hit ||
+        fetch(req).then((res) => {
+          if (res && (res.status === 200 || res.type === 'opaque')) {
+            const copy = res.clone();
+            caches.open(STATIC_CACHE).then((c) => c.put(req, copy));
+          }
+          return res;
+        }),
+    ),
   );
 });
 
-// Explicit Message Handling:
-// - 'cache-manual': Download and verify offline storage
-// - 'clear-user-cache': Purge protected user-specific reader caches on sign out
+// Store a page AND every script/style it needs, so it opens offline even if
+// the student has never visited it while this worker was active.
+async function cachePageWithAssets(pagePath) {
+  const url = new URL(pagePath, self.location.origin);
+  if (url.origin !== self.location.origin || isRestricted(url)) return;
+  const res = await fetch(url.pathname, { credentials: 'same-origin' });
+  if (!res.ok) return;
+  const html = await res.clone().text();
+  const pages = await caches.open(PAGES_CACHE);
+  await pages.put(url.pathname, res);
+
+  const statics = await caches.open(STATIC_CACHE);
+  const seen = new Set();
+  const queue = [];
+  const add = (u) => {
+    try {
+      const abs = new URL(u, self.location.origin);
+      if (abs.origin !== self.location.origin) return;
+      if (!/^\/(_astro|pdfjs|images)\//.test(abs.pathname)) return;
+      if (!seen.has(abs.pathname)) {
+        seen.add(abs.pathname);
+        queue.push(abs.pathname);
+      }
+    } catch (e) {}
+  };
+  for (const m of html.matchAll(/(?:src|href)="([^"]+)"/g)) add(m[1]);
+  while (queue.length) {
+    const path = queue.shift();
+    let r = await caches.match(path);
+    if (!r) {
+      r = await fetch(path).catch(() => null);
+      if (!r || !r.ok) continue;
+      await statics.put(path, r.clone());
+    }
+    if (path.endsWith('.js')) {
+      const js = await r.text();
+      // ES module imports between build chunks, e.g. from"./supabase.abc123.js"
+      for (const m of js.matchAll(/["'](\.{1,2}\/[^"']+?\.(?:js|css|mjs))["']/g)) add(new URL(m[1], self.location.origin + path).pathname);
+      for (const m of js.matchAll(/["'](\/_astro\/[^"']+?\.(?:js|css))["']/g)) add(m[1]);
+    }
+  }
+}
+
 self.addEventListener('message', (event) => {
-  if (event.data?.action === 'clear-user-cache') {
+  const data = event.data || {};
+  if (data.action === 'cache-pages' && Array.isArray(data.paths)) {
     event.waitUntil(
-      caches.delete(READER_CACHE).then(() => caches.open(READER_CACHE))
+      Promise.all(data.paths.slice(0, 10).map((p) => cachePageWithAssets(p).catch(() => {}))).then(() => {
+        if (event.source) event.source.postMessage({ action: 'cache-pages-done' });
+      }),
     );
-  } else if (event.data?.action === 'cache-manual') {
-    const urls = event.data.urls || [];
-    event.waitUntil(
-      caches.open(READER_CACHE).then((cache) => {
-        return Promise.all(
-          urls.map((u) => {
-            const parsed = new URL(u, self.location.origin);
-            if (isRestrictedEndpoint(parsed)) return Promise.resolve();
-            return fetch(u).then((res) => {
-              if (res.ok) return cache.put(u, res);
-            }).catch((err) => console.warn('[SW] Offline manual caching error:', u, err));
-          })
-        );
-      }).then(() => {
-        event.source?.postMessage({ status: 'cached-complete' });
-      })
-    );
+  }
+  // Signing out clears cached pages (books live in IndexedDB and are cleared by the app).
+  if (data.action === 'clear-user-cache') {
+    event.waitUntil(caches.delete(PAGES_CACHE));
   }
 });
