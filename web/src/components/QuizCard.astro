@@ -21,20 +21,28 @@ const { title, description, subject, questionCount, duration, difficulty, startU
   <h3>{title}</h3>
   {description && <p class="description">{description}</p>}
 
-  <dl class="meta">
-    <div>
-      <dt>Questions</dt>
-      <dd>{questionCount ?? '—'}</dd>
-    </div>
-    <div>
-      <dt>Duration</dt>
-      <dd>{duration ?? '—'}</dd>
-    </div>
-    <div>
-      <dt>Difficulty</dt>
-      <dd>{difficulty ?? '—'}</dd>
-    </div>
-  </dl>
+  {(questionCount != null || duration || difficulty) && (
+    <dl class="meta">
+      {questionCount != null && (
+        <div>
+          <dt>Questions</dt>
+          <dd>{questionCount}</dd>
+        </div>
+      )}
+      {duration && (
+        <div>
+          <dt>Duration</dt>
+          <dd>{duration}</dd>
+        </div>
+      )}
+      {difficulty && (
+        <div>
+          <dt>Difficulty</dt>
+          <dd>{difficulty}</dd>
+        </div>
+      )}
+    </dl>
+  )}
 
   <a class="btn-primary" href={startUrl} target={external ? '_blank' : undefined} rel={external ? 'noopener' : undefined}>
     Start Quiz

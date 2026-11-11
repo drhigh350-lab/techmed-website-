@@ -62,6 +62,8 @@ export interface Resource {
   status: ResourceStatus;
   /** Naira amount. Omitted entirely (not zero) when pricing isn't public yet. */
   price?: number;
+  /** Original/standard price shown crossed out next to `price` (e.g. early-bird offers). */
+  compareAtPrice?: number;
   currency?: string;
   /** Display order, lower first — same convention as the faqItem schema's `order` field. */
   order?: number;
@@ -603,6 +605,7 @@ const RESOURCE_QUERY = `*[_type == "resource" && !(_id in path("drafts.**"))] {
   type,
   status,
   price,
+  compareAtPrice,
   currency,
   order,
   featured,
@@ -636,6 +639,51 @@ function byOrder(a: Resource, b: Resource): number {
 export async function getResources(): Promise<Resource[]> {
   const resources = await fetchSanity<Resource[]>(RESOURCE_QUERY, FALLBACK_RESOURCES);
   return [...resources].sort(byOrder);
+}
+
+export function formatNaira(amount: number): string {
+  return `₦${amount.toLocaleString('en-NG')}`;
+}
+
+/**
+ * Can a student buy this resource on its own right now? Only when it is a
+ * paid, standalone product with a real, published price. Resources without a
+ * price (e.g. Operation 100 before registration opens) are never shown with
+ * an "Unlock" button.
+ */
+export function isPurchasable(resource: Resource): boolean {
+  return (
+    resource.status === 'paid' &&
+    typeof resource.price === 'number' &&
+    resource.price > 0 &&
+    resource.isAvailableStandalone !== false
+  );
+}
+
+/** Only e-books open in the in-site reader, so only they get a "Read Free Preview" link. */
+export function hasReaderPreview(resource: Resource): boolean {
+  return resource.deliveryFormat === 'PDF eBook';
+}
+
+export interface PriceDisplay {
+  /** Main label, e.g. "FREE", "₦3,000", "Included in Ultimate", "Opening soon". */
+  label: string;
+  /** Crossed-out original price, when an offer price is active. */
+  compareAt?: string;
+}
+
+export function priceDisplay(resource: Resource): PriceDisplay {
+  if (resource.status === 'free') return { label: 'FREE' };
+  if (typeof resource.price === 'number' && resource.price > 0) {
+    const hasOffer = typeof resource.compareAtPrice === 'number' && resource.compareAtPrice > resource.price;
+    return {
+      label: formatNaira(resource.price),
+      compareAt: hasOffer ? formatNaira(resource.compareAtPrice as number) : undefined,
+    };
+  }
+  if (resource.inclusions?.ultimate && !resource.inclusions?.mastery) return { label: 'Included in Ultimate' };
+  if (resource.inclusions?.mastery) return { label: 'Included in Mastery' };
+  return { label: 'Opening soon' };
 }
 
 export function getResourceBySlug(resources: Resource[], slug: string): Resource | undefined {

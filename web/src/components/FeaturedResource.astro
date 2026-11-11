@@ -5,7 +5,7 @@
 // moving the flag. Renders nothing if no resource is featured, so the
 // hub degrades gracefully rather than showing a broken/empty block.
 import type { Resource } from '../lib/resources';
-import { resourceIcon } from '../lib/resources';
+import { resourceIcon, priceDisplay } from '../lib/resources';
 
 interface Props {
   resource?: Resource;
@@ -13,14 +13,7 @@ interface Props {
 
 const { resource } = Astro.props;
 
-const currencySymbol = resource?.currency === 'NGN' ? '₦' : (resource?.currency ?? '');
-const priceLabel = resource
-  ? resource.status === 'free'
-    ? 'FREE'
-    : resource.price
-      ? `${currencySymbol}${resource.price.toLocaleString()}`
-      : 'Price coming soon'
-  : '';
+const price = resource ? priceDisplay(resource) : undefined;
 
 const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
 const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
@@ -34,7 +27,7 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
       <h2>{resource.title}</h2>
       <p class="description">{resource.description}</p>
       <div class="footer">
-        <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+        <span class:list={['price-badge', resource.status]}>{price?.compareAt && <s style="opacity:.6;margin-right:6px;font-weight:500">{price.compareAt}</s>}{price?.label}</span>
         <div class="actions">
           {resource.status === 'free' && primaryHref && (
             <a
@@ -51,7 +44,7 @@ const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.ac
       </div>
     </div>
     {resource.primaryImage ? (
-      <img class="thumb-image" src={resource.primaryImage} alt="" loading="lazy" decoding="async" />
+      <img class="thumb-image" src={resource.primaryImage} alt={`${resource.title} cover`} loading="lazy" decoding="async" />
     ) : (
       <div class="icon" set:html={resourceIcon(resource)} />
     )}

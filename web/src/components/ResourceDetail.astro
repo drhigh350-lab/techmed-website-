@@ -3,7 +3,7 @@
 // resource plus a small set of related resources (same category) for
 // internal linking — real records only, never invented "related" items.
 import type { Resource } from '../lib/resources';
-import { resourceIcon } from '../lib/resources';
+import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview } from '../lib/resources';
 
 interface Props {
   resource: Resource;
@@ -12,13 +12,10 @@ interface Props {
 
 const { resource, related = [] } = Astro.props;
 
-const currencySymbol = resource.currency === 'NGN' ? '₦' : (resource.currency ?? '');
-const priceLabel =
-  resource.status === 'free'
-    ? 'FREE'
-    : resource.price
-      ? `${currencySymbol}${resource.price.toLocaleString()}`
-      : 'Price coming soon';
+const price = priceDisplay(resource);
+const priceLabel = price.label;
+const canBuy = isPurchasable(resource);
+const showPreview = resource.status === 'paid' && hasReaderPreview(resource);
 
 const primaryHref = resource.accessUrl ?? resource.externalUrl;
 const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.accessUrl?.startsWith('http'));
@@ -42,7 +39,10 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     <p class="description">{resource.description}</p>
 
     <div class="cta-row">
-      <span class:list={['price-badge', resource.status]}>{priceLabel}</span>
+      <span class:list={['price-badge', resource.status]}>
+        {price.compareAt && <s class="price-was">{price.compareAt}</s>}
+        <span class="price-now">{priceLabel}</span>
+      </span>
 
       {resource.status === 'free' && (
         <>
@@ -64,34 +64,45 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
 
       {resource.status === 'paid' && (
         <>
-          <button
-            type="button"
-            class="btn-primary detail-buy-btn"
-            data-resource={JSON.stringify({
-              id: resource.id,
-              slug: resource.slug,
-              title: resource.title,
-              price: resource.price,
-              currency: resource.currency || 'NGN',
-              subject: resource.subject || resource.category,
-              deliveryFormat: resource.deliveryFormat || 'PDF eBook',
-              description: resource.description,
-              whatsappUrl: resource.whatsappUrl,
-            })}
-            onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
-          >
-            Unlock with Paystack / Transfer
-          </button>
+          {canBuy ? (
+            <button
+              type="button"
+              class="btn-primary detail-buy-btn"
+              data-resource={JSON.stringify({
+                id: resource.id,
+                slug: resource.slug,
+                title: resource.title,
+                price: resource.price,
+                compareAtPrice: resource.compareAtPrice,
+                currency: resource.currency || 'NGN',
+                subject: resource.subject || resource.category,
+                deliveryFormat: resource.deliveryFormat || 'PDF eBook',
+                description: resource.description,
+                whatsappUrl: resource.whatsappUrl,
+              })}
+              onclick="window.dispatchEvent(new CustomEvent('open-checkout', { detail: { resource: JSON.parse(this.dataset.resource) } }))"
+            >
+              Unlock with Paystack / Transfer
+            </button>
+          ) : resource.whatsappUrl ? (
+            <a class="btn-primary" href={resource.whatsappUrl} target="_blank" rel="noopener">
+              {resource.actionLabel}
+            </a>
+          ) : null}
 
-          <a class="btn-secondary" href={`/library/read/${resource.id}`}>
-            Read Free Preview &rarr;
-          </a>
+          {showPreview && (
+            <a class="btn-secondary" href={`/library/read/${resource.id}`}>
+              Read Free Preview &rarr;
+            </a>
+          )}
 
-          {resource.whatsappUrl && (
+          {canBuy && resource.whatsappUrl && (
             <a class="whatsapp-alt-link" href={resource.whatsappUrl} target="_blank" rel="noopener">
               Or order on WhatsApp &rarr;
             </a>
           )}
+        </>
+      )}
         </>
       )}
     </div>
@@ -428,6 +439,11 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
       width: 100%;
       text-align: center;
     }
+  }
+  .price-was {
+    margin-right: 8px;
+    font-weight: 500;
+    opacity: 0.6;
   }
 </style>
 

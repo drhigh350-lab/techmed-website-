@@ -28,7 +28,29 @@ export default defineConfig({
     },
   },
   adapter: cloudflare(),
-  integrations: [sitemap()],
+  integrations: [
+    sitemap({
+      // Keep private, utility and redirect-only URLs out of search results.
+      // Each of these pages also carries <meta name="robots" content="noindex">.
+      filter: (page) => {
+        const path = new URL(page).pathname;
+        const excluded = [
+          /^\/dashboard\/?$/,
+          /^\/login\/?$/,
+          /^\/register\/?$/,
+          /^\/account\//,
+          /^\/admin\//,
+          /^\/library(\/|$)/, // reader + admin + legacy redirect
+          /^\/read\//,
+          /^\/payment\//,
+          /^\/cohort\/?$/,
+          /^\/utme-2027\/builders\/join\/?$/,
+          /^\/404\/?$/,
+        ];
+        return !excluded.some((rx) => rx.test(path));
+      },
+    }),
+  ],
   redirects: {
     // /join's unique content (4H Standard, Builder Rules, the cohort-join
     // link) was folded into /utme-2027/builders itself, so a student never
