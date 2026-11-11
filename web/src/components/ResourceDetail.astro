@@ -108,7 +108,7 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
           ) : null}
 
           {showPreview && (
-            <a class="btn-secondary" href={`/library/read/${resource.id}`}>
+            <a class="btn-secondary" href={resource.previewPdfUrl ? `/library/read/${resource.id}/?preview=1` : `/library/read/${resource.id}`}>
               Read Free Preview &rarr;
             </a>
           )}

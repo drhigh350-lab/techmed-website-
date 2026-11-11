@@ -58,6 +58,7 @@ const config = {
   title: resource.title,
   isFree: resource.status === 'free',
   publicPdfUrl: isPublicPdf ? resource.accessUrl : null,
+  previewPdfUrl: resource.previewPdfUrl ?? null,
   isReadable: isPublicPdf || resource.deliveryFormat === 'PDF eBook',
   watermark: WATERMARKED.includes(resource.id),
   detailUrl: `/resources/${resource.slug}`,
@@ -103,6 +104,11 @@ const config = {
           <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="2" /><circle cx="12" cy="12" r="2" /><circle cx="19" cy="12" r="2" /></svg>
         </button>
       </header>
+
+      <div id="previewBar" class="preview-bar" hidden>
+        <span><strong>Free preview</strong> · the first chapters</span>
+        <a href={config.detailUrl}>Get the full book</a>
+      </div>
 
       <div id="partsBar" class="parts-bar" hidden>
         <label for="partSelect">Section</label>
@@ -188,6 +194,7 @@ const config = {
         title: string;
         isFree: boolean;
         publicPdfUrl: string | null;
+        previewPdfUrl: string | null;
         isReadable: boolean;
         watermark: boolean;
         detailUrl: string;
@@ -547,6 +554,12 @@ const config = {
           return;
         }
 
+        // Free preview copy (public excerpt), e.g. /library/read/<book>/?preview=1
+        if (cfg.previewPdfUrl && new URLSearchParams(location.search).get('preview') === '1') {
+          await openPreview();
+          return;
+        }
+
         // Free public guides: no account needed.
         if (cfg.publicPdfUrl) {
           showMessage('Opening your book…', '', [], true);
@@ -568,6 +581,7 @@ const config = {
         if (!userId) {
           showMessage('Sign in to read your book', 'Use the same email you paid with or enrolled with.', [
             { label: 'Sign in', href: `/login?redirect=${encodeURIComponent(location.pathname)}`, primary: true },
+            ...previewAction(),
             { label: 'About this book', href: cfg.detailUrl },
           ]);
           return;
@@ -616,6 +630,28 @@ const config = {
         }
       }
 
+      function previewAction() {
+        return cfg.previewPdfUrl ? [{ label: 'Read the free preview', href: `${location.pathname.replace(/\/?$/, '/')}?preview=1` }] : [];
+      }
+
+      async function openPreview() {
+        showMessage('Opening the free preview…', '', [], true);
+        try {
+          const res = await fetch(cfg.previewPdfUrl as string);
+          if (!res.ok) throw new Error(String(res.status));
+          const bytes = await res.arrayBuffer();
+          partsBar.hidden = true;
+          await openPdf(bytes, 'preview');
+          $('offlineSection').hidden = true;
+          $('previewBar').hidden = false;
+          setChip('Free preview', 'info');
+        } catch {
+          showMessage('Could not open the preview.', 'Check your connection and try again.', [
+            { label: 'Try again', onClick: () => location.reload(), primary: true },
+          ]);
+        }
+      }
+
       // When online, make sure a saved copy is still allowed and up to date.
       async function revalidateSaved() {
         if (!userId || !savedMeta) return;
@@ -651,6 +687,7 @@ const config = {
         if (code === 'not_entitled') {
           showMessage("You don't have this book yet", 'Buy it once and it stays in your library for life.', [
             { label: 'Get this book', href: cfg.detailUrl, primary: true },
+            ...previewAction(),
             { label: 'My library', href: '/resources#my-library' },
           ]);
         } else if (code === 'sign_in_required') {
@@ -843,6 +880,25 @@ const config = {
       .icon-btn:hover,
       .icon-btn:focus-visible {
         background: rgba(255, 255, 255, 0.1);
+      }
+      .preview-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 8px 12px;
+        background: #c9a227;
+        color: #1a1400;
+        font-size: 0.88rem;
+      }
+      .preview-bar a {
+        flex-shrink: 0;
+        padding: 6px 12px;
+        border-radius: 999px;
+        background: #012748;
+        color: #f8f9fa;
+        font: 700 0.82rem 'Montserrat', sans-serif;
+        text-decoration: none;
       }
       .parts-bar {
         display: flex;

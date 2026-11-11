@@ -141,7 +141,7 @@ const icon = resource ? resourceIcon(resource) : undefined;
               <a class="btn-primary" href={`/resources/${resource.slug}`}>View Details</a>
             )}
             {showPreview && (
-              <a class="reader-preview-link" href={`/library/read/${resource.id}`}>
+              <a class="reader-preview-link" href={resource.previewPdfUrl ? `/library/read/${resource.id}/?preview=1` : `/library/read/${resource.id}`}>
                 Read Free Preview &rarr;
               </a>
             )}

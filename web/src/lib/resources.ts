@@ -100,6 +100,10 @@ export interface Resource {
   codeManaged?: boolean;
   /** False until the free sample excerpt is uploaded; hides "Read Free Preview". */
   previewReady?: boolean;
+  /** Public free-preview PDF (a short excerpt), opened in the reader in preview mode. */
+  previewPdfUrl?: string;
+  /** Listed but not yet on sale (e.g. the book file isn't ready). */
+  comingSoon?: boolean;
   /** 1200×630 social-share image (falls back to primaryImage). */
   ogImage?: string;
   /** Short subtitle / tagline shown under the title. */
@@ -489,6 +493,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     slug: 'organic-chemistry-mastery',
     codeManaged: true,
     previewReady: false,
+    comingSoon: true,
     title: 'Organic Chemistry Mastery',
     tagline: 'Understand the Structures. Master the Reactions. Conquer the Questions.',
     description:
@@ -535,7 +540,8 @@ export const FALLBACK_RESOURCES: Resource[] = [
     id: 'mole-concept-cure',
     slug: 'mole-concept-cure',
     codeManaged: true,
-    previewReady: false,
+    previewReady: true,
+    previewPdfUrl: '/previews/mole-concept-cure-free-preview.pdf',
     title: 'The Mole Concept Cure',
     tagline: 'Understand the Mole. Master the Calculations. Conquer the Questions.',
     description:
@@ -559,7 +565,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     book: {
       series: 'Think Smart Series',
       edition: 'Second Edition 2027',
-      pages: 'About 230',
+      pages: '211',
       chapters: 10,
       author: 'TECHMED',
     },
@@ -753,6 +759,7 @@ export function formatNaira(amount: number): string {
 export function isPurchasable(resource: Resource): boolean {
   return (
     resource.status === 'paid' &&
+    !resource.comingSoon &&
     typeof resource.price === 'number' &&
     resource.price > 0 &&
     resource.isAvailableStandalone !== false
@@ -773,6 +780,7 @@ export interface PriceDisplay {
 
 export function priceDisplay(resource: Resource): PriceDisplay {
   if (resource.status === 'free') return { label: 'FREE' };
+  if (resource.comingSoon) return { label: 'Coming soon' };
   if (typeof resource.price === 'number' && resource.price > 0) {
     const hasOffer = typeof resource.compareAtPrice === 'number' && resource.compareAtPrice > resource.price;
     return {
