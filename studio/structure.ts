@@ -45,6 +45,8 @@ export const structure: StructureResolver = (S) =>
       S.documentTypeListItem('proofPoint').title('Proof Points'),
       S.divider(),
       S.documentTypeListItem('resource').title('Resources'),
+      S.documentTypeListItem('quiz').title('Quizzes'),
+      S.documentTypeListItem('classLink').title('Class Links (Easy Access Zone)'),
       S.documentTypeListItem('subject').title('JAMB Subjects'),
       S.documentTypeListItem('syllabusTopic').title('Syllabus Topics'),
       S.divider(),
