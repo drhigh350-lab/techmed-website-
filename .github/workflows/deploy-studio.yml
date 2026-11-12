@@ -17,17 +17,24 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: studio
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Install Studio dependencies
-        run: npm install --no-audit --no-fund
+          node-version: 22
+      - name: Install Studio dependencies (Studio only, outside the monorepo workspace)
+        run: |
+          cp -r studio "$RUNNER_TEMP/studio"
+          cd "$RUNNER_TEMP/studio"
+          for attempt in 1 2 3; do
+            npm install --no-audit --no-fund && break
+            echo "npm install failed (attempt $attempt), retrying in 20s"
+            npm cache clean --force || true
+            sleep 20
+          done
+          test -d node_modules/sanity
       - name: Deploy Studio
+        working-directory: ${{ runner.temp }}/studio
         env:
           SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
         run: |
