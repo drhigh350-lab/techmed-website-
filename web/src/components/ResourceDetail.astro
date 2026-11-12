@@ -119,9 +119,20 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
           )}
         </>
       )}
-        </>
-      )}
     </div>
+
+    {resource.bonus && (
+      <aside class="bonus-box" aria-label="Exclusive bonus">
+        <p class="bonus-eyebrow">Exclusive bonus · included with every copy</p>
+        <h2 class="bonus-title">{resource.bonus.title.replace(/^Exclusive bonus:\s*/i, '')}</h2>
+        <p class="bonus-text">{resource.bonus.text}</p>
+        {resource.bonus.points && (
+          <ul class="bonus-points">
+            {resource.bonus.points.map((pt) => <li>{pt}</li>)}
+          </ul>
+        )}
+      </aside>
+    )}
   </header>
 
   <div class="body">
@@ -138,13 +149,16 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
         <h2>Preparation Plan Inclusions</h2>
         <div class="inclusions-box">
           {resource.inclusions.mastery && (
-            <p><strong>TECHMED Mastery &amp; Ultimate:</strong> Included with full enrolment on or before 30 November 2026. No separate purchase required.</p>
+            <p><strong>TECHMED Mastery &amp; Ultimate:</strong> {resource.inclusions.masteryText ?? 'Included with full enrolment on or before 30 November 2026. No separate purchase required.'}</p>
           )}
           {resource.inclusions.core && (
             <p><strong>TECHMED Core:</strong> {resource.inclusions.core}.</p>
           )}
           {resource.isAvailableStandalone && (
-            <p><strong>Standalone Purchase:</strong> Available to any candidate nationwide regardless of whether you are enrolled in a TECHMED class.</p>
+            <p><strong>Standalone Purchase:</strong> Available to any candidate nationwide, regardless of whether they are enrolled in a TECHMED class.</p>
+          )}
+          {resource.bonus && (
+            <p><strong>Exclusive Bonus:</strong> {resource.bonus.text}</p>
           )}
           {resource.inclusions.note && <p class="inc-note">{resource.inclusions.note}</p>}
         </div>
@@ -491,6 +505,37 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
     border-radius: 999px;
     border: 1px solid var(--border);
     background: var(--surface);
+  }
+  .bonus-box {
+    margin-top: var(--space-6, 24px);
+    padding: var(--space-5, 20px);
+    border-radius: var(--radius-lg, 16px);
+    border: 2px solid var(--accent);
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.14), rgba(201, 162, 39, 0.04));
+  }
+  .bonus-eyebrow {
+    margin: 0 0 6px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-text, var(--accent));
+  }
+  .bonus-title {
+    margin: 0 0 8px;
+    font-size: 1.25rem;
+    line-height: 1.25;
+  }
+  .bonus-text {
+    margin: 0 0 10px;
+  }
+  .bonus-points {
+    margin: 0;
+    padding-left: 1.2em;
+  }
+  .bonus-points li {
+    margin: 4px 0;
   }
 </style>
 

@@ -48,6 +48,8 @@ export interface ResourceInclusions {
   core?: string; // e.g. "20% discount (₦4,000)"
   mastery?: boolean; // included in Mastery
   ultimate?: boolean; // included in Ultimate
+  /** Overrides the default Mastery & Ultimate sentence on the detail page. */
+  masteryText?: string;
   note?: string;
 }
 
@@ -106,6 +108,13 @@ export interface Resource {
   comingSoon?: boolean;
   /** Delivered another way (e.g. per-university research pages), never in the PDF reader. */
   notInReader?: boolean;
+  /** Prominent extra that comes with the product (shown under the price and on the card). */
+  bonus?: {
+    label: string; // short card badge, e.g. "+ 1,003-question online practice bank"
+    title: string;
+    text: string;
+    points?: string[];
+  };
   /** 1200×630 social-share image (falls back to primaryImage). */
   ogImage?: string;
   /** Short subtitle / tagline shown under the title. */
@@ -500,7 +509,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     title: 'Organic Chemistry Mastery',
     tagline: 'Understand the Structures. Master the Reactions. Conquer the Questions.',
     description:
-      'The complete TECHMED guide to organic chemistry for JAMB UTME, WAEC and NECO — 19 chapters, 1,000+ questions including 600+ real past questions, 200+ custom figures and a full reaction map.',
+      'A complete foundation for SSCE and UTME Chemistry, taking students from the fundamentals of organic chemistry to hydrocarbons, alcohols, phenols, carboxylic acids, esters, fats and soaps, amines, carbohydrates, proteins and polymers. With 19 comprehensive chapters, 1,000+ questions, 600+ authentic past questions, worked examples and over 200 custom diagrams, this guide transforms Organic Chemistry from a collection of confusing reactions into concepts you can understand, connect and apply.',
     category: 'Academic',
     subject: 'Chemistry',
     type: 'Guide',
@@ -520,24 +529,44 @@ export const FALLBACK_RESOURCES: Resource[] = [
     book: {
       series: 'Think Smart Series',
       edition: 'First Edition 2027',
-      pages: 'About 460',
+      pages: 'Approximately 440',
       chapters: 19,
       author: 'TECHMED',
+    },
+    bonus: {
+      label: '+ 1,003-question online practice bank',
+      title: 'Exclusive bonus: 1,003-question online practice bank',
+      text: 'Every buyer gets private access to the Organic Chemistry Mastery 1,000+ Question Bank on QuizBoot. The quiz link and access passcode are inside the full e-book.',
+      points: [
+        '923 questions drawn from the book, plus 80 bonus JAMB-style UTME Extra questions',
+        'Fresh 63-question randomised tests in 50-minute attempts',
+        'Instant marking with explanations, unlimited retakes and leaderboard access',
+      ],
     },
     inclusions: {
       core: '20% off for active TECHMED Core students',
       mastery: true,
       ultimate: true,
-      note: 'Included in Mastery and Ultimate. Read online in the TECHMED Library.',
+      masteryText:
+        'Included with full enrolment on or before 30 November 2026, subject to the applicable package inclusion. No separate purchase required.',
+      note: 'Included in the applicable package enrolments. Read online in the TECHMED Library.',
     },
     whatsIncluded: [
-      '19 chapters across 4 parts (about 460 pages)',
-      '1,000+ questions: 600+ real JAMB, WAEC and NECO past questions, about 180 worked examples and 285 chapter practice questions',
-      '200+ custom figures, a full reaction map and a chemical-tests summary',
-      'Corrections to wrong answer keys that circulate for popular past questions',
+      '19 comprehensive chapters covering the foundations and major areas of Organic Chemistry.',
+      '1,000+ questions, each with an explanation.',
+      '600+ authentic JAMB, WAEC and NECO past questions, alongside TECHMED practice questions and short-answer calculations.',
+      'Approximately 180 step-by-step worked examples.',
+      '285 end-of-chapter questions with detailed answer explanations.',
+      '200+ custom scientific diagrams, reaction maps, structures and illustrations.',
+      'A complete reaction map and a reference table of 22 key organic reactions.',
+      'A guide to 20 essential chemical tests, including what each test detects.',
+      'Functional-group comparison tables, IUPAC and common names, and a 35-term glossary.',
+      'UTME Focus, UTME Trap Alerts, Common Mistakes and Quick Revision tables.',
+      'Exclusive 1,003-question online practice bank: 923 questions drawn from the book and 80 bonus JAMB-style UTME Extra questions.',
+      'Fresh 63-question randomised tests, 50-minute attempts, instant marking, explanations, unlimited retakes and leaderboard access.',
     ],
     whoItsFor:
-      'JAMB UTME, WAEC and NECO candidates who want to understand organic structures and reactions properly — and answer exam questions on them accurately.',
+      'Students who find Organic Chemistry difficult to understand, struggle to distinguish functional groups or find it hard to remember and apply organic reactions. Designed for JAMB UTME, WAEC and NECO candidates who want to build a strong foundation, understand the relationships between organic compounds and practise extensively with examination-standard questions.',
   },
   {
     id: 'mole-concept-cure',
@@ -548,7 +577,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     title: 'The Mole Concept Cure',
     tagline: 'Understand the Mole. Master the Calculations. Conquer the Questions.',
     description:
-      'A complete guide to chemical calculations, stoichiometry and the mole concept for JAMB UTME, WAEC and NECO — 10 chapters, 600+ questions including 300+ real past questions, and the TECHMED five-step method.',
+      'A complete guide to chemical calculations, stoichiometry and the mole concept for JAMB UTME, WAEC and NECO. Featuring 10 chapters, 600+ questions, 300+ real past questions, step-by-step worked examples and the TECHMED five-step method for solving chemical calculations with confidence.',
     category: 'Academic',
     subject: 'Chemistry',
     type: 'Guide',
@@ -579,13 +608,18 @@ export const FALLBACK_RESOURCES: Resource[] = [
       note: 'Included in Mastery and Ultimate. Read online in the TECHMED Library.',
     },
     whatsIncluded: [
-      '10 chapters (about 230 pages)',
-      '600+ questions: 300+ real past questions, 100+ worked examples and a 102-question bank',
-      'A Question-Pattern Library of the ways examiners set mole-concept questions',
-      'The TECHMED five-step method for solving any chemical calculation',
+      '10 comprehensive chapters covering the mole concept, chemical calculations and stoichiometry.',
+      '600+ questions, including 300+ authentic JAMB, WAEC and NECO past questions.',
+      '100+ step-by-step worked examples using the TECHMED five-step calculation method.',
+      'A 102-question timed practice bank to test your understanding and calculation speed.',
+      'A Question-Pattern Library showing how examiners construct recurring mole-concept questions.',
+      '60+ custom scientific diagrams and illustrations.',
+      'UTME Focus, UTME Trap Alerts and Common Mistakes in every chapter.',
+      'Chapter-end assessments, answer keys and detailed explanations.',
+      'Formula sheets, revision tools and an examination-readiness checklist.',
     ],
     whoItsFor:
-      'Candidates who find chemical calculations confusing and want a dependable method for mole, mass, volume, particle and concentration questions in JAMB, WAEC and NECO.',
+      'Candidates who struggle with chemical calculations or find mole-concept questions difficult to approach. Ideal for students preparing for JAMB UTME, WAEC and NECO who want to understand the principles behind the calculations, develop a reliable problem-solving method and practise with examination-standard questions.',
   },
   {
     id: 'physics-mechanics-electricity',
