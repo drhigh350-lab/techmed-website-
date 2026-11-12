@@ -11,6 +11,19 @@ const currentPath = Astro.url.pathname;
 const isActive = (path: string) => currentPath === path || currentPath === `${path}/`;
 ---
 
+<script is:inline>
+  // Before first paint: if a saved Supabase session exists, show the avatar
+  // (not "Log In") straight away. The full check below confirms it.
+  try {
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && /^sb-.+-auth-token$/.test(k) && localStorage.getItem(k)) {
+        document.documentElement.dataset.auth = 'in';
+        break;
+      }
+    }
+  } catch (e) {}
+</script>
 <header class="navbar">
   <nav class="navbar-inner">
     <a href="/" class="logo">
@@ -271,6 +284,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   }
 
   async function updateNavbarAuth(user: any) {
+    document.documentElement.dataset.auth = user ? 'in' : 'out';
     if (user) {
       const name = user.user_metadata?.full_name || user.user_metadata?.name || 'TECHMED Student';
       const email = user.email || '';
@@ -751,7 +765,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   /* Direct Mobile Header Auth Triggers (hidden on desktop) */
   .mobile-header-auth-btn,
   .mobile-header-avatar-link {
-    display: none !important;
+    display: none;
   }
 
   /* Mobile Account Section in Drawer */
@@ -907,6 +921,17 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     opacity: 0.8;
   }
 
+  :global(html[data-auth='in']) .nav-auth-link {
+    display: none !important;
+  }
+
+  @media (min-width: 861px) {
+    .mobile-header-auth-btn,
+    .mobile-header-avatar-link {
+      display: none !important;
+    }
+  }
+
   @media (max-width: 960px) {
     .nav-links {
       gap: var(--space-3);
@@ -923,7 +948,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
 
     /* Show Mobile Header Auth triggers */
     .mobile-header-auth-btn {
-      display: inline-flex !important;
+      display: inline-flex;
       align-items: center;
       gap: 6px;
       font-family: var(--font-display);
@@ -940,6 +965,14 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
       white-space: nowrap;
     }
 
+    /* Signed in: avatar only. Signed out: Log In only. Never both. */
+    :global(html[data-auth='in']) .mobile-header-auth-btn {
+      display: none !important;
+    }
+    :global(html[data-auth='in']) .mobile-header-avatar-link {
+      display: inline-flex !important;
+    }
+
     .mobile-header-auth-btn:hover {
       background: rgba(201, 162, 39, 0.15);
       border-color: var(--accent);
@@ -947,7 +980,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
     }
 
     .mobile-header-avatar-link {
-      display: inline-flex !important;
+      display: none;
       align-items: center;
       justify-content: center;
       text-decoration: none;
