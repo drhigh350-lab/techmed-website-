@@ -67,6 +67,7 @@ const icon = resource ? resourceIcon(resource) : undefined;
       </p>
       <h3>{resource.title}</h3>
       <p class="description">{resource.description}</p>
+      {resource.bonus && <p class="bonus-badge">{resource.bonus.label}</p>}
 
       {resource.inclusions && (
         <div class="inclusion-note">
@@ -456,5 +457,17 @@ const icon = resource ? resourceIcon(resource) : undefined;
     font-weight: 500;
     opacity: 0.6;
     font-size: 0.85em;
+  }
+  .bonus-badge {
+    display: inline-block;
+    margin: 8px 0 0;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: rgba(201, 162, 39, 0.16);
+    border: 1px solid var(--accent);
+    color: var(--text);
+    font-family: var(--font-display, 'Montserrat', sans-serif);
+    font-size: 0.78rem;
+    font-weight: 700;
   }
 </style>
