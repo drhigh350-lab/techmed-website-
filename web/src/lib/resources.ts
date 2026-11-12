@@ -732,8 +732,15 @@ export async function getResources(): Promise<Resource[]> {
   const slugs = new Set(resources.map((r) => r.slug));
   const merged = [
     ...resources.map((r) => {
-      const code = FALLBACK_RESOURCES.find((f) => f.codeManaged && f.slug === r.slug);
-      return code ? { ...code, ...stripEmpty(r), id: code.id } : r;
+      // Sanity documents have their own ids (e.g. "resource-chemistry-booster-system").
+      // Use the product id the database, payments and reader all understand,
+      // matched by slug, so ownership and the reader work for every book.
+      const code = FALLBACK_RESOURCES.find((f) => f.slug === r.slug);
+      if (!code) return r;
+      if (code.codeManaged) return { ...code, ...stripEmpty(r), id: code.id };
+      // Keep Sanity's copy, but fill in how the product is delivered when the
+      // CMS entry doesn't say (e.g. booster systems are PDF e-books → reader).
+      return { ...r, id: code.id, deliveryFormat: r.deliveryFormat ?? code.deliveryFormat };
     }),
     ...FALLBACK_RESOURCES.filter((f) => f.codeManaged && !slugs.has(f.slug)),
   ];
@@ -767,8 +774,18 @@ export function isPurchasable(resource: Resource): boolean {
 }
 
 /** Only e-books open in the in-site reader, so only they get a "Read Free Preview" link. */
+/** Every PDF e-book (free or paid) opens in the TECHMED reader, never as a raw file. */
+export function opensInReader(resource: Resource): boolean {
+  return resource.deliveryFormat === 'PDF eBook' || Boolean(resource.accessUrl?.toLowerCase().endsWith('.pdf'));
+}
+
+export function readerUrl(resource: Resource): string {
+  return `/library/read/${resource.id}/`;
+}
+
 export function hasReaderPreview(resource: Resource): boolean {
-  return resource.deliveryFormat === 'PDF eBook' && resource.previewReady !== false;
+  // Only when a real preview file exists — never a link that leads nowhere.
+  return Boolean(resource.previewPdfUrl) && resource.previewReady !== false;
 }
 
 export interface PriceDisplay {

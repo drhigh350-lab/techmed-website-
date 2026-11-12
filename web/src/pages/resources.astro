@@ -6,8 +6,7 @@ import FeaturedResource from '../components/FeaturedResource.astro';
 import ResourceFilters from '../components/ResourceFilters.astro';
 import QuizCard from '../components/QuizCard.astro';
 import CheckoutModal from '../components/CheckoutModal.astro';
-import MyLibrary from '../components/MyLibrary.astro';
-import { getResources, getFeaturedResource, getQuizResources, resourceIcon } from '../lib/resources';
+import { getResources, getFeaturedResource, getQuizResources, resourceIcon, opensInReader } from '../lib/resources';
 
 const resources = await getResources();
 const featured = getFeaturedResource(resources);
@@ -49,7 +48,7 @@ const jsonLd = [
     </p>
 
     <div class="hero-actions">
-      <a href="#catalog" class="btn-primary">Browse Catalogue &amp; Bookshelf</a>
+      <a href="#catalog" class="btn-primary">Browse Catalogue &amp; My Library</a>
     </div>
 
     <!-- Quick explanation card of inclusions -->
@@ -66,20 +65,18 @@ const jsonLd = [
       <div class="strip-divider" aria-hidden="true">·</div>
       <div class="strip-item">
         <span class="strip-label">Mastery &amp; Ultimate:</span>
-        <span class="strip-val">Formula workbooks &amp; boosters included</span>
+        <span class="strip-val">E-books &amp; boosters included</span>
       </div>
     </div>
   </section>
-
-  <MyLibrary resources={resources} />
 
   {featured && <FeaturedResource resource={featured} />}
 
   <section class="catalog" id="catalog">
     <div class="catalog-header">
       <SectionHeading
-        title="Learning Catalogue &amp; Bookshelf"
-        subtitle="Discover study materials, formula banks, and your personal student bookshelf."
+        title="Learning Catalogue &amp; My Library"
+        subtitle="Every TECHMED resource, and your own library of books you can read anywhere."
         align="center"
       />
     </div>
@@ -94,6 +91,9 @@ const jsonLd = [
           data-slug={resource.slug}
           data-subject={resource.subject || resource.category || 'General'}
           data-status={resource.status}
+          data-title={resource.title}
+          data-reader={opensInReader(resource) ? '1' : '0'}
+          data-price={resource.comingSoon ? 0 : (resource.price ?? 0)}
         >
           <ResourceCard resource={resource} />
         </div>
@@ -120,16 +120,16 @@ const jsonLd = [
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
       </div>
-      <p class="prompt-eyebrow">STUDENT BOOKSHELF</p>
-      <h3>Sign in to access your bookshelf</h3>
+      <p class="prompt-eyebrow">MY LIBRARY</p>
+      <h3>Sign in to see your library</h3>
       <p class="prompt-desc">
-        Log in to view your purchased booster systems, cohort plan inclusions, and free official study materials.
+        Sign in to read the books you bought or got with your TECHMED plan, and save them for offline reading.
       </p>
       <div class="prompt-actions">
-        <a href="/login?redirect=/resources?view=bookshelf" class="btn-primary prompt-btn">
-          Log In to Your Bookshelf &rarr;
+        <a href="/login?redirect=/resources/?view=library" class="btn-primary prompt-btn">
+          Log In to Your Library &rarr;
         </a>
-        <a href="/register?redirect=/resources?view=bookshelf" class="btn-secondary prompt-btn">
+        <a href="/register?redirect=/resources/?view=library" class="btn-secondary prompt-btn">
           Create Free Account
         </a>
       </div>
@@ -143,8 +143,8 @@ const jsonLd = [
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
       </div>
-      <h3>Your personal bookshelf</h3>
-      <p class="empty-desc">You haven't unlocked any paid booster systems yet. Explore the catalogue below to add materials to your bookshelf.</p>
+      <h3>Your library is empty</h3>
+      <p class="empty-desc">Books you buy, or get with your TECHMED plan, appear here automatically.</p>
       <button type="button" id="browseAllFromBookshelfBtn" class="btn-primary prompt-btn">
         Browse All Resources &rarr;
       </button>
