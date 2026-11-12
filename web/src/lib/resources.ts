@@ -775,7 +775,10 @@ export async function getResources(): Promise<Resource[]> {
       // matched by slug, so ownership and the reader work for every book.
       const code = FALLBACK_RESOURCES.find((f) => f.slug === r.slug);
       if (!code) return r;
-      if (code.codeManaged) return { ...code, ...stripEmpty(r), id: code.id };
+      // Code-managed products (the Think Smart e-books) keep their full page
+      // copy from code; a Sanity entry only makes them pickable in the Studio
+      // (e.g. as a quiz's Book) and can never overwrite the page.
+      if (code.codeManaged) return { ...stripEmpty(r), ...code, id: code.id };
       // Keep Sanity's copy, but fill in how the product is delivered when the
       // CMS entry doesn't say (e.g. booster systems are PDF e-books → reader).
       return { ...r, id: code.id, deliveryFormat: r.deliveryFormat ?? code.deliveryFormat, notInReader: code.notInReader };

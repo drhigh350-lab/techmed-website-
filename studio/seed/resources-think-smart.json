@@ -1,0 +1,34 @@
+[
+  {
+    "_id": "resource-mole-concept-cure",
+    "_type": "resource",
+    "title": "The Mole Concept Cure",
+    "slug": { "_type": "slug", "current": "mole-concept-cure" },
+    "description": "A complete guide to chemical calculations, stoichiometry and the mole concept for JAMB UTME, WAEC and NECO.",
+    "category": "Academic",
+    "subject": "Chemistry",
+    "deliveryFormat": "PDF eBook",
+    "type": "Guide",
+    "status": "paid",
+    "price": 3000,
+    "currency": "NGN",
+    "order": 2.7,
+    "actionLabel": "Unlock E-book"
+  },
+  {
+    "_id": "resource-organic-chemistry-mastery",
+    "_type": "resource",
+    "title": "Organic Chemistry Mastery",
+    "slug": { "_type": "slug", "current": "organic-chemistry-mastery" },
+    "description": "A complete foundation in Organic Chemistry for JAMB UTME, WAEC and NECO, with an exclusive 1,003-question online practice bank.",
+    "category": "Academic",
+    "subject": "Chemistry",
+    "deliveryFormat": "PDF eBook",
+    "type": "Guide",
+    "status": "paid",
+    "price": 3000,
+    "currency": "NGN",
+    "order": 2.6,
+    "actionLabel": "Unlock E-book"
+  }
+]

@@ -1,0 +1,33 @@
+name: Import into Sanity
+
+# Run by hand (Actions -> Import into Sanity -> Run workflow) or by Claude.
+# Adds documents from studio/seed/*.json without overwriting existing ones.
+# Needs repository secret SANITY_WRITE_TOKEN (Sanity token, Editor permission).
+on:
+  workflow_dispatch:
+    inputs:
+      files:
+        description: 'Seed files to import (space-separated paths)'
+        required: true
+        default: 'studio/seed/resources-think-smart.json'
+
+permissions:
+  contents: read
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Import
+        env:
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+          FILES: ${{ inputs.files }}
+        run: |
+          for f in $FILES; do
+            case "$f" in studio/seed/*.json) ;; *) echo "::error::Only studio/seed/*.json files can be imported"; exit 1;; esac
+          done
+          node studio/seed/import.mjs $FILES
