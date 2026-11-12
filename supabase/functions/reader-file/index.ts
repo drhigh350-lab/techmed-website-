@@ -11,6 +11,8 @@
 // File location convention (private bucket "paid-resources"):
 //   <product-id>.pdf   e.g. organic-chemistry-mastery.pdf, mole-concept-cure.pdf
 //   <product-id>.zip   legacy booster systems (zip of PDFs)
+//   <product-id>-free-preview.pdf   free preview: served to ANYONE via
+//                                   ?mode=preview (never the full book)
 // or products.metadata.file_path to point at any other path.
 
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -44,9 +46,30 @@ Deno.serve(async (req) => {
 
   const url = new URL(req.url);
   const rawId = (url.searchParams.get("resource") || "").trim().toLowerCase();
-  const mode = url.searchParams.get("mode") === "check" ? "check" : "file";
+  const modeParam = url.searchParams.get("mode");
+  const mode = modeParam === "check" ? "check" : modeParam === "preview" ? "preview" : "file";
   if (!/^[a-z0-9-]{2,80}$/.test(rawId)) return json({ error: "invalid_resource" }, 400);
   const resourceId = ALIASES[rawId] ?? rawId;
+
+  // Free previews are public marketing copies: no sign-in, fixed file name,
+  // and they can never resolve to the full book.
+  if (mode === "preview") {
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const previewName = `${resourceId}-free-preview.pdf`;
+    const res = await fetch(
+      `${supabaseUrl}/storage/v1/object/authenticated/paid-resources/${encodeURIComponent(previewName)}`,
+      { headers: { Authorization: `Bearer ${serviceKey}`, apikey: serviceKey } },
+    );
+    if (!res.ok || !res.body) return json({ error: "preview_not_uploaded" }, 404);
+    const h = new Headers(corsHeaders);
+    h.set("Content-Type", "application/pdf");
+    h.set("Cache-Control", "public, max-age=3600");
+    h.set("Content-Disposition", "inline");
+    const len = res.headers.get("content-length");
+    if (len) h.set("Content-Length", len);
+    return new Response(res.body, { status: 200, headers: h });
+  }
 
   const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
   if (!token) return json({ error: "sign_in_required" }, 401);

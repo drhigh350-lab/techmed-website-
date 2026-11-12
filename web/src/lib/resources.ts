@@ -504,8 +504,9 @@ export const FALLBACK_RESOURCES: Resource[] = [
     id: 'organic-chemistry-mastery',
     slug: 'organic-chemistry-mastery',
     codeManaged: true,
-    previewReady: false,
-    comingSoon: true,
+    previewReady: true,
+    // Served from the private bucket by reader-file (preview file only, no sign-in).
+    previewPdfUrl: 'https://unbgborbhxzsotaieiun.supabase.co/functions/v1/reader-file?resource=organic-chemistry-mastery&mode=preview',
     title: 'Organic Chemistry Mastery',
     tagline: 'Understand the Structures. Master the Reactions. Conquer the Questions.',
     description:
