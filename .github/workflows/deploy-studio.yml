@@ -1,0 +1,38 @@
+name: Deploy Sanity Studio
+
+# Publishes the Studio (techmed.sanity.studio) whenever its schema changes on
+# main, so new content types (e.g. Quizzes, Class Links) appear for editors.
+# Needs a repository secret SANITY_AUTH_TOKEN: a Sanity API token with
+# "Deploy Studio" permission (sanity.io/manage -> API -> Tokens).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'studio/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install Studio dependencies
+        run: npm install --no-audit --no-fund
+      - name: Deploy Studio
+        env:
+          SANITY_AUTH_TOKEN: ${{ secrets.SANITY_AUTH_TOKEN }}
+        run: |
+          if [ -z "$SANITY_AUTH_TOKEN" ]; then
+            echo "::error::Add the SANITY_AUTH_TOKEN repository secret (Sanity token with Deploy Studio permission)."
+            exit 1
+          fi
+          npx sanity deploy --yes

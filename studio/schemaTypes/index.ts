@@ -12,6 +12,8 @@ import announcementBanner from './announcementBanner';
 import contactPageSettings from './contactPageSettings';
 import proofPoint from './proofPoint';
 import fiveMinutesForwardSettings from './fiveMinutesForwardSettings';
+import quiz from './quiz';
+import classLink from './classLink';
 
 export const schemaTypes = [
   siteSettings,
@@ -24,6 +26,8 @@ export const schemaTypes = [
   proofPoint,
   fiveMinutesForwardSettings,
   resource,
+  quiz,
+  classLink,
   subject,
   syllabusTopic,
   article,
