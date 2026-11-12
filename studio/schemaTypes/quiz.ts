@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity';
+import { SealedUrlInput, SealedTextInput, SEALED_PREFIX } from '../components/SealedInput';
 
 // TECHMED Quiz Hub. One document per quiz shown on the website.
 // Works with any quiz platform (QuizBoot today, Kairo next): only the link changes.
@@ -173,21 +174,42 @@ export default defineType({
       title: 'Quiz link',
       type: 'url',
       group: 'access',
-      description: 'For locked quizzes this is only given to students who can open it.',
+      description: 'Free quizzes only. Everyone can see this link.',
+      hidden: ({ parent }) => parent?.category !== 'free',
       validation: (Rule) =>
         Rule.uri({ scheme: ['https'] }).custom((value, ctx) => {
-          const p = ctx.parent as { category?: string; status?: string };
-          if (p?.category === 'hidden' || p?.category === 'programme') return true;
-          return value ? true : 'Add the quiz link';
+          const p = ctx.parent as { category?: string };
+          return p?.category === 'free' && !value ? 'Add the quiz link' : true;
+        }),
+    }),
+    defineField({
+      name: 'sealedQuizUrl',
+      title: 'Quiz link (locked)',
+      type: 'string',
+      group: 'access',
+      description: 'Type the link and press "Lock & save". Only students who can open the quiz will receive it.',
+      components: { input: SealedUrlInput },
+      hidden: ({ parent }) => !['paid', 'book', 'programme'].includes(parent?.category),
+      validation: (Rule) =>
+        Rule.custom((value, ctx) => {
+          const p = ctx.parent as { category?: string };
+          if (value && !String(value).startsWith(SEALED_PREFIX)) return 'Press "Lock & save" so the link is protected';
+          return ['paid', 'book'].includes(p?.category || '') && !value ? 'Add the quiz link' : true;
         }),
     }),
     defineField({ name: 'quizKey', title: 'Quiz key (optional)', type: 'string', group: 'access' }),
     defineField({
-      name: 'passcode',
-      title: 'Passcode (optional)',
+      name: 'sealedPasscode',
+      title: 'Passcode (optional, locked)',
       type: 'string',
       group: 'access',
-      description: 'Shown, with a copy button, only to students who can open the quiz.',
+      description: 'Shown with a copy button, only to students who can open the quiz.',
+      components: { input: SealedTextInput },
+      hidden: ({ parent }) => parent?.category === 'hidden',
+      validation: (Rule) =>
+        Rule.custom((value) =>
+          value && !String(value).startsWith(SEALED_PREFIX) ? 'Press "Lock & save" so the passcode is protected' : true,
+        ),
     }),
     defineField({
       name: 'isPublicOnPlatform',
