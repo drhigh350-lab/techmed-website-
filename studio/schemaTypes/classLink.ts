@@ -1,4 +1,5 @@
 import { defineField, defineType } from 'sanity';
+import { SealedUrlInput, SEALED_PREFIX } from '../components/SealedInput';
 
 // Easy Access Zone: live-class links. Students see the right link on their
 // dashboard. Links are only ever given to students whose plan (or 3-day grace
@@ -47,7 +48,25 @@ export default defineType({
       name: 'url',
       title: 'Class link',
       type: 'url',
-      validation: (Rule) => Rule.required().uri({ scheme: ['https'] }),
+      description: 'Free community groups only. Everyone can see this link.',
+      hidden: ({ parent }) => parent?.minimumPlan !== 'free',
+      validation: (Rule) =>
+        Rule.uri({ scheme: ['https'] }).custom((value, ctx) =>
+          (ctx.parent as { minimumPlan?: string })?.minimumPlan === 'free' && !value ? 'Add the link' : true,
+        ),
+    }),
+    defineField({
+      name: 'sealedUrl',
+      title: 'Class link (locked)',
+      type: 'string',
+      description: 'Type the link and press "Lock & save". Only students whose plan covers this class will receive it.',
+      components: { input: SealedUrlInput },
+      hidden: ({ parent }) => parent?.minimumPlan === 'free',
+      validation: (Rule) =>
+        Rule.custom((value, ctx) => {
+          if (value && !String(value).startsWith(SEALED_PREFIX)) return 'Press "Lock & save" so the link is protected';
+          return (ctx.parent as { minimumPlan?: string })?.minimumPlan !== 'free' && !value ? 'Add the class link' : true;
+        }),
     }),
     defineField({
       name: 'minimumPlan',
