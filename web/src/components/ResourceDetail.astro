@@ -3,7 +3,7 @@
 // resource plus a small set of related resources (same category) for
 // internal linking — real records only, never invented "related" items.
 import type { Resource } from '../lib/resources';
-import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview } from '../lib/resources';
+import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview, opensInReader } from '../lib/resources';
 
 interface Props {
   resource: Resource;
@@ -17,11 +17,11 @@ const priceLabel = price.label;
 const canBuy = isPurchasable(resource);
 const showPreview = resource.status === 'paid' && hasReaderPreview(resource);
 
-const primaryHref = resource.accessUrl ?? resource.externalUrl;
+const primaryHref = opensInReader(resource) ? null : (resource.accessUrl ?? resource.externalUrl);
 const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.accessUrl?.startsWith('http'));
 ---
 
-<article class="detail" data-resource-id={resource.id} data-resource-price={resource.price || 0} data-status={resource.status}>
+<article class="detail" data-reader={opensInReader(resource) ? '1' : '0'} data-resource-id={resource.id} data-resource-price={resource.price || 0} data-status={resource.status}>
   <nav class="breadcrumb" aria-label="Breadcrumb">
     <a href="/resources">Resources</a>
     <span aria-hidden="true">/</span>
@@ -62,21 +62,20 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
       </span>
 
       {resource.status === 'free' && (
-        <>
-          <a class="btn-primary" href={`/library/read/${resource.id}`}>
-            Read Online Now &rarr;
+        opensInReader(resource) ? (
+          <a class="btn-primary" href={`/library/read/${resource.id}/`}>
+            Read Now &rarr;
           </a>
-          {primaryHref && (
-            <a
-              class="btn-secondary"
-              href={primaryHref}
-              target={primaryIsExternal ? '_blank' : undefined}
-              rel={primaryIsExternal ? 'noopener' : undefined}
-            >
-              Direct Download / Link
-            </a>
-          )}
-        </>
+        ) : primaryHref ? (
+          <a
+            class="btn-primary"
+            href={primaryHref}
+            target={primaryIsExternal ? '_blank' : undefined}
+            rel={primaryIsExternal ? 'noopener' : undefined}
+          >
+            {resource.actionLabel} &rarr;
+          </a>
+        ) : null
       )}
 
       {resource.status === 'paid' && (
@@ -497,6 +496,7 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
 
 <script>
   import { getCurrentUser, getStudentPlan, hasActiveResourceAccess } from '/src/lib/supabase.ts';
+  import { renderOwnedActions } from '/src/lib/libraryActions.ts';
 
   async function checkDetailAccess() {
     const article = document.querySelector('.detail');
@@ -522,17 +522,20 @@ const primaryIsExternal = Boolean(resource.externalUrl) || Boolean(resource.acce
       const waLink = document.querySelector('.whatsapp-alt-link') as HTMLElement | null;
 
       if (hasAccess) {
-        if (buyBtn) {
-          const readLink = document.createElement('a');
-          readLink.className = 'btn-primary';
-          readLink.href = `/library/read/${resourceId}`;
-          readLink.innerHTML = 'Read Now &rarr;';
-          buyBtn.replaceWith(readLink);
+        // Same "Read · Save offline" buttons as the catalogue and My Library.
+        const holder = document.createElement('div');
+        holder.style.width = '100%';
+        holder.style.maxWidth = '420px';
+        if (buyBtn) buyBtn.replaceWith(holder);
+        else article.querySelector('.cta-row')?.appendChild(holder);
+        const title = (document.querySelector('.detail h1') as HTMLElement | null)?.textContent?.trim() || '';
+        if (article.getAttribute('data-reader') === '1') {
+          await renderOwnedActions(holder, { id: resourceId, title }, user.id);
         }
         if (previewBtn) previewBtn.style.display = 'none';
         if (waLink) waLink.style.display = 'none';
         if (priceBadge) {
-          priceBadge.textContent = planInfo.isMastery || planInfo.isUltimate ? 'Included in Plan' : 'Unlocked · Full Access';
+          priceBadge.textContent = '✓ In your library';
           priceBadge.classList.add('free');
         }
       } else if ((planInfo.isCore || planInfo.isMastery || planInfo.isUltimate) && price > 0) {

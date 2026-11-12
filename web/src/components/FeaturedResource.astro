@@ -5,7 +5,7 @@
 // moving the flag. Renders nothing if no resource is featured, so the
 // hub degrades gracefully rather than showing a broken/empty block.
 import type { Resource } from '../lib/resources';
-import { resourceIcon, priceDisplay } from '../lib/resources';
+import { resourceIcon, priceDisplay, opensInReader, readerUrl } from '../lib/resources';
 
 interface Props {
   resource?: Resource;
@@ -15,8 +15,8 @@ const { resource } = Astro.props;
 
 const price = resource ? priceDisplay(resource) : undefined;
 
-const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
-const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
+const primaryHref = resource && opensInReader(resource) ? readerUrl(resource) : (resource?.accessUrl ?? resource?.externalUrl);
+const primaryIsExternal = !(resource && opensInReader(resource)) && (Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http')));
 ---
 
 {resource && (

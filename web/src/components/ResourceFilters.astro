@@ -11,7 +11,7 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
 ---
 
 <div class="catalogue-controls" data-grid={gridSelector}>
-  <!-- Primary View Tabs: All Resources vs My Bookshelf -->
+  <!-- Primary View Tabs: All Resources vs My Library -->
   <div class="primary-view-wrap">
     <div class="view-tabs" role="tablist" aria-label="Resource View" id="viewFilterGroup">
       <button
@@ -43,7 +43,7 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
           <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
           <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
         </svg>
-        <span>My Bookshelf</span>
+        <span>My Library</span>
         <span class="bookshelf-badge" id="bookshelfCountBadge" style="display: none;">0</span>
       </button>
     </div>
@@ -100,7 +100,9 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
 </div>
 
 <script>
-  import { getCurrentUser, getUserResourceEntitlements } from '/src/lib/supabase.ts';
+  import { getSupabase, getUserResourceEntitlements, getMyLibraryIds, getStudentPlan } from '/src/lib/supabase.ts';
+  import { listBooks, rememberReader, lastReader } from '/src/lib/offlineBooks.ts';
+  import { renderOwnedActions, ownedStatus } from '/src/lib/libraryActions.ts';
 
   (function initUnifiedResourceFilters() {
     const root = document.querySelector('.catalogue-controls');
@@ -135,102 +137,112 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
     let authChecked = false;
     let ownedResourceIds: Set<string> | null = null;
 
-    // Check user auth state and prefetch entitlements
+    // Database ids that differ from the website's resource ids.
+    const DB_TO_SITE: Record<string, string> = {
+      'post-utme-pq': 'post-utme-brainstorming-hub',
+      'research-file': 'university-research-file',
+    };
+
+    function setPriceLine(wrapper: HTMLElement, html: string, owned = false) {
+      const priceVal = wrapper.querySelector('.price-val') as HTMLElement | null;
+      const note = wrapper.querySelector('.standalone-note') as HTMLElement | null;
+      if (priceVal) {
+        priceVal.innerHTML = html;
+        priceVal.classList.toggle('is-owned', owned);
+      }
+      if (note && owned) note.style.display = 'none';
+    }
+
+    // Who is this, what do they own (asked of the database), and what plan
+    // discount applies. Owned books get the same "Read · Save offline"
+    // buttons everywhere; nobody is shown "Unlock" for a book they have.
     async function loadAuthAndEntitlements() {
       try {
-        currentUser = await getCurrentUser();
+        const { data } = await getSupabase().auth.getSession();
+        const sessionUser = data.session?.user ?? null;
+        let userId: string | null = sessionUser?.id ?? null;
+        if (sessionUser) rememberReader({ id: sessionUser.id, email: sessionUser.email });
+        if (!userId && !navigator.onLine) userId = lastReader()?.id ?? null;
+        currentUser = userId ? { id: userId, email: sessionUser?.email } : null;
         authChecked = true;
 
-        if (currentUser) {
-          const res = await getUserResourceEntitlements(currentUser.id, currentUser.email);
+        if (userId) {
           const ids = new Set<string>();
-
-          // Add free items and owned items
-          res.items.forEach((item) => {
-            if (item.isOwned || item.status === 'free') {
-              ids.add(item.id);
-              if (item.slug) ids.add(item.slug);
-            }
-          });
-
-          // Check claimed local entitlements
-          try {
-            const raw = localStorage.getItem('techmed_claimed_entitlements');
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              if (Array.isArray(parsed)) {
-                parsed.forEach((e: any) => {
-                  if (e.resourceId) ids.add(e.resourceId);
-                });
+          const serverIds = navigator.onLine && sessionUser ? await getMyLibraryIds() : null;
+          (serverIds ?? []).forEach((id) => ids.add(DB_TO_SITE[id] ?? id));
+          if (serverIds === null && navigator.onLine && sessionUser) {
+            // Fallback if the database call is unavailable.
+            const res = await getUserResourceEntitlements(sessionUser.id, sessionUser.email);
+            res.items.forEach((item) => {
+              if (item.isOwned) {
+                ids.add(item.id);
+                if (item.slug) ids.add(item.slug);
               }
-            }
-          } catch {}
-
+            });
+          }
+          // Books saved on this phone are owned too (works offline).
+          (await listBooks(userId)).forEach((m) => ids.add(m.resourceId));
           ownedResourceIds = ids;
 
-          // Update card DOM action buttons and prices to reflect actual access & tier discounts
-          itemWrappers.forEach((wrapper) => {
+          let hasPlan = false;
+          if (sessionUser && navigator.onLine) {
+            try {
+              const plan = await getStudentPlan(sessionUser.id, sessionUser.email);
+              hasPlan = Boolean(plan?.isCore || plan?.isMastery || plan?.isUltimate);
+            } catch {}
+          }
+
+          for (const wrapper of itemWrappers) {
             const resId = wrapper.getAttribute('data-resource-id') || '';
             const slug = wrapper.getAttribute('data-slug') || '';
             const status = wrapper.getAttribute('data-status') || '';
+            const title = wrapper.getAttribute('data-title') || '';
+            const inReader = wrapper.getAttribute('data-reader') === '1';
+            const price = Number(wrapper.getAttribute('data-price')) || 0;
             const isOwned = Boolean((resId && ids.has(resId)) || (slug && ids.has(slug)));
+            if (status !== 'paid') continue;
 
-            if (status === 'paid') {
-              const actionStack = wrapper.querySelector('.paid-action-stack');
-              const priceVal = wrapper.querySelector('.price-val');
-              const previewLink = wrapper.querySelector('.reader-preview-link');
-
-              if (isOwned) {
-                // PART 3 & PART 4: Accessible resources show "Read Now →", not "Unlock"
-                if (actionStack) {
-                  actionStack.innerHTML = `
-                    <a class="btn-primary" href="/library/read/${resId}" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center;">
-                      Read Now &rarr;
-                    </a>
-                  `;
-                }
-                if (previewLink) {
-                  (previewLink as HTMLElement).style.display = 'none';
-                }
-                if (priceVal) {
-                  priceVal.textContent = res.hasMasteryPlan || res.hasUltimatePlan
-                    ? 'Included in Plan'
-                    : 'Unlocked';
-                }
-              } else if (res.hasCorePlan) {
-                // PART 1 & 2: Core students receive automatic 20% discount on standalone resources
-                const buyBtn = wrapper.querySelector('.buy-trigger-btn') as HTMLElement | null;
-                if (buyBtn && priceVal) {
-                  const itemData = res.items.find(i => i.id === resId || i.slug === slug);
-                  const originalPrice = itemData?.priceNgn || 0;
-                  if (originalPrice > 0) {
-                    const discount = Math.round(originalPrice * 0.20);
-                    const discountedPrice = originalPrice - discount;
-                    priceVal.innerHTML = `<span style="text-decoration: line-through; opacity: 0.6; font-size: 0.85em; margin-right: 4px;">₦${originalPrice.toLocaleString()}</span>₦${discountedPrice.toLocaleString()}`;
-                    buyBtn.textContent = `Unlock · ₦${discountedPrice.toLocaleString()}`;
-                  }
-                }
+            const actionStack = wrapper.querySelector('.paid-action-stack') as HTMLElement | null;
+            if (isOwned && actionStack) {
+              if (inReader) {
+                const book = { id: resId, title };
+                const refresh = async () => {
+                  const st = await ownedStatus(book, userId as string);
+                  setPriceLine(wrapper, `<span class="owned-tick">✓</span> ${st.text}`, true);
+                };
+                await renderOwnedActions(actionStack, book, userId, refresh);
+                await refresh();
+              } else {
+                actionStack.style.width = '100%';
+                actionStack.style.alignItems = 'stretch';
+                actionStack.innerHTML = `<div class="lib-actions"><a class="lib-btn lib-read" href="/resources/${slug}/">Open</a></div>`;
+                setPriceLine(wrapper, '<span class="owned-tick">✓</span> In your library', true);
               }
+            } else if (hasPlan && price > 0 && wrapper.querySelector('.buy-trigger-btn')) {
+              // TECHMED plan students: 20% off standalone e-books (server applies the same rule).
+              const discounted = price - Math.round(price * 0.2);
+              setPriceLine(
+                wrapper,
+                `<s class="price-was">₦${price.toLocaleString()}</s>₦${discounted.toLocaleString()}`,
+              );
+              const buyBtn = wrapper.querySelector('.buy-trigger-btn') as HTMLElement;
+              buyBtn.textContent = `Unlock · ₦${discounted.toLocaleString()}`;
             }
-          });
+          }
 
-          // Update bookshelf count badge
           if (bookshelfBadge) {
-            let userOwnedCount = 0;
-            itemWrappers.forEach((wrapper) => {
-              const resId = wrapper.getAttribute('data-resource-id') || '';
-              const slug = wrapper.getAttribute('data-slug') || '';
-              const status = wrapper.getAttribute('data-status') || '';
-              if (status === 'free' || (resId && ids.has(resId)) || (slug && ids.has(slug))) {
-                userOwnedCount++;
-              }
+            let owned = 0;
+            itemWrappers.forEach((w) => {
+              const id = w.getAttribute('data-resource-id') || '';
+              const sl = w.getAttribute('data-slug') || '';
+              if (w.getAttribute('data-status') === 'free' || ids.has(id) || ids.has(sl)) owned++;
             });
-            bookshelfBadge.textContent = String(userOwnedCount);
+            bookshelfBadge.textContent = String(owned);
             bookshelfBadge.style.display = 'inline-block';
           }
         }
       } catch (err) {
-        console.warn('Auth/entitlement load notice:', err);
+        console.warn('Library load notice:', err);
         authChecked = true;
       }
 
@@ -253,7 +265,7 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
           if (emptyState) emptyState.style.display = 'none';
           if (emptyBookshelf) emptyBookshelf.style.display = 'none';
           if (authPrompt) authPrompt.style.display = 'block';
-          if (counterEl) counterEl.textContent = 'Sign in to access your student bookshelf';
+          if (counterEl) counterEl.textContent = 'Sign in to see your library';
           if (resetBtn) resetBtn.style.display = 'none';
           return;
         }
@@ -317,9 +329,9 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
       if (counterEl) {
         if (currentView === 'bookshelf') {
           if (currentSearch || currentSubject !== 'All') {
-            counterEl.textContent = `Showing ${matchCount} of ${bookshelfTotal} resources in your bookshelf`;
+            counterEl.textContent = `Showing ${matchCount} of ${bookshelfTotal} resources in your library`;
           } else {
-            counterEl.textContent = `Showing all ${bookshelfTotal} resources in your bookshelf`;
+            counterEl.textContent = `Showing all ${bookshelfTotal} resources in your library`;
           }
         } else {
           if (currentSearch || currentSubject !== 'All') {
@@ -348,7 +360,8 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
       try {
         const url = new URL(window.location.href);
         if (view === 'bookshelf') {
-          url.searchParams.set('view', 'bookshelf');
+          url.searchParams.set('view', 'library');
+          url.hash = '';
         } else {
           url.searchParams.delete('view');
         }
@@ -412,8 +425,13 @@ const SUBJECT_OPTIONS = ['All', 'Chemistry', 'Biology', 'Physics', 'Admission', 
 
     // Handle initial URL param e.g. /resources?view=bookshelf or #bookshelf
     const initialParams = new URLSearchParams(window.location.search);
-    if (initialParams.get('view') === 'bookshelf' || window.location.hash === '#bookshelf') {
+    const wantsLibrary =
+      initialParams.get('view') === 'bookshelf' ||
+      initialParams.get('view') === 'library' ||
+      ['#bookshelf', '#my-library', '#library'].includes(window.location.hash);
+    if (wantsLibrary) {
       setView('bookshelf');
+      requestAnimationFrame(() => root.scrollIntoView({ block: 'start' }));
     }
 
     // Run auth check & initial hydration

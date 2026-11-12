@@ -11,7 +11,7 @@
 // component just needs height: 100% + flex so the footer lands at the
 // same baseline regardless of description length.
 import type { Resource } from '../lib/resources';
-import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview } from '../lib/resources';
+import { resourceIcon, priceDisplay, isPurchasable, hasReaderPreview, opensInReader, readerUrl } from '../lib/resources';
 
 interface Props {
   title?: string;
@@ -30,8 +30,8 @@ const priceLabel = price?.label ?? '';
 const canBuy = resource ? isPurchasable(resource) : false;
 const showPreview = resource ? resource.status === 'paid' && hasReaderPreview(resource) : false;
 
-const primaryHref = resource?.accessUrl ?? resource?.externalUrl;
-const primaryIsExternal = Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http'));
+const primaryHref = resource && opensInReader(resource) ? readerUrl(resource) : (resource?.accessUrl ?? resource?.externalUrl);
+const primaryIsExternal = !(resource && opensInReader(resource)) && (Boolean(resource?.externalUrl) || Boolean(resource?.accessUrl?.startsWith('http')));
 const icon = resource ? resourceIcon(resource) : undefined;
 ---
 

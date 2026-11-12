@@ -67,3 +67,92 @@ img {
     transition: none;
   }
 }
+
+/* ------------------------------------------------------------------
+   Library actions ("Read · Save offline") for books a student owns.
+   Global on purpose: these buttons are created by script after load,
+   so component-scoped styles would not reach them.
+   ------------------------------------------------------------------ */
+.lib-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  min-width: 220px;
+}
+.lib-actions .lib-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 120ms ease, background-color 120ms ease, border-color 120ms ease;
+}
+.lib-actions .lib-btn:active {
+  transform: scale(0.98);
+}
+.lib-actions .lib-read {
+  background: var(--accent, #c9a227);
+  color: #1a1400;
+  border: 2px solid var(--accent, #c9a227);
+}
+.lib-actions .lib-read:hover {
+  background: var(--accent-light, #dbbe5c);
+}
+.lib-actions .lib-save {
+  background: transparent;
+  color: var(--text, inherit);
+  border: 2px solid var(--accent, #c9a227);
+}
+.lib-actions .lib-save.is-saved {
+  border-color: rgba(152, 176, 196, 0.45);
+  color: var(--text-light, inherit);
+  font-weight: 600;
+}
+.lib-actions .lib-save:disabled {
+  opacity: 0.65;
+  cursor: default;
+}
+.lib-actions .lib-read:only-child {
+  grid-column: 1 / -1;
+}
+.lib-actions .lib-progress {
+  grid-column: 1 / -1;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(152, 176, 196, 0.25);
+  overflow: hidden;
+}
+.lib-actions .lib-progress[hidden] {
+  display: none;
+}
+.lib-actions .lib-progress > div {
+  height: 100%;
+  width: 0;
+  background: var(--accent, #c9a227);
+  transition: width 0.2s;
+}
+.price-val.is-owned {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text, inherit);
+}
+.price-val .owned-tick {
+  color: var(--accent, #c9a227);
+  margin-right: 2px;
+}
+.price-val .price-was {
+  margin-right: 6px;
+  font-weight: 500;
+  opacity: 0.6;
+  font-size: 0.85em;
+}
