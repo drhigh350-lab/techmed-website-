@@ -17,11 +17,15 @@ function getClient(): SanityClient | null {
   try {
     const envProj = import.meta.env.SANITY_PROJECT_ID;
     const projectId = (!envProj || envProj.toLowerCase() === 'o3yqdwylc') ? 'kxoz58eb' : envProj;
+    // Read token (Viewer) for a PRIVATE dataset. Build-time only; never
+    // shipped to the browser. Without it the public dataset is read as before.
+    const token = import.meta.env.SANITY_API_TOKEN || undefined;
     client = createClient({
       projectId,
       dataset: import.meta.env.SANITY_DATASET ?? 'production',
       apiVersion: '2024-01-01',
-      useCdn: true,
+      useCdn: !token,
+      token,
       timeout: 8000,
     });
   } catch (err) {

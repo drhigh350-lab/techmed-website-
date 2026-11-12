@@ -62,9 +62,29 @@ export interface StudentEntitlement {
   planId?: string | null;
   startsAt?: string | null;
   grantedAt: string;
-  expiresAt: string | null; // null = permanent lifetime access
+  expiresAt: string | null; // null = permanent lifetime access (includes plan grace period)
+  /** Plan coverage end before the grace period (renewal date). */
+  coverageEndsAt?: string | null;
+  /** True during the 3-day grace period after a plan's coverage ended. */
+  inGrace?: boolean;
   isActive: boolean;
   resourceTitle?: string;
+}
+
+/** Plans keep access for this long after their coverage ends (matches the database). */
+export const PLAN_GRACE_MS = 3 * 24 * 60 * 60 * 1000;
+
+export function isPlanResource(resourceId?: string | null): boolean {
+  const id = (resourceId || '').toLowerCase();
+  return ['cohort-core', 'cohort-mastery', 'cohort-ultimate'].includes(id);
+}
+
+/** Millisecond time when access ends (null = no end). Plans get the grace period. */
+export function entitlementAccessEnd(resourceId?: string | null, expiresAt?: string | null): number | null {
+  if (!expiresAt) return null;
+  const t = new Date(expiresAt).getTime();
+  if (isNaN(t)) return null;
+  return isPlanResource(resourceId) ? t + PLAN_GRACE_MS : t;
 }
 
 export async function getCurrentSession(): Promise<Session | null> {
@@ -170,12 +190,11 @@ export async function fetchUserEntitlements(
         }
       }
 
-      // 3. expires_at must not be in the past (consistent UTC comparison)
-      if (row.expires_at) {
-        const expiresUtc = new Date(row.expires_at).getTime();
-        if (!isNaN(expiresUtc) && expiresUtc <= nowUtc) {
-          return false;
-        }
+      // 3. Access must not have ended. Plans (Core/Mastery/Ultimate) keep
+      //    access for a 3-day grace period after their end date.
+      const accessEnd = entitlementAccessEnd(row.resource_id, row.expires_at);
+      if (accessEnd !== null && accessEnd <= nowUtc) {
+        return false;
       }
 
       return true;
@@ -190,7 +209,14 @@ export async function fetchUserEntitlements(
       planId: row.plan_id,
       startsAt: row.starts_at || null,
       grantedAt: row.granted_at,
-      expiresAt: row.expires_at || null,
+      // Effective end of access (includes the plan grace period), so every
+      // existing expiry check keeps working during grace.
+      expiresAt: (() => {
+        const end = entitlementAccessEnd(row.resource_id, row.expires_at);
+        return end === null ? null : new Date(end).toISOString();
+      })(),
+      coverageEndsAt: row.expires_at || null,
+      inGrace: Boolean(row.expires_at && isPlanResource(row.resource_id) && new Date(row.expires_at).getTime() <= nowUtc),
       isActive: row.is_active,
     }));
 
