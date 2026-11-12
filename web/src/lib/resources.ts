@@ -104,6 +104,8 @@ export interface Resource {
   previewPdfUrl?: string;
   /** Listed but not yet on sale (e.g. the book file isn't ready). */
   comingSoon?: boolean;
+  /** Delivered another way (e.g. per-university research pages), never in the PDF reader. */
+  notInReader?: boolean;
   /** 1200×630 social-share image (falls back to primaryImage). */
   ogImage?: string;
   /** Short subtitle / tagline shown under the title. */
@@ -426,6 +428,7 @@ export const FALLBACK_RESOURCES: Resource[] = [
     tags: ['Admission', 'Research'],
     actionLabel: 'Order via WhatsApp',
     whatsappUrl: whatsapp('Hi TECHMED, I want to buy the Detailed University Research File. Price: ₦1,000. My name is ______.'),
+    notInReader: true,
     deliveryFormat: 'PDF eBook',
     isAvailableStandalone: true,
     whatsIncluded: [
@@ -740,7 +743,7 @@ export async function getResources(): Promise<Resource[]> {
       if (code.codeManaged) return { ...code, ...stripEmpty(r), id: code.id };
       // Keep Sanity's copy, but fill in how the product is delivered when the
       // CMS entry doesn't say (e.g. booster systems are PDF e-books → reader).
-      return { ...r, id: code.id, deliveryFormat: r.deliveryFormat ?? code.deliveryFormat };
+      return { ...r, id: code.id, deliveryFormat: r.deliveryFormat ?? code.deliveryFormat, notInReader: code.notInReader };
     }),
     ...FALLBACK_RESOURCES.filter((f) => f.codeManaged && !slugs.has(f.slug)),
   ];
@@ -776,6 +779,7 @@ export function isPurchasable(resource: Resource): boolean {
 /** Only e-books open in the in-site reader, so only they get a "Read Free Preview" link. */
 /** Every PDF e-book (free or paid) opens in the TECHMED reader, never as a raw file. */
 export function opensInReader(resource: Resource): boolean {
+  if (resource.notInReader) return false;
   return resource.deliveryFormat === 'PDF eBook' || Boolean(resource.accessUrl?.toLowerCase().endsWith('.pdf'));
 }
 
