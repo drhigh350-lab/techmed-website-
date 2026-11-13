@@ -243,6 +243,7 @@ const description = 'Manage your TECHMED account security, email, password recov
 
 <script>
   import { getSupabase, fetchUserProfile, checkIsVerifiedStudent } from '../../lib/supabase';
+  import { pushLogout } from '../../lib/push';
   import {
     initPasswordChecklist,
     validatePassword,
@@ -484,6 +485,7 @@ const description = 'Manage your TECHMED account security, email, password recov
   // Sign out handler
   settingsSignOutBtn?.addEventListener('click', async () => {
     try {
+      await pushLogout();
       await supabase.auth.signOut();
     } finally {
       window.location.href = '/';

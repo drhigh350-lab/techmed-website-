@@ -73,3 +73,13 @@ export async function turnOnPush(): Promise<boolean> {
     return false;
   }
 }
+
+/** Unlink this phone from the student on sign-out (shared phones get no wrong alerts). Never blocks sign-out for more than 3s. */
+export async function pushLogout(): Promise<void> {
+  if (!pushSupported()) return;
+  const done = (async () => {
+    const OneSignal = await loadOneSignal();
+    await OneSignal?.logout?.();
+  })().catch(() => {});
+  await Promise.race([done, new Promise((r) => setTimeout(r, 3000))]);
+}
