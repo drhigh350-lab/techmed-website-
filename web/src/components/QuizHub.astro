@@ -1,0 +1,505 @@
+---
+// TECHMED Quiz Hub. Used on the dashboard (Quizzes tab) and the public
+// /quizzes page. The static list rendered here is for search engines and
+// first paint (public card details only); the script then asks the secure
+// quiz-access server what THIS student can open, and only then shows links
+// and passcodes.
+import { getPublicQuizzes, accessLabel, type PublicQuiz } from '../lib/quizzes';
+
+interface Props {
+  /** 'page' adds an intro-friendly layout; 'dashboard' is compact. */
+  variant?: 'page' | 'dashboard';
+}
+const { variant = 'page' } = Astro.props;
+const quizzes: PublicQuiz[] = await getPublicQuizzes();
+---
+
+<section class:list={['quiz-hub', `quiz-hub--${variant}`]} data-quiz-hub>
+  <div class="qh-plan" data-qh-plan hidden></div>
+
+  <div class="qh-controls">
+    <div class="qh-tabs" role="tablist" aria-label="Quiz filters">
+      <button type="button" class="qh-tab active" data-filter="all" role="tab" aria-selected="true">All</button>
+      <button type="button" class="qh-tab" data-filter="free" role="tab" aria-selected="false">Free</button>
+      <button type="button" class="qh-tab" data-filter="plan" role="tab" aria-selected="false">My Plan</button>
+      <button type="button" class="qh-tab" data-filter="book" role="tab" aria-selected="false">Book Banks</button>
+      <button type="button" class="qh-tab" data-filter="programme" role="tab" aria-selected="false">Programmes</button>
+    </div>
+    <div class="qh-row">
+      <label class="qh-search">
+        <span class="sr-only">Search quizzes</span>
+        <input type="search" placeholder="Search by title or topic" data-qh-search />
+      </label>
+      <label class="qh-subject">
+        <span class="sr-only">Subject</span>
+        <select data-qh-subject>
+          <option value="">All subjects</option>
+          <option>English</option>
+          <option>Mathematics</option>
+          <option>Physics</option>
+          <option>Chemistry</option>
+          <option>Biology</option>
+          <option>Mixed / All</option>
+        </select>
+      </label>
+    </div>
+  </div>
+
+  <div class="qh-featured-wrap" data-qh-featured-wrap hidden>
+    <h3 class="qh-heading">Featured this week</h3>
+    <div class="qh-featured" data-qh-featured></div>
+  </div>
+
+  <div class="qh-grid" data-qh-grid>
+    <!-- Static first paint / search engines: public details only, no locked links. -->
+    {quizzes.map((q) => (
+      <article class="qh-card" data-static>
+        <div class="qh-chips">
+          {q.subject && <span class="qh-chip">{q.subject}</span>}
+          {q.programme && <span class="qh-chip qh-chip--soft">{q.programme}</span>}
+        </div>
+        <h3 class="qh-title"><a href={`/quizzes/${q.slug}/`}>{q.title}</a></h3>
+        {q.shortDescription && <p class="qh-desc">{q.shortDescription}</p>}
+        <p class="qh-meta">
+          {q.questionCount ? `${q.questionCount} questions` : ''}
+          {q.questionCount && q.durationMinutes ? ' · ' : ''}
+          {q.durationMinutes ? `${q.durationMinutes} min` : ''}
+        </p>
+        <p class="qh-access">{accessLabel(q)}</p>
+      </article>
+    ))}
+  </div>
+
+  <p class="qh-empty" data-qh-empty hidden>No quizzes match. Try another filter.</p>
+  <p class="qh-error" data-qh-error hidden>Couldn't load quizzes right now. Check your connection and try again.</p>
+</section>
+
+<script>
+  import { getSupabase } from '../lib/supabase';
+  import { QUIZ_ACCESS_URL, WHATSAPP_NUMBER } from '../lib/quizConstants';
+
+  type Quiz = {
+    id: string;
+    slug: string | null;
+    title: string;
+    shortDescription: string | null;
+    subject: string | null;
+    topic: string | null;
+    programme: string | null;
+    questionCount: number | null;
+    durationMinutes: number | null;
+    featured: boolean;
+    category: 'free' | 'paid' | 'book' | 'programme';
+    minimumPlan: string | null;
+    book: { slug: string | null; title: string | null } | null;
+    platform: string;
+    state: 'open' | 'locked' | 'coming_soon' | 'closed';
+    lockReason: 'plan' | 'book' | null;
+    badge: string;
+    comingSoonText: string | null;
+    waitlistMessage: string | null;
+    quizUrl: string | null;
+    passcode: string | null;
+    createdAt: string;
+  };
+
+  const esc = (s: unknown) =>
+    String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+  const PLAN_NAMES: Record<string, string> = { core: 'Core', mastery: 'Mastery', ultimate: 'Ultimate' };
+
+  function kairoCard(): string {
+    return `
+      <article class="qh-card qh-card--kairo">
+        <div class="qh-chips"><span class="qh-chip">All subjects</span><span class="qh-badge qh-badge--soon">Coming soon</span></div>
+        <h3 class="qh-title">Kairo — TECHMED CBT</h3>
+        <p class="qh-desc">TECHMED's own CBT practice platform: timed drills, instant results and progress tracking, right inside your dashboard.</p>
+        <button class="qh-btn qh-btn--ghost" type="button" disabled>Coming soon</button>
+      </article>`;
+  }
+
+  function card(q: Quiz): string {
+    const meta = [q.questionCount ? `${q.questionCount} questions` : '', q.durationMinutes ? `${q.durationMinutes} min` : '']
+      .filter(Boolean)
+      .join(' · ');
+    const badgeClass =
+      q.state === 'locked' ? 'locked' : q.state === 'closed' ? 'closed' : q.state === 'coming_soon' ? 'soon' : q.badge === 'Closes soon' ? 'warn' : 'live';
+    let action = '';
+    if (q.state === 'open' && q.quizUrl) {
+      action = `<a class="qh-btn" href="${esc(q.quizUrl)}" target="_blank" rel="noopener">Start quiz</a>`;
+      if (q.passcode) {
+        action += `
+          <div class="qh-pass">
+            <span>Passcode: <code>${esc(q.passcode)}</code></span>
+            <button type="button" class="qh-copy" data-copy="${esc(q.passcode)}">Copy</button>
+          </div>`;
+      }
+    } else if (q.state === 'locked' && q.lockReason === 'book' && q.book?.slug) {
+      action = `<a class="qh-btn qh-btn--gold" href="/resources/${esc(q.book.slug)}/">Get the book</a>
+                <p class="qh-note">Free with ${esc(q.book.title || 'the book')}.</p>`;
+    } else if (q.state === 'locked') {
+      const plan = PLAN_NAMES[q.minimumPlan || 'core'] || 'Core';
+      action = `<a class="qh-btn qh-btn--gold" href="/pricing/">Enrol to unlock</a>
+                <p class="qh-note">For ${plan === 'Core' ? 'Core, Mastery and Ultimate' : plan === 'Mastery' ? 'Mastery and Ultimate' : 'Ultimate'} students.</p>`;
+    } else if (q.state === 'coming_soon') {
+      action = q.comingSoonText ? `<p class="qh-soon">${esc(q.comingSoonText)}</p>` : '';
+      if (q.waitlistMessage) {
+        action += `<a class="qh-btn qh-btn--gold" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(q.waitlistMessage)}" target="_blank" rel="noopener">Join the waitlist</a>`;
+      } else {
+        action += `<button class="qh-btn qh-btn--ghost" type="button" disabled>Coming soon</button>`;
+      }
+    } else {
+      action = `<button class="qh-btn qh-btn--ghost" type="button" disabled>Closed</button>`;
+    }
+    const platformNote =
+      q.state === 'open' && q.platform === 'QuizBoot'
+        ? `<p class="qh-note">Opens on QuizBoot in a new tab. A free QuizBoot account is needed.</p>`
+        : '';
+    return `
+      <article class="qh-card" data-category="${q.category}">
+        <div class="qh-chips">
+          ${q.subject ? `<span class="qh-chip">${esc(q.subject)}</span>` : ''}
+          ${q.programme ? `<span class="qh-chip qh-chip--soft">${esc(q.programme)}</span>` : ''}
+          <span class="qh-badge qh-badge--${badgeClass}">${esc(q.badge)}</span>
+        </div>
+        <h3 class="qh-title">${q.slug ? `<a href="/quizzes/${esc(q.slug)}/">${esc(q.title)}</a>` : esc(q.title)}</h3>
+        ${q.shortDescription ? `<p class="qh-desc">${esc(q.shortDescription)}</p>` : ''}
+        ${meta ? `<p class="qh-meta">${meta}</p>` : ''}
+        <div class="qh-actions">${action}</div>
+        ${platformNote}
+      </article>`;
+  }
+
+  async function init(root: HTMLElement) {
+    const grid = root.querySelector('[data-qh-grid]') as HTMLElement;
+    const featuredWrap = root.querySelector('[data-qh-featured-wrap]') as HTMLElement;
+    const featured = root.querySelector('[data-qh-featured]') as HTMLElement;
+    const planBox = root.querySelector('[data-qh-plan]') as HTMLElement;
+    const empty = root.querySelector('[data-qh-empty]') as HTMLElement;
+    const errorBox = root.querySelector('[data-qh-error]') as HTMLElement;
+    const search = root.querySelector('[data-qh-search]') as HTMLInputElement;
+    const subject = root.querySelector('[data-qh-subject]') as HTMLSelectElement;
+    let filter = 'all';
+    let quizzes: Quiz[] = [];
+    let signedIn = false;
+
+    try {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      const res = await fetch(`${QUIZ_ACCESS_URL}?action=quizzes`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: 'no-store',
+      });
+      if (!res.ok) throw new Error(String(res.status));
+      const body = await res.json();
+      quizzes = (body.quizzes || []).filter((q: Quiz) => !/^test\b/i.test(q.title));
+      signedIn = !!body.signedIn;
+      const plan = body.plan as { name: string | null; inGrace: boolean; coverageEndsAt: string | null } | null;
+      if (signedIn) {
+        planBox.hidden = false;
+        if (plan?.name) {
+          const end = plan.coverageEndsAt ? new Date(plan.coverageEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+          planBox.innerHTML = plan.inGrace
+            ? `<strong>${esc(plan.name)} plan ended${end ? ` on ${esc(end)}` : ''}.</strong> You still have access for a few days. <a href="/pricing/">Renew now</a> to keep your quizzes and classes.`
+            : `Your plan: <strong>${esc(plan.name)}</strong>${end ? ` · renews ${esc(end)}` : ''}. Quizzes for your plan are unlocked.`;
+          planBox.classList.toggle('qh-plan--warn', !!plan.inGrace);
+        } else {
+          planBox.innerHTML = `Free quizzes are open to you. <a href="/pricing/">Enrol in a TECHMED plan</a> to unlock class quizzes and mocks.`;
+        }
+      }
+    } catch {
+      errorBox.hidden = false;
+      return;
+    }
+
+    const render = () => {
+      const term = search.value.trim().toLowerCase();
+      const subj = subject.value;
+      const visible = quizzes.filter((q) => {
+        if (filter === 'free' && q.category !== 'free') return false;
+        if (filter === 'plan' && q.category !== 'paid') return false;
+        if (filter === 'book' && q.category !== 'book') return false;
+        if (filter === 'programme' && q.category !== 'programme') return false;
+        if (subj && q.subject !== subj) return false;
+        if (term && !`${q.title} ${q.topic || ''} ${q.programme || ''}`.toLowerCase().includes(term)) return false;
+        return true;
+      });
+      // Open quizzes first, then coming soon, locked, closed; featured first within each.
+      const rank = { open: 0, coming_soon: 1, locked: 2, closed: 3 } as const;
+      visible.sort((a, b) => rank[a.state] - rank[b.state] || Number(b.featured) - Number(a.featured));
+      const showFeatured = filter === 'all' && !term && !subj;
+      const feat = showFeatured ? visible.filter((q) => q.featured && q.state !== 'closed').slice(0, 4) : [];
+      featuredWrap.hidden = feat.length === 0;
+      featured.innerHTML = feat.map(card).join('');
+      const rest = visible.filter((q) => !feat.includes(q));
+      grid.innerHTML = (filter === 'all' && !term && !subj ? kairoCard() : '') + rest.map(card).join('');
+      empty.hidden = visible.length > 0 || (filter === 'all' && !term && !subj);
+      if (filter === 'plan' && !signedIn) {
+        grid.innerHTML = `<p class="qh-empty">Sign in to see the quizzes your plan unlocks. <a href="/login?redirect=${encodeURIComponent(location.pathname)}">Sign in</a></p>` + grid.innerHTML;
+      }
+    };
+
+    root.querySelectorAll<HTMLButtonElement>('.qh-tab').forEach((btn) =>
+      btn.addEventListener('click', () => {
+        filter = btn.dataset.filter || 'all';
+        root.querySelectorAll('.qh-tab').forEach((b) => {
+          b.classList.toggle('active', b === btn);
+          b.setAttribute('aria-selected', String(b === btn));
+        });
+        render();
+      }),
+    );
+    search.addEventListener('input', render);
+    subject.addEventListener('change', render);
+    root.addEventListener('click', async (e) => {
+      const t = e.target as HTMLElement;
+      if (t.matches('.qh-copy')) {
+        try {
+          await navigator.clipboard.writeText(t.dataset.copy || '');
+          t.textContent = 'Copied';
+          setTimeout(() => (t.textContent = 'Copy'), 1500);
+        } catch {
+          t.textContent = 'Copy failed';
+        }
+      }
+    });
+    render();
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-quiz-hub]').forEach((el) => void init(el));
+</script>
+
+<style>
+  .quiz-hub {
+    display: grid;
+    gap: 16px;
+  }
+  .qh-plan {
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    font-size: 0.92rem;
+  }
+  .qh-plan--warn {
+    border-color: rgba(201, 162, 39, 0.6);
+    background: rgba(201, 162, 39, 0.12);
+  }
+  .qh-plan :global(a) {
+    color: var(--accent-text, var(--accent));
+    font-weight: 700;
+  }
+  .qh-controls {
+    display: grid;
+    gap: 10px;
+  }
+  .qh-tabs {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 2px;
+    scrollbar-width: none;
+  }
+  .qh-tab {
+    flex-shrink: 0;
+    min-height: 40px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: 700 0.85rem 'Montserrat', sans-serif;
+    cursor: pointer;
+  }
+  .qh-tab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a1400;
+  }
+  .qh-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .qh-search {
+    flex: 1 1 220px;
+  }
+  .qh-search input,
+  .qh-subject select {
+    width: 100%;
+    min-height: 42px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font: inherit;
+  }
+  .qh-subject {
+    flex: 0 1 180px;
+  }
+  .qh-heading {
+    margin: 0 0 8px;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+  }
+  .qh-featured,
+  .qh-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+  }
+  .qh-grid :global(.qh-card),
+  .qh-featured :global(.qh-card),
+  .qh-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px;
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .qh-featured :global(.qh-card) {
+    border-color: rgba(201, 162, 39, 0.55);
+  }
+  :global(.qh-card--kairo) {
+    border-style: dashed !important;
+  }
+  .quiz-hub :global(.qh-chips) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+  .quiz-hub :global(.qh-chip) {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(9, 71, 110, 0.14);
+    color: var(--text);
+  }
+  .quiz-hub :global(.qh-chip--soft) {
+    background: rgba(152, 176, 196, 0.2);
+  }
+  .quiz-hub :global(.qh-badge) {
+    margin-left: auto;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .quiz-hub :global(.qh-badge--live) {
+    background: rgba(16, 185, 129, 0.16);
+    color: rgb(5, 150, 105);
+  }
+  .quiz-hub :global(.qh-badge--warn),
+  .quiz-hub :global(.qh-badge--soon) {
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--accent-text, #7e6416);
+  }
+  .quiz-hub :global(.qh-badge--locked) {
+    background: rgba(9, 71, 110, 0.16);
+    color: var(--text);
+  }
+  .quiz-hub :global(.qh-badge--closed) {
+    background: rgba(152, 176, 196, 0.25);
+    color: var(--text-light);
+  }
+  .quiz-hub :global(.qh-title) {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+  .quiz-hub :global(.qh-title a) {
+    color: inherit;
+    text-decoration: none;
+  }
+  .quiz-hub :global(.qh-desc),
+  .quiz-hub :global(.qh-soon) {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-light);
+  }
+  .quiz-hub :global(.qh-meta),
+  .quiz-hub :global(.qh-access) {
+    margin: 0;
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .quiz-hub :global(.qh-actions) {
+    display: grid;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 4px;
+  }
+  .quiz-hub :global(.qh-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid var(--accent);
+    background: var(--accent);
+    color: #1a1400;
+    font: 700 0.9rem 'Montserrat', sans-serif;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .quiz-hub :global(.qh-btn--gold) {
+    background: transparent;
+    color: var(--text);
+  }
+  .quiz-hub :global(.qh-btn--ghost) {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text-light);
+    cursor: default;
+  }
+  .quiz-hub :global(.qh-pass) {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    background: rgba(201, 162, 39, 0.12);
+    font-size: 0.88rem;
+  }
+  .quiz-hub :global(.qh-pass code) {
+    font-weight: 800;
+    letter-spacing: 0.04em;
+  }
+  .quiz-hub :global(.qh-copy) {
+    min-height: 34px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .quiz-hub :global(.qh-note) {
+    margin: 0;
+    font-size: 0.78rem;
+    color: var(--text-light);
+  }
+  .qh-empty,
+  .qh-error,
+  .quiz-hub :global(.qh-empty) {
+    color: var(--text-light);
+    grid-column: 1 / -1;
+  }
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+  }
+</style>

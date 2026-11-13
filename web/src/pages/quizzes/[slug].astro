@@ -1,0 +1,190 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getPublicQuizzes, accessLabel, type PublicQuiz } from '../../lib/quizzes';
+
+export async function getStaticPaths() {
+  const quizzes = await getPublicQuizzes();
+  return quizzes.map((quiz) => ({ params: { slug: quiz.slug }, props: { quiz } }));
+}
+
+interface Props {
+  quiz: PublicQuiz;
+}
+const { quiz } = Astro.props;
+const pageUrl = new URL(`/quizzes/${quiz.slug}/`, Astro.site).toString();
+const facts = [
+  quiz.subject,
+  quiz.programme,
+  quiz.questionCount ? `${quiz.questionCount} questions` : null,
+  quiz.durationMinutes ? `${quiz.durationMinutes} minutes` : null,
+  accessLabel(quiz),
+].filter(Boolean) as string[];
+const description =
+  quiz.shortDescription ||
+  `${quiz.title}: a TECHMED ${quiz.subject && quiz.subject !== 'Mixed / All' ? quiz.subject + ' ' : ''}quiz for UTME 2027 candidates.`;
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Quiz',
+    name: quiz.title,
+    description,
+    url: pageUrl,
+    educationalLevel: 'Senior secondary / UTME',
+    ...(quiz.subject && quiz.subject !== 'Mixed / All' ? { about: quiz.subject } : {}),
+    provider: { '@type': 'Organization', name: 'TECHMED', url: Astro.site?.toString() },
+    isAccessibleForFree: quiz.category === 'free',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: Astro.site?.toString() },
+      { '@type': 'ListItem', position: 2, name: 'Quizzes', item: new URL('/quizzes/', Astro.site).toString() },
+      { '@type': 'ListItem', position: 3, name: quiz.title, item: pageUrl },
+    ],
+  },
+];
+---
+
+<BaseLayout title={`${quiz.title} | TECHMED Quizzes`} description={description} jsonLd={jsonLd}>
+  <main class="quiz-detail" data-quiz-slug={quiz.slug}>
+    <nav class="qd-crumbs" aria-label="Breadcrumb"><a href="/quizzes/">Quizzes</a> <span aria-hidden="true">/</span> <span>{quiz.title}</span></nav>
+    <h1>{quiz.title}</h1>
+    {quiz.shortDescription && <p class="qd-desc">{quiz.shortDescription}</p>}
+    <ul class="qd-facts">{facts.map((f) => <li>{f}</li>)}</ul>
+    {quiz.comingSoon && quiz.comingSoonText && <p class="qd-soon">{quiz.comingSoonText}</p>}
+    <div class="qd-action" data-qd-action>
+      <p class="qd-loading">Checking your access…</p>
+    </div>
+    <p class="qd-back"><a href="/quizzes/">← All quizzes</a></p>
+  </main>
+</BaseLayout>
+
+<script>
+  import { getSupabase } from '../../lib/supabase';
+  import { QUIZ_ACCESS_URL, WHATSAPP_NUMBER } from '../../lib/quizConstants';
+
+  const root = document.querySelector('[data-quiz-slug]') as HTMLElement;
+  const box = root.querySelector('[data-qd-action]') as HTMLElement;
+  const slug = root.dataset.quizSlug;
+  const esc = (s: unknown) =>
+    String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] as string);
+
+  (async () => {
+    try {
+      const { data } = await getSupabase().auth.getSession();
+      const token = data.session?.access_token;
+      const res = await fetch(`${QUIZ_ACCESS_URL}?action=quizzes`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        cache: 'no-store',
+      });
+      const body = await res.json();
+      const q = (body.quizzes || []).find((x: { slug: string }) => x.slug === slug);
+      if (!q) {
+        box.innerHTML = `<p>This quiz isn't available right now. <a href="/quizzes/">See all quizzes</a></p>`;
+        return;
+      }
+      if (q.state === 'open' && q.quizUrl) {
+        box.innerHTML = `<a class="qd-btn" href="${esc(q.quizUrl)}" target="_blank" rel="noopener">Start quiz</a>
+          ${q.passcode ? `<p class="qd-pass">Passcode: <code>${esc(q.passcode)}</code> <button type="button" class="qd-copy">Copy</button></p>` : ''}
+          ${q.platform === 'QuizBoot' ? '<p class="qd-note">Opens on QuizBoot in a new tab. A free QuizBoot account is needed.</p>' : ''}`;
+        box.querySelector('.qd-copy')?.addEventListener('click', async (e) => {
+          await navigator.clipboard.writeText(q.passcode);
+          (e.target as HTMLElement).textContent = 'Copied';
+        });
+      } else if (q.state === 'locked' && q.lockReason === 'book' && q.book?.slug) {
+        box.innerHTML = `<a class="qd-btn" href="/resources/${esc(q.book.slug)}/">Get the book</a><p class="qd-note">This question bank is free with ${esc(q.book.title)}.${body.signedIn ? '' : ' Already own it? <a href="/login?redirect=' + encodeURIComponent(location.pathname) + '">Sign in</a>.'}</p>`;
+      } else if (q.state === 'locked') {
+        box.innerHTML = `<a class="qd-btn" href="/pricing/">Enrol to unlock</a><p class="qd-note">For TECHMED plan students.${body.signedIn ? '' : ' Already enrolled? <a href="/login?redirect=' + encodeURIComponent(location.pathname) + '">Sign in</a>.'}</p>`;
+      } else if (q.state === 'coming_soon') {
+        box.innerHTML = q.waitlistMessage
+          ? `<a class="qd-btn" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(q.waitlistMessage)}" target="_blank" rel="noopener">Join the waitlist</a>`
+          : '<p class="qd-note">Coming soon.</p>';
+      } else {
+        box.innerHTML = '<p class="qd-note">This quiz is closed. <a href="/quizzes/">See open quizzes</a></p>';
+      }
+    } catch {
+      box.innerHTML = '<p class="qd-note">Couldn\'t check access right now. Please try again.</p>';
+    }
+  })();
+</script>
+
+<style>
+  .quiz-detail {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: var(--space-12, 48px) var(--space-4, 16px) var(--space-16, 64px);
+  }
+  .qd-crumbs {
+    font-size: 0.82rem;
+    color: var(--text-light);
+    margin-bottom: 16px;
+  }
+  .qd-crumbs a,
+  .qd-back a {
+    color: inherit;
+  }
+  h1 {
+    margin: 0 0 10px;
+    font-size: clamp(1.5rem, 5vw, 2.1rem);
+    line-height: 1.2;
+  }
+  .qd-desc,
+  .qd-soon {
+    color: var(--text-light);
+  }
+  .qd-facts {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .qd-facts li {
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .qd-action {
+    margin: 20px 0;
+    display: grid;
+    gap: 10px;
+    max-width: 420px;
+  }
+  .qd-action :global(.qd-btn) {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 48px;
+    border-radius: 12px;
+    background: var(--accent);
+    color: #1a1400;
+    font: 700 1rem 'Montserrat', sans-serif;
+    text-decoration: none;
+  }
+  .qd-action :global(.qd-note),
+  .qd-loading {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--text-light);
+  }
+  .qd-action :global(.qd-pass) {
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: rgba(201, 162, 39, 0.12);
+  }
+  .qd-action :global(.qd-copy) {
+    margin-left: 8px;
+    padding: 4px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--accent);
+    background: transparent;
+    color: var(--text);
+    font-weight: 700;
+  }
+</style>

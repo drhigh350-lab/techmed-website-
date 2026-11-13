@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import QuizHub from '../../components/QuizHub.astro';
+import { getPublicQuizzes } from '../../lib/quizzes';
+
+const quizzes = await getPublicQuizzes();
+const pageUrl = new URL('/quizzes/', Astro.site).toString();
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    name: 'TECHMED Quizzes — free UTME, WAEC and NECO practice',
+    url: pageUrl,
+    description: 'Free daily and weekly UTME 2027 quizzes, diagnostics and mock exams from TECHMED, plus book question banks and class quizzes for TECHMED students.',
+    hasPart: quizzes.slice(0, 50).map((q) => ({
+      '@type': 'Quiz',
+      name: q.title,
+      url: new URL(`/quizzes/${q.slug}/`, Astro.site).toString(),
+      ...(q.shortDescription ? { description: q.shortDescription } : {}),
+      ...(q.subject && q.subject !== 'Mixed / All' ? { about: q.subject } : {}),
+      educationalLevel: 'Senior secondary / UTME',
+    })),
+  },
+];
+---
+
+<BaseLayout
+  title="Quizzes — Free UTME 2027 Practice, Mocks & Book Question Banks | TECHMED"
+  description="Free daily and weekly UTME 2027 quizzes, diagnostics and mock exams from TECHMED, plus book question banks and class quizzes for TECHMED students."
+  jsonLd={jsonLd}
+>
+  <main class="quizzes-page">
+    <header class="qp-head">
+      <p class="qp-eyebrow">TECHMED QUIZ HUB</p>
+      <h1>Practise every day. Know exactly where you stand.</h1>
+      <p class="qp-sub">
+        Daily Builder quizzes, weekly CBT challenges, diagnostics and full JAMB-standard mocks, all in one place.
+        Free quizzes are open to everyone; class quizzes and book question banks unlock with your TECHMED plan or book.
+      </p>
+    </header>
+    <QuizHub variant="page" />
+  </main>
+</BaseLayout>
+
+<style>
+  .quizzes-page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: var(--space-12, 48px) var(--space-4, 16px) var(--space-16, 64px);
+  }
+  .qp-head {
+    margin-bottom: 20px;
+  }
+  .qp-eyebrow {
+    margin: 0;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: var(--accent-text, var(--accent));
+  }
+  .qp-head h1 {
+    margin: 6px 0 10px;
+    font-size: clamp(1.6rem, 5vw, 2.4rem);
+    line-height: 1.15;
+  }
+  .qp-sub {
+    margin: 0;
+    max-width: 720px;
+    color: var(--text-light);
+  }
+</style>
