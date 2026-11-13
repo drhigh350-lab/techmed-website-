@@ -1,4 +1,5 @@
 ---
+import QuizHub from '../components/QuizHub.astro';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import StudentHubNav from '../components/StudentHubNav.astro';
 import {
@@ -103,7 +104,11 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
             </button>
             <button type="button" class="segment-btn" data-view="resources" role="tab" aria-selected="false">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-              <span>Bookshelf &amp; CBT</span>
+              <span>Bookshelf</span>
+            </button>
+            <button type="button" class="segment-btn" data-view="quizzes" role="tab" aria-selected="false">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              <span>Quizzes</span>
             </button>
           </nav>
         </div>
@@ -579,6 +584,13 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
         </section>
 
+        <!-- Quiz Hub: every TECHMED quiz, unlocked by plan or book (server-checked) -->
+        <section class="dashboard-card dashboard-view-section" data-section-view="quizzes" id="quizHubSection">
+          <h2 class="card-title">Quiz Hub</h2>
+          <p class="card-subtitle" style="margin:0 0 14px;color:var(--text-light);font-size:0.92rem;">Daily Builder, weekly CBT challenges, mocks and your book question banks. Quizzes your plan or books unlock open right here.</p>
+          <QuizHub variant="dashboard" />
+        </section>
+
         <!-- Quick Access Hub Tools: Authoritative single destination for Bookshelf & CBT -->
         <section class="dashboard-card quick-access-card dashboard-view-section" data-section-view="resources">
           <h2 class="card-title">Study Tools &amp; Quick Links</h2>
@@ -598,8 +610,8 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
               </div>
               <div class="tool-info">
-                <span class="tool-title">Kairo CBT Speed Drills</span>
-                <span class="tool-desc">Practice timed questions in English, Biology, Chemistry, Physics, and Math.</span>
+                <span class="tool-title">Kairo CBT (coming soon)</span>
+                <span class="tool-desc">TECHMED's own CBT platform. Until it launches, practise in the Quiz Hub tab.</span>
               </div>
             </a>
 
@@ -1174,6 +1186,14 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
       firstVisible?.scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
   });
+
+  // Deep links, e.g. /dashboard?view=quizzes or /dashboard#quizzes
+  {
+    const wanted = new URLSearchParams(location.search).get('view') || location.hash.replace('#', '');
+    if (wanted && document.querySelector(`.segment-btn[data-view="${CSS.escape(wanted)}"]`)) {
+      setDashboardView(wanted);
+    }
+  }
 
   const todayViewTimetableLink = document.getElementById('todayViewTimetableLink');
   todayViewTimetableLink?.addEventListener('click', () => {
