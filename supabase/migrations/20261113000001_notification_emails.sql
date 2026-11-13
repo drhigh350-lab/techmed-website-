@@ -57,3 +57,28 @@ FOR EACH ROW EXECUTE FUNCTION public.on_auth_user_created_welcome();
 -- Daily renewal reminders at 08:07 Lagos time (07:07 UTC).
 SELECT cron.unschedule(jobid) FROM cron.job WHERE jobname = 'techmed-renewal-emails';
 SELECT cron.schedule('techmed-renewal-emails', '7 7 * * *', $$SELECT public.notify_email('{"type":"renewals"}'::jsonb)$$);
+
+-- TECHMED receipt (with the next step) whenever an order becomes paid.
+CREATE OR REPLACE FUNCTION public.on_order_paid_receipt()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public, extensions
+AS $$
+BEGIN
+  IF NEW.status = 'paid' AND (TG_OP = 'INSERT' OR OLD.status IS DISTINCT FROM 'paid') THEN
+    BEGIN
+      PERFORM public.notify_email(jsonb_build_object('type', 'receipt', 'reference', NEW.reference));
+    EXCEPTION WHEN OTHERS THEN
+      RAISE WARNING 'receipt email not queued: %', SQLERRM;
+    END;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.on_order_paid_receipt() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS techmed_receipt_email ON public.orders;
+CREATE TRIGGER techmed_receipt_email
+AFTER INSERT OR UPDATE OF status ON public.orders
+FOR EACH ROW EXECUTE FUNCTION public.on_order_paid_receipt();

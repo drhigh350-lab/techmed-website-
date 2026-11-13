@@ -358,6 +358,7 @@ const catalogMapJson = JSON.stringify(FALLBACK_RESOURCES.map(r => ({
     if (productId.includes('monthly')) return '1-Month Subscription (Renews Monthly)';
     if (productId.includes('earlybird')) return '3 Months Upfront (Early-Bird Offer)';
     if (productId.includes('standard')) return '3 Months Upfront (Standard)';
+    if (productId.includes('organic')) return 'Permanent Lifetime Bookshelf License';
     if (productId.includes('ultimate')) return 'Full UTME 2027 Access (All Phases)';
     if (productId.includes('core')) return '3 Months Upfront (Early-Bird Offer)';
     if (productId.includes('mastery')) return '3 Months Upfront (Early-Bird Offer)';
