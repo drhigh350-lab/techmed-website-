@@ -1,0 +1,177 @@
+---
+// TECHMED notification bell: past notifications + a switch to turn push on.
+// Shown only to signed-in students (html[data-auth='in']).
+---
+<div class="nb" id="notifyBell">
+  <button type="button" class="nb-btn" id="nbBtn" aria-label="Notifications" aria-expanded="false" aria-controls="nbPanel">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    <span class="nb-count" id="nbCount" hidden>0</span>
+  </button>
+  <div class="nb-panel" id="nbPanel" role="dialog" aria-label="Notifications" hidden>
+    <div class="nb-head">
+      <strong>Notifications</strong>
+      <button type="button" class="nb-close" id="nbClose" aria-label="Close">×</button>
+    </div>
+    <div class="nb-push" id="nbPush">
+      <span id="nbPushText">Get alerts for new quizzes, live classes and mock exams.</span>
+      <button type="button" class="nb-on" id="nbOn">Turn on</button>
+    </div>
+    <ul class="nb-list" id="nbList"><li class="nb-empty">Loading…</li></ul>
+  </div>
+</div>
+
+<script>
+  import { getSupabase } from '../lib/supabase';
+  import { pushSupported, linkPushUser, isPushOn, turnOnPush } from '../lib/push';
+
+  const SEEN_KEY = 'techmed-notify-seen';
+  const supabase = getSupabase();
+  const btn = document.getElementById('nbBtn') as HTMLButtonElement | null;
+  const panel = document.getElementById('nbPanel');
+  const list = document.getElementById('nbList');
+  const count = document.getElementById('nbCount');
+  const pushBox = document.getElementById('nbPush');
+  const pushText = document.getElementById('nbPushText');
+  const onBtn = document.getElementById('nbOn') as HTMLButtonElement | null;
+  let items: Array<{ id: number; title: string; body: string; url: string; created_at: string }> = [];
+  let userId = '';
+  let plan = 'free';
+  let firstName = '';
+
+  const seen = () => { try { return Number(localStorage.getItem(SEEN_KEY) || 0); } catch { return 0; } };
+  const markSeen = () => { try { localStorage.setItem(SEEN_KEY, String(Date.now())); } catch {} };
+  const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]!);
+  const safeUrl = (u: string) => (u && u.startsWith('/') && !u.startsWith('//') ? u : '/dashboard');
+  function ago(iso: string) {
+    const m = Math.round((Date.now() - Date.parse(iso)) / 60000);
+    if (m < 1) return 'just now';
+    if (m < 60) return `${m} min ago`;
+    const h = Math.round(m / 60);
+    if (h < 24) return `${h}h ago`;
+    const d = Math.round(h / 24);
+    return d === 1 ? 'yesterday' : `${d} days ago`;
+  }
+
+  function render() {
+    if (!list || !count) return;
+    const since = seen();
+    const unread = items.filter((n) => Date.parse(n.created_at) > since).length;
+    count.hidden = unread === 0;
+    count.textContent = unread > 9 ? '9+' : String(unread);
+    list.innerHTML = items.length
+      ? items.map((n) => `
+        <li class="${Date.parse(n.created_at) > since ? 'is-new' : ''}">
+          <a href="${esc(safeUrl(n.url))}">
+            <span class="nb-title">${esc(n.title)}</span>
+            ${n.body ? `<span class="nb-body">${esc(n.body)}</span>` : ''}
+            <span class="nb-time">${ago(n.created_at)}</span>
+          </a>
+        </li>`).join('')
+      : '<li class="nb-empty">No notifications yet. New quizzes, live classes and announcements will appear here.</li>';
+  }
+
+  async function showPushState() {
+    if (!pushBox || !pushText || !onBtn) return;
+    if (!pushSupported()) {
+      pushText.textContent = "This browser can't show notifications. Try Chrome to get alerts.";
+      onBtn.hidden = true;
+      return;
+    }
+    if (Notification.permission === 'denied') {
+      pushText.textContent = 'Notifications are blocked. Tap the lock icon by the web address → Notifications → Allow.';
+      onBtn.hidden = true;
+      return;
+    }
+    const on = await isPushOn();
+    pushBox.classList.toggle('is-on', on);
+    pushText.textContent = on ? '✓ Notifications are on for this phone.' : 'Get alerts for new quizzes, live classes and mock exams.';
+    onBtn.hidden = on;
+  }
+
+  async function init() {
+    const { data } = await supabase.auth.getSession();
+    const user = data.session?.user;
+    if (!user) return;
+    userId = user.id;
+    firstName = String(user.user_metadata?.full_name || user.user_metadata?.name || '').trim().split(/\s+/)[0] || '';
+    const [{ data: rows }, { data: ps }] = await Promise.all([
+      supabase.rpc('my_notifications'),
+      supabase.rpc('my_plan_status'),
+    ]);
+    items = (rows as typeof items) || [];
+    const lvl = Number((Array.isArray(ps) ? ps[0] : ps)?.plan_level || 0);
+    plan = ['free', 'core', 'mastery', 'ultimate'][lvl] || 'free';
+    render();
+  }
+
+  function setOpen(open: boolean) {
+    if (!panel || !btn) return;
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', String(open));
+    if (open) {
+      showPushState();
+      markSeen();
+      setTimeout(render, 1500);
+    }
+  }
+
+  btn?.addEventListener('click', (e) => { e.stopPropagation(); setOpen(panel?.hidden ?? true); });
+  document.getElementById('nbClose')?.addEventListener('click', () => setOpen(false));
+  document.addEventListener('click', (e) => {
+    if (panel && !panel.hidden && !(e.target as Element).closest('#notifyBell')) setOpen(false);
+  });
+  onBtn?.addEventListener('click', async () => {
+    if (!onBtn) return;
+    onBtn.disabled = true;
+    onBtn.textContent = 'Turning on…';
+    if (userId) await linkPushUser(userId, plan, firstName);
+    await turnOnPush();
+    onBtn.disabled = false;
+    onBtn.textContent = 'Turn on';
+    showPushState();
+  });
+
+  init().catch(() => {});
+</script>
+
+<style>
+  .nb { position: relative; display: none; align-items: center; }
+  :global(html[data-auth='in']) .nb { display: inline-flex; }
+  .nb-btn {
+    position: relative; display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(152, 176, 196, 0.35);
+    background: transparent; color: inherit; cursor: pointer;
+  }
+  .nb-btn:hover { border-color: #C9A227; }
+  .nb-count {
+    position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; padding: 0 5px;
+    border-radius: 999px; background: #C9A227; color: #012748; font-size: 11px; font-weight: 800;
+    line-height: 18px; text-align: center;
+  }
+  .nb-count[hidden] { display: none; }
+  .nb-panel {
+    position: absolute; right: 0; top: calc(100% + 8px); width: min(360px, calc(100vw - 32px));
+    max-height: min(70vh, 520px); overflow: auto; z-index: 1000;
+    background: #fff; color: #012748; border-radius: 14px; border: 1px solid #dde5ec;
+    box-shadow: 0 16px 40px rgba(1, 39, 72, 0.22);
+  }
+  .nb-panel[hidden] { display: none; }
+  @media (max-width: 860px) {
+    .nb-panel { position: fixed; left: 16px; right: 16px; top: 72px; width: auto; }
+  }
+  .nb-head { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; border-bottom: 1px solid #eef2f6; font-family: 'Montserrat', sans-serif; }
+  .nb-close { background: none; border: 0; font-size: 24px; line-height: 1; cursor: pointer; color: #6C87A0; min-width: 44px; min-height: 44px; }
+  .nb-push { display: flex; gap: 10px; align-items: center; justify-content: space-between; padding: 12px 16px; background: rgba(201, 162, 39, 0.10); font-size: 14px; }
+  .nb-push.is-on { background: rgba(16, 185, 129, 0.08); }
+  .nb-on { flex: none; background: #C9A227; color: #012748; border: 0; border-radius: 999px; padding: 8px 14px; font-weight: 700; min-height: 40px; cursor: pointer; }
+  .nb-on[hidden] { display: none; }
+  .nb-list { list-style: none; margin: 0; padding: 0; }
+  .nb-list :global(li + li) { border-top: 1px solid #eef2f6; }
+  .nb-list :global(a) { display: grid; gap: 2px; padding: 12px 16px; color: inherit; text-decoration: none; }
+  .nb-list :global(a:hover) { background: #F8F9FA; }
+  .nb-list :global(li.is-new a) { background: rgba(9, 71, 110, 0.06); }
+  :global(.nb-title) { font-weight: 700; font-size: 14px; }
+  :global(.nb-body) { font-size: 13.5px; color: #3d5a73; }
+  :global(.nb-time) { font-size: 12px; color: #6C87A0; }
+  :global(.nb-empty) { padding: 18px 16px; font-size: 14px; color: #6C87A0; }
+</style>

@@ -1,4 +1,5 @@
 ---
+import NotifyBell from './NotifyBell.astro';
 import { NAV_ROUTES } from '../lib/routes';
 import { getBuilderSettings } from '../lib/builders';
 
@@ -100,6 +101,8 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
           </div>
         </div>
       </div>
+
+      <NotifyBell />
 
       <!-- Direct Mobile Quick Auth Trigger (Header bar on mobile screens) -->
       <a href="/login" class="mobile-header-auth-btn" id="mobileHeaderLoginBtn" aria-label="Student Log In">

@@ -5,6 +5,8 @@
 //   {action:"midday"}    daily 12:07 Lagos: renewal pushes + enrol campaign
 //   {action:"evening"}   daily 20:07 Lagos: inactivity nudges + "classes start tomorrow"
 //   {action:"payment", user_id}  payment verified
+//   {action:"test", user_id}     test push to one student
+// Studio "Announcement" documents are pushed by the tick and kept for the website bell.
 // Every send is recorded in notify_log, so nothing is ever sent twice.
 import { createClient } from "jsr:@supabase/supabase-js@2";
 
@@ -68,10 +70,28 @@ async function push(body: Record<string, unknown>) {
   if (!r.ok || (out as { errors?: unknown }).errors) console.error("[notify-push]", JSON.stringify(out).slice(0, 400));
   return out;
 }
-const msg = (filters: Filter[], title: string, text: string, path = "/dashboard") =>
-  push({ filters, headings: { en: title }, contents: { en: text }, url: SITE + path });
-const toUser = (userId: string, template: string) =>
-  push({ template_id: template, include_aliases: { external_id: [userId] } });
+// Every push is also saved for the website's notification bell.
+async function record(audience: "all" | "free" | "paid" | "user", title: string, body: string, path: string, userId?: string) {
+  await admin.from("notifications").insert({ audience, title, body, url: path, user_id: userId ?? null });
+}
+const audienceOf = (f: Filter[]) => (f === FREE ? "free" : f === PAID ? "paid" : "all");
+async function msg(filters: Filter[], title: string, text: string, path = "/dashboard") {
+  await record(audienceOf(filters), title, text, path);
+  return push({ filters, headings: { en: title }, contents: { en: text }, url: SITE + path });
+}
+// Personal template pushes: the link is set here so a tap always opens the right page.
+const LABEL: Record<string, [string, string, string]> = {
+  "240dfbb9-cea7-44ae-8b25-1093e041526b": ["Payment verified ✅", "Your access is ready. Tap to continue to your dashboard.", "/dashboard"],
+  "52b5b954-519f-453c-b3a1-1604f14c8ba8": ["Your plan ends in 7 days", "Renew early so your classes continue without a break.", "/pricing"],
+  "098c2968-53d1-4c96-b8f9-47ea9dfdfa40": ["Your plan ends in 3 days", "Renew now to keep your classes, class links and quizzes.", "/pricing"],
+  "3b3a3007-cc1b-4406-8924-b92e6b80f460": ["Your plan ends today", "Your 3-day grace period starts now. Renew to keep your access.", "/pricing"],
+  "7cf56ee6-1d8e-4194-9404-c2cc71393c74": ["Your grace period is ending", "Renew today so you don't lose access to your classes.", "/pricing"],
+};
+async function toUser(userId: string, template: string) {
+  const [title, body, path] = LABEL[template] ?? ["TECHMED", "", "/dashboard"];
+  await record("user", title, body, path, userId);
+  return push({ template_id: template, include_aliases: { external_id: [userId] }, url: SITE + path });
+}
 
 async function sanity<T>(query: string): Promise<T> {
   const r = await fetch(`${SANITY}?query=${encodeURIComponent(query)}`);
@@ -109,7 +129,19 @@ async function tick() {
   for (const s of sessions || []) {
     await classAlerts(`s:${s._id}:${s.startsAt}`, Date.parse(s.startsAt), s.title, s.minimumPlan === "free" ? "all" : "paid", now);
   }
-  // 3) New quizzes and mock exams
+  // 3) Announcements written in Studio (sent once, at "Send at" or straight away)
+  const notes = await sanity<Array<{ _id: string; title: string; message: string; link?: string; audience?: string }>>(
+    `*[_type=="announcement" && !(_id in path("drafts.**")) && dateTime(coalesce(sendAt, _createdAt)) <= dateTime(now()) && dateTime(coalesce(sendAt, _createdAt)) > dateTime(now()) - 86400]{_id,title,message,link,audience}`,
+  ).catch(() => []);
+  for (const n of notes || []) {
+    if (!(await once(`note:${n._id}`))) continue;
+    const who = n.audience === "free" ? FREE : n.audience === "paid" ? PAID : ALL;
+    let path = (n.link || "/dashboard").trim();
+    if (path.startsWith(SITE)) path = path.slice(SITE.length) || "/";
+    if (!path.startsWith("/")) path = "/dashboard";
+    await msg(who, n.title, n.message, path);
+  }
+  // 4) New quizzes and mock exams
   const quizzes = await sanity<Array<{ _id: string; title: string; slug: string; category: string; programme?: string; comingSoon?: boolean; opensAt?: string; closesAt?: string }>>(
     `*[_type=="quiz" && status=="Live" && category!="hidden" && !(_id in path("drafts.**")) && !(title match "TEST*")]{_id,title,"slug":slug.current,category,programme,comingSoon,opensAt,closesAt}`,
   ).catch(() => []);
@@ -200,9 +232,9 @@ async function evening() {
   // Inactivity nudges: each band is one day wide, so each student gets each nudge once.
   const today = lagosDate();
   if (await once(`inactive:${today}`)) {
-    await push({ template_id: T.INACTIVE_3D, filters: inactive(72, 96) });
-    await push({ template_id: T.INACTIVE_7D, filters: inactive(168, 192) });
-    await push({ template_id: T.INACTIVE_14D, filters: inactive(336, 360) });
+    await push({ template_id: T.INACTIVE_3D, filters: inactive(72, 96), url: SITE + "/quizzes" });
+    await push({ template_id: T.INACTIVE_7D, filters: inactive(168, 192), url: SITE + "/quizzes" });
+    await push({ template_id: T.INACTIVE_14D, filters: inactive(336, 360), url: SITE + "/quizzes" });
   }
   // Night before the first class
   const tomorrow = lagosDate(Date.now() + DAY);
@@ -223,6 +255,9 @@ Deno.serve(async (req) => {
     if (b.action === "tick") return json(await tick());
     if (b.action === "midday") return json({ renewals: await renewals(), enrol: await enrolCampaign() });
     if (b.action === "evening") return json(await evening());
+    if (b.action === "test" && typeof b.user_id === "string") {
+      return json(await push({ include_aliases: { external_id: [b.user_id] }, headings: { en: "✅ TECHMED notifications are on" }, contents: { en: "This is a test. You'll get quiz, class and mock exam alerts here." }, url: SITE + "/dashboard" }));
+    }
     if (b.action === "payment" && typeof b.user_id === "string") {
       if (await once(`paid:${b.reference || b.user_id}`)) await toUser(b.user_id, T.PAYMENT_VERIFIED);
       return json({ ok: true });
