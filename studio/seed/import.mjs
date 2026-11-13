@@ -7,7 +7,7 @@ const PROJECT = 'kxoz58eb';
 const DATASET = 'production';
 const token = process.env.SANITY_WRITE_TOKEN;
 if (!token) {
-  console.error('::error::Add the SANITY_WRITE_TOKEN repository secret (Sanity token with Editor permission).');
+  console.error('::error::Add the SANITY_IMPORT_TOKEN repository secret (Sanity Editor token from project kxoz58eb).');
   process.exit(1);
 }
 

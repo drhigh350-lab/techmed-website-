@@ -2,7 +2,8 @@ name: Import into Sanity
 
 # Run by hand (Actions -> Import into Sanity -> Run workflow) or by Claude.
 # Adds documents from studio/seed/*.json without overwriting existing ones.
-# Needs repository secret SANITY_WRITE_TOKEN (Sanity token, Editor permission).
+# Needs repository secret SANITY_IMPORT_TOKEN (Sanity token, Editor permission,
+# created in project kxoz58eb). Falls back to SANITY_WRITE_TOKEN if unset.
 on:
   workflow_dispatch:
     inputs:
@@ -24,7 +25,7 @@ jobs:
           node-version: 22
       - name: Import
         env:
-          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_WRITE_TOKEN }}
+          SANITY_WRITE_TOKEN: ${{ secrets.SANITY_IMPORT_TOKEN || secrets.SANITY_WRITE_TOKEN }}
           FILES: ${{ inputs.files }}
         run: |
           for f in $FILES; do
