@@ -87,10 +87,24 @@ const LABEL: Record<string, [string, string, string]> = {
   "3b3a3007-cc1b-4406-8924-b92e6b80f460": ["Your plan ends today", "Your 3-day grace period starts now. Renew to keep your access.", "/pricing"],
   "7cf56ee6-1d8e-4194-9404-c2cc71393c74": ["Your grace period is ending", "Renew today so you don't lose access to your classes.", "/pricing"],
 };
+// A student's active push subscriptions (phones/browsers). Targeting these
+// directly is more reliable than targeting by alias.
+async function subsOf(userId: string): Promise<string[]> {
+  const r = await fetch(`https://api.onesignal.com/apps/${APP_ID}/users/by/external_id/${encodeURIComponent(userId)}`, {
+    headers: { Authorization: `Key ${KEY}` },
+  });
+  if (!r.ok) return [];
+  const u = await r.json().catch(() => ({}));
+  return ((u.subscriptions || []) as Array<{ id: string; enabled?: boolean; type?: string }>)
+    .filter((x) => x.enabled && /Push$/.test(x.type || ""))
+    .map((x) => x.id);
+}
 async function toUser(userId: string, template: string) {
   const [title, body, path] = LABEL[template] ?? ["TECHMED", "", "/dashboard"];
   await record("user", title, body, path, userId);
-  return push({ template_id: template, include_aliases: { external_id: [userId] }, url: SITE + path });
+  const subs = await subsOf(userId);
+  if (!subs.length) return { skipped: "no_subscription" };
+  return push({ template_id: template, include_subscription_ids: subs, url: SITE + path });
 }
 
 async function sanity<T>(query: string): Promise<T> {
@@ -256,7 +270,9 @@ Deno.serve(async (req) => {
     if (b.action === "midday") return json({ renewals: await renewals(), enrol: await enrolCampaign() });
     if (b.action === "evening") return json(await evening());
     if (b.action === "test" && typeof b.user_id === "string") {
-      return json(await push({ include_aliases: { external_id: [b.user_id] }, headings: { en: "✅ TECHMED notifications are on" }, contents: { en: "This is a test. You'll get quiz, class and mock exam alerts here." }, url: SITE + "/dashboard" }));
+      const subs = await subsOf(b.user_id);
+      if (!subs.length) return json({ skipped: "no_subscription" });
+      return json(await push({ include_subscription_ids: subs, headings: { en: "✅ TECHMED notifications are on" }, contents: { en: "This is a test. You'll get quiz, class and mock exam alerts here." }, url: SITE + "/dashboard" }));
     }
     if (b.action === "payment" && typeof b.user_id === "string") {
       if (await once(`paid:${b.reference || b.user_id}`)) await toUser(b.user_id, T.PAYMENT_VERIFIED);

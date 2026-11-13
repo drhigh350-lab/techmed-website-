@@ -102,6 +102,13 @@
     const lvl = Number((Array.isArray(ps) ? ps[0] : ps)?.plan_level || 0);
     plan = ['free', 'core', 'mastery', 'ultimate'][lvl] || 'free';
     render();
+    // Keep this phone linked to the right student (once per visit), on any page.
+    try {
+      if (pushSupported() && Notification.permission === 'granted' && sessionStorage.getItem('techmed-push-linked') !== userId) {
+        await linkPushUser(userId, plan, firstName);
+        sessionStorage.setItem('techmed-push-linked', userId);
+      }
+    } catch {}
   }
 
   function setOpen(open: boolean) {
@@ -139,10 +146,13 @@
   :global(html[data-auth='in']) .nb { display: inline-flex; }
   .nb-btn {
     position: relative; display: inline-flex; align-items: center; justify-content: center;
-    width: 44px; height: 44px; border-radius: 999px; border: 1px solid rgba(152, 176, 196, 0.35);
-    background: transparent; color: inherit; cursor: pointer;
+    width: 44px; height: 44px; border-radius: 999px; border: 1.5px solid #C9A227;
+    background: rgba(255, 255, 255, 0.08); color: #FFFFFF; cursor: pointer;
   }
-  .nb-btn:hover { border-color: #C9A227; }
+  /* The header is navy in both themes, so the bell is always white on navy. */
+  :global(html[data-theme='light']) .nb-btn { color: #FFFFFF; background: rgba(255, 255, 255, 0.10); }
+  .nb-btn svg { stroke: currentColor; }
+  .nb-btn:hover { background: rgba(201, 162, 39, 0.18); }
   .nb-count {
     position: absolute; top: 4px; right: 4px; min-width: 18px; height: 18px; padding: 0 5px;
     border-radius: 999px; background: #C9A227; color: #012748; font-size: 11px; font-weight: 800;
