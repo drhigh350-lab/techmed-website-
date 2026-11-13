@@ -239,6 +239,14 @@ export default defineType({
       validation: (Rule) => Rule.required(),
     }),
     defineField({
+      name: 'comingSoon',
+      title: 'Show as "Coming soon"',
+      type: 'boolean',
+      group: 'schedule',
+      initialValue: false,
+      description: 'Shows the card as Coming soon (with the message and waitlist button below) until you switch this off. Use it when the launch date is not fixed yet, e.g. Operation 100.',
+    }),
+    defineField({
       name: 'opensAt',
       title: 'Opens at (optional)',
       type: 'datetime',

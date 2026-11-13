@@ -124,6 +124,7 @@ type QuizDoc = {
   sealedQuizUrl?: string;
   sealedPasscode?: string;
   status: "Draft" | "Live" | "Closed" | "Archived";
+  comingSoon?: boolean;
   opensAt?: string;
   closesAt?: string;
   comingSoonText?: string;
@@ -134,7 +135,7 @@ const QUIZ_QUERY = `*[_type == "quiz" && !(_id in path("drafts.**")) && category
   _id, _createdAt, title, "slug": slug.current, shortDescription, subject, topic, programme,
   questionCount, durationMinutes, "coverImage": coverImage.asset->url, tags, featured, sortOrder,
   category, minimumPlan, "linkedResourceSlug": linkedResource->slug.current, "linkedResourceTitle": linkedResource->title,
-  platform, quizUrl, sealedQuizUrl, sealedPasscode, status, opensAt, closesAt, comingSoonText, waitlistMessage
+  platform, quizUrl, sealedQuizUrl, sealedPasscode, status, comingSoon, opensAt, closesAt, comingSoonText, waitlistMessage
 }`;
 
 const CLASS_QUERY = `*[_type == "classLink" && !(_id in path("drafts.**")) && active != false]{
@@ -237,7 +238,7 @@ Deno.serve(async (req) => {
     for (const q of docs) {
       const opensAt = q.opensAt ? Date.parse(q.opensAt) : null;
       const closesAt = q.closesAt ? Date.parse(q.closesAt) : null;
-      const notYetOpen = opensAt !== null && opensAt > now;
+      const notYetOpen = q.comingSoon === true || (opensAt !== null && opensAt > now);
       const closed = q.status === "Closed" || (closesAt !== null && closesAt <= now);
 
       let entitled = false;
