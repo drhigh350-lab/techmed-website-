@@ -83,6 +83,15 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
           </div>
         </header>
 
+        <!-- Push notifications opt-in -->
+        <div class="push-card" id="pushCard" hidden>
+          <div class="push-copy">
+            <strong>Don't miss a quiz or a live class</strong>
+            <span id="pushText">Turn on notifications for new quizzes, live classes and mock exams.</span>
+          </div>
+          <button type="button" class="push-btn" id="pushBtn">Turn on notifications</button>
+        </div>
+
         <!-- Apple-Inspired Segmented View Switcher: 5 clear destinations -->
         <div class="segmented-control-container">
           <nav class="dashboard-segmented-nav" role="tablist" aria-label="Dashboard sections">
@@ -654,6 +663,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     type UserResourceEntitlementItem,
   } from '../lib/supabase';
   import { TIMETABLE_SCHEDULE } from '../lib/dashboard-data';
+  import { pushSupported, linkPushUser, isPushOn, turnOnPush } from '../lib/push';
 
   const supabase = getSupabase();
 
@@ -789,6 +799,34 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     } catch {
       /* keep rooms locked if the server can't be reached */
     }
+  }
+
+  async function setupPush(userId: string, plan: string, fullName?: string | null) {
+    const card = document.getElementById('pushCard');
+    const btn = document.getElementById('pushBtn') as HTMLButtonElement | null;
+    const text = document.getElementById('pushText');
+    if (!card || !btn || !text || !pushSupported()) return;
+    const firstName = (fullName || '').trim().split(/\s+/)[0] || undefined;
+    await linkPushUser(userId, plan, firstName);
+    const show = (on: boolean) => {
+      card.hidden = false;
+      card.classList.toggle('is-on', on);
+      btn.hidden = on;
+      text.textContent = on
+        ? "Notifications are on. We'll alert you about new quizzes, live classes and mock exams."
+        : Notification.permission === 'denied'
+          ? 'Notifications are blocked for this site. Allow them in your browser settings to get class and quiz alerts.'
+          : 'Turn on notifications for new quizzes, live classes and mock exams.';
+    };
+    show(await isPushOn());
+    btn.onclick = async () => {
+      btn.disabled = true;
+      btn.textContent = 'Turning on…';
+      const on = await turnOnPush();
+      btn.disabled = false;
+      btn.textContent = 'Turn on notifications';
+      show(on);
+    };
   }
 
   async function updateClassroomsAccess(hasCohortAccess: boolean, planName?: string) {
@@ -1020,6 +1058,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 
       // Update Classroom Access badges and links based on database-backed privileges
       updateClassroomsAccess(isCohortEnrolled, privileges.planName);
+      setupPush(userId, isCohortEnrolled ? String(privileges.badgeType) : 'free', (profileResult as any)?.profile?.fullName);
 
       // Render authorized features
       if (benefitsChecklist) {
@@ -2083,6 +2122,20 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     background: currentColor;
   }
 
+  .push-card {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;
+    margin: 0 0 16px; padding: 14px 16px; border-radius: 14px;
+    background: rgba(201, 162, 39, 0.10); border: 1px solid rgba(201, 162, 39, 0.45);
+  }
+  .push-card[hidden] { display: none; }
+  .push-card.is-on { background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.35); }
+  .push-copy { display: grid; gap: 2px; min-width: 0; flex: 1 1 220px; font-size: 0.92rem; }
+  .push-copy strong { font-family: 'Montserrat', sans-serif; font-size: 0.95rem; }
+  .push-btn {
+    background: #C9A227; color: #012748; border: 0; border-radius: 999px; padding: 10px 16px;
+    font-weight: 700; font-size: 0.9rem; cursor: pointer; min-height: 44px;
+  }
+  .push-btn[hidden] { display: none; }
   .classrooms-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

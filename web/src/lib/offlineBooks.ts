@@ -202,7 +202,7 @@ export function formatSize(bytes: number): string {
 export async function keepPagesOffline(paths: string[]): Promise<void> {
   try {
     if (!('serviceWorker' in navigator)) return;
-    const reg = await navigator.serviceWorker.register('/sw.js');
+    const reg = await navigator.serviceWorker.register('/OneSignalSDKWorker.js');
     const ready = await navigator.serviceWorker.ready;
     (ready.active || reg.active)?.postMessage({ action: 'cache-pages', paths });
   } catch {
