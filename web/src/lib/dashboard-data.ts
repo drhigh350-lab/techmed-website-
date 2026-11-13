@@ -49,7 +49,8 @@ export interface ClassroomLink {
   id: string;
   subject: string;
   platform: 'Telegram' | 'WhatsApp';
-  url: string;
+  /** Public link: free community groups only. Locked rooms come from the quiz-access server (Sanity Class Links). */
+  url?: string;
   description: string;
   isCommunity?: boolean;
   requiresEnrolment?: boolean;
@@ -71,7 +72,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'biology',
     subject: 'Biology Classroom',
     platform: 'Telegram',
-    url: 'https://t.me/+-MMNZixSVJM3ZjRk',
     description: 'Live interactive lectures, diagrams, genetics walkthroughs, and pre-class notes.',
     requiresEnrolment: true,
   },
@@ -79,7 +79,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'chemistry',
     subject: 'Chemistry Classroom',
     platform: 'Telegram',
-    url: 'https://t.me/+B6xm1bGauWgyZDJk',
     description: 'Stoichiometry, organic chemistry, reaction mechanisms, and calculation chains.',
     requiresEnrolment: true,
   },
@@ -87,7 +86,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'physics',
     subject: 'Physics Classroom',
     platform: 'Telegram',
-    url: 'https://t.me/+Uhvk2wlI-LQ3MWJk',
     description: 'Formula derivations, mechanics, electromagnetism, and calculation speed drills.',
     requiresEnrolment: true,
   },
@@ -95,7 +93,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'english',
     subject: 'English Language Classroom',
     platform: 'Telegram',
-    url: 'https://t.me/+WAhmsDP-4rM4OWVk',
     description: 'Lexis, grammatical structure, The Lekki Headmaster, and comprehension tactics.',
     requiresEnrolment: true,
   },
@@ -103,7 +100,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'mathematics',
     subject: 'Mathematics Classroom',
     platform: 'Telegram',
-    url: 'https://t.me/+H5AcDzEEd49kMTJk',
     description: 'Calculus, algebra, mensuration, coordinate geometry, and JAMB problem-solving.',
     requiresEnrolment: true,
   },
@@ -111,7 +107,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'brainstorming-group',
     subject: 'Brainstorming Group',
     platform: 'WhatsApp',
-    url: 'https://chat.whatsapp.com/HKR7lb7mRoA5wivQLjUhUc?s=cl&p=a&mlu=4&ilr=4&iam=2',
     description: 'Direct candidate collaboration, daily questions, and study accountability group.',
     requiresEnrolment: true,
     isCommunity: false,
@@ -120,7 +115,6 @@ export const CLASSROOM_LINKS: ClassroomLink[] = [
     id: 'paid-class-official',
     subject: 'Paid Class Official Group',
     platform: 'WhatsApp',
-    url: 'https://chat.whatsapp.com/FbCsdrxF7KE3E1q2ckwKOW?s=cl&p=a&mlu=4&ilr=4&iam=2',
     description: 'Official announcements, timetable changes, class reminders, and admission updates for paid students.',
     requiresEnrolment: true,
     isCommunity: false,

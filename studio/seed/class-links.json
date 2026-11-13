@@ -1,0 +1,86 @@
+[
+  {
+    "_id": "classlink-biology",
+    "_type": "classLink",
+    "title": "Biology Classroom",
+    "subject": "Biology",
+    "kind": "classroom",
+    "platform": "Telegram",
+    "sealedUrl": "sealed:v1:NFnT1V9G+tTItBkaVh3Ei5eyzDmtQITr1VZ/rWOJfQu2Uw6d/5mrloZSNo1GhB/3bKYpJYrSYFnPVA4vvdMXrv0XfxQGjsMC+7IwLEzIdfWAu5eK8IEIgC+trrFZLnAoeo0ckjUxRkKwrocySnj30JbNH5fwFfGlBRjbrOQTcAm2+FDnXBjEEh2CXszcxc/OXeF2HHOFzGEIfo8OqywKt5M1ZyrMccJlrAMCfeHfU+454tCUqf09KJxWTqbUnrwRzPHdWwT1TK/ddXnUMBgJPp/2nN2t5X70rXKvrER2pgknqBuYVYuxOYhPMQWOYBbe/EKIHbzTQ52EQCJhZ+fRGA==",
+    "minimumPlan": "core",
+    "notes": "Live interactive lectures, diagrams, genetics walkthroughs, and pre-class notes.",
+    "active": true
+  },
+  {
+    "_id": "classlink-chemistry",
+    "_type": "classLink",
+    "title": "Chemistry Classroom",
+    "subject": "Chemistry",
+    "kind": "classroom",
+    "platform": "Telegram",
+    "sealedUrl": "sealed:v1:nTDsz+p/Juj/xfeFh6l/XKBc44eKPlupVwAdw3sb4s2DcXBNVGkI89ghOzHdg0upgSSSd9Rr6blUn9V0SSJE1nPeTTAjFr2GoPYcyGQw2ybjgOeqRH4N59upEbOr7H8/GHKZpmAPvuwp1wBTzwVezACqsPRgWli/BZj6ZSgKFMiNNfJWgWDnbc2pRhRp4QrVo+XXiaBFmmqDXG8/2GsJZRSiLbOErfmIKAA+CCU020d8/5t3JgazR4cTaqiUmfQ0JbSv+gqGrdXUvkD8bPwueunTyD3HaoCVNO0oP7CblCeQMkexB5BpDSJlzymgYdTvq2VneFowwsz3ovzI7BfwGg==",
+    "minimumPlan": "core",
+    "notes": "Stoichiometry, organic chemistry, reaction mechanisms, and calculation chains.",
+    "active": true
+  },
+  {
+    "_id": "classlink-physics",
+    "_type": "classLink",
+    "title": "Physics Classroom",
+    "subject": "Physics",
+    "kind": "classroom",
+    "platform": "Telegram",
+    "sealedUrl": "sealed:v1:z5FH5BO70fOoGAgo8mYS3RqtJ8yA85rCVa/cl9gzlqVzhsbpwtr4Be9WIIO4XLhy6N5qt9rBGu/9i93nNqVgcoSQI16QouF8s4dJS5o6WJf0n/QY0zuAsUb/Zk49c2k/OiPlGhulaFsMdDsSSWLzJWXH1Gd1bF6ljv6MZKJkTQHiPlvg9DycoK3HGjpvOXJOGSUXosR0T7MVbr1IatmoYfTbabK2ICqLqR6b2q4mi5/sgBcixf8NoOpnWpn4kpI+tN6Kyk0w+nCpRaF1CB6EIAjb4h4zLvRTWPa9i3ZRWLisARtteGS2l69tDcCfZg6y2jAE4iBnZYl2i9IAyczWZQ==",
+    "minimumPlan": "core",
+    "notes": "Formula derivations, mechanics, electromagnetism, and calculation speed drills.",
+    "active": true
+  },
+  {
+    "_id": "classlink-english",
+    "_type": "classLink",
+    "title": "English Language Classroom",
+    "subject": "English",
+    "kind": "classroom",
+    "platform": "Telegram",
+    "sealedUrl": "sealed:v1:Pia89T60UR22WAZbrZocVKR6GW83aZ1ZvdEBnWpVdvIQzIJ/VK7H13hgzoYWWRPD5rg/IJdT3oS3zLYn4wFzq8R42MeTDDLynlNnZ9E5X+Ie9C+EJud4TrdeN59Vg7bNbXInNw3rUOsLkl4EBgO7rdMLE5wnG7PdZZDZ3OvRLxYtONqSQdzaP0n+hzsiJwGLMJy47reWKB8DKOlPR5F2yag7svAqd5yhDSWucoWZPtScEMpJNXMifTrR52w1ZaSHdhVkE7ymzGfESCczoRtDx7/ABDzbAPBVaApoFZkwjD+tx2CXSjKqghnE14om7xCHhmbrN8+8EE4rkZpsz3/VqA==",
+    "minimumPlan": "core",
+    "notes": "Lexis, grammatical structure, The Lekki Headmaster, and comprehension tactics.",
+    "active": true
+  },
+  {
+    "_id": "classlink-mathematics",
+    "_type": "classLink",
+    "title": "Mathematics Classroom",
+    "subject": "Mathematics",
+    "kind": "classroom",
+    "platform": "Telegram",
+    "sealedUrl": "sealed:v1:mbr+ybk40tA9f+Qo7TTeOp+TA77gFxLRSoJAaLWofdMv6oRMgHpMq+q9M315Tba7Qa2UNzFEibgq+N5QIzooW6NHJuMYcMFnWxS5v1InBpJNmfsoc80nhd3yIsrLzgc3gxHo9XjhN8lxrZBAxL1vIZZfoLmHMsc30hTcixdfBAfIcRxmWS+ciQTIicOZwnBa1zWLBuj1UDHuSl4bH5G5v9kWn2QA0OupZ525H5blyDitJJmauYiC2x18bpHfjVZWzacLw97qfj07LilW4IptgF2mdfFr3NfNYAcDHEu1e626MkFxttLMwLcUqeDz6hhECOZ7nFN/vvVH/zOwcd9T1g==",
+    "minimumPlan": "core",
+    "notes": "Calculus, algebra, mensuration, coordinate geometry, and JAMB problem-solving.",
+    "active": true
+  },
+  {
+    "_id": "classlink-brainstorming-group",
+    "_type": "classLink",
+    "title": "Brainstorming Group",
+    "subject": "General",
+    "kind": "classroom",
+    "platform": "WhatsApp",
+    "sealedUrl": "sealed:v1:HrQjKj+du3lsPL6EyUTkRjCIjjTFcGFOUz8y6GKPx3CTbRe/7sj0Rc3BJqzONDsIybiE7uHPJNK4sVNMYqBOw6q78Ky6j/g3YS80Grp9uzZDVH6BtCa41FlzJ+/97aQpThK4eqco7CIMfCQDiXjmnsUcbrpcRJFmSoi2t12/yzHcoHlNxTbmaM8hbU144lMW10L3ekTw55IOO5jGn8RI95Slnk/YBBiYeIvgaYxvIX4prWpwjnJfhLy9VqD6D5J0D/UuEuYDPcJrYiCU/cYNz00KQqowp4ixbaffzc7G2uQgtwfmPbAWrlQEGcOJP48FDSXZ0pQKAC2LG97BC+iZQA==",
+    "minimumPlan": "core",
+    "notes": "Direct candidate collaboration, daily questions, and study accountability group.",
+    "active": true
+  },
+  {
+    "_id": "classlink-paid-class-official",
+    "_type": "classLink",
+    "title": "Paid Class Official Group",
+    "subject": "General",
+    "kind": "classroom",
+    "platform": "WhatsApp",
+    "sealedUrl": "sealed:v1:ewcGGW86F/9lyenMb6zSMnXrnmz9Ah6mNSuqoo/ztTnvJSd195CJzVgsVaYP7PNQrk4ymLQ1t3g8joSi1ajOH1OREmmoup5fJMrRzvm51FYf/lIh/1AVoe2R6Kvqj12hQzKagpVOYtZtXe46oln2aIQA6H5EvoJPnRC7lUVQCSjKIyLVxs1EyCe4o6ubQXfXv8yqbXZTo8NPAvgqjYQlbHF4gSMv9DV04wy+fKkekixfntkOlA+hrseu5wkghy0WK7InBqZf48zp5K2bOX1Fg5Yj86GzdrmS+3InXBx3uiIxuZTQAt/36Ur45r5tqpyzP6U3nkjh7YEoFKFBBtZjmw==",
+    "minimumPlan": "core",
+    "notes": "Official announcements, timetable changes, class reminders, and admission updates for paid students.",
+    "active": true
+  }
+]

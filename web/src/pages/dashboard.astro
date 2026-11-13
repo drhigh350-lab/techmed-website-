@@ -257,7 +257,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
                   data-classroom-id={cls.id}
                   data-is-community={cls.isCommunity ? 'true' : 'false'}
                   data-requires-enrolment={requiresEnrol ? 'true' : 'false'}
-                  data-locked-url={cls.url}
+                  data-locked-url={requiresEnrol ? undefined : cls.url}
                   data-subject-title={cls.subject}
                 >
                   <div class="box-top">
@@ -644,6 +644,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
 <script>
   import {
     getSupabase,
+    SUPABASE_URL,
     fetchUserProfile,
     fetchUserEntitlements,
     resolveStudentPrivileges,
@@ -768,7 +769,30 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
     `).join('');
   }
 
-  function updateClassroomsAccess(hasCohortAccess: boolean, planName?: string) {
+  // Private class links live (locked) in Sanity Class Links. The quiz-access
+  // server only hands them to students whose plan covers them (grace included).
+  let classUrls: Record<string, string> = {};
+  let classUrlsLoaded = false;
+  async function loadClassUrls(): Promise<void> {
+    if (classUrlsLoaded) return;
+    try {
+      const { data } = await supabase.auth.getSession();
+      const token = data.session?.access_token;
+      if (!token) return;
+      const res = await fetch(`${SUPABASE_URL}/functions/v1/quiz-access?action=classes`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) return;
+      const body = await res.json();
+      for (const c of body.classes || []) if (c.state === 'open' && c.url) classUrls[c.id] = c.url;
+      classUrlsLoaded = true;
+    } catch {
+      /* keep rooms locked if the server can't be reached */
+    }
+  }
+
+  async function updateClassroomsAccess(hasCohortAccess: boolean, planName?: string) {
+    if (hasCohortAccess) await loadClassUrls();
     if (classroomAccessNotice && classroomAccessText) {
       if (hasCohortAccess) {
         classroomAccessNotice.classList.add('unlocked');
@@ -786,7 +810,7 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
       const requiresEnrol = box.getAttribute('data-requires-enrolment') !== 'false';
       const accessPill = box.querySelector('[data-role="classroom-access-pill"]');
       const actionBtn = box.querySelector('[data-role="classroom-btn"]');
-      const lockedUrl = box.getAttribute('data-locked-url') || '';
+      const lockedUrl = box.getAttribute('data-locked-url') || classUrls[`classlink-${box.getAttribute('data-classroom-id')}`] || '';
       const subjectTitle = box.getAttribute('data-subject-title') || 'Room';
 
       if (!requiresEnrol) {
@@ -807,6 +831,15 @@ const description = 'Official TECHMED UTME 2027 Paid Student Dashboard: enrolled
         if (accessPill) {
           accessPill.textContent = 'Active Enrolment';
           accessPill.className = 'access-pill unlocked';
+        }
+        if (actionBtn && !lockedUrl) {
+          // Enrolled, but the room link couldn't be fetched (offline or not set yet).
+          actionBtn.setAttribute('href', 'https://wa.me/2347044255045?text=' + encodeURIComponent(`Hi TECHMED, I'm enrolled but can't open the ${subjectTitle} link on my dashboard.`));
+          actionBtn.setAttribute('target', '_blank');
+          actionBtn.setAttribute('rel', 'noopener noreferrer');
+          actionBtn.className = 'btn-secondary locked-classroom-btn';
+          const span = actionBtn.querySelector('span');
+          if (span) span.textContent = 'Get link from support';
         }
         if (actionBtn && lockedUrl) {
           actionBtn.setAttribute('href', lockedUrl);
