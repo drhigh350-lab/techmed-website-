@@ -17,7 +17,8 @@ const PLAN_NAME: Record<string, string> = { "cohort-core": "Core", "cohort-maste
 const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!, {
   auth: { persistSession: false },
 });
-const RESEND = Deno.env.get("RESEND_API_KEY") || "";
+// TECHMED's own key (the shared RESEND_API_KEY belongs to another app on this project).
+const RESEND = Deno.env.get("TECHMED_RESEND_API_KEY") || "";
 
 const json = (b: unknown, s = 200) => new Response(JSON.stringify(b), { status: s, headers: { "Content-Type": "application/json" } });
 const esc = (s: string) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]!));

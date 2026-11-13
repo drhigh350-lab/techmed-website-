@@ -223,6 +223,9 @@ Deno.serve(async (req) => {
     if (b.action === "tick") return json(await tick());
     if (b.action === "midday") return json({ renewals: await renewals(), enrol: await enrolCampaign() });
     if (b.action === "evening") return json(await evening());
+    if (b.action === "test" && typeof b.user_id === "string") {
+      return json(await push({ include_aliases: { external_id: [b.user_id] }, headings: { en: "✅ TECHMED notifications are on" }, contents: { en: "This is a test. You'll get quiz, class and mock exam alerts here." }, url: SITE + "/dashboard" }));
+    }
     if (b.action === "payment" && typeof b.user_id === "string") {
       if (await once(`paid:${b.reference || b.user_id}`)) await toUser(b.user_id, T.PAYMENT_VERIFIED);
       return json({ ok: true });
