@@ -14,6 +14,7 @@ import proofPoint from './proofPoint';
 import fiveMinutesForwardSettings from './fiveMinutesForwardSettings';
 import quiz from './quiz';
 import classLink from './classLink';
+import pushAnnouncement from './pushAnnouncement';
 
 export const schemaTypes = [
   siteSettings,
@@ -28,6 +29,7 @@ export const schemaTypes = [
   resource,
   quiz,
   classLink,
+  pushAnnouncement,
   subject,
   syllabusTopic,
   article,
