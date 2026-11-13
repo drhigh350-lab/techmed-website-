@@ -197,6 +197,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
 
 <script>
   import { getSupabase, checkIsVerifiedStudent } from '../lib/supabase';
+  import { pushLogout } from '../lib/push';
 
   // Theme toggle persistence
   const THEME_KEY = 'techmed-theme';
@@ -363,6 +364,7 @@ const isActive = (path: string) => currentPath === path || currentPath === `${pa
   // Sign out handlers
   async function handleSignOut() {
     try {
+      await pushLogout();
       await supabase.auth.signOut();
     } finally {
       window.location.href = '/';
