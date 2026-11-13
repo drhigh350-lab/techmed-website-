@@ -67,6 +67,15 @@ installStragglerGuard();
 // during the same prerender pass don't each start their own request.
 const queryCache = new Map<string, Promise<unknown>>();
 
+let tokenDropped = false;
+function dropToken(): boolean {
+  if (!client || !client.config().token) return tokenDropped;
+  console.warn('[sanity] read token was rejected; reading the public dataset without it');
+  client = client.withConfig({ token: undefined, useCdn: true });
+  tokenDropped = true;
+  return true;
+}
+
 // Fetches are defensive by design: if Sanity is unreachable at build time
 // (misconfigured env, network issue, project not yet seeded), the site
 // still builds using the caller's fallback rather than failing the deploy.
@@ -76,7 +85,15 @@ export async function fetchSanity<T>(query: string, fallback: T): Promise<T> {
 
   let pending = queryCache.get(query) as Promise<T> | undefined;
   if (!pending) {
-    pending = sanity.fetch<T>(query);
+    pending = sanity.fetch<T>(query).catch((err: { statusCode?: number }) => {
+      // A rejected read token (expired, revoked, or from another Sanity
+      // project) must not turn every request into a failure: the dataset is
+      // public, so drop the token and read it publicly for the rest of the build.
+      if ((err?.statusCode === 401 || err?.statusCode === 403) && dropToken()) {
+        return getClient()!.fetch<T>(query);
+      }
+      throw err;
+    });
     queryCache.set(query, pending);
   }
 
