@@ -6,6 +6,19 @@ export const SUPABASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.PUBLIC_SUPABASE_URL) ||
   'https://unbgborbhxzsotaieiun.supabase.co';
 
+/**
+ * True only for real plan ids/names (cohort-core, "Mastery Plan"...), never for
+ * products that merely contain the word, e.g. the "Organic Chemistry Mastery" book.
+ */
+export function isPlanTier(value: unknown, tier: 'core' | 'mastery' | 'ultimate'): boolean {
+  const s = String(value ?? '').toLowerCase().trim();
+  if (!s) return false;
+  if (s.includes('organic')) return false;
+  if (s === tier || s.startsWith(`cohort-${tier}`) || s.startsWith(`cohort_${tier}`)) return true;
+  return new RegExp(`\\b${tier}\\b`).test(s) && /(plan|cohort|class|programme|program|utme)/.test(s);
+}
+
+
 export const SUPABASE_ANON_KEY =
   (typeof import.meta !== 'undefined' && import.meta.env?.PUBLIC_SUPABASE_ANON_KEY) ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVuYmdib3JiaHh6c290YWllaXVuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI0MDMyNDcsImV4cCI6MjA5Nzk3OTI0N30.3uM4SaYII60V988NA5PvqphQs6HkTVTnGKpZFqzZY-c';
@@ -175,13 +188,13 @@ export async function fetchUserEntitlements(
       // Standalone scheduled resources preserve starts_at and are gated by hasActiveResourceAccess / accessStatus.
       const isCohortPlan =
         row.resource_id?.toLowerCase().includes('cohort') ||
-        row.resource_id?.toLowerCase().includes('mastery') ||
-        row.resource_id?.toLowerCase().includes('ultimate') ||
-        row.resource_id?.toLowerCase().includes('core') ||
+        isPlanTier(row.resource_id?.toLowerCase(), 'mastery') ||
+        isPlanTier(row.resource_id?.toLowerCase(), 'ultimate') ||
+        isPlanTier(row.resource_id?.toLowerCase(), 'core') ||
         row.plan_id?.toLowerCase().includes('cohort') ||
-        row.plan_id?.toLowerCase().includes('mastery') ||
-        row.plan_id?.toLowerCase().includes('ultimate') ||
-        row.plan_id?.toLowerCase().includes('core');
+        isPlanTier(row.plan_id?.toLowerCase(), 'mastery') ||
+        isPlanTier(row.plan_id?.toLowerCase(), 'ultimate') ||
+        isPlanTier(row.plan_id?.toLowerCase(), 'core');
 
       if (row.starts_at && !isCohortPlan) {
         const startsUtc = new Date(row.starts_at).getTime();
@@ -493,7 +506,7 @@ async function legacyHasActiveResourceAccess(
     if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
     const r = (e.resourceId || '').toLowerCase();
     const p = (e.planId || '').toLowerCase();
-    return r.includes('mastery') || p.includes('mastery');
+    return isPlanTier(r, 'mastery') || isPlanTier(p, 'mastery');
   });
 
   const isUltimateCohort = entitlements.some(e => {
@@ -501,7 +514,7 @@ async function legacyHasActiveResourceAccess(
     if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
     const r = (e.resourceId || '').toLowerCase();
     const p = (e.planId || '').toLowerCase();
-    return r.includes('ultimate') || p.includes('ultimate');
+    return isPlanTier(r, 'ultimate') || isPlanTier(p, 'ultimate');
   });
 
   // PART 3: All published resources covered by the TECHMED resource offering
@@ -567,7 +580,7 @@ async function legacyHasActiveResourceAccess(
       const hasOrderMasteryOrUltimate = orders.some((o: any) => {
         const pid = (o.product_id || '').toLowerCase();
         const pname = (o.product_name || '').toLowerCase();
-        return pid.includes('mastery') || pid.includes('ultimate') || pname.includes('mastery') || pname.includes('ultimate');
+        return isPlanTier(pid, 'mastery') || isPlanTier(pid, 'ultimate') || isPlanTier(pname, 'mastery') || isPlanTier(pname, 'ultimate');
       });
       if (hasOrderMasteryOrUltimate) {
         return true;
@@ -1057,19 +1070,19 @@ export function resolveStudentPrivileges(
   const isUltimateMatch = (val?: string | null) => {
     if (!val) return false;
     const v = val.toLowerCase();
-    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
+    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || isPlanTier(v, 'ultimate');
   };
 
   const isMasteryMatch = (val?: string | null) => {
     if (!val) return false;
     const v = val.toLowerCase();
-    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || v.includes('mastery');
+    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || isPlanTier(v, 'mastery');
   };
 
   const isCoreMatch = (val?: string | null) => {
     if (!val) return false;
     const v = val.toLowerCase();
-    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || v.includes('core');
+    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || isPlanTier(v, 'core');
   };
 
   // Check for Ultimate
@@ -1357,14 +1370,14 @@ export async function getStudentPlan(
       if (e.expiresAt && new Date(e.expiresAt).getTime() <= now) return false;
       const r = (e.resourceId || '').toLowerCase();
       const p = (e.planId || '').toLowerCase();
-      return r.includes('cohort') || r.includes('core') || r.includes('mastery') || r.includes('ultimate') ||
-             p.includes('cohort') || p.includes('core') || p.includes('mastery') || p.includes('ultimate');
+      return r.includes('cohort') || isPlanTier(r, 'core') || isPlanTier(r, 'mastery') || isPlanTier(r, 'ultimate') ||
+             p.includes('cohort') || isPlanTier(p, 'core') || isPlanTier(p, 'mastery') || isPlanTier(p, 'ultimate');
     });
 
     const ultimateEnt = activeCohortEntitlements.find(e => {
       const r = (e.resourceId || '').toLowerCase();
       const p = (e.planId || '').toLowerCase();
-      return r.includes('ultimate') || p.includes('ultimate');
+      return isPlanTier(r, 'ultimate') || isPlanTier(p, 'ultimate');
     });
     if (ultimateEnt) {
       return {
@@ -1382,7 +1395,7 @@ export async function getStudentPlan(
     const masteryEnt = activeCohortEntitlements.find(e => {
       const r = (e.resourceId || '').toLowerCase();
       const p = (e.planId || '').toLowerCase();
-      return r.includes('mastery') || p.includes('mastery');
+      return isPlanTier(r, 'mastery') || isPlanTier(p, 'mastery');
     });
     if (masteryEnt) {
       return {
@@ -1400,7 +1413,7 @@ export async function getStudentPlan(
     const coreEnt = activeCohortEntitlements.find(e => {
       const r = (e.resourceId || '').toLowerCase();
       const p = (e.planId || '').toLowerCase();
-      return r.includes('core') || p.includes('core');
+      return isPlanTier(r, 'core') || isPlanTier(p, 'core');
     });
     if (coreEnt) {
       return {
@@ -1437,7 +1450,7 @@ export async function getStudentPlan(
       const hasUltimate = paidOrders.some((o: any) => {
         const pid = (o.product_id || '').toLowerCase();
         const pname = (o.product_name || '').toLowerCase();
-        return pid.includes('ultimate') || pname.includes('ultimate');
+        return isPlanTier(pid, 'ultimate') || isPlanTier(pname, 'ultimate');
       });
       if (hasUltimate) {
         return {
@@ -1455,7 +1468,7 @@ export async function getStudentPlan(
       const hasMastery = paidOrders.some((o: any) => {
         const pid = (o.product_id || '').toLowerCase();
         const pname = (o.product_name || '').toLowerCase();
-        return pid.includes('mastery') || pname.includes('mastery');
+        return isPlanTier(pid, 'mastery') || isPlanTier(pname, 'mastery');
       });
       if (hasMastery) {
         return {
@@ -1473,7 +1486,7 @@ export async function getStudentPlan(
       const hasCore = paidOrders.some((o: any) => {
         const pid = (o.product_id || '').toLowerCase();
         const pname = (o.product_name || '').toLowerCase();
-        if (!pid.includes('core') && !pname.includes('core')) return false;
+        if (!isPlanTier(pid, 'core') && !isPlanTier(pname, 'core')) return false;
         if (pid.includes('monthly')) {
           const orderTime = new Date(o.created_at).getTime();
           if (Date.now() - orderTime > 32 * 24 * 60 * 60 * 1000) return false;
@@ -1556,19 +1569,19 @@ export async function getUserResourceEntitlements(
   const isMasteryMatch = (s?: string | null) => {
     if (!s) return false;
     const v = s.toLowerCase();
-    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || v.includes('mastery');
+    return v === 'mastery' || v === 'cohort-mastery' || v.startsWith('cohort-mastery') || isPlanTier(v, 'mastery');
   };
 
   const isUltimateMatch = (s?: string | null) => {
     if (!s) return false;
     const v = s.toLowerCase();
-    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || v.includes('ultimate');
+    return v === 'ultimate' || v === 'cohort-ultimate' || v.startsWith('cohort-ultimate') || isPlanTier(v, 'ultimate');
   };
 
   const isCoreMatch = (s?: string | null) => {
     if (!s) return false;
     const v = s.toLowerCase();
-    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || v.includes('core');
+    return v === 'core' || v === 'cohort-core' || v.startsWith('cohort-core') || isPlanTier(v, 'core');
   };
 
   const hasMasteryCohort =
@@ -1822,7 +1835,7 @@ export async function getUserResourceEntitlements(
         return isMasteryMatch(o.product_id) || (typeof o.product_name === 'string' && isMasteryMatch(o.product_name));
       }
       if (def.id === 'cohort-core') {
-        return o.product_id?.toLowerCase().startsWith('cohort-core') || o.product_id?.toLowerCase() === 'core' || (typeof o.product_name === 'string' && o.product_name.toLowerCase().includes('core'));
+        return o.product_id?.toLowerCase().startsWith('cohort-core') || o.product_id?.toLowerCase() === 'core' || (typeof o.product_name === 'string' && isPlanTier(o.product_name.toLowerCase(), 'core'));
       }
       if (def.id === 'cohort-ultimate') {
         return isUltimateMatch(o.product_id) || (typeof o.product_name === 'string' && isUltimateMatch(o.product_name));

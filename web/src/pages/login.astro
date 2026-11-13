@@ -236,6 +236,18 @@ const description = 'Log in or create your student account to access your UTME 2
             <span>Create Student Account</span>
           </button>
         </form>
+        <!-- Email verification by code (replaces the confirm-link step) -->
+        <form id="verifyCodeForm" class="auth-form verify-code-form" style="display: none;" novalidate>
+          <div class="verify-code-head">
+            <span class="verify-code-icon" aria-hidden="true">✉️</span>
+            <h2>Check your email for a code</h2>
+            <p>We sent a verification code to <strong id="verifyEmailLabel"></strong>. Enter the code below to open your account (or just tap the button in that email). Can&apos;t find it? Check Spam or Promotions.</p>
+          </div>
+          <label for="verifyCodeInput" class="verify-code-label">Verification code</label>
+          <input id="verifyCodeInput" class="verify-code-input" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="10" placeholder="Enter code" required />
+          <button type="submit" id="verifyCodeBtn" class="auth-submit-btn">Verify &amp; open my account</button>
+          <button type="button" id="resendCodeBtn" class="verify-code-resend">Send me a new code</button>
+        </form>
 
         <!-- Form 3: Password Recovery Request -->
         <form id="recoveryForm" class="auth-form" style="display: none;" novalidate>
@@ -449,6 +461,7 @@ const description = 'Log in or create your student account to access your UTME 2
   }
 
   function switchTab(tab: 'login' | 'register' | 'recovery' | 'new-password') {
+    const vcf = document.getElementById('verifyCodeForm'); if (vcf) vcf.style.display = 'none';
     hideAlert();
     [tabLogin, tabRegister, tabRecovery].forEach(b => {
       b?.classList.remove('active');
@@ -544,6 +557,47 @@ const description = 'Log in or create your student account to access your UTME 2
   // =========================================================================
 
   // Handle Login
+  // ---- Email verification by code ----
+  const verifyCodeForm = document.getElementById('verifyCodeForm') as HTMLFormElement | null;
+  const verifyCodeInput = document.getElementById('verifyCodeInput') as HTMLInputElement | null;
+  const verifyCodeBtn = document.getElementById('verifyCodeBtn') as HTMLButtonElement | null;
+  const resendCodeBtn = document.getElementById('resendCodeBtn') as HTMLButtonElement | null;
+  let verifyEmail = '';
+  function showVerifyCode(email: string) {
+    verifyEmail = email;
+    const label = document.getElementById('verifyEmailLabel');
+    if (label) label.textContent = email;
+    document.querySelectorAll<HTMLElement>('.auth-form').forEach((f) => (f.style.display = 'none'));
+    if (verifyCodeForm) verifyCodeForm.style.display = 'flex';
+    verifyCodeInput?.focus();
+  }
+  verifyCodeForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideAlert();
+    const token = (verifyCodeInput?.value || '').replace(/\s+/g, '');
+    if (!/^\d{6,10}$/.test(token)) {
+      showAlert('Enter the code exactly as it appears in the email (numbers only).');
+      return;
+    }
+    if (verifyCodeBtn) { verifyCodeBtn.disabled = true; verifyCodeBtn.textContent = 'Verifying...'; }
+    const { data, error } = await supabase.auth.verifyOtp({ email: verifyEmail, token, type: 'signup' });
+    if (verifyCodeBtn) { verifyCodeBtn.disabled = false; verifyCodeBtn.textContent = 'Verify & open my account'; }
+    if (error || !data?.session) {
+      showAlert('That code is wrong or has expired. Check the latest email from TECHMED, or tap "Send me a new code".');
+      return;
+    }
+    showAlert('Email verified! Opening your account…', 'success');
+    window.location.href = '/account/onboarding';
+  });
+  resendCodeBtn?.addEventListener('click', async () => {
+    hideAlert();
+    if (!verifyEmail) return;
+    resendCodeBtn.disabled = true;
+    const { error } = await supabase.auth.resend({ type: 'signup', email: verifyEmail });
+    resendCodeBtn.disabled = false;
+    showAlert(error ? getFriendlyAuthErrorMessage(error.message) : `A new code is on its way to ${verifyEmail}.`, error ? 'error' : 'success');
+  });
+
   loginForm?.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideAlert();
@@ -566,6 +620,12 @@ const description = 'Log in or create your student account to access your UTME 2
     submitBtn.textContent = 'Sign In to Student Account';
 
     if (error) {
+      if (/not confirmed/i.test(error.message)) {
+        await supabase.auth.resend({ type: 'signup', email });
+        showVerifyCode(email);
+        showAlert('Your email isn\'t verified yet. We just sent you a code: enter it below.', 'success');
+        return;
+      }
       showAlert(getFriendlyAuthErrorMessage(error.message));
     } else if (data?.user) {
       window.location.href = redirectTarget;
@@ -643,11 +703,8 @@ const description = 'Log in or create your student account to access your UTME 2
       if (data.session) {
         window.location.href = '/account/onboarding';
       } else {
-        showAlert(
-          'Account created successfully! Please check your email inbox to verify your address, then sign in.',
-          'success'
-        );
-        switchTab('login');
+        showVerifyCode(email);
+        showAlert('Account created! Check your email inbox for your verification code.', 'success');
       }
     }
   });
@@ -1190,4 +1247,12 @@ const description = 'Log in or create your student account to access your UTME 2
     color: var(--text-light);
     line-height: 1.5;
   }
+  .verify-code-form { flex-direction: column; gap: 12px; }
+  .verify-code-head { text-align: center; display: grid; gap: 6px; }
+  .verify-code-head h2 { font-family: 'Montserrat', sans-serif; font-size: 1.2rem; margin: 0; }
+  .verify-code-head p { margin: 0; font-size: 0.95rem; opacity: 0.85; }
+  .verify-code-icon { font-size: 2rem; }
+  .verify-code-label { font-weight: 600; font-size: 0.9rem; }
+  .verify-code-input { font-size: 1.5rem; letter-spacing: 0.4em; text-align: center; padding: 12px; border-radius: 10px; border: 1.5px solid #98B0C4; min-height: 52px; }
+  .verify-code-resend { background: none; border: 0; color: #09476E; font-weight: 600; text-decoration: underline; cursor: pointer; min-height: 44px; }
 </style>
