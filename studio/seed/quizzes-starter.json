@@ -1,0 +1,367 @@
+[
+  {
+    "_id": "quiz-qb-KG57pUkJwZ",
+    "_type": "quiz",
+    "title": "Daily Builder Quiz — Day 3: Use of English (Comprehension & Main Ideas)",
+    "slug": {
+      "_type": "slug",
+      "current": "daily-builder-quiz-day-3-use-of-english-comprehension-main-ideas"
+    },
+    "shortDescription": "Ten quick UTME 2027 questions on comprehension and finding the main idea.",
+    "subject": "English",
+    "programme": "Daily Builder",
+    "questionCount": 10,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/KG57pUkJwZ",
+    "quizKey": "KG57pUkJwZ",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": true
+  },
+  {
+    "_id": "quiz-qb-mdrUPvTVxY",
+    "_type": "quiz",
+    "title": "Daily Builder Quiz — Day 2: Mathematics (Number Bases & Fractions)",
+    "slug": {
+      "_type": "slug",
+      "current": "daily-builder-quiz-day-2-mathematics-number-bases-fractions"
+    },
+    "shortDescription": "Ten quick UTME 2027 questions on number bases and fractions.",
+    "subject": "Mathematics",
+    "programme": "Daily Builder",
+    "questionCount": 10,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/mdrUPvTVxY",
+    "quizKey": "mdrUPvTVxY",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-NuwDEPU4QJ",
+    "_type": "quiz",
+    "title": "Daily Builder Quiz — Day 1: Physics (Measurement & Units)",
+    "slug": {
+      "_type": "slug",
+      "current": "daily-builder-quiz-day-1-physics-measurement-units"
+    },
+    "shortDescription": "Ten quick UTME 2027 questions on measurement and units.",
+    "subject": "Physics",
+    "programme": "Daily Builder",
+    "questionCount": 10,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/NuwDEPU4QJ",
+    "quizKey": "NuwDEPU4QJ",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-z4ePzZdK35",
+    "_type": "quiz",
+    "title": "Weekly CBT Challenge 2 — Medical courses",
+    "slug": {
+      "_type": "slug",
+      "current": "weekly-cbt-challenge-2-medical-courses"
+    },
+    "shortDescription": "A timed 40-question UTME 2027 CBT challenge for medical-course candidates.",
+    "subject": "Mixed / All",
+    "programme": "Weekly CBT Challenge",
+    "questionCount": 40,
+    "durationMinutes": 30,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/z4ePzZdK35",
+    "quizKey": "z4ePzZdK35",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": true
+  },
+  {
+    "_id": "quiz-qb-zky5pc4q6P",
+    "_type": "quiz",
+    "title": "Weekly CBT Challenge 2 — Engineering courses",
+    "slug": {
+      "_type": "slug",
+      "current": "weekly-cbt-challenge-2-engineering-courses"
+    },
+    "shortDescription": "A timed 40-question UTME 2027 CBT challenge for engineering-course candidates.",
+    "subject": "Mixed / All",
+    "programme": "Weekly CBT Challenge",
+    "questionCount": 40,
+    "durationMinutes": 30,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/zky5pc4q6P",
+    "quizKey": "zky5pc4q6P",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-BcHgcc9w3d",
+    "_type": "quiz",
+    "title": "Weekly CBT Challenge — Medical courses",
+    "slug": {
+      "_type": "slug",
+      "current": "weekly-cbt-challenge-medical-courses"
+    },
+    "shortDescription": "A timed 40-question UTME 2027 CBT challenge for medical-course candidates.",
+    "subject": "Mixed / All",
+    "programme": "Weekly CBT Challenge",
+    "questionCount": 40,
+    "durationMinutes": 30,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/BcHgcc9w3d",
+    "quizKey": "BcHgcc9w3d",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-QTPfnTMBqy",
+    "_type": "quiz",
+    "title": "Weekly CBT Challenge — Engineering courses",
+    "slug": {
+      "_type": "slug",
+      "current": "weekly-cbt-challenge-engineering-courses"
+    },
+    "shortDescription": "A timed 40-question UTME 2027 CBT challenge for engineering-course candidates.",
+    "subject": "Mixed / All",
+    "programme": "Weekly CBT Challenge",
+    "questionCount": 40,
+    "durationMinutes": 30,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/QTPfnTMBqy",
+    "quizKey": "QTPfnTMBqy",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-fUEp8yvkPT",
+    "_type": "quiz",
+    "title": "Chemistry Diagnostic Quiz: Identify Your Weak Points",
+    "slug": {
+      "_type": "slug",
+      "current": "chemistry-diagnostic-quiz-identify-your-weak-points"
+    },
+    "shortDescription": "Twenty Chemistry questions to show which topics need your attention first.",
+    "subject": "Chemistry",
+    "programme": "Diagnostic",
+    "questionCount": 20,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/fUEp8yvkPT",
+    "quizKey": "fUEp8yvkPT",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-VqxuHJAfJy",
+    "_type": "quiz",
+    "title": "Chemistry Diagnostic Quiz — UTME 2027",
+    "slug": {
+      "_type": "slug",
+      "current": "chemistry-diagnostic-quiz-utme-2027"
+    },
+    "shortDescription": "A fast five-minute Chemistry diagnostic for UTME 2027.",
+    "subject": "Chemistry",
+    "programme": "Diagnostic",
+    "questionCount": 20,
+    "durationMinutes": 5,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/VqxuHJAfJy",
+    "quizKey": "VqxuHJAfJy",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-SGRRThaHWW",
+    "_type": "quiz",
+    "title": "Genetics Quiz — UTME 2027",
+    "slug": {
+      "_type": "slug",
+      "current": "genetics-quiz-utme-2027"
+    },
+    "shortDescription": "Twenty UTME 2027 Biology questions on genetics.",
+    "subject": "Biology",
+    "programme": "Other",
+    "questionCount": 20,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/SGRRThaHWW",
+    "quizKey": "SGRRThaHWW",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-NqDcsqfmV5",
+    "_type": "quiz",
+    "title": "Biology Giveaway Quiz — UTME 2027",
+    "slug": {
+      "_type": "slug",
+      "current": "biology-giveaway-quiz-utme-2027"
+    },
+    "shortDescription": "A five-minute UTME 2027 Biology giveaway quiz.",
+    "subject": "Biology",
+    "programme": "Other",
+    "questionCount": 20,
+    "durationMinutes": 5,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/NqDcsqfmV5",
+    "quizKey": "NqDcsqfmV5",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-HZXPWCtzAy",
+    "_type": "quiz",
+    "title": "Think Smart with TECHMED: Chemistry 1.0 (Laws of Chemical Combination)",
+    "slug": {
+      "_type": "slug",
+      "current": "think-smart-with-techmed-chemistry-1-0-laws-of-chemical-combination"
+    },
+    "shortDescription": "Ten questions on the laws of chemical combination.",
+    "subject": "Chemistry",
+    "programme": "Other",
+    "questionCount": 10,
+    "durationMinutes": 10,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/HZXPWCtzAy",
+    "quizKey": "HZXPWCtzAy",
+    "isPublicOnPlatform": true,
+    "status": "Live",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-zZXtedQVKW",
+    "_type": "quiz",
+    "title": "JAMB-Standard Medical Mock Exam — UTME 2027",
+    "slug": {
+      "_type": "slug",
+      "current": "jamb-standard-medical-mock-exam-utme-2027"
+    },
+    "shortDescription": "The final Foundation Protocol mock: Use of English, Biology, Chemistry and Physics, scored out of 400.",
+    "subject": "Mixed / All",
+    "programme": "Mock Exam",
+    "questionCount": 180,
+    "durationMinutes": 120,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/zZXtedQVKW",
+    "quizKey": "zZXtedQVKW",
+    "isPublicOnPlatform": true,
+    "status": "Closed",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-5qvweTje8C",
+    "_type": "quiz",
+    "title": "JAMB-Standard Engineering Mock Exam — UTME 2027",
+    "slug": {
+      "_type": "slug",
+      "current": "jamb-standard-engineering-mock-exam-utme-2027"
+    },
+    "shortDescription": "The final Foundation Protocol mock for engineering combinations, scored out of 400.",
+    "subject": "Mixed / All",
+    "programme": "Mock Exam",
+    "questionCount": 180,
+    "durationMinutes": 120,
+    "category": "free",
+    "platform": "QuizBoot",
+    "quizUrl": "https://quizboot.com/quiz/5qvweTje8C",
+    "quizKey": "5qvweTje8C",
+    "isPublicOnPlatform": true,
+    "status": "Closed",
+    "featured": false
+  },
+  {
+    "_id": "quiz-qb-BGzZPXTzpm",
+    "_type": "quiz",
+    "title": "Organic Chemistry Mastery: 1000+ Question Bank",
+    "slug": {
+      "_type": "slug",
+      "current": "organic-chemistry-mastery-question-bank"
+    },
+    "shortDescription": "The 1,003-question bonus bank for Organic Chemistry Mastery owners: fresh 63-question tests, instant marking and explanations.",
+    "subject": "Chemistry",
+    "programme": "Book Question Bank",
+    "questionCount": 63,
+    "durationMinutes": 50,
+    "category": "book",
+    "linkedResource": {
+      "_type": "reference",
+      "_ref": "resource-organic-chemistry-mastery"
+    },
+    "platform": "QuizBoot",
+    "quizKey": "BGzZPXTzpm",
+    "sealedQuizUrl": "sealed:v1:rFGUe5igV0JvZ7e7k2V6pNoHF5M0EvUN3D4te1F0s6HUd1aRD7bc3SXgj/jeytYaWxK4+oZnj4ziCK0cdjFFo/nJvCQ+VtesrYw7rKAbgC9Te535OE1Mknlv7aphipvMc7RxfZ+GzO2uRP0bRkBhMGiY4nwUJ8MxzBJ5zvYeopxqGIhz/2A1iGHauX5VrxFKaGcKwa7WDqmFQiBI/fTlhl77Z37Ug6u5OecxhZeVezUFw3p/WkFYvXT7wllRu3e0RONIliV2Z4mpKzys54er589P3GwbC03XGFcrcQCJQfGH8FTxG4fnReCqbeu/wYL6EC6DrEbxcQ5+BwAScOespA==",
+    "sealedPasscode": "sealed:v1:XsieZCBAfP9fSIzwzGtvAFiWBV6ufB/j9CP3KZfGQvhqu+/KAkjO4pvcm4mL5KZ63my/1ye0sbak9CG986TlUt5HJqNYAjdKxQO87FTmPDbcuEV5N3Vg2EI29yf7Oty9ROp8uOMxCsav+ouHx1b3CoUv3xMqZZZON+o28iH0wTW+FvztW4D/A2kvOYmELYcib1GCr+RLkRFhVfMsAc5ldriamaykNDaxKA9B8S8lCWwuW2TtoE+Dv+vWnd76VSJcuFKHg+DXbuA7hPPeRZ/BVc9YhnnnR3fdY8/Fy4j0UNInO23z0V3yV9laGvAfC374Bgu8vN8rYEFIeIn1fy1/7A==",
+    "isPublicOnPlatform": false,
+    "status": "Live",
+    "featured": true
+  },
+  {
+    "_id": "quiz-qb-tuNwkxvByy",
+    "_type": "quiz",
+    "title": "The Mole Concept Cure: 100 Question Challenge",
+    "slug": {
+      "_type": "slug",
+      "current": "mole-concept-cure-100-question-challenge"
+    },
+    "shortDescription": "A 100-question challenge for owners of The Mole Concept Cure.",
+    "subject": "Chemistry",
+    "programme": "Book Question Bank",
+    "questionCount": 100,
+    "durationMinutes": 120,
+    "category": "book",
+    "linkedResource": {
+      "_type": "reference",
+      "_ref": "resource-mole-concept-cure"
+    },
+    "platform": "QuizBoot",
+    "quizKey": "tuNwkxvByy",
+    "sealedQuizUrl": "sealed:v1:V3K/VWuGII/M2eXEf1NhZsmdjMrbQuU7VXqif/f/kSx1e/mgfmi7MiHO/pNIYIRtmQAHrEjWo04oWmHfNSC2hfNCKm9ipaEe6XB4C8+LtAmQtNgIPtikSa8Deld/38SdVQb7Rn87dDx1gg0OsCp+sGQHYsubDvEeiicl+N7lDaob+eFojEVn0/09xIHMryjcWut//Z8EYr7cTlb7X0PU8j9Ym902f87tsigwKpGh0MIFu3ITFgCyd7dys2EtEQNmtn/0Ut9Q2dsQF5Cwmwq3hdbMiAz+ExRtI6Jdu1NpFSfdADDja5V9TDnMu0ybdFIDiMXrwP50C6Rpu+3mPPCSZA==",
+    "sealedPasscode": "sealed:v1:c7ikc9Kdfpw8p+vA12rg3rT//34I5nXuXjNi6MS1i3etsaheIOriI+MbP1g2klXumyxoyrYYIRkJK7JcTjYUWcNv4fzen2N7IcQusCsXI9TBYemdL3X6q3QhllTUDs6wZ+mH2SHYqbcLB5kqjlD5wEsAvKR96Lg7L7kaaUmjdtn3nKMJPZQ6T7HfFxo+kQ5dvO+BDn0ruXzgu/r5XHEp9UNp4F0whPVe3UHMs3Vvk6p73Tyi/5fzBSXLx2p+og9VrXrbRo0cAdJiAsvH42T9GfyeL2cdtklhvC2dP4CBwEyQa5IG5Apz8BsuzgW0clknBP/HhEIt9XlqKtVqHsjsZA==",
+    "isPublicOnPlatform": false,
+    "status": "Live",
+    "featured": true
+  },
+  {
+    "_id": "quiz-operation-100-2027",
+    "_type": "quiz",
+    "title": "Operation 100 — 2027 Edition",
+    "slug": {
+      "_type": "slug",
+      "current": "operation-100-2027"
+    },
+    "shortDescription": "100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics and English.",
+    "subject": "Mixed / All",
+    "programme": "Operation 100",
+    "category": "programme",
+    "platform": "QuizBoot",
+    "status": "Live",
+    "featured": true,
+    "comingSoon": true,
+    "comingSoonText": "A focused daily challenge for serious JAMB candidates: 100 carefully selected past questions every day across Physics, Chemistry, Biology, Mathematics and English, built to sharpen speed, accuracy and exam confidence. Registration opens closer to UTME 2027.",
+    "waitlistMessage": "Hi TECHMED, I want to join the Operation 100 2027 waitlist. My name is {name} and I am preparing for JAMB. Please notify me when registration opens."
+  }
+]
