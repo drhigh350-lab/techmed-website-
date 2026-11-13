@@ -21,6 +21,7 @@
     "typescript": "^5.6.3"
   },
   "overrides": {
-    "compute-scroll-into-view": "3.2.1"
+    "compute-scroll-into-view": "3.1.1",
+    "scroll-into-view-if-needed": "3.1.0"
   }
 }
