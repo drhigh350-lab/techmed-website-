@@ -77,6 +77,7 @@ const quizzes: PublicQuiz[] = await getPublicQuizzes();
 <script>
   import { getSupabase } from '../lib/supabase';
   import { QUIZ_ACCESS_URL, WHATSAPP_NUMBER } from '../lib/quizConstants';
+  let focusDone = false;
 
   type Quiz = {
     id: string;
@@ -155,7 +156,7 @@ const quizzes: PublicQuiz[] = await getPublicQuizzes();
         ? `<p class="qh-note">Opens on QuizBoot in a new tab. A free QuizBoot account is needed.</p>`
         : '';
     return `
-      <article class="qh-card" data-category="${q.category}">
+      <article class="qh-card" data-category="${q.category}" data-slug="${esc(q.slug || '')}">
         <div class="qh-chips">
           ${q.subject ? `<span class="qh-chip">${esc(q.subject)}</span>` : ''}
           ${q.programme ? `<span class="qh-chip qh-chip--soft">${esc(q.programme)}</span>` : ''}
@@ -235,6 +236,16 @@ const quizzes: PublicQuiz[] = await getPublicQuizzes();
       empty.hidden = visible.length > 0 || (filter === 'all' && !term && !subj);
       if (filter === 'plan' && !signedIn) {
         grid.innerHTML = `<p class="qh-empty">Sign in to see the quizzes your plan unlocks. <a href="/login?redirect=${encodeURIComponent(location.pathname)}">Sign in</a></p>` + grid.innerHTML;
+      }
+      // Opened from a notification or link: /quizzes?quiz=<slug> jumps to that quiz.
+      const want = new URLSearchParams(location.search).get('quiz');
+      if (want && !focusDone) {
+        const el = Array.from(root.querySelectorAll<HTMLElement>('[data-slug]')).find((c) => c.dataset.slug === want);
+        if (el) {
+          focusDone = true;
+          el.classList.add('qh-card--focus');
+          setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'center' }), 150);
+        }
       }
     };
 
@@ -362,6 +373,7 @@ const quizzes: PublicQuiz[] = await getPublicQuizzes();
   .qh-featured :global(.qh-card) {
     border-color: rgba(201, 162, 39, 0.55);
   }
+  :global(.qh-card--focus) { outline: 3px solid #C9A227; outline-offset: 2px; box-shadow: 0 0 0 6px rgba(201, 162, 39, 0.18); }
   :global(.qh-card--kairo) {
     border-style: dashed !important;
   }
