@@ -2,6 +2,14 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 ---
 
+<script is:inline>
+  // New quizzes get their own page at the next site build. Until then, send
+  // /quizzes/<slug> to the live Quiz Hub, which opens that quiz.
+  (function () {
+    var m = location.pathname.match(/^\/quizzes\/([a-z0-9-]+)\/?$/i);
+    if (m) location.replace('/quizzes/?quiz=' + encodeURIComponent(m[1]));
+  })();
+</script>
 <BaseLayout title="Page Not Found — TECHMED" description="The page you're looking for doesn't exist." noindex>
   <section class="not-found">
     <span class="badge">404</span>
